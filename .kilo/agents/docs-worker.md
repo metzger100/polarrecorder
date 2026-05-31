@@ -21,7 +21,6 @@ permission:
     "rg *": allow
     "sed *": allow
     "cat *": allow
-    "*": deny
   task: deny
 ---
 

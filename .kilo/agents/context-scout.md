@@ -17,7 +17,6 @@ permission:
     "find *": allow
     "sed *": allow
     "cat *": allow
-    "*": deny
   task: deny
 ---
 

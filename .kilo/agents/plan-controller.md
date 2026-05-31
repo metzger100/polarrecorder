@@ -20,7 +20,6 @@ permission:
     "rg *": allow
     "sed *": allow
     "cat *": allow
-    "*": deny
   task:
     context-scout: allow
     implementation-worker: allow
