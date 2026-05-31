@@ -160,6 +160,17 @@ function assertEqual(actual, expected, label) {
   }
 }
 
+function assertReportOnlyEdit(config, label) {
+  const edit = get(config, "permission.edit");
+  if (!edit || typeof edit !== "object" || Array.isArray(edit)) {
+    fail(`${label} permission.edit: expected report-only edit map, got ${JSON.stringify(edit)}`);
+    return;
+  }
+
+  assertEqual(edit["*"], "deny", `${label} permission.edit.*`);
+  assertEqual(edit[".kilo/reports/**"], "allow", `${label} permission.edit..kilo/reports/**`);
+}
+
 function listedMarkdownNames(directory) {
   if (!fs.existsSync(directory)) {
     return [];
@@ -216,7 +227,7 @@ for (const name of requiredAgents) {
   assertEqual(get(config, "permission.agent_manager"), "deny", `${filePath} permission.agent_manager`);
 
   if (["context-scout", "pro-requirements-verifier", "pro-quality-verifier"].includes(name)) {
-    assertEqual(get(config, "permission.edit"), "deny", `${filePath} permission.edit`);
+    assertReportOnlyEdit(config, filePath);
   }
 }
 
