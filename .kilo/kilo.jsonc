@@ -18,5 +18,8 @@
     "code": {
       "model": "openrouter/deepseek/deepseek-v4-pro"
     }
+  },
+  "tools": {
+    "agent_manager_tool": true
   }
 }
