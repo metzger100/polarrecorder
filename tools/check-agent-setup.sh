@@ -151,12 +151,6 @@ function assertEqual(actual, expected, label) {
   }
 }
 
-function assertIncludes(actual, expected, label) {
-  if (!Array.isArray(actual) || !actual.includes(expected)) {
-    fail(`${label}: expected array containing ${JSON.stringify(expected)}`);
-  }
-}
-
 function listedMarkdownNames(directory) {
   if (!fs.existsSync(directory)) {
     return [];
@@ -165,6 +159,25 @@ function listedMarkdownNames(directory) {
     .readdirSync(directory)
     .filter((entry) => entry.endsWith(".md"))
     .map((entry) => entry.slice(0, -3));
+}
+
+function checkPrimaryTools(config, label) {
+  const value = get(config, "tools.primary_tools");
+  if (Array.isArray(value)) {
+    fail(`${label} tools.primary_tools: arrays are invalid for the installed Kilo schema`);
+    return;
+  }
+  if (value !== undefined && typeof value !== "boolean") {
+    fail(`${label} tools.primary_tools: expected absent or boolean, got ${JSON.stringify(value)}`);
+  }
+}
+
+function checkAgentManagerToolKeyCount(filePath) {
+  const text = readRequired(filePath);
+  const count = (text.match(/"agent_manager_tool"\s*:/g) ?? []).length;
+  if (count > 1) {
+    fail(`${filePath}: duplicate agent_manager_tool keys`);
+  }
 }
 
 for (const name of requiredAgents) {
@@ -221,6 +234,9 @@ for (const name of requiredCommands) {
 const dotKiloConfig = parseJsonc(path.join(".kilo", "kilo.jsonc"));
 const rootConfig = parseJsonc("kilo.jsonc");
 
+checkAgentManagerToolKeyCount(path.join(".kilo", "kilo.jsonc"));
+checkAgentManagerToolKeyCount("kilo.jsonc");
+
 for (const [label, config] of [
   [".kilo/kilo.jsonc", dotKiloConfig],
   ["kilo.jsonc", rootConfig],
@@ -230,8 +246,7 @@ for (const [label, config] of [
   assertEqual(config.small_model, "openrouter/deepseek/deepseek-v4-flash", `${label} small_model`);
   assertEqual(config.default_agent, "plan-controller", `${label} default_agent`);
   assertEqual(get(config, "tools.agent_manager_tool"), true, `${label} tools.agent_manager_tool`);
-  assertIncludes(get(config, "tools.primary_tools"), "task", `${label} tools.primary_tools`);
-  assertIncludes(get(config, "tools.primary_tools"), "agent_manager", `${label} tools.primary_tools`);
+  checkPrimaryTools(config, label);
 }
 
 for (const key of ["$schema", "model", "small_model", "default_agent"]) {

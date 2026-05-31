@@ -21,7 +21,6 @@
     }
   },
   "tools": {
-    "agent_manager_tool": true,
-    "primary_tools": ["task", "agent_manager"]
+    "agent_manager_tool": true
   }
 }
