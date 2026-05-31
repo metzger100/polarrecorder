@@ -13,6 +13,7 @@ Start here for project documentation. Read this file first, then choose only the
 - [Technical debt](TECH-DEBT.md)
 - [Plugin lifecycle](architecture/plugin-lifecycle.md)
 - [API shape](architecture/api.md)
+- [Polar model](architecture/polar-model.md)
 - [AvNav keys and units](avnav/keys-and-units.md)
 - [Configuration](user/configuration.md)
 - [Coding standards](conventions/coding-standards.md)
