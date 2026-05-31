@@ -13,4 +13,5 @@ def test_import_package_and_instantiate_plugin() -> None:
     assert polarrecorder.__version__ == "1.0.0"
     assert plugin.api is api
     assert Plugin.pluginInfo()["version"] == "1.0.0"
+    api.stop_main_thread = True
     plugin.run()
