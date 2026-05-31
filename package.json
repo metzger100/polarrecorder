@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "ai:sync:agents": "node tools/sync-ai-instructions.mjs --from=agents",
+    "ai:sync:claude": "node tools/sync-ai-instructions.mjs --from=claude",
+    "ai:check": "node tools/check-ai-instructions.mjs",
+    "check:docs": "node tools/check-docs.mjs && node tools/check-doc-format.mjs && node tools/check-doc-reachability.mjs && npm run ai:check",
+    "check:filesize": "node tools/check-file-size.mjs --oneliner=block",
+    "check:headers": "node tools/check-headers.mjs",
+    "check:namespace": "node tools/check-namespace.mjs",
+    "check:naming": "node tools/check-naming.mjs",
+    "check:patterns": "node tools/check-patterns.mjs",
+    "check:deps": "node tools/check-dependencies.mjs",
+    "check:core": "npm run check:patterns && npm run check:docs && npm run check:filesize && npm run check:headers && npm run check:namespace && npm run check:naming && npm run check:deps",
+    "check:all": "npm run check:core",
+    "hooks:install": "node tools/install-hooks.mjs"
+  },
+  "devDependencies": {}
+}

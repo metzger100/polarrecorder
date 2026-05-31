@@ -1,0 +1,22 @@
+# Documentation Table Of Contents
+
+**Status:** Complete for Phase 1 bootstrap.
+
+## Overview
+
+Start here for project documentation. Read this file first, then choose only the one to three documents needed for the current task.
+
+## Key Details
+
+- [Core principles](core-principles.md)
+- [Quality](QUALITY.md)
+- [Technical debt](TECH-DEBT.md)
+- [Coding standards](conventions/coding-standards.md)
+- [Smell prevention](conventions/smell-prevention.md)
+- [Testing infrastructure](conventions/testing-infrastructure.md)
+- [Execution plan authoring](guides/exec-plan-authoring.md)
+
+## Related
+
+- [Root architecture](../ARCHITECTURE.md)
+- [Contributing](../CONTRIBUTING.md)

@@ -1,0 +1,116 @@
+[project]
+name = "polarrecorder"
+version = "1.0.0"
+requires-python = ">=3.9"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# Put the repo root on sys.path so `import polarrecorder` / `import plugin` resolve from
+# tests regardless of invocation. `python -m pytest` already does this via the -m flag, but
+# this makes bare `pytest` work too (the layout has conftest.py under tests/, not at root).
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+# tools/ is dev-only CLI tooling (print()-based output, http.server, etc.) and is exempt
+# from ruff, consistent with its existing exemption from mypy, the file-size limit, and
+# header checks. extend-exclude (not per-file-ignores) so `ruff format --check` skips it too.
+extend-exclude = ["tools"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH", "RUF",
+  "C90", "D", "PT", "ARG", "ERA", "S", "PIE", "RSE", "RET", "FBT", "PL",
+  "T20", "TID", "FA",
+]
+# E=pycodestyle, F=pyflakes, W=warnings, I=isort, N=naming,
+# UP=pyupgrade, B=bugbear, A=builtins, SIM=simplify, TCH=type-checking, RUF=ruff-specific,
+# C90=mccabe complexity, D=pydocstyle docstrings, PT=pytest-style, ARG=unused-arguments,
+# ERA=commented-out code, S=bandit security, PIE=unnecessary-pass/reimplemented-builtins,
+# RSE=raise-without-message, RET=return-consistency, FBT=boolean-trap, PL=pylint-subset,
+# T20=flake8-print (no print() calls), TID=flake8-tidy-imports (banned imports),
+# FA=flake8-future-annotations (enforces `from __future__ import annotations` in every file)
+ignore = [
+  "D100",   # missing module docstring (covered by file headers)
+  "D104",   # missing __init__.py docstring
+  "D203",   # conflicts with D211 (no-blank-line-before-class vs one-blank-line-before-class)
+  "D213",   # conflicts with D212 (multi-line-summary-second-line vs first-line)
+  "S101",   # assert in non-test code (used for internal invariants)
+  "FBT001", # boolean positional arg in function def (too strict for dataclass fields)
+  "FBT002", # boolean default value in function def (same reason)
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-branches = 10
+max-returns = 4
+max-statements = 40
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-tidy-imports]
+# Ban AvNav imports in polarrecorder/ — AvNav API is injected via reader.py's StoreAPI protocol
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"avnav_api".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
+"pluginhandler".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
+"avnav_store".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
+"avnav_nmea".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "D",       # docstrings not required on test functions
+  "S101",    # assert is the whole point of tests
+  "PLR2004", # magic values in test assertions are fine
+  "ARG001",  # unused function arguments (pytest fixtures appear unused)
+  "ARG002",  # unused method arguments (same reason)
+  "N802",    # FakeAvNavAPI mirrors AvNav method names (getSingleValue, setStatus, ...)
+  "N803",    # FakeAvNavAPI mirrors AvNav arg names (includeInfo, iconFile, ...)
+]
+"polarrecorder/__init__.py" = ["D104"]  # __init__.py needs no docstring
+"plugin.py" = ["D100", "TID251", "E402", "N802"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# `avnav_api` lives in the AvNav server source tree, not on the dev/CI sys.path. plugin.py
+# imports `AVNApi` only under `if TYPE_CHECKING:` (never at runtime — see Layer 1 / Python
+# Rules), so this override lets `mypy --strict` resolve that type-checking-only import without
+# AvNav installed. `AVNApi` is then treated as `Any` at the boundary, which is acceptable.
+[[tool.mypy.overrides]]
+module = ["avnav_api"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["polarrecorder"]
+# Coverage is gated on polarrecorder/ only. plugin.py is the AvNav integration boundary and is
+# exercised by test_plugin_integration.py but NOT included in the 90% gate; its ~70%
+# figure in "Coverage Targets" is an informational guideline, not an enforced threshold
+# (it cannot be unit-tested fully without a real AvNav server).
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+# Lines that never execute at runtime by design — excluded so they don't count as "missing".
+# Covers the TYPE_CHECKING import blocks (export.py) and the Protocol method stub bodies
+# (reader.py StoreAPI, logger.py Logger). NOTE: rules_enhanced.py is NOT covered by these
+# excludes — per Phase 4 it ships with no `...`/NotImplementedError bodies at all and reaches
+# full line coverage via the smoke `import` in test_validation_heuristic.py.
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "@(typing\\.)?overload",
+    "^\\s*\\.\\.\\.\\s*$",
+    "if __name__ == .__main__.:",
+]
