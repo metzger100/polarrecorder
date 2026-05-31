@@ -22,5 +22,8 @@
   },
   "tools": {
     "agent_manager_tool": true
+  },
+  "indexing": {
+    "enabled": true
   }
 }
