@@ -95,7 +95,7 @@ Use `documentation/conventions/smell-prevention.md` for the full catalog.
 
 ## 5. Quality Gate
 
-`tools/check-all.sh` must pass before any commit and before any phase is marked complete. It runs:
+`tools/check-all.sh` must pass before any commit and before any phase is marked complete. In this repository, prefer `PATH=/tmp/polarrecorder-venv/bin:$PATH tools/check-all.sh` so the project virtualenv tooling is found. The gate runs:
 
 - `python -m ruff check .`
 - `python -m ruff format --check .`

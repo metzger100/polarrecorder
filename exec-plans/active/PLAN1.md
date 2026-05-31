@@ -1415,9 +1415,9 @@ polarrecorder/
 │       ├── exec-plan.md
 │       └── verify-phase.md
 │
-├── misc/                               # Read-only reference source zips (NOT shipped, NOT modified; deleted in Phase 11 once the project is complete)
-│   ├── avnav-master.zip                # AvNav source tree (Verified Baseline references)
-│   └── dyninstruments.zip              # dyninstruments source tree (quality-infra references)
+├── misc/                               # Read-only unpacked reference source trees (NOT shipped, NOT modified; deleted in Phase 11 once the project is complete)
+│   ├── avnav-master/                   # AvNav source tree (Verified Baseline references)
+│   └── dyninstruments/                 # dyninstruments source tree (quality-infra references)
 │
 ├── exec-plans/
 │   ├── active/
@@ -2545,7 +2545,7 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 - `tools/check-all.sh` passes with zero failures.
 - Coverage meets thresholds: `polarrecorder/` overall ≥ 90%, `polarrecorder/validation/` ≥ 95%, `polarrecorder/histogram.py` ≥ 95%.
 - All documentation up to date.
-- **Delete the `misc/` reference folder** (`misc/avnav-master.zip` and `misc/dyninstruments.zip`). These were development-time references for the Verified Baseline (§3) and the dyninstruments quality-infra adaptation; once the project is complete they are no longer needed and only bloat the repository. Removing `misc/` has no effect on `tools/check-all.sh` (it holds only `.zip` files — `ruff`/`mypy`/`check-python-filesize` scan only Python sources, and the doc checks scan `documentation/`), and it is already absent from every release zip (the release allowlist in §10 Phase 10 ships only the named runtime files + `polarrecorder/`). Do this as a final cleanup step; the gate below is re-run afterward to confirm green.
+- **Delete the `misc/` reference folder** (`misc/avnav-master/` and `misc/dyninstruments/`). These were development-time references for the Verified Baseline (§3) and the dyninstruments quality-infra adaptation; once the project is complete they are no longer needed and only bloat the repository. Removing `misc/` has no effect on `tools/check-all.sh` (the Python checks scan only project Python sources, and the doc checks scan `documentation/`), and it is already absent from every release zip (the release allowlist in §10 Phase 10 ships only the named runtime files + `polarrecorder/`). Do this as a final cleanup step; the gate below is re-run afterward to confirm green.
 - Manual test checklist (documented in `documentation/QUALITY.md`):
   - [ ] Install plugin by copying directory to AvNav plugins.
   - [ ] AvNav loads plugin without errors.
