@@ -16,6 +16,7 @@ Start here for project documentation. Read this file first, then choose only the
 - [Data pipeline](architecture/data-pipeline.md)
 - [Polar model](architecture/polar-model.md)
 - [Rejection rules](filters/rejection-rules.md)
+- [Poisoning resistance](filters/poisoning-resistance.md)
 - [AvNav keys and units](avnav/keys-and-units.md)
 - [Configuration](user/configuration.md)
 - [Coding standards](conventions/coding-standards.md)

@@ -1,8 +1,35 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union
+
+from polarrecorder import commit
+from polarrecorder.validation import pipeline
+
+if TYPE_CHECKING:
+    from polarrecorder.config import Config
+    from polarrecorder.polar_model import PolarModel
+    from polarrecorder.sample import ReadResult, Sample
+    from polarrecorder.validation.pipeline import PipelineResult
+    from polarrecorder.validation.state import ValidationState
 
 RequestHandlerReturn = Union[dict[str, Any], bool, None]
+
+
+def drive_read_results(
+    read_results: list[ReadResult],
+    state: ValidationState,
+    config: Config,
+    model: PolarModel,
+) -> list[tuple[PipelineResult, Sample | None]]:
+    """Drive reads through the same normal-path orchestration as plugin.py."""
+    results: list[tuple[PipelineResult, Sample | None]] = []
+    for read_result in read_results:
+        pipeline_result, sample = pipeline.run(read_result, state, config)
+        if sample is not None:
+            state.observe(sample)
+        commit.commit_sample(pipeline_result, sample, model)
+        results.append((pipeline_result, sample))
+    return results
 
 
 class FakeDataEntry:
