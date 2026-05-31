@@ -1,3 +1,12 @@
 #!/bin/bash
 set -euo pipefail
+
+export LC_ALL=C
+
+VENV_DIR="${POLARRECORDER_VENV:-/tmp/polarrecorder-venv}"
+
+if [ -d "$VENV_DIR/bin" ]; then
+  export PATH="$VENV_DIR/bin:$PATH"
+fi
+
 tools/check-all.sh
