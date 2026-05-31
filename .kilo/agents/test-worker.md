@@ -1,7 +1,7 @@
 ---
 description: Flash testing and quality-check subagent for targeted tests and verification commands delegated by the plan controller.
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: openrouter/deepseek/deepseek-v4-flash
 temperature: 0.1
 permission:
   read: allow

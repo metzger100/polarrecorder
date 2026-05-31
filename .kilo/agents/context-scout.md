@@ -1,7 +1,7 @@
 ---
 description: Read-only scout for active plans, repository state, documentation, constraints, and suspected plan defects.
 mode: subagent
-model: deepseek/deepseek-v4-flash
+model: openrouter/deepseek/deepseek-v4-flash
 temperature: 0.1
 permission:
   read: allow

@@ -1,7 +1,7 @@
 ---
 description: Strict read-only Pro verifier for architecture, maintainability, tests, docs, gates, secrets, and scoped quality.
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: openrouter/deepseek/deepseek-v4-pro
 temperature: 0.0
 permission:
   read: allow

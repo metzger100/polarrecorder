@@ -9,8 +9,8 @@ Configure OpenRouter as the model provider in Kilo Code. Keep the OpenRouter API
 Before the first `/exec-plan` run, perform two setup checks:
 
 1. Slug verification: confirm these model slugs resolve in the live OpenRouter catalog:
-   - `deepseek/deepseek-v4-pro`
-   - `deepseek/deepseek-v4-flash`
+   - `openrouter/deepseek/deepseek-v4-pro`
+   - `openrouter/deepseek/deepseek-v4-flash`
 2. Kilo capability verification: confirm the installed Kilo Code version supports:
    - per-agent model assignment;
    - read-only subagents via permissions;

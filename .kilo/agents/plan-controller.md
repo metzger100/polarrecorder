@@ -1,7 +1,7 @@
 ---
 description: Primary orchestrator for active execution plans; owns phase ledgers, delegates scoped work, and requires both Pro verifiers before completion.
 mode: primary
-model: deepseek/deepseek-v4-pro
+model: openrouter/deepseek/deepseek-v4-pro
 temperature: 0.1
 permission:
   read: allow
