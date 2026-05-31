@@ -18,6 +18,15 @@ const requiredAgents = [
 
 const subagents = requiredAgents.filter((name) => name !== "plan-controller");
 const requiredCommands = ["exec-plan", "verify-phase"];
+const expectedBackgroundProcess = {
+  "plan-controller": "deny",
+  "context-scout": "deny",
+  "implementation-worker": "ask",
+  "test-worker": "ask",
+  "docs-worker": "deny",
+  "pro-requirements-verifier": "deny",
+  "pro-quality-verifier": "deny",
+};
 const errors = [];
 const warnings = [];
 
@@ -186,7 +195,11 @@ for (const name of requiredAgents) {
 
   assertEqual(config.description ? "present" : "missing", "present", `${filePath} description`);
   assertEqual(config.model ? "present" : "missing", "present", `${filePath} model`);
-  assertEqual(get(config, "permission.background_process"), "allow", `${filePath} permission.background_process`);
+  assertEqual(
+    get(config, "permission.background_process"),
+    expectedBackgroundProcess[name],
+    `${filePath} permission.background_process`,
+  );
 
   if (name === "plan-controller") {
     assertEqual(config.mode, "primary", `${filePath} mode`);
@@ -194,12 +207,13 @@ for (const name of requiredAgents) {
       assertEqual(get(config, `permission.task.${subagent}`), "allow", `${filePath} permission.task.${subagent}`);
     }
     assertEqual(get(config, "permission.task.*"), "deny", `${filePath} permission.task.*`);
-    assertEqual(get(config, "permission.agent_manager"), "ask", `${filePath} permission.agent_manager`);
+    assertEqual(get(config, "permission.agent_manager"), "deny", `${filePath} permission.agent_manager`);
     continue;
   }
 
   assertEqual(config.mode, "subagent", `${filePath} mode`);
   assertEqual(get(config, "permission.task"), "deny", `${filePath} permission.task`);
+  assertEqual(get(config, "permission.agent_manager"), "deny", `${filePath} permission.agent_manager`);
 
   if (["context-scout", "pro-requirements-verifier", "pro-quality-verifier"].includes(name)) {
     assertEqual(get(config, "permission.edit"), "deny", `${filePath} permission.edit`);
