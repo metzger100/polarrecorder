@@ -2,7 +2,7 @@
 
 Phase 0 — done — 2026-05-31 — intended end state after human sign-off: human bootstrap, inspection-verified
 Phase 1 — done — 2026-05-31 — intended end state after human sign-off: human bootstrap, inspection-verified
-Phase 2 — pending — 2026-05-31 — Source-Verified AvNav Integration Documentation
+Phase 2 — done — 2026-05-31 — Source-Verified AvNav Integration Documentation; pre-existing deliverables inspected, npm run check:docs and full gate green
 Phase 3 — pending — 2026-05-31 — Pure Domain Model
 Phase 4 — pending — 2026-05-31 — Validation and Bad-Data Threat Handling
 Phase 5 — pending — 2026-05-31 — Poisoning-Resistance Scenario Tests
