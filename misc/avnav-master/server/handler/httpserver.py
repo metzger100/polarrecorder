@@ -1,0 +1,317 @@
+# -*- coding: utf-8 -*-
+# vim: ts=2 sw=2 et ai
+###############################################################################
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+#  parts from this software (AIS decoding) are taken from the gpsd project
+#  so refer to this BSD licencse also (see ais.py) or omit ais.py 
+###############################################################################
+
+import socketserver
+import http.server
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
+from typing import Dict
+
+from httphandler import AVNHTTPHandler, WebSocketHandler
+from avnav_util import plainUrlToPath
+
+try:
+  import create_overview
+except:
+  pass
+from avnav_manager import *
+hasIfaces=False
+try:
+  import netifaces
+  hasIfaces=True
+except:
+  pass
+import threading
+
+
+class StaticPathHandler:
+    def __init__(self,basePath,baseDir):
+        self.basePath = basePath
+        self.baseDir = baseDir
+    def isDisabled(self)->bool:
+        return False
+    def getPrefix(self)->str:
+        return self.basePath
+    def handlePathRequest(self,path, requestParam, server=None,handler=None):
+        path= plainUrlToPath(path)
+        file=os.path.join(self.baseDir,path)
+        if os.path.isfile(file):
+            return AVNFileDownload(file)
+        else:
+            return AVNDownloadError(404,f"{file} is not a file")
+
+
+#a HTTP server with threads for each request
+class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
+  webSocketHandlers: Dict[str, WebSocketHandler]
+  navxml=AVNUtil.NAVXML
+  PORT_CONFIG="httpPort"
+  PATH_USER='user'
+  PATH_VIEWER='viewer'
+  PATH_MODULES='modules'
+  PATH_CHARTS='charts'
+  CFG_CHARTBASE='chartbase' #the name of a config value to change the chart mapping name
+                            #in reality this does not change the chart base URL
+                            #but we keep this for compatibilty if someone used this in the past
+
+  @classmethod
+  def autoInstantiate(cls):
+    return True
+
+  @classmethod
+  def createInstance(cls, cfgparam):
+    cls.checkSingleInstance()
+    return AVNHttpServer(cfgparam, AVNHTTPHandler)
+  @classmethod
+  def getConfigParam(cls, child=None):
+    if child == "Directory":
+      return {
+              "urlpath":None,
+              "path":None
+              }
+    if child == "MimeType":
+      return {
+              'extension':None,
+              'type':None
+              }
+    if child == 'UserTool':
+      return {
+        'url':None, #we replace $HOST...
+        'title':'',
+        'icon':None, #an icon below $datadir/user
+        'keepUrl':'' #auto detect
+      }
+    if not child is None:
+      return None
+    rt={
+                     "basedir":"",
+                     "navurl":"/api", #those must be absolute with /
+                     "navurlCompat":"/viewer/avnav_navi.php",
+                     "index":"/viewer/avnav_viewer.html",
+                     cls.CFG_CHARTBASE: "maps", #just to be able to use very old configs
+                                          #the chart base now is always /charts
+                                          #but potentially someone defined
+                                          #an url mapping with maps
+                                          #or even worse: changed this value and defined
+                                          #a mapping with teh changed value
+                     cls.PORT_CONFIG:"8080",
+                     "numThreads":"5",
+                     "httpHost":"",
+        }
+    return rt
+  def __init__(self,cfgparam,RequestHandlerClass):
+    ALLOWED_PREFIXES=[self.PATH_USER,self.PATH_VIEWER,str(cfgparam.get(self.CFG_CHARTBASE) or "maps")]
+    replace=AVNHandlerManager.filterBaseParam(cfgparam)
+    if cfgparam.get('basedir')== '.':
+      #some migration of the older setting - we want to use our global dir function, so consider . to be empty
+      cfgparam['basedir']=''
+    self.basedir=AVNHandlerManager.getDirWithDefault(cfgparam, 'basedir', defaultSub='', belowData=False)
+    self.datadir=cfgparam[AVNHandlerManager.BASEPARAM.DATADIR]
+    pathmappings={}
+    marray=cfgparam.get("Directory")
+    if marray is not None:
+      pathmappings={}
+      for mapping in marray:
+        prefix=mapping['urlpath']
+        if not prefix in ALLOWED_PREFIXES:
+            continue
+        if prefix == self.getConfigString(self.CFG_CHARTBASE):
+            prefix=self.PATH_CHARTS
+        pathmappings[prefix]=AVNUtil.prependBase(AVNUtil.replaceParam(os.path.expanduser(mapping['path']),replace),self.basedir)
+    self.pathmappings=pathmappings
+    self.overwrite_map=({
+                              '.png': 'image/png',
+                              '.js': 'text/javascript; charset=utf-8',
+                              '.avt': 'text/plain',
+                              '.log': 'text/plain',
+                              '.mjs': 'text/javascript; charset=utf-8',
+                              })
+    mtypes=cfgparam.get('MimeType')
+    if mtypes is not None:
+      for mtype in mtypes:
+        self.overwrite_map[mtype['extension']]=mtype['type']
+    AVNWorker.__init__(self, cfgparam)
+    self.type=AVNWorker.Type.HTTPSERVER
+    self.interfaceReader=None
+    self.addresslist=[]
+    self.handlerMap={}
+    self.externalHandlers={} #type: dict[str,AVNWorker | StaticPathHandler] #prefixes that will be handled externally
+    self.webSocketHandlers={} #type: dict[str,AVNWorker]
+    self.requestHandler=RequestHandlerClass
+
+  def updatePathMappings(self,mappings:dict):
+      '''
+      will be called by main before all handlers are started
+      to overwrite mappings with config parameters
+      :param mappings:
+      :return:
+      '''
+      for k,v in mappings.items():
+          self.pathmappings[k]=v
+      self._setDefaultMappings()
+
+  def _setDefaultMappings(self):
+      if self.pathmappings.get(self.PATH_VIEWER) is None:
+          self.pathmappings[self.PATH_VIEWER] = os.path.join(self.basedir, self.PATH_VIEWER)
+      for dd in [self.PATH_USER, self.PATH_CHARTS]:
+          if self.pathmappings.get(dd) is None:
+              self.pathmappings[dd] = os.path.join(self.datadir, dd)
+
+  def run(self):
+    self.freeAllUsedResources()
+    self.externalHandlers["/" + self.PATH_VIEWER] = StaticPathHandler(self.PATH_VIEWER, self.pathmappings[self.PATH_VIEWER])
+    self.externalHandlers["/" + self.PATH_MODULES] = StaticPathHandler(self.PATH_MODULES,
+                                                                      os.path.join(self.pathmappings[self.PATH_VIEWER],'modules'))
+    self.externalHandlers["/" + self.PATH_USER + "/icons"] = StaticPathHandler(self.PATH_USER + "/icons", os.path.join(
+        self.pathmappings[self.PATH_USER], "icons"))
+    server_address=(self.param['httpHost'],int(self.param[self.PORT_CONFIG]))
+    http.server.HTTPServer.__init__(self, server_address, self.requestHandler)
+    self.claimUsedResource(UsedResource.T_TCP,self.server_port,force=True)
+    self.setNameIfEmpty("%s-%d"%(self.getName(),self.server_port))
+    AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
+    self.setInfo('main',"serving at port %s"%(str(self.server_port)),WorkerStatus.RUNNING)
+    if hasIfaces:
+      self.interfaceReader=threading.Thread(target=self.readInterfaces)
+      self.interfaceReader.daemon=True
+      self.interfaceReader.start()
+    self.serve_forever()
+
+  def isNavUrl(self,url):
+      '''
+      returns the trailing path after the navurl if the url matches the navurl
+      can be empty
+      returns None otherwise
+      :param url:
+      :return:
+      '''
+      if url is None:
+          return False
+      cfg=self.getConfigParam()
+      for navurl in [cfg.get('navurl'),cfg.get('navurlCompat')]:
+        if navurl is not None and url.startswith(navurl):
+            return url[len(navurl)+1:]
+      return False
+
+  def handlePathmapping(self,path):
+    if not self.pathmappings is None:
+      for mk in list(self.pathmappings.keys()):
+        if path.find(mk) == 0:
+          path=self.pathmappings[mk]+path[len(mk):]
+          AVNLog.ld("remapped path to",path)
+          return path
+      path=os.path.join(self.basedir,path)
+      return path
+    else:
+      return path
+
+  def getChartBaseDir(self):
+    return self.handlePathmapping(self.PATH_CHARTS)
+
+
+  #read out all IP addresses
+  def readInterfaces(self):
+    while True:
+      addresses=[]
+      interfaces=netifaces.interfaces()
+      for intf in interfaces:
+        try:
+            intfaddr=netifaces.ifaddresses(intf)
+            if intfaddr is not None:
+                ips=intfaddr.get(netifaces.AF_INET)
+                if ips is not None:
+                    for ip in ips:
+                        if ip.get('addr') is not None:
+                            addresses.append(ip.get('addr')+":"+str(self.server_port))
+        except Exception as e:
+            AVNLog.error("error reading network interfaces:"+str(e))
+      self.addresslist=addresses
+      time.sleep(5)
+
+  def getStatusProperties(self):
+    if self.addresslist is not None and len(self.addresslist) > 0:
+      return {'addresses':self.addresslist}
+    else:
+      return {}
+
+  def registerPathHandler(self,prefix,handler):
+    self.externalHandlers[prefix]=handler
+  def registerWebsocketHandler(self,prefix,handler):
+      self.webSocketHandlers[prefix]=handler
+  def registerRequestHandler(self,type,handler):
+    self.handlerMap[type]=handler
+
+  def getRequestHandler(self,type):
+    handler=self.handlerMap.get(type)
+    if handler is None:
+      return None
+    if handler.isDisabled():
+      return None
+    return handler
+
+
+  def doExternalMappings(self,path,query,handler=None):
+    requestParam=urllib.parse.parse_qs(query,True)
+    for prefix,phandler in self.externalHandlers.items():
+      if path.startswith(prefix) and not phandler.isDisabled():
+        path=path[len(prefix):]
+        path=re.sub('^/*','',path)
+        try:
+          return phandler.handlePathRequest(path, requestParam, server=self,handler=handler)
+        except:
+          AVNLog.error("external mapping failed for %s: %s",path,traceback.format_exc())
+          raise
+  def tryExternalMappings(self,path,query,handler=None):
+    rt=self.doExternalMappings(path,query,handler)
+    if isinstance(rt,AVNDownloadError) and rt.responseCode == 404:
+        #legacy fallback:
+        #new pathes are /user/viewer and /user/images - they are handled
+        #by the new directory handlers - and they should habe been found
+        #we try to fallback from /user/icons to /user/images
+        FBPATH="/user/icons"
+        if path.startswith(FBPATH):
+            path="/"+self.PATH_USER+"/images/"+path[len(FBPATH):]
+            return self.doExternalMappings(path,query,handler)
+    return rt
+
+  def getWebSocketsHandler(self,path,query,handler):
+    requestParam=urllib.parse.parse_qs(query,True)
+    path=posixpath.normpath(path)
+    for prefix in list(self.webSocketHandlers.keys()):
+      if path.startswith(prefix) and not self.webSocketHandlers[prefix].isDisabled():
+        # the external handler can either return a mapped path (already
+        # converted in an OS path - e.g. using plainUrlToPath)
+        # or just do the handling by its own and return None
+        try:
+          return self.webSocketHandlers[prefix].handleWebSocketRequest(prefix, path,handler=handler)
+        except:
+          AVNLog.error("no websocket handler %s: %s",path,traceback.format_exc())
+        return None
+
+
+avnav_handlerList.registerHandler(AVNHttpServer)
+
+

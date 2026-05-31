@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- configuration for avnav_server on windows
+     we do not have a gpsd and we can only directly use serial readers -->
+<AVNServer>
+<Worker>
+<AVNFeeder/>
+<!-- provide your data at this port for e.g. OpenCPN -->
+<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50"/>
+<AVNUdpReader minTime="100" port="34667"/>
+<AVNTrackWriter interval="10" distance="100"/>
+<AVNHttpServer navurl="/viewer/avnav_navi.php" chartbase="maps" upzoom="0" empty="nonexist">
+	<MimeType extension=".avt" type="text/plain"></MimeType>
+	<MimeType extension=".log" type="text/plain"></MimeType>
+</AVNHttpServer>
+<!-- create chart overview files -->
+<AVNChartHandler></AVNChartHandler>
+<!--  routing handler -->
+<AVNRouter/>
+<AVNNmeaLogger></AVNNmeaLogger>
+<AVNImporter/>
+<AVNSignalKHandler enabled="False"/>
+<AVNPluginHandler>
+<builtin-canboat enabled="False"/>
+</AVNPluginHandler>
+<AVNAvahi enabled="False"/>
+<AVNCommandHandler>
+<Command name="sound" command="windows\sound.cmd" repeat="1"/>
+</AVNCommandHandler>
+</Worker>
+</AVNServer>

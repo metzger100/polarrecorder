@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>avnav.conf Generator</title>
+    <link rel="stylesheet" href="index.css">
+    <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="sha512.js"></script>
+    <script type="text/javascript" src="sha512crypt.js"></script>
+</head>
+<body>
+<div class="configui container">
+    <h2>avnav.conf Generator</h2>
+    <div id="warn">Warning: This is a preview version, do not use for production</div>
+    <div class="info" id="info"></div>
+    <div class="row">
+            <span class="label">Image Realease</span>
+            <select id="IMAGE_VERSION" data-default="trixie"></select>
+    </div>
+    <div class="parameters" id="parameterContainer">
+        <div class="row">
+            <span class="label"><a href="../docs/install.html#configSEQUENCE" target="cfghelp">Config Sequence</a></span>
+            <input type="number" id="AVNAV_CONFIG_SEQUENCE" value="1" />
+        </div>
+        <div class="row">
+            <span class="label">Wifi SSID</span>
+            <input type="text" id="AVNAV_SSID" value="avnav" />
+        </div>
+        <div class="row">
+            <span class="label">Wifi Password</span>
+            <input type="text" id="AVNAV_PSK" value="avnav-secret"/>
+        </div>
+        <div class="row">
+            <span class="label">Wifi Country<span class="since">(since 20210429)</span></span>
+            <select id="AVNAV_WIFI_COUNTRY" data-default="DE"></select>
+        </div>
+        <div class="row bookworm">
+            <span class="label">Internal Wifi as Client<span class="since">(since 20210429)</span></span>
+            <input type="checkbox" id="AVNAV_WIFI_CLIENT"/>
+        </div>
+        <div class="row">
+            <span class="label">Hostname<span class="since">(since 20210429)</span></span>
+            <input type="text" id="AVNAV_HOSTNAME" value="avnav"/>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi interface</span>
+            <input type="text" id="AVNAV_WIFI_INTF" value="wlan0"/>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi band</span>
+            <select id="AVNAV_WIFI_BAND" data-default="bg"></select>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi channel</span>
+            <input type="text" id="AVNAV_WIFI_CHANNEL" value="7"/>
+        </div>
+        <div class="row trixie">
+            <span class="label">Wifi address</span>
+            <input type="text" id="AVNAV_WIFI_ADDRESS" value="192.168.30.10/24"/>
+        </div>
+        <div class="row">
+            <span class="label">User pi Password</span>
+            <input type="text" id="AVNAV_PASSWD" value="raspberry"/>
+        </div>        <div class="row">
+            <span class="label" ><a href="../docs/install.html#configBOARDS" target="cfghelp">Base Board</a><span class="since">(since 202303xx)</span></span>
+            <select id="AVNAV_BASE_BOARD" data-default="NONE"></select>
+        </div>
+        <div class="row">
+            <span class="label"><a href="../docs/install.html#configHATS" target="cfghelp">HAT</a><span class="since">(since 202303xx)</span></span>
+            <select id="AVNAV_HAT" data-default="NONE"></select>
+        </div>
+        <div class="row bookworm">
+            <span class="label"><a href="../docs/install.html#configMODULES" target="cfghelp">Module RTL8188EU</a><span class="since">(since 20230426)</span></span>
+            <input type="checkbox" id="AVNAV_MODULE_RTL8188EU"></input>
+        </div>
+        <div class="row bookworm">
+            <span class="label"><a href="../docs/install.html#configMODULES" target="cfghelp">Module RTL8192EU</a><span class="since">(since 20230426)</span></span>
+            <input type="checkbox" id="AVNAV_MODULE_RTL8192EU"></input>
+        </div>
+        <div class="row">
+            <span class="label">TimeZone<span class="since">(since 20210429)</span></span>
+            <select id="AVNAV_TIMEZONE" data-default="Europe/Berlin"></select>
+        </div>
+        <div class="row">
+            <span class="label">KeyboardLayout<span class="since">(since 20210429)</span></span>
+            <select id="AVNAV_KBLAYOUT" data-default="de"></select>
+        </div>
+        <div class="row">
+            <span class="label">KeyboardType<span class="since">(since 20210429)</span></span>
+            <select id="AVNAV_KBMODEL" data-default="pc105"></select>
+        </div>
+        <div class="row">
+            <span class="label">TouchSupport<span class="since">(since 202204xx)</span></span>
+            <input type="checkbox" id="AVNAV_STARTX" >
+        </div>
+        <div class="row">
+            <span class="label">DisplayDPI<span class="since">(since 202204xx)</span></span>
+            <input type="number" id="AVNAV_DPI" value="96"/>
+        </div>
+        <div class="row">
+            <span class="label">OnScreen Keyboard Height<span class="since">(since 202204xx)</span></span>
+            <input type="number" id="AVNAV_KEYHEIGHT" value="7"/>
+        </div>
+        <div class="row">
+            <span class="label">Hide Cursor<span class="since">(since 202204xx)</span></span>
+            <input type="checkbox" id="AVNAV_HIDE_CURSOR" checked/>
+        </div>
+    </div>
+    <div class="buttons">
+        <button name="upload" id="upload">Load Current</button>
+        <button name="download" id="download">Download</button>
+    </div>
+    <div class="visually-hidden">
+        <input type="file" id="fileSelect">
+    </div>
+<div class="footer">
+    SHA512 thanks to https://github.com/mvo5/sha512crypt-node
+</div>
+<div class="dialogBack hidden">
+    <div class="dialog">
+        <h2>Compute DPI</h2>
+        <div class="row">
+            <span class="label">Screen Width(mm)</span>
+            <input type="number" value="245" id="XScreenWidth">
+        </div>
+        <div class="row">
+            <span class="label">Screen Width(pixel)</span>
+            <input type="number" value="1920" id="XScreenWPix">
+        </div>
+        <div class="row">
+            <span class="label">Screen Height(mm)</span>
+            <input type="number" value="150" id="XScreenHeight">
+        </div>
+        <div class="row">
+            <span class="label">Screen Height(pixel)</span>
+            <input type="number" value="1280" id="XScreenHPix">
+        </div>
+        <div class="row">
+            <span class="label">DPI</span>
+            <div id="XScreenDPI"></div>
+        </div>
+        <div class="row">
+            <button id="dpiCancel">Cancel</button>
+            <button id="dpiOk">OK</button>
+         </div>
+    </div>
+</div>
+</div>
+<a id="downloadLink"></a>
+
+</body>
+</html>

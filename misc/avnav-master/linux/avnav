@@ -1,0 +1,149 @@
+#! /bin/sh
+#set -x
+avnavdir=`readlink -f $0`
+avnavdir=`dirname $avnavdir`
+pdir=$avnavdir
+#demochart from the viewer/demo dir, will be copied to the charts dir
+#if also copying the template
+DEMOCHART="osm-online.xml"
+
+basedir=""
+chartdir=""
+xmlfile=""
+viewer=""
+silent=0
+loglevel="INFO"
+port=""
+template="$avnavdir/avnav_template.xml"
+
+usage(){
+  echo "usage: $0 [-e] [-d] [-q] [-w basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBase] [-v viewerDir]"
+  echo "       -w basedir     : data dir for avanv routes,tracks,charts,..."
+  echo "       -c chartdir    : separate dir for charts (instead of basedir/charts)"
+  echo "       -x cfgfile     :  start the server directly with this config "
+  echo "       -t template    : create basedir/avnav_server.xml from this if not found"
+  echo "       -l loglevel    : set the log level (ERROR|INFO|DEBUG)"
+  echo "       -e             : directly fail on any errors in avnav_server.xml instead of trying avnav_server.xml.ok"
+  echo "       -d             : start with loglevel debug"
+  echo "       -q             : do not log to stderr"
+  echo "       -o port        : use port as http server port"
+  echo "       -n envFile     : read environment variables from env file if it exists"
+  echo "       -------------- some development options --------------"
+  echo "       -a softwareBase: find the server software at this directory"
+  echo "       -v viewerDir   : find the viewer software at this directory"
+}
+
+err(){
+  echo "ERROR: $*"
+  exit 1
+}
+
+
+while getopts dec:b:w:x:qt:a:v:l:n:o: opt; do
+case $opt in
+  d)
+    loglevel="DEBUG"
+    ;;
+  e)
+    eopt="-e"
+    ;;
+  c)
+    chartdir=$OPTARG
+    ;;
+  b)
+    basedir=$OPTARG
+    ;;
+  w)
+    basedir=$OPTARG
+    ;;
+  x)
+    xmlfile=$OPTARG
+    [ ! -f "$xmlfile" ] && err "config file $xmlfile not found"
+    ;;
+  q)
+    silent=1
+    ;;
+  t)
+    template="$OPTARG"
+    [ ! -f "$template" ] && err "template $template not found"
+    ;;
+  a)
+    avnavdir="$OPTARG"
+    ;;
+  v)
+    viewer="$OPTARG"
+    ;;
+  l)
+    loglevel="$OPTARG"
+    ;;
+  n)
+    envFile="$OPTARG"
+    if [ -r "$envFile" ]  ; then
+    . "$envFile"
+    fi
+    ;;
+  o)
+    port="-o $OPTARG"
+    ;;
+  \?)
+    echo "invalid option $opt"
+    usage
+    exit 1
+esac
+done
+shift $((OPTIND-1))
+
+
+startprog="$avnavdir/server/avnav_server.py"
+[ ! -x $startprog ] && err "$startprog not found"
+
+if [ "$basedir" = "" ] ; then
+  if [ "$HOME" = "" ] ; then
+    err "no parameter -b is set and environment HOME is unset"
+  fi
+  basedir="$HOME/avnav"
+  if [ -d $basedir/data ] ; then
+    basedir=$basedir/data
+    echo "using old style basedir $basedir"
+  fi
+fi
+if [ ! -d $basedir ] ; then
+    echo "creating $basedir"
+    mkdir -p $basedir || err "unable to create $basedir"
+fi
+basedir=`readlink -f $basedir`
+for d in log charts routes tracks ; do
+  if [ ! -d "$basedir/$d" ] ; then
+    mkdir -p "$basedir/$d" || err "unable to create $basedir/$p"
+  fi
+done
+if [ "$chartdir" = "" ] ; then
+  chartdir="$basedir/charts"
+fi
+if [ ! -d "$chartdir" ] ; then
+  mkdir -p "$chartdir" || err "unable to create chart dir $chartdir"
+fi
+if [ "$viewer" = "" ]; then
+  viewer="$avnavdir/viewer"
+fi
+viewer=`readlink -f "$viewer"`
+if [ "$xmlfile" = "" ] ; then
+  xmlfile=$basedir/avnav_server.xml
+  if [ ! -f "$xmlfile" ] ; then
+    echo "creating initial $xmlfile"
+    cp "$template"  $xmlfile || err "unable to create $xmlfile"
+    demo="$viewer/demo/$DEMOCHART"
+    if [ -f "$demo" ];then
+      echo "copying demo chart $demo"
+      cp "$demo" "$chartdir"
+    fi  
+  fi
+fi
+echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
+if [ "$silent" = 0 ] ; then
+    exec $startprog $port  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer" $dopt $eopt "$xmlfile"
+else
+    exec $startprog  $port -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer" $dopt $eopt "$xmlfile" 
+fi
+
+

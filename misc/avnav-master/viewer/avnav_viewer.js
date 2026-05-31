@@ -1,0 +1,200 @@
+/*
+# vim: ts=2 sw=2 et
+###############################################################################
+# Copyright (c) 2014, Andreas Vogel andreas@wellenvogel.net
+# parts of software from movable-type
+# http://www.movable-type.co.uk/
+# for their license see the file latlon.js
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+
+icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-minimal-icons/
+                  http://ionicons.com/ (MIT license)
+*/
+
+import splitsupport from "./util/splitsupport";
+import React from 'react';
+import propertyHandler from './util/propertyhandler';
+import App from './App.jsx';
+import keys from './util/keys.jsx';
+import globalStore from './util/globalstore.jsx';
+import base from './base.ts';
+import Requests from './util/requests.js';
+import Toast from './components/Toast.jsx';
+import Api from './util/api.impl.ts';
+import registerRadial from './components/CanvasGaugeDefinitions.js';
+import assign from 'object-assign';
+import LeaveHandler from './util/leavehandler';
+import isIosSafari from '@braintree/browser-detection/is-ios-safari';
+import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
+import {createRoot} from "react-dom/client";
+import {loadJs, loadOrUpdateCss} from "./util/helper";
+import pluginmanager from "./util/pluginmanager";
+import {layoutLoader} from "./util/layouthandler";
+import {showParameterDialog} from "./components/ParameterDialog";
+import createExports from './exportmodules/provider';
+
+if (! window.avnav){
+    window.avnav={};
+}
+window.avnavLegacy=Api;
+
+
+function getParam(key)
+{
+    // Find the key and everything up to the ampersand delimiter
+    let value=RegExp(""+key+"[^&]+").exec(window.location.search);
+
+    // Return the unescaped value minus everything starting from the equals sign or an empty string
+    return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
+}
+const DEFAULT_NAVURL='/api';
+/**
+ * main function called when dom is loaded
+ *
+ */
+export default function() {
+    let storePrefix=getParam('storePrefix');
+    if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
+    if (LocalStorage.hasPrefix()){
+        //fill the prefixed data with the unprefixed one if prefixed is not available
+        for (let n in PREFIX_NAMES){
+            let sn=PREFIX_NAMES[n];
+            let item=LocalStorage.getItem(sn,undefined);
+            if (! item){
+                item=LocalStorage.getItem(sn,undefined);
+                if (item){
+                    LocalStorage.setItem(sn,undefined,item);
+                }
+            }
+
+        }
+    }
+    propertyHandler.resetToSaved();
+    propertyHandler.savePrefixedValues();
+    //some workaround for lees being broken on IOS browser
+    //less.modifyVars();
+    let body=document.querySelector('body');
+    body.style.display='block';
+    if (isIosSafari()){
+        //strange bug on IOS 13 safari - seems that it does not recompute the height after rotating and hiding address bar...
+        body.style.height="100vh";
+        document.querySelector('html').style.height="100vh";
+    }
+
+    if (getParam('log')) window.avnav.debugMode=true;
+    let navurl=getParam('navurl');
+    if (navurl){
+        globalStore.storeData(keys.gui.global.navUrl,navurl,true);
+        globalStore.storeData(keys.properties.routingServerError,false,true);
+    }
+    else {
+        globalStore.storeData(keys.properties.routingServerError,true,true);
+        globalStore.storeData(keys.gui.global.navUrl,DEFAULT_NAVURL,true);
+    }
+    let ro="readOnlyServer";
+    if (getParam(ro) && getParam(ro) == "true"){
+        globalStore.storeData(keys.properties.connectedMode,false,true);
+        globalStore.storeData(keys.gui.capabilities.canConnect,false,true);
+    }
+    if (getParam("noCloseDialog") === "true"){
+        LeaveHandler.stop();
+    }
+    if (getParam('preventAlarms') === 'true'){
+        globalStore.storeData(keys.gui.global.preventAlarms,true);
+    }
+    if (getParam('ignoreAndroidBack') === 'true'){
+        globalStore.storeData(keys.gui.global.ignoreAndroidBack,true);
+    }
+    if (getParam('splitMode') === 'true'){
+        globalStore.storeData(keys.gui.global.splitMode,true);
+    }
+
+    const loadScripts=(loadList)=>{
+        for (let i in  loadList) {
+            let script=loadList[i];
+            let scriptname;
+            let id;
+            try {
+                if (typeof (script) === 'object') {
+                    scriptname = script.url;
+                    id = script.id
+                }
+                else{
+                    scriptname = script;
+                }
+                if (scriptname.match(/js$/)) { //if filename is a external JavaScript file
+                    loadJs(scriptname);
+                } else { //if filename is an external CSS file
+                    loadOrUpdateCss(scriptname, id);
+                }
+            }catch (e){
+                console.log("error loading script/css "+scriptname+": ",e);
+            }
+        }
+    };
+    let addScripts="addScripts";
+    if (getParam(addScripts)){
+        let addList=[];
+        getParam(addScripts).split(',').forEach((script)=>{
+            addList.push(script);
+        })
+        loadScripts(addList);
+    }
+    const doLateLoads = async () => {
+        await createExports();
+        createRoot(document.getElementById('new_pages')).render(<App/>);
+        //ios browser sometimes has issues with less...
+        setTimeout(function () {
+            propertyHandler.incrementSequence();
+        }, 1000);
+        await layoutLoader.init();
+        try {
+            await pluginmanager.start();
+        } catch (error) {
+            Toast("unable to load plugin/user data: " + error);
+        }
+        pluginmanager.setDialogStarter(showParameterDialog);
+    };
+    //register some widget definitions
+    registerRadial();
+    if (splitsupport.setSplitFromLast()){
+        return;
+    }
+    //check capabilities
+    let falseCapabilities={};
+    for (let k in keys.gui.capabilities){
+        falseCapabilities[k]=false;
+    }
+    Requests.getJson({
+        request:'api',
+        type:'config',
+        command:'capabilities'
+    }).then(async (json)=>{
+        let capabilities=assign({},falseCapabilities,json.data);
+        globalStore.storeMultiple(capabilities,keys.gui.capabilities);
+        await doLateLoads();
+    }).catch(async (error)=>{
+        globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
+        await doLateLoads();
+    });
+    base.log("avnav loaded");
+};
+

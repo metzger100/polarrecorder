@@ -1,0 +1,481 @@
+/**
+ *###############################################################################
+ # Copyright (c) 2012-2020 Andreas Vogel andreas@wellenvogel.net
+ #
+ #  Permission is hereby granted, free of charge, to any person obtaining a
+ #  copy of this software and associated documentation files (the "Software"),
+ #  to deal in the Software without restriction, including without limitation
+ #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ #  and/or sell copies of the Software, and to permit persons to whom the
+ #  Software is furnished to do so, subject to the following conditions:
+ #
+ #  The above copyright notice and this permission notice shall be included
+ #  in all copies or substantial portions of the Software.
+ #
+ #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
+ #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ #  DEALINGS IN THE SOFTWARE.
+ #
+ ###############################################################################
+ */
+
+import Requests from '../util/requests.js';
+import ChartSourceBase, {
+    addToSettings, buildOlFontConfig, editableOverlayParameters, FoundFeatureFlags, orderSettings, TEXT_FORMAT_SETTINGS
+} from './chartsourcebase.js';
+import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
+import {Vector as olVectorSource} from 'ol/source';
+import {Vector as olVectorLayer} from 'ol/layer';
+import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
+import {Feature as olFeature} from 'ol';
+import {GPX as olGPXFormat} from 'ol/format';
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
+import navobjects from "../nav/navobjects";
+import NavCompute from "../nav/navcompute";
+import routeobjects from "../nav/routeobjects";
+import {getClosestRoutePoint} from "../nav/routeeditor";
+import Mapholder from "./mapholder";
+import {OverlayFeatureInfo, RouteFeatureInfo, TrackFeatureInfo} from "./featureInfo";
+import {getRouteStyles} from "./routelayer";
+import {fetchItem} from "../util/itemFunctions";
+import base from "../base";
+import {getav, setav} from "../util/helper";
+
+export const stylePrefix="style."; // the prefix for style attributes
+
+
+class OwnGpx extends olGPXFormat{
+    constructor(mapholder) {
+        super();
+        this.mapholder=mapholder;
+    }
+
+    readFeaturesFromNode(node, opt_options) {
+        let routes=node.ownerDocument.getElementsByTagName('rte');
+        let rt=[];
+        for (let i=0;i<routes.length;i++){
+            let rtel=routes[i];
+            rtel.parentNode.removeChild(rtel);
+            let route=new routeobjects.Route();
+            route.fromXmlNode(rtel);
+            if (route.name !== undefined || route.points.length > 0){
+                let coordinates=[];
+                route.points.forEach((pt)=>{
+                    coordinates.push(this.mapholder.transformToMap([pt.lon,pt.lat]));
+                })
+                let feature=new olFeature();
+                feature.setGeometry(new olLineString(coordinates));
+                feature.set('name',route.name);
+                feature.set('route',route);
+                rt.push(feature);
+            }
+        }
+        let tracks=node.ownerDocument.getElementsByTagName('trk');
+        for (let i=0;i<tracks.length;i++){
+            let trkel=tracks[i];
+            trkel.parentNode.removeChild(trkel);
+            const feature=super.readFeatureFromNode(trkel,opt_options);
+            if (feature){
+                feature.set('track',true);
+                rt.push(feature);
+            }
+        }
+        let of=super.readFeaturesFromNode(node, opt_options);
+        return rt.concat(of);
+    }
+}
+
+const getRoutePointName=(feature,idx)=>{
+    if (!feature) return;
+    const route=feature.get('route');
+    if (! route || ! route.points) return;
+    return route.points[idx].name;
+}
+
+const getSupportedStyleParameters=(isRoute)=>{
+    const routeStyles=getRouteStyles();
+    return [
+        editableOverlayParameters.lineWidth.clone({default:globalstore.getData(isRoute?keys.properties.routeWidth:keys.properties.trackWidth)}),
+        editableOverlayParameters.lineColor.clone({default:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor)}),
+        editableOverlayParameters.fillColor.clone({default:isRoute?routeStyles.normalWpStyle.color:'rgba(255,255,0,0.4)'}),
+        editableOverlayParameters.strokeWidth.clone({default:0}),
+        editableOverlayParameters.strokeColor.clone({default:globalstore.getData(isRoute?keys.properties.routeColor:keys.properties.trackColor) }),
+        editableOverlayParameters.circleWidth.clone({default:globalstore.getData(keys.properties.routeWpSize) }),
+        editableOverlayParameters.showText.clone({default:isRoute}),
+        editableOverlayParameters.textSize.clone({default:globalstore.getData(keys.properties.routingTextSize)}),
+        editableOverlayParameters.textColor,
+        editableOverlayParameters.textOffset,
+        editableOverlayParameters.featureFormatter,
+        editableOverlayParameters.minZoom,
+        editableOverlayParameters.maxZoom,
+        editableOverlayParameters.minScale,
+        editableOverlayParameters.maxScale,
+        editableOverlayParameters.icon,
+        editableOverlayParameters.defaultIcon
+    ]
+}
+
+class GpxChartSource extends ChartSourceBase{
+    /**
+     *
+     * @param mapholer
+     * @param chartEntry
+     *        properties: url - the url of the gpx
+     *                    icons - the base url for icons (if points have a sym)
+     *                    defaultIcon - the url for an icon if sym not found (opt)
+     *                    minZoom - minimal zoom (opt)
+     *                    maxZoom - maximal zoom (opt)
+     *                    minScale - min zoom, lower zoom decrease symbol size (opt)
+     *                    maxScale - max zoom, higher zooms increase symbol size (opt)
+     *                    opacity - 0...1 (opt)
+     */
+    constructor(mapholer, chartEntry) {
+        super(mapholer,chartEntry);
+        this.styleMap={};
+        this.styleFunction=this.styleFunction.bind(this);
+        this.styles={};
+
+        this.source=undefined;
+        this.isRoute=false;
+        globalstore.register(()=>{
+            if (this.isRoute){
+                this.redraw();
+            }
+        },[keys.nav.routeHandler.useRhumbLine])
+        this.routePoints=[];
+    }
+
+    redraw() {
+        if (this.source) {
+            this.source.clear();
+            this.source.refresh();
+            return true;
+        }
+    }
+    buildStyles(){
+        const supportedStyles=getSupportedStyleParameters(this.isRoute); //get the defaults
+        this.styleParameters=this.buildStyleConfig(supportedStyles);
+        const textStyle= new olText(
+            buildOlFontConfig(this.styleParameters,{
+                declutterMode: 'declutter',
+                offsetY: this.styleParameters[editableOverlayParameters.textOffset],
+                scale: this.getScale()
+            })
+        )
+        this.styles = {
+            Point: new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: this.styleParameters[editableOverlayParameters.fillColor],
+                    }),
+                    radius: this.styleParameters[editableOverlayParameters.circleWidth]/2,
+                    stroke: new olStroke({
+                        color: (this.styleParameters[editableOverlayParameters.strokeWidth]>0)?
+                            this.styleParameters[editableOverlayParameters.strokeColor]:this.COLOR_INVISIBLE,
+                        width: this.styleParameters[editableOverlayParameters.strokeWidth],
+                    })
+                }),
+                text: this.styleParameters[editableOverlayParameters.showText]?textStyle:undefined
+            }),
+            LineString: new olStyle({
+                stroke: new olStroke({
+                    color: (this.styleParameters[editableOverlayParameters.lineWidth]>0)?
+                        this.styleParameters[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                    width: this.styleParameters[editableOverlayParameters.lineWidth],
+                })
+            }),
+            MultiLineString: new olStyle({
+                stroke: new olStroke({
+                    color: (this.styleParameters[editableOverlayParameters.lineWidth]>0)?this.styleParameters[editableOverlayParameters.lineColor]:this.COLOR_INVISIBLE,
+                    width: this.styleParameters[editableOverlayParameters.lineWidth],
+                })
+            }),
+            RoutePoint: new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: this.styleParameters[editableOverlayParameters.fillColor],
+                    }),
+                    radius: this.styleParameters[editableOverlayParameters.circleWidth] / 2,
+                }),
+                text: this.styleParameters[editableOverlayParameters.showText]?textStyle:undefined
+            })
+        };
+    }
+    styleFunction(feature,resolution) {
+        const fallbackUrl=this.styleParameters[editableOverlayParameters.defaultIcon];
+        let type=feature.getGeometry().getType();
+        if (type === 'Point'){
+            let rt=this.styles[type];
+            if(this.styleParameters[editableOverlayParameters.icon]||this.styleParameters[editableOverlayParameters.defaultIcon]) {
+                let sym = feature.get('sym');
+                if (!sym && this.styleParameters[editableOverlayParameters.defaultIcon]) {
+                    sym = "defaultIcon"; //arbitrary name that is neither an external or absolute URL
+                }
+                if (sym) {
+                    if (!this.styleMap[sym]) {
+                        rt = rt.clone();
+                        const icon=this.createIconWithFallback(
+                            this.getSymbolUrl(sym, '.png'),
+                            fallbackUrl
+                        )
+                        rt.setImage(
+                          icon
+                        );
+                        this.styleMap[sym] = rt;
+                    }
+                    else{
+                        rt=this.styleMap[sym];
+                    }
+                }
+            }
+            const scale=this.getScale();
+            const image=rt.getImage();
+            if (image) image.setScale(scale);
+            let textStyle=rt.getText();
+            if (textStyle) {
+                textStyle = textStyle.clone();
+                textStyle.setScale(scale);
+                const txt = feature.get('name') || feature.get('desc')||feature.get('description');
+                if (txt) {
+                    textStyle.setText(txt);
+                }
+                else{
+                    textStyle.setText('');
+                }
+                rt.setText(textStyle);
+            }
+            return rt;
+        }
+        if (type === 'LineString'){
+            //route
+            let geometry=feature.getGeometry();
+            let styles=[this.styles[type]];
+            let isFirst=true;
+            let ptIdx=0;
+            geometry.forEachSegment((start,end)=>{
+                if (isFirst){
+                    styles.push(this.getRoutePointStyle(start,getRoutePointName(feature,ptIdx)));
+                    isFirst=false;
+                    ptIdx++;
+                }
+                styles.push(this.getRoutePointStyle(end,getRoutePointName(feature,ptIdx)));
+                ptIdx++;
+            })
+            return styles;
+        }
+        if (type === 'MultiLineString'){
+            //route or track
+            let geometry=feature.getGeometry();
+            const route=feature.get('route');
+            let styles=[this.styles[type]];
+            if (route) {
+                let isFirst = true;
+                let lineStrings = geometry.getLineStrings();
+                let ptIdx = 0;
+                lineStrings.forEach((lineString) => {
+                    let coordinates = lineString.getCoordinates();
+                    if (coordinates.length > 1) {
+                        if (isFirst) {
+                            styles.push(this.getRoutePointStyle(coordinates[0], getRoutePointName(feature, ptIdx)));
+                            isFirst = false;
+                            ptIdx++;
+                        }
+                        styles.push(this.getRoutePointStyle(coordinates[coordinates.length - 1], getRoutePointName(feature, ptIdx)));
+                        ptIdx++;
+                    }
+                })
+            }
+            return styles;
+        }
+        return this.styles[feature.getGeometry().getType()];
+    };
+    getRoutePointStyle(coordinates,name){
+        const base=this.styles.RoutePoint;
+        let rt= new olStyle({
+            geometry: new olPoint(coordinates),
+            image: new olCircle({
+                fill: base.getImage().getFill(),
+                radius: base.getImage().getRadius(),
+                scale: this.getScale()
+            }),
+            text: (base.getText())?base.getText().clone():undefined
+        });
+        const textStyle=rt.getText();
+        if (textStyle) textStyle.setScale(this.getScale());
+        if (name && textStyle) textStyle.setText(name);
+        return rt;
+    }
+    prepareInternal() {
+        let url = this.chartEntry.url;
+        return new Promise((resolve, reject)=> {
+            if (!url) {
+                reject("no url for "+this.chartEntry.name);
+                return;
+            }
+            this.source = new olVectorSource({
+                format: new OwnGpx(this.mapholder),
+                loader: (extent, resolution, projection) => {
+                    fetchItem(this.chartEntry)
+                        .then((gpx) => {
+                            gpx = stripExtensions(gpx);
+                            let features = this.source.getFormat().readFeatures(gpx, {
+                                extent: extent,
+                                featureProjection: projection,
+                            });
+                            if (features) {
+                                features.forEach((feature) => {
+                                    let geometry = feature.getGeometry();
+                                    if (geometry instanceof olLineString) {
+                                        this.isRoute = 1;
+                                        //this is a route
+                                        let coordinates = geometry.getCoordinates();
+                                        if (coordinates.length > 1 && !globalstore.getData(keys.nav.routeHandler.useRhumbLine)) {
+                                            let newGeometry = new olMultiLineString([]);
+                                            let start = new navobjects.Point();
+                                            start.fromCoord(this.mapholder.transformFromMap(coordinates[0]));
+                                            let end = new navobjects.Point();
+                                            for (let i = 1; i < coordinates.length; i++) {
+                                                let newCoordinates = [];
+                                                end.fromCoord(this.mapholder.transformFromMap(coordinates[i]));
+                                                let points = NavCompute.computeCoursePoints(start, end, 3);
+                                                points.forEach((point) => {
+                                                    newCoordinates.push(this.mapholder.transformToMap([point.lon, point.lat]));
+                                                })
+                                                start.lat = end.lat;
+                                                start.lon = end.lon;
+                                                newGeometry.appendLineString(new olLineString(newCoordinates));
+                                            }
+                                            feature.setGeometry(newGeometry);
+                                        }
+                                    }
+                                })
+                            }
+
+                            this.source.addFeatures(
+                                features
+                            );
+                            this.buildStyles();
+                        })
+                        .catch((err) => {
+                            base.log(`unable to load geojson ${this.chartEntry.name}: ${err}`);
+                            this.source.removeLoadedExtent(extent);
+                        })
+                },
+                wrapX: true
+            });
+            this.buildStyles();
+            let layerOptions={
+                source: this.source,
+                style: this.styleFunction,
+                opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
+            };
+            if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;
+            if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom=this.chartEntry.maxZoom;
+            let vectorLayer = new olVectorLayer(layerOptions);
+            resolve([vectorLayer]);
+        });
+    }
+    featureToInfo(feature,pixel){
+        if (! feature) {
+            return;
+        }
+        let rt;
+        const ot=(this.chartEntry||{}).type;
+        const oname=this.getName();
+        const fname=feature.get('name');
+        if (ot==='track'){
+            rt=new TrackFeatureInfo({title:oname,isOverlay:true,name:this.getChartKey()});
+        }
+        else if (ot === 'route'){
+            rt=new RouteFeatureInfo({isOverlay:true,routeName:this.getChartKey(),title:oname})
+        }
+        else{
+            rt=new OverlayFeatureInfo({title: oname,name:this.getChartKey()});
+        }
+        rt.overlaySource=this;
+        let geometry=feature.getGeometry();
+        let coordinates;
+        if (geometry instanceof olPoint){
+            coordinates=this.mapholder.fromMapToPoint(geometry.getCoordinates());
+            rt.point=coordinates;
+            if (fname) rt.point.name=fname;
+
+        }
+        else{
+            if (geometry){
+                coordinates=this.mapholder.fromMapToPoint(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                const route=feature.get('route')
+                if (route && route instanceof routeobjects.Route){
+                        const routePoint=getClosestRoutePoint(route,coordinates);
+                        if (routePoint) rt.point=routePoint;
+                }
+                else{
+                    rt.point=coordinates;
+                }
+            }
+            else {
+                rt.point = this.mapholder.fromMapToPoint(this.mapholder.pixelToCoord(pixel));
+            }
+        }
+        const userInfo={};
+        let infoItems=['desc','name','sym','time','height','link','linkText'];
+        infoItems.forEach((item)=>userInfo[item]=feature.get(item));
+        this.formatFeatureInfo(this.styleParameters[editableOverlayParameters.featureFormatter], userInfo,feature,coordinates,true);
+        rt.userInfo=userInfo;
+        return rt;
+    }
+
+    static async analyzeOverlay(item){
+        const overlay=await fetchItem(item);
+        return readFeatureInfoFromGpx(overlay)
+    }
+}
+
+export default  GpxChartSource;
+
+/**
+ * we will strip extensions from the gpx for now
+ * as firefox is very strict with namespaces
+ * and we potentially have some strange gpx files (e.g. nautin)
+ * @param xml
+ */
+const stripExtensions=(gpx)=>{
+    if (!gpx) return;
+    return gpx.replace(/<extensions.*?>.*?<\/extensions.*?>/g,"")
+}
+
+/**
+ * parses an gpx document and returns a couple of flags
+ * to determine which kind of styling is necessary
+ * @param gpx
+ *
+ */
+export const readFeatureInfoFromGpx=(gpx)=>{
+    let parser=new OwnGpx(Mapholder);
+    let features=parser.readFeatures(stripExtensions(gpx));
+    const featureFlags=FoundFeatureFlags.parseFoundFeatures(features,(feature,rt)=>{
+        if (feature.get('route')) {
+            rt.hasRoute=true;
+            rt.hasText=true;
+            rt.hasNonSymbolPoint=true;
+        }
+    });
+    let settings=featureFlags.createSettings();
+    addToSettings(settings,editableOverlayParameters.featureFormatter)
+    addToSettings(settings,getSupportedStyleParameters(featureFlags.hasRoute),true);
+    TEXT_FORMAT_SETTINGS.forEach((setting)=>{
+        addToSettings(settings,setting.clone({
+            condition:{[editableOverlayParameters.showText]:true}
+        }),true);
+    })
+    return {
+        hasAny: featureFlags.hasAny,
+        settings: orderSettings(settings,getSupportedStyleParameters(featureFlags.isRoute))
+    }
+
+}

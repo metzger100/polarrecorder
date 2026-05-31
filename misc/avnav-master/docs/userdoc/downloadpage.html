@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Files/Download</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1400">
+    <h1>Die Files/Download Seite </h1>
+    <div class="toc" data-maxlevel="3"></div>
+    <p>Von der <a href="mainpage.html">Startseite</a> kommt man mit dem&nbsp;<img
+        src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">
+      Button zur Files/Download Seite. Auf dieser Seite kann man Karten, Tracks,
+      Routen, Layouts, Nutzer-Dateien, Bilder herunterladen oder auf den
+      Raspberry (Server) hochladen und sie dort auch löschen. Für einige Dateien
+      ist auch eine direkte Bearbeitung möglich.</p>
+    <p> <img src="downloadpage-charts.png" alt="" class="fimage"> </p>
+    <h2>Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/map2.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageCharts</td>
+          <td>Anzeige der Liste der Karten</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/swap_horiz.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageImporter</td>
+          <td>Anzeige der <a href="importerpage.html">Import Seite<br>
+            </a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/track.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageTracks</td>
+          <td>Anzeige der Liste der Tracks</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageRoutes</td>
+          <td>Anzeige der Liste der Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageLayouts</td>
+          <td>Anzeige der Liste der Layouts</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUser</td>
+          <td>Anzeige der Liste der <a href="#userfiles">Nutzerdateien</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageImages</td>
+          <td>Anzeige der Liste der Nutzer-Bilder</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageOverlays</td>
+          <td>Zeige die Liste der <a href="../hints/overlays.html">Overlay</a>
+            Dateien</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_upload.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUpload</td>
+          <td>Hochladen einer Datei für die gerade angezeigte Kategorie</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Mann über Bord (siehe <a href="mainpage.html#mob">Hauptseite</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur vorigen Seite</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>In der angezeigten Liste stehen einige Informationen zum jeweiligen
+      Eintrag und es gibt einen <img src="../viewerimages/icons-new/ic_delete.svg"
+        alt="" class="inlineimage">Löschen und einen <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">Download Button. Diese aber nur, wenn es das
+      jeweilige Element erlaubt (z.B. kein Löschen von demo charts oder
+      system-Layouts).</p>
+    <p><a name="filedialog" id="filedialog"></a>Potentiell werden noch weitere
+      Icons angezeigt, die die Bearbeitungsoptionen darstellen. Beim Klick auf
+      ein Element in der Liste öffnet sich ein Dialog mit den verfügbaren
+      Optionen.</p>
+    <p><img src="downloadpage-user-dialog.png" alt="" class="fimage"></p>
+    <p>Falls angeboten ("Edit" / "View"), kann hier zu einer Anzeige- /
+      Bearbeitungsansicht gewechselt werden. Für Routen öffnet man damit den <a
+        href="editroutepage.html">Routen-Editor</a>.</p>
+    <p><img src="viewpage-edit-layout.png" alt="" class="fimage">Auf dieser
+      Seite können Änderungen vorgenommen werden (Überschrift "Editing") oder
+      der Inhalt wird angezeigt. Durch Klick auf <img src="../viewerimages/icons-new/save.svg"
+        alt="" class="inlineimage">werden Änderungen gespeichert.</p>
+    <h2>Besondere Funktionen</h2>
+    <h3><a name="userfiles" id="userfiles"></a>Nutzer Dateien</h3>
+    <p>Wenn zur Ansicht <img src="../viewerimages/icons-new/folder_shared.svg"
+        alt="" class="inlineimage"> Nutzer Dateien gewechselt wurde, können hier
+      unter anderem die Datei <a href="../hints/userjs.html">user.js</a> und <a
+        href="../hints/usercss.html">user.css</a> angesehen und bearbeitet
+      werden.</p>
+    <p>Die Datei keys.json ermöglicht <a href="../hints/keyboard.html">nutzerspezifische
+        Tastaturkürzel</a>.</p>
+    <p>Mit der Datei images.json kann man <a href="../hints/usericons.html">Symbole
+        anpassen</a>.</p>
+    <p><img src="downloadpage-user.png" alt="" class="fimage"></p>
+    <p>Auf dieser Seite können auch weitere Dateien hochgeladen werden, die für
+      die Anpassung von avnav benötigt werden (z.B. css Dateien, java script
+      files oder auch HMTL Dateien). Diese Dateien sind jeweils über die URL
+      /user/viewer/&lt;name&gt; erreichbar.<br>
+      Bilder sollten vorzugsweise in der Ansicht <img src="../viewerimages/icons-new/image-icon.svg"
+        alt="" class="inlineimage">hochgeladen werden und sind dann über
+      /user/images/&lt;name&gt; erreichbar.</p>
+    <p>Über den "+" Button unten rechts kann eine neue Datei angelegt werden.
+      Das könnte z.B. eine HTML Datei sein, die dann zu einer <a href="addonconfigpage.html">User
+        App</a> gemacht werden soll.</p>
+    <p>Für eine HTML Datei enthält der Aktionen Dialog den Button "<img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">App", mit dem direkt eine <a href="addonconfigpage.html">User
+        App</a> erzeugt werden kann (vorher muss allerdings ein Icon hochgeladen
+      worden sein).</p>
+    <p><img src="downloadpage-user-dialog-html.png" alt="" class="fimage"></p>
+    <h3><a name="mbtiles" id="mbtiles"></a>Karten - mbtiles Format</h3>
+    <p>Bei einer Karte im <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      Format kann es sein, dass die Kacheln intern in einer anderen als der
+      default Ordnung gespeichert sind. Der Default ist "xyz", optional gibt es
+      "tms". Falls die Karte keine gültige Information enthält, wird "xyz"
+      angenommen. Wenn eine solche Karte nicht korrekt dargestellt wird, kann
+      man versuchen auf "tms" umzuschalten.</p>
+    <p><img src="downloadpage-charts-mbtiles.png" alt="" class="fimage"></p>
+    <p>Diese Information wird dann dauerhaft in der Kartendatei gespeichert.</p>
+    <h3><a name="chartupload" id="chartupload"></a>Hochladen von Karten</h3>
+    <p>In der Kategorie <img src="../viewerimages/icons-new/map2.svg" alt="" class="inlineimage">
+      Karten können auch <a href="../charts.html#chartformats">Karten Dateien</a>
+      direkt hochgeladen werden. Dateien, die AvNav direkt verarbeiten kann
+      (gemf, mbtiles, xml files), werden direkt hochgeladen und können sofort
+      genutzt werden.</p>
+    <p>Für Karten, die erst nach <a href="../charts.html#Convert">Konvertierung</a>
+      nutzbar sind, wird angeboten, diese in das Eingangsverzeichnis des <a href="importerpage.html">Importers</a>
+      zu laden (nicht unter Android). </p>
+    <p><img src="downloadpage-upload-import-set.png" alt="" class="fimage"> </p>
+    <p>Hierbei kann noch ein Name für ein "set" vergeben werden. Das wird dann
+      der Name der erzeugten gemf Datei, es können so mehrere Karten in eine
+      gemf Datei konvertiert werden. Der Zustand der Konvertierung kann
+      anschliessend auf der <a href="importerpage.html">Import Seite</a>
+      geprüft werden (diese wird automatisch geöffnet).<br>
+      Nach einem Upload wartet der Importer noch eine gewisse Zeit, damit hat
+      man die Möglichkeit nacheinander mehrere Dateien hochzuladen, die dann
+      alle in einer Konvertierung bearbeitet werden.</p>
+    <h3><a name="tracks" id="tracks"></a>Tracks</h3>
+    <p>Der Info Dialog für Tracks enthält zusätzliche Informationen.</p>
+    <p><img src="downloadpage-track-dialog.png" alt="" class="fimage"> </p>
+    <p>Ausserdem kann hier über den Button <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">das <a href="../hints/TracksToRoutes.html">Umwandeln
+        des Tracks in eine Route</a> gestartet werden. Über den <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">overlay button kann der Track zu <a href="../hints/overlays.html">Overlays</a>
+      hinzugefügt oder gelöscht werden.</p>
+  </body>
+</html>

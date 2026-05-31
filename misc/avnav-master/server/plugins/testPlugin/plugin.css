@@ -1,0 +1,11 @@
+.testPlugin_CourseWidget .widgetData{
+    font-size: 2.5em;
+}
+
+.testPlugin_CourseWidget canvas{
+    height: 40%;
+}
+
+.testPlugin_ServerWidget .reset.running{
+    color: yellow;
+}

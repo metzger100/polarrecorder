@@ -1,0 +1,76 @@
+#! /bin/sh
+BASE=/usr/lib/avnav/raspberry
+startAvNav=0
+if systemctl -q is-active avnav ; then
+  startAvNav=1
+else
+  echo "avnav not running"
+fi
+if [ "$startAvNav" = 1 ] ; then
+    systemctl stop avnav || echo "avnav not running"
+else
+    echo
+fi
+
+VERSIONFILE=$BASE/raspi.version
+if [ -f $VERSIONFILE ] ; then
+    . $VERSIONFILE
+fi
+PATCHCMD=$BASE/patchServerConfig.py
+systemctl daemon-reload
+systemctl enable avnav || echo "cannot enable avnav service"
+echo stopping and disabling gpsd
+systemctl disable gpsd || echo ' ' > /dev/null
+systemctl stop gpsd || echo '' > /dev/null
+CONFIG=/home/pi/avnav/data/avnav_server.xml
+if [ -f $CONFIG ] ; then
+    echo "migrating old config $CONFIG"
+    if [ ! -f $CONFIG.save ] ; then
+        cp $CONFIG $CONFIG.save
+        chown pi $CONFIG.save
+    fi
+    if [ -x "$PATCHCMD" ] ; then
+        "$PATCHCMD" -v -f "$CONFIG" -h AVNConfig "settimecmd=/usr/lib/avnav/raspberry/settime.sh"
+        newBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm gpio`
+        if [ "$newBt" = "" ] ; then
+            oldBt=`"$PATCHCMD" -p -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin | sed 's/.*=//'`
+            if [ "$?" = 0 -a "$oldBt" != "" ] ; then
+                echo "migrating setting for stop alarm pin $oldBt"
+                "$PATCHCMD" -v -d -f "$CONFIG" -h AVNAlarmHandler stopAlarmPin
+                "$PATCHCMD" -v -f "$CONFIG" -h AVNPluginHandler -c system-resetAlarm "gpio=$oldBt"
+            fi
+        fi
+    else
+        sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh"?' $CONFIG
+    fi
+else
+    echo "no old config $CONFIG found to migrate"
+fi
+
+BOOTCFG=/boot/avnav.conf
+if [ -d /boot/firmware ]
+then
+  BOOTCFG=/boot/firmware/avnav.conf
+fi
+
+if [ ! -e "$BOOTCFG" ] ; then
+    echo "creating $BOOTCFG"
+    cp $BASE/avnav.conf $BOOTCFG
+fi    
+
+TO_DISABLE="systemd-timesyncd"
+for service in $TO_DISABLE
+do
+    if systemctl --quiet is-enabled $service ; then
+        systemctl disable --now $service || echo "unable to disable $service"
+    fi
+done
+
+systemctl daemon-reload
+if [ "$startAvNav" = "1" ] ; then
+    echo "starting avnav"
+    systemctl start avnav
+fi
+systemctl enable avnav-startup
+
+exit 0

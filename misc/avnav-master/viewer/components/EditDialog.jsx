@@ -1,0 +1,201 @@
+import React, {useEffect, useRef, useState} from "react";
+import {
+    DBCancel,
+    DBOk,
+    DialogButtons,
+    DialogFrame,
+    promiseResolveHelper,
+    showPromiseDialog
+} from "./OverlayDialog";
+import CodeFlask from 'codeflask';
+import Prism from "prismjs";
+import UploadHandler, {uploadClick} from "./UploadHandler";
+import Toast from "./Toast";
+import DownloadButton from "./DownloadButton";
+import PropTypes from "prop-types";
+import {ConfirmDialog} from "./BasicDialogs";
+import Requests from "../util/requests";
+import Helper from "../util/helper";
+import {useDialogContext} from "./DialogContext";
+
+export const EditDialog = ({data, title, language, resolveFunction, saveFunction, fileName,showCollapse}) => {
+    const flask = useRef();
+    const editElement = useRef();
+    const [changed, setChanged] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
+    const everChanged=useRef(false);
+    if (changed)everChanged.current=true;
+    const dialogContext = useDialogContext();
+    const [uploadFile, setUploadFile] = useState(undefined);
+    const languageImpl=language||languageMap[Helper.getExt(fileName)];
+    useEffect(() => {
+        flask.current = new CodeFlask(editElement.current, {
+            language: languageImpl || 'html',
+            lineNumbers: true,
+            defaultTheme: false,
+            noInitialCallback: true,
+            highLighter: Prism.highlightElement
+        });
+        //this.flask.addLanguage(language,Prism.languages[language]);
+        flask.current.updateCode(data, true);
+        flask.current.onUpdate(() => setChanged(true));
+    }, []);
+    const buttonList=[
+        {
+            name: 'upload',
+            label: 'Import',
+            onClick: () => {
+                setCollapsed(false);
+                uploadClick((ev)=>{
+                    setUploadFile(ev.target.files[0]);
+                })
+            },
+            close: false
+        },
+        () => <DownloadButton
+            useDialogButton={true}
+            localData={() => flask.current.getCode()}
+            fileName={fileName}
+            name={"download"}
+            close={false}
+        >Download</DownloadButton>,
+        {
+            name: 'save',
+            close: false,
+            onClick: () => {
+                setChanged(false);
+                setCollapsed(false);
+                promiseResolveHelper({
+                    ok: ()=>{
+                        setChanged(false);
+                    },
+                    err: (e) => {
+                        if (e) Toast(e);
+                        setChanged(true)
+                    }
+                }, saveFunction, flask.current.getCode())
+            },
+            visible: !!saveFunction,
+            disabled: !changed
+        },
+        DBCancel(),
+        DBOk(() => {
+                promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, flask.current.getCode());
+            }, {disabled: !everChanged.current, close: false}
+        )
+    ];
+    if (showCollapse) {
+        buttonList.splice(0,0,{
+            name: collapsed?'show':'hide',
+            close: false,
+            onClick: () => {
+                setCollapsed(!collapsed);
+            }
+        })
+    }
+    return <DialogFrame title={title || fileName } className={Helper.concatsp("editFileDialog",collapsed?"collapsed":undefined)}>
+        <UploadHandler
+            file={uploadFile}
+            local={true}
+            type={'user'}
+            doneCallback={(data) => {
+                setUploadFile(undefined);
+                showPromiseDialog(dialogContext, ConfirmDialog,{text:"overwrite with " + data.name + " ?"})
+                    .then(() => {
+                        flask.current.updateCode(data.data, true);
+                        setChanged(true);
+                    }, () => {
+                    })
+            }}
+            checkNameCallback={(file) => {
+                return {name: (file||{}).name}
+            }}
+            errorCallback={(err) => {
+                setUploadFile(undefined);
+                Toast(err)
+            }}
+        />
+        <div className={"edit"} ref={editElement}></div>
+        <DialogButtons buttonList={buttonList}></DialogButtons>
+    </DialogFrame>
+}
+
+EditDialog.propTypes={
+    data: PropTypes.string,
+    title: PropTypes.string,
+    language: PropTypes.string,
+    resolveFunction: PropTypes.func,
+    saveFunction: PropTypes.func,
+    fileName: PropTypes.string
+}
+export const uploadFromEdit = async (name, data, overwrite,type) => {
+    try {
+        await Requests.postPlain({
+            request: 'api',
+            command: 'upload',
+            type: type,
+            name: name,
+            overwrite: overwrite,
+            completeName: true
+        }, data);
+    } catch (e) {
+        Toast(e);
+        throw e;
+    }
+}
+
+export const EditDialogWithSave=(props)=>{
+    return <EditDialog
+        {...props}
+        resolveFunction={async (data)=>{
+            await uploadFromEdit(props.fileName,data,true,props.type);
+            props.resolveFunction(data);
+        }}
+        saveFunction={async (data)=> await uploadFromEdit(props.fileName,data,true,props.type)}
+    />
+
+}
+EditDialogWithSave.propTypes={...EditDialog.propTypes,
+    type: PropTypes.string.isRequired
+}
+
+export const getTemplate=(name)=>{
+    if (! name) return;
+    const ext=Helper.getExt(name);
+    if (ext === 'html'){
+        return `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
+    }
+    if (ext === 'json'){
+        return JSON.stringify({});
+    }
+    if (ext === 'gpx'){
+        return `
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx>
+<!--<rte>
+    <name>default</name>
+    <rtept lon="13.540864957547065" lat="54.29884367794568">
+    <name>WP 1</name>
+    </rte
+</rte> -->
+<!--<trk>
+    <name>avnav-track-2025-04-08</name>
+    <trkseg>
+        <trkpt lat="54.340983000" lon="13.507483000" ><time>2025-04-08T04:38:57Z</time><course>141.6</course><speed>1.76</speed></trkpt>
+    </trkseg>
+    </trk> -->
+</gpx>
+        `
+    }
+} //add all extensions here that we can edit
+//if set to undefined we will edit them but without highlighting
+export const languageMap = {
+    js: 'js',
+    mjs:'js',
+    json: 'json',
+    html: 'markup',
+    css: 'css',
+    xml: 'markup',
+    gpx: 'markup',
+    txt: undefined
+};

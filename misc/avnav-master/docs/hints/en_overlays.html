@@ -1,0 +1,322 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Overlays</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="800">
+    <h1>Avnav Overlays</h1>
+    <div class="toc"> </div>
+    <p>Since version 20201219 AvNav is able to show additional information
+      beside the chart itself in it's chart views. This could be waypoints from
+      a GPX file or available tracks or other data (like e.g. current buoys from
+      <a href="https://www.nautin.nl/wb/pages/navigatie/actuele-boeienposities.php">nautin.nl</a>).</p>
+    <p>Additionally you can show multiple charts on top of each other (e.g. an
+      OpenSeamap chart that covers a wider range below an <a href="ocharts.html">o-charts</a>
+      chart - or just multiple o-charts for different ranges).</p>
+    <p>Within AvNav this is called Overlays.</p>
+    <p>You can use the following types of data for overlays:</p>
+    <ul>
+      <li>GPX files (waypoints, tracks, routes)</li>
+      <li><a href="https://developers.google.com/kml/documentation/kmzarchives">KML
+          and KMZ</a> files (google) - inside the KMZ file you must have a
+        doc.kml.</li>
+      <li><a href="https://de.wikipedia.org/wiki/GeoJSON">geojson</a> files</li>
+      <li>other AvNav charts</li>
+      <li>AvNav routes</li>
+      <li>AvNav tracks</li>
+    </ul>
+    <p>For GPX and KML files you can provide user defined icons or e.g. html
+      pages that can be accessed via link properties within a zip archive. KMZ
+      files normally already contain such kinds of data.</p>
+    <p>If you have such overlays visible on a chart you can obtain additional
+      information by clicking on the symbol on the chart.</p>
+    <h2><a name="configuration"></a>Configuration</h2>
+    <p>Before you can start using overlays they need to be uploaded to AvNav.</p>
+    <p><img src="DownloadPage-Overlays.png" alt="" class="fimage"></p>
+    <p>Within AvNav the symbol <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">is used for overlays.</p>
+    <p>After you uploaded the files you can assign them to the available charts.
+      You can define a set of overlays to be shown on every chart (default
+      overlays). Additionally you can define per chart which overlays you would
+      like to see on it.</p>
+    <p>You can make those assignments either on the <a href="../userdoc/downloadpage.html">Files/Download
+        page</a> at the sub section "charts" - or&nbsp; at the <a href="../userdoc/mainpage.html">Mainpage</a>.</p>
+    <p><img src="Overlay-Config-Default-DownloadPage.png" alt="" class="fimage"></p>
+    <p>In the screenshot&nbsp; you see the dialog showing up once you click on
+      "DefaultOverlays" at the Files/Download page.<br>
+      To change the display order of overlays just drag and drop them in the
+      list. <br>
+      Hint: Overlays shown before the ---chart--- entry are shown below the
+      chart.<br>
+      The overlays defined in the default overlays will be visible for all
+      charts (but can be enabled/disabled in the overlay dialogs for particular
+      charts).</p>
+    <p>In this dialog you can add, edit or remove overlays.</p>
+    <p><img src="Overlay-Config-Default-Select1.png" alt="" class="fimage"></p>
+    <p>In the screenshot you see the dialog that opens on clicking
+      "InsertAfter".<br>
+      In the example I selected the file Wegepunkte2020.gpx (<a href="https://nvcharts.com/downloads/wegepunkte/2024/Wegepunkte2024_gpx.zip">NV
+        Verlag</a>)&nbsp; that has been uploaded to the overlays directory.<br>
+      You can now set various parameters (depending on the type of overlay).</p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>default</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>enable</td>
+          <td>true</td>
+          <td>If set to false the overlay is configured - but will still not
+            show up. You can have it displayed later on by a single click.</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>overlay</td>
+          <td>type of overlay<br>
+            overlay: a file that has been uploaded to overlays<br>
+            chart: a chart from AvNav<br>
+            route: a route from AvNav<br>
+            track: a track from AvNav</td>
+        </tr>
+        <tr>
+          <td>overlay name</td>
+          <td>---</td>
+          <td>you will get a list to select from available overlays depending on
+            the selected type</td>
+        </tr>
+        <tr>
+          <td>opacity</td>
+          <td>1</td>
+          <td>the opacity for the display (0...1) - 0: invisible</td>
+        </tr>
+        <tr>
+          <td>icon file</td>
+          <td>---</td>
+          <td>You can select a zip file (that has been uploaded to overlays)
+            containing symbol icons or other content (like html pages).<br>
+            If there is a "sym" property within a gpx file (e.g. at a waypoint)
+            - like sym="b1" AvNav will try to read a file b1.png from the
+            provided zip file to display it at the position.<br>
+            If a link property like link="data/1.html" is present, an entry
+            data/1.html will be searched for within the zip file.<br>
+            The same applies for KML files. Normally however, you better use KMZ
+            files as they already contain all necessary data.</td>
+        </tr>
+        <tr>
+          <td>min zoom</td>
+          <td>0</td>
+          <td>the minimal zoom level for displaying the overlay(0: always)</td>
+        </tr>
+        <tr>
+          <td>max zoom</td>
+          <td>0</td>
+          <td>the maximal zoom level for displaying the overlay(0: always)</td>
+        </tr>
+        <tr>
+          <td>min scale</td>
+          <td>0</td>
+          <td>if the zoom level of the chart is below this value, symbols will
+            be scaled down (0: function disabled)</td>
+        </tr>
+        <tr>
+          <td>max scale</td>
+          <td>0</td>
+          <td>if the zoom level of the chart is above this value, symbols will
+            be scaled up (0: function deactivated)</td>
+        </tr>
+        <tr>
+          <td>default icon</td>
+          <td>--none--</td>
+          <td>With this parameter you can select an icon file (png, svg) to be
+            used if an icon is not found (or you did not fill the user icons
+            parameter). You can select from files you have uploaded to overlays
+            or to user files or to images.<br>
+            With --DefaultGpxIcon-- you can select a builtin icon. <img src="../viewerimages/icons-new/DefaultGpxPoint.png"
+              alt="" class="inlineimage"></td>
+        </tr>
+        <tr>
+          <td>show text</td>
+          <td>false</td>
+          <td>If enabled show item names (e.g. point names)</td>
+        </tr>
+        <tr>
+          <td>featureFormatter</td>
+          <td>---</td>
+          <td>select a <a href="userjs.html#featureFormatter">featureFormatter</a>
+            that will be used to format the information when the overlay is
+            clicked on the map.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If the overlay contains other data than way points, potentially more
+      parameters can be displayed.</p>
+    <p><img src="Overlay-Config-Default-Select2.png" alt="" class="fimage"></p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>default</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>line width</td>
+          <td>track/route line width</td>
+          <td>line width for display</td>
+        </tr>
+        <tr>
+          <td>line color</td>
+          <td>track/route color</td>
+          <td>line color for display</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>After clicking "Ok" the overlay has been added.</p>
+    <img src="Overlay-Config-Default-SelectList.png" alt="" class="fimage"><br>
+    <br>
+    <p>For a chart the overlay configuration looks like:</p>
+    <img src="Overlay-Config-Default-SelectListNormal.png" alt="" class="fimage">
+    <p>Overlays configured as defaults can only be moved (as a block) or
+      enabled/disabled. The overlays assigned explicitly to the chart can be
+      edited.</p>
+    <p>You can also access the overlay configuration page from the Mainpage via
+      the <img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage">button
+      beside each chart.</p>
+    <p><img src="Overlay-Config-Mainpage.png" alt="" class="fimage"></p>
+    <p>The button on the right side will show the configuration for the default
+      charts.</p>
+    <p>For tracks and routes you can also invoke overlay configuration directly
+      from a track (gpx file) or a route on the Files/Download page.</p>
+    <p><img src="Overlay-Config-Track1.png" alt="" class="fimage"> </p>
+    <p>In the picture you see the info dialog that pops up after clicking a gpx
+      track. By selecting "Overlays" you can assign this track to charts (or
+      remove it).</p>
+    <p><img src="Overlay-Config-Track2.png" alt="" class="fimage"></p>
+    <p>After deciding whether to assign it to the default overlays or to a
+      particular chart, the normal overlay configuration dialog will pop up.</p>
+    <p>If you select "Remove from Charts" this track will be removed from all
+      overlays.</p>
+    <br>
+    <h2><a name="usage"></a>Usage</h2>
+    <p>A chart selected for display will be shown together with the configured
+      overlays.</p>
+    <img src="Overlay-Example-Maps-Waypoints.png" alt="" class="fimage">
+    <p>This example shows an o-charts chart together with an OpenStreetMap chart
+      (below) and a waypoint file on top.<br>
+      As default icon the --DefaultGpxIcon-- has been selected.<br>
+      If you click one of the overlay's icons you will get a Feature List with
+      the overlay included, clicking it brings up the Feature Info dialog.</p>
+    <img src="Overlay-Example-InfoDialog.png" alt="" class="fimage">
+    <p>You will see the inforamtion available for this point and you can e.g.
+      use this point as a routing target immediately (Goto).<br>
+      Using "Hide" you can temporarily disable the complete overlay.<br>
+      From within the <a href="../userdoc/editroutepage.html#featureInfo">Route
+        Editor</a> some more functions are available at the info dialog.</p>
+    At the <a href="../userdoc/navpage.html">Navigation Page</a> and within the
+    <a href="../userdoc/editroutepage.html">Route Editor</a> there is an option
+    to temporarily disable or enable overlays.<br>
+    <p> This is done using the <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">button on the right side.</p>
+    <p><img src="Overlay-Config-ActiveOverlays.png" alt="" class="fimage"></p>
+    <p>The enable and disable settings remain active until you change the chart.
+      They are only valid for your current device (in contrary to all other
+      overlay configuration functions that will always affect all connected
+      devices as they are handled at the server).</p>
+    <p>By clicking the Edit button you can enter the normal overlay
+      configuration.</p>
+    <p><b>Hint:</b></p>
+    <p>Using overlay files with a lot of elements can seriously impact the
+      display performance. There is currently no fixed limit for overlay file
+      sizes. Files with several 100MB will for sure lead to problems - 1000
+      points within an overlay are ok.</p>
+    <h2>Changes of Overlays</h2>
+    <p>Since version 20220225 AvNav will monitor the timestamp of the overlay
+      files and will automatically update the chart display whenever an overlay
+      file changes.</p>
+    <a name="adaptation"></a>
+    <h2>Adaptations</h2>
+    <p>Since version 20210114 you can adapt the information to be extracted from
+      the overlay file and shown at "Feature Info". This could make sense as
+      potentially overlay files contain information that otherwise cannot be
+      handled by AvNav on its own.</p>
+    <p>For this purpose you can set a "featureFormatter" function when you <a href="#configuration">configure</a>
+      the overlay. This featureFormatter is a java script function, either
+      already built in into AvNav or implemented by you in your <a href="userjs.html#featureFormatter">user.js</a>&nbsp;
+      It may also be provided by a <a href="plugins.html">plugin</a>.</p>
+    <p>This java script function will retrieve all available parameters of the
+      element from the overlay file that you have clicked on. It can return the
+      properties to be shown in the "Feature Info" dialog.</p>
+    <p>You can return the following properties:</p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td>sym</td>
+          <td>The URL for an icon to be shown. This can be a relative URL
+            referencing an icon file within the <a href="#configuration">configured</a>
+            userIcons file. Alternatively it can be an absolute path like
+            /user/images/myImage.png or an external url starting with http: or
+            https: - this one can only be used with an existing internet
+            connection, of course.</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>The name to be displayed</td>
+        </tr>
+        <tr>
+          <td>desc</td>
+          <td>The text for the "description" field.</td>
+        </tr>
+        <tr>
+          <td>htmlInfo</td>
+          <td>A html string, that will be shown when clicking the <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button.</td>
+        </tr>
+        <tr>
+          <td>time</td>
+          <td>A time value (string or java script Date)</td>
+        </tr>
+        <tr>
+          <td>link</td>
+          <td>An URL, that will be shown when clicking the <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button (alternatively to
+            htmlInfo). The same rules apply as for "sym".</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The parameters retrieved by the function depend on the overlay file.
+      Additionally you will always receive "lat" and "lon".</p>
+    <p>An example for the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/featureFormatter.js">built
+        in genericHtmlInfo</a> function retrieving all available parameters and
+      writing them into the htmlInfo property as HTML.</p>
+    <div class="code">let genericHtmlInfo=function(properties,extended){
+    if (! extended) return {};
+    let htmlInfo='&lt;div class="featureInfoHtml"&gt;';
+    for (let k in properties){
+        if (!properties[k]) continue;
+        if (htmlInfo !== "") htmlInfo+="&lt;br/&gt;";
+        htmlInfo+=avnav.api.escapeHtml(k)+"="+avnav.api.escapeHtml(properties[k]);
+    }
+    htmlInfo+='&lt;/div&gt;';
+    return {htmlInfo:htmlInfo};
+}</div>
+    <p>The second parameter accepted by this function determines whether to
+      compute all properties or only the "sym" property. If it is set to false
+      you should not execute any time consuming operations, as this function
+      will potentially be called for each of the overlay's elements.</p>
+    <p>To let AvNav know about your own formatter function you need to register
+      it (see <a href="userjs.html">user.js</a>).</p>
+    <div class="code">avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);</div>
+    <p>After registration you can select this function in overlay <a href="#configuration">configuration</a>.<br>
+    </p>
+    <p><br>
+    </p>
+    <p></p>
+    <p> </p>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+.code {
+    background-color: #e9eae978;
+    padding: 1em;
+    white-space: pre-wrap;
+    border-radius: 0.3em;
+    font-family: monospace;
+    line-height: 1.6em;
+}
+
+.red{
+   color: red;
+}
+
+.inlineimage{
+	width: 2em;
+	height: 2em;
+	display: inline-block;
+	vertical-align: middle;
+}
+.inlineimagered{
+	width: 2em;
+	height: 2em;
+	display: inline-block;
+	vertical-align: middle;
+	filter: invert(22%) sepia(100%) saturate(7262%) hue-rotate(359deg) brightness(93%) contrast(117%);
+}
+.image{
+	width: 600px;
+}
+.fimage{
+    max-width: 100%;
+}
+
+.inline{
+	display: inline-block;
+	margin-left: 2em;
+	vertical-align: top;
+	max-width: 35em;
+}
+
+.gallery img{
+	height: 250px;
+}
+
+.mainlist{
+    
+      }
+ 
+table{
+    border-spacing: 0;
+    border-width: 1px;
+    border-color: #80808061;
+}
+td{
+    padding: 5px;
+}     
+
+.docMapItem{
+    display: list-item;
+}
+.docMapLevelh2{
+    margin-left: 1em;
+}
+.docMapLevelh3{
+    margin-left: 2em;
+}
+.docMapLevelh4{
+    margin-left: 3em;
+}
+
+.error {
+    text-align: center;
+    font-size: 1.5em;
+    color: red;
+}

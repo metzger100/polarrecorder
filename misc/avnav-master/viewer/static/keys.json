@@ -1,0 +1,94 @@
+{
+  "all": {
+    "map": {
+      "zoomIn":["+","PageUp"],
+      "zoomOut":["-","PageDown"],
+      "up":"ArrowUp",
+      "down":"ArrowDown",
+      "left":"ArrowLeft",
+      "right":"ArrowRight",
+      "lockGps":"l",
+      "unlockGps":"u",
+      "toggleGps":["t","Control-a"],
+      "toggleCourseUp":"b"
+    },
+    "alarm":{
+      "stop":"q"
+    },
+    "global":{
+      "mobon": ["m","Control- "],
+      "anchoron": ["i"],
+      "anchoroff": ["Control-i"],
+      "toggledimm": ["z"],
+      "dummy": ["Control-g"]
+    },
+    "button":{
+      "Cancel":"Escape"
+    },
+    "dialogButton": {
+      "Cancel": "Escape",
+      "cancel": "Escape"
+    },
+    "addon":{
+      "0":"Control-0",
+      "1":"Control-1",
+      "2":"Control-2",
+      "3":"Control-3",
+      "4":"Control-4",
+      "5":"Control-5",
+      "6":"Control-6",
+      "7":"Control-7"
+    }
+
+  },
+  "gpspage":{
+    "button":{
+      "Cancel":["d","Escape"]
+    }
+  },
+  "navpage":{
+    "widget":{
+      "AisTarget":"a",
+      "COG":"d"
+    },
+    "button":{
+      "LockMarker":"g",
+      "StopNav": "s",
+      "ShowRoutePanel":["Control-r","r"]
+    },
+    "map":{
+      "centerToGps":"c"
+    },
+    "page":{
+      "centerToTarget":"w",
+      "navNext": ["n","Control-n"],
+      "toggleNav": ["Control-g"]
+    }
+  },
+  "mainpage":{
+    "page":{
+      "selectChart":"Enter",
+      "nextChart":["Tab","ArrowDown"],
+      "previousChart":"ArrowUp"
+    },
+    "button":{
+      "ShowSettings":"Control-+",
+      "ShowStatus":"Control-s",
+      "ShowGps": "d",
+      "Night":["c","Control-c","Control-g"]
+    }
+  },
+  "viewpage": {
+    "_config": {
+      "mode": "explicit"
+    },
+    "button": {
+      "ViewPageSave": "Control-s",
+      "Cancel":"Escape"
+    },
+    "dialogButton": {
+      "Cancel": "Escape",
+      "cancel": "Escape"
+    }
+  }
+}

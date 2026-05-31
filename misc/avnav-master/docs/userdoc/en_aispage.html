@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav AIS List</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1700">
+    <h1>The AIS List</h1>
+    <p>From the <a href="navpage.html#aisinfo">Ais Info</a> you get here by
+      clicking the <img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage">
+      button.</p>
+    <p><img src="aislist.png" alt="" class="fimage"></p>
+    <h2>Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisNearest</td>
+          <td>back to "normal mode", the closest target will be displayed
+            centered on the&nbsp; <a href="navpage.html">navigation page</a> </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/sort.svg" class="inlineimage"></td>
+          <td>AisSort</td>
+          <td>change the sort order of the list</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/update_disabled.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisLock</td>
+          <td>disable the automatic list update (toggle)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/search.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisSearch</td>
+          <td>filter the shown ais targets. <br>
+            A filter dialog will be shown to input a search item. This will be
+            machted against: name,mmsi,callsign,shipname.<br>
+            Only matching or partially matching items will be shown in the list.<br>
+            As the button is a toggle button the second click will disable the
+            filter.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>man over board (see <a href="mainpage.html#mob">main page</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>back to previous page</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>This page lists all targets within a 10nm range to the current position
+      or to the center of the chart (sorted by Priority). By clicking a row you
+      go to the <a href="navpage.html#aisinfo">Ais Info</a> for this target. </p>
+    <p>By clicking either the heading or the <img src="../viewerimages/icons-new/sort.svg"
+        alt="" class="inlineimage">button you can change the sort order.<br>
+      The following sort modes are available:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Sorting</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>Priority</td>
+          <td>Sort by importance for navigation. Refer to <a href="navpage.html#aispriority">AIS
+              Priority</a>.</td>
+        </tr>
+        <tr>
+          <td>DCPA</td>
+          <td>Distance at the CPA (closest point of approach)</td>
+        </tr>
+        <tr>
+          <td>TCPA</td>
+          <td>Time till reaching the CPA point</td>
+        </tr>
+        <tr>
+          <td>DST</td>
+          <td>Current distance</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td>Sort by name</td>
+        </tr>
+        <tr>
+          <td>MMSI</td>
+          <td>Sort by mmsi</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
