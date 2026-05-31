@@ -1,5 +1,7 @@
 #!/bin/bash
 set -euo pipefail
+# Agent orchestration setup checks
+tools/check-agent-setup.sh
 # Python checks
 python -m ruff check .
 python -m ruff format --check .
