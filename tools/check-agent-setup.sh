@@ -186,6 +186,7 @@ for (const name of requiredAgents) {
 
   assertEqual(config.description ? "present" : "missing", "present", `${filePath} description`);
   assertEqual(config.model ? "present" : "missing", "present", `${filePath} model`);
+  assertEqual(get(config, "permission.background_process"), "allow", `${filePath} permission.background_process`);
 
   if (name === "plan-controller") {
     assertEqual(config.mode, "primary", `${filePath} mode`);
@@ -245,6 +246,7 @@ for (const [label, config] of [
   assertEqual(config.model, "openrouter/deepseek/deepseek-v4-pro", `${label} model`);
   assertEqual(config.small_model, "openrouter/deepseek/deepseek-v4-flash", `${label} small_model`);
   assertEqual(config.default_agent, "plan-controller", `${label} default_agent`);
+  assertEqual(get(config, "permission.background_process"), "allow", `${label} permission.background_process`);
   assertEqual(get(config, "tools.agent_manager_tool"), true, `${label} tools.agent_manager_tool`);
   checkPrimaryTools(config, label);
 }

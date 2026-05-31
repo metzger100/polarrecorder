@@ -30,7 +30,7 @@ The controller never implements the human-authored foundation phases. It starts 
 
 - Current Kilo docs list project agent Markdown files under `.kilo/agents/*.md`; some creation flows also mention `.kilo/agent/*.md`. This repository keeps the canonical definitions only in `.kilo/agents/` so Kilo does not load duplicate same-name agents from both paths.
 - Current Kilo docs identify project `kilo.jsonc` at the repository root as the project config. This repository also keeps `.kilo/kilo.jsonc` for compatibility with `.kilo/` directory config loading. Keep the root and `.kilo/` config values mirrored.
-- The root and `.kilo/` configs set `default_agent` to `plan-controller` and enable the Agent Manager tool. Delegation is bounded in agent frontmatter: `plan-controller` allows only the named subagents, and every subagent denies `task`.
+- The root and `.kilo/` configs set `default_agent` to `plan-controller`, enable the Agent Manager tool, and allow `background_process` for project agents. Delegation is bounded in agent frontmatter: `plan-controller` allows only the named subagents, and every subagent denies `task`.
 - The optional CLI verification is `kilo agent list`. If the standalone CLI is unavailable, verify through the VS Code Kilo agent picker and command picker.
 
 ## Schema Assumptions - Verify In Kilo
@@ -39,4 +39,4 @@ The controller never implements the human-authored foundation phases. It starts 
 - Project commands are Markdown files under `.kilo/commands/*.md`.
 - Agent frontmatter supports `description`, `mode`, `model`, `temperature`, and `permission`.
 - Command frontmatter supports `description` and `agent`.
-- Permission rules support `read`, `grep`, `glob`, `edit`, `bash`, and `task`, including deny rules and command/file patterns.
+- Permission rules support `read`, `grep`, `glob`, `edit`, `bash`, `background_process`, and `task`, including deny rules and command/file patterns.

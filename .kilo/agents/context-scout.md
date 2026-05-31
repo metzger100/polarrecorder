@@ -7,6 +7,7 @@ permission:
   read: allow
   grep: allow
   glob: allow
+  background_process: allow
   edit: deny
   bash:
     "git status*": allow

@@ -1,12 +1,13 @@
 ---
 description: Primary orchestrator for active execution plans; owns phase ledgers, delegates scoped work, and requires both Pro verifiers before completion.
 mode: primary
-model: openrouter/deepseek/deepseek-v4-pro
+model: openrouter/qwen/qwen3.7-max
 temperature: 0.1
 permission:
   read: allow
   grep: allow
   glob: allow
+  background_process: allow
   edit:
     "exec-plans/active/*.progress.md": allow
     "exec-plans/active/*.amendments.md": allow

@@ -7,6 +7,7 @@ permission:
   read: allow
   grep: allow
   glob: allow
+  background_process: allow
   edit:
     "*.md": allow
     "documentation/**": allow

@@ -9,6 +9,7 @@ permission:
   glob: allow
   edit: allow
   bash: allow
+  background_process: allow
   task: deny
 ---
 

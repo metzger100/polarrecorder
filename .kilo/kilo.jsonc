@@ -20,6 +20,10 @@
       "model": "openrouter/deepseek/deepseek-v4-pro"
     }
   },
+  "permission": {
+    "bash": "allow",
+    "background_process": "allow"
+  },
   "tools": {
     "agent_manager_tool": true
   },
