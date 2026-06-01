@@ -1,6 +1,6 @@
 # Export and Import
 
-**Status:** Complete for Phase 8 API endpoints.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -42,7 +42,7 @@ uses the display floor `MIN_SAMPLES_DISPLAY = 3`. Adding
 
 `GET /api/export/json` returns the full persistence JSON shape used by
 `polar.json`. It is intended for backup and inspection. Restore/import from this
-backup is planned after the MVP and is not implemented in Phase 8.
+backup is Post-MVP and is not implemented in version 1.0.0.
 
 ## Related
 

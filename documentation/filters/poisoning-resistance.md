@@ -1,6 +1,6 @@
 # Poisoning Resistance
 
-**Status:** Complete for Phase 5 scenario coverage.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -23,8 +23,8 @@ cooldown periods, and unstable rolling windows. R16 quarantines suspected low-wi
 `polarrecorder.commit.commit_sample()` is the single dispatch point from a `PipelineResult`
 to the model update contract. Accepted samples update histograms, quality-gate rejections and
 quarantines update per-bin diagnostics, and candidacy-gate or warming-up rejections touch no
-bin. The Phase 5 scenario tests drive reads through `pipeline.run`, `ValidationState.observe`,
-and `commit_sample`, matching the production normal path.
+bin. The scenario tests drive reads through `pipeline.run`, `ValidationState.observe`, and
+`commit_sample`, matching the production normal path.
 
 The executable proof lives in `tests/test_poisoning_scenarios.py`. It covers valid learning,
 slow-sample resistance, anchored bursts, sensor spikes, gradual drift, low-wind rejection, and

@@ -1,6 +1,6 @@
 # API Shape
 
-**Status:** Complete for Phase 8 API endpoints.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -11,7 +11,7 @@ and formats read responses outside the lock through pure helpers.
 
 ## Key Details
 
-Source-verified AvNav request-handler facts from Phase 2:
+Source-verified AvNav request-handler facts:
 
 - `AVNApi.getBaseUrl()` documents that appending `/api` reaches plugin API
   requests. For Polar Recorder the design URL is
@@ -55,8 +55,7 @@ MVP endpoints:
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
 
-There is no import/restore endpoint in Phase 8. Restore from a JSON backup is
-Post-MVP.
+There is no import/restore endpoint in version 1.0.0. Restore from a JSON backup is Post-MVP.
 
 `GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
 grids are not accepted by the polar endpoint. The response always uses a 181

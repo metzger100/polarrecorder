@@ -1,6 +1,6 @@
 # Technical Debt
 
-**Status:** Complete for Phase 1 bootstrap.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -10,11 +10,10 @@ This file records known debt and intentional temporary states.
 
 | Item | Status | Planned Resolution |
 |---|---|---|
-| `README.md` is a stub | Accepted | Complete in Phase 10 |
-| `documentation/QUALITY.md` is a stub | Accepted | Complete in Phase 11 |
-| Reference sources are unpacked directories, not zips | Human decision | Use read-only directories during implementation; remove `misc/` in Phase 11 |
+| `documentation/QUALITY.md` manual checklist is not complete | Accepted | Complete during final quality hardening |
+| Reference sources are unpacked directories, not zips | Human decision | Use read-only directories during implementation; remove `misc/` during final repository cleanup |
 
 ## Related
 
 - [Roadmap](../ROADMAP.md)
-- [Active execution plan](../exec-plans/active/PLAN1.md)
+- [Quality](QUALITY.md)

@@ -1,6 +1,6 @@
 # Polar Model
 
-**Status:** Complete for Phase 3 pure domain model.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -16,7 +16,7 @@ percentile recalculates the learned speed without relearning from raw samples.
   value, and a signed -180..+180 value where negative means port.
 - Bin addresses use Python `round()` directly: TWA wraps with modulo 360 and
   TWS clamps to the fixed 0-60 kt grid.
-- Percentiles use the PLAN1 nearest-rank crossing algorithm over deciknot
+- Percentiles use a nearest-rank crossing algorithm over deciknot
   histogram keys. There is no interpolation or midpoint averaging.
 - `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh
   nested histogram copies so API formatting can run outside the future plugin

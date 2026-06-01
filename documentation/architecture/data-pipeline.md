@@ -1,13 +1,12 @@
 # Data Pipeline
 
-**Status:** Complete for Phase 4 validation.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
 The runtime data path is `ReadResult -> Sample -> validation pipeline -> model dispatch`.
-Phase 4 implements only the pure `ReadResult -> Sample -> validation pipeline` portion.
-Later phases perform model commits, counters, timeline updates, persistence, and AvNav
-integration.
+Plugin integration then updates model bins, counters, timeline state, persistence, and
+AvNav-visible status.
 
 ## Key Details
 
@@ -31,9 +30,9 @@ direct `build_sample` use during pause/disabled loops. This ordering keeps R11 t
 reading the previous sample, lets R15 evaluate only the prior buffer, and lets the UI warming
 flag call `state.is_warming_up(now)` against the same buffer R15 just judged.
 
-The Phase 5 model dispatch will consume `(PipelineResult, Sample | None)`. Accepted samples
-enter the histogram. Quality-gate rejections and quarantines update per-bin diagnostics.
-Candidacy-gate rejections and `reject_warming_up` do not touch the model.
+Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the
+histogram. Quality-gate rejections and quarantines update per-bin diagnostics. Candidacy-gate
+rejections and `reject_warming_up` do not touch the model.
 
 Optional signal rules will be added through `rules_enhanced.py` after the MVP core rules.
 They should read optional values from `Sample.enhanced`, return `RuleResult`, and keep the

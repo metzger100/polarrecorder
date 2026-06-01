@@ -1,6 +1,6 @@
 # Smell Prevention
 
-**Status:** Complete for Phase 1 bootstrap.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 

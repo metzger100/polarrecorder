@@ -1,6 +1,6 @@
 # UI Architecture
 
-**Status:** Complete for Phase 9 UI.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 

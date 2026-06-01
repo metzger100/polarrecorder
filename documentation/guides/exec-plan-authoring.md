@@ -1,6 +1,6 @@
 # Execution Plan Authoring
 
-**Status:** Complete for Phase 1 bootstrap.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -10,9 +10,9 @@ Execution plans define phased work that leaves the repository green after every 
 
 - Active plans live in `exec-plans/active/`.
 - Completed plans move to `exec-plans/completed/`.
-- Plan files use sequential names such as `PLAN1.md`.
+- Plan files use sequential names in the active plan directory.
 - A progress ledger beside the active plan records each phase as `pending`, `in-progress`, or `done`.
-- Phase 0 and Phase 1 are human-authored foundations for PLAN1. The agent loop begins at Phase 2.
+- Bootstrap work can be human-authored before agent-driven implementation begins.
 - Plan defects must be surfaced and resolved explicitly instead of silently improvised around.
 
 ## Related

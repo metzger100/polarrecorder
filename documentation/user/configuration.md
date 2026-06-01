@@ -1,6 +1,6 @@
 # Configuration
 
-**Status:** Complete for Phase 7 AvNav plugin integration.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 

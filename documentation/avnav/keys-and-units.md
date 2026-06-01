@@ -1,15 +1,15 @@
 # AvNav Keys And Units
 
-**Status:** Complete for Phase 2 AvNav key and unit reference.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
-This document lists the AvNav store keys Polar Recorder reads or may use later. AvNav facts cite the verified source tree in `misc/avnav-master/`; Polar Recorder unit conversions are PLAN1 design.
+This document lists the AvNav store keys Polar Recorder reads or may use later. AvNav facts cite the verified source tree in `misc/avnav-master/`; Polar Recorder unit conversions are described directly here.
 
 ## Key Details
 
 - AvNav's store base key for navigation data is `gps` (`avnav_store.py:34-37`). AvNav key objects prepend that base as `gps.<key>` (`avnav_nmea.py:45-54`), and parsed NMEA data is written below `AVNStore.BASE_KEY_GPS` (`avnav_nmea.py:210-220`).
-- `gps.trueWindAngle` comes from `K_TWA=Key('trueWindAngle', ...)`; the key is true wind angle in degrees (`avnav_nmea.py:129-130`). MWV sentences with `T` reference write the angle value directly to the true-wind key (`avnav_nmea.py:485-501`), so Polar Recorder treats AvNav TWA as raw 0-360 degrees (PLAN1 section 3.25 and section 6.A).
+- `gps.trueWindAngle` comes from `K_TWA=Key('trueWindAngle', ...)`; the key is true wind angle in degrees (`avnav_nmea.py:129-130`). MWV sentences with `T` reference write the angle value directly to the true-wind key (`avnav_nmea.py:485-501`), so Polar Recorder treats AvNav TWA as raw 0-360 degrees.
 - `gps.trueWindSpeed` comes from `K_TWS=Key('trueWindSpeed', ..., 'm/s', ...)`; AvNav stores true wind speed in m/s (`avnav_nmea.py:129`). MWV true-wind speed is converted from km/h or knots to m/s when needed and stored on the true-wind speed key (`avnav_nmea.py:496-510`).
 - `gps.waterSpeed` comes from `K_VHWS=Key('waterSpeed', 'speed through water', 'm/s', ...)`; AvNav stores speed through water in m/s (`avnav_nmea.py:126`).
 - `gps.speed` comes from `K_SOG=Key('speed', 'speed in m/s', 'm/s', ...)`; AvNav stores speed over ground in m/s (`avnav_nmea.py:136-137`).
@@ -28,7 +28,7 @@ This document lists the AvNav store keys Polar Recorder reads or may use later. 
 - Each `DataEntry` stores `.value`, `.timestamp`, `.source`, `.priority`, `.keepAlways`, and `.record`; if no timestamp is supplied, AvNav uses `time.monotonic()` (`avnav_store.py:46-56`).
 - Store expiry compares `DataEntry.timestamp` to `time.monotonic() - expiryTime` unless `keepAlways` is set (`avnav_store.py:102-108`). `getSingleValue()` returns `None` for missing, expired, or dict-valued entries, returns the `DataEntry` when `includeInfo=True`, and otherwise returns the raw value (`avnav_store.py:260-272`).
 - `getExpiryPeriod()` returns the store expiry period in seconds (`avnav_store.py:115-116`).
-- Polar Recorder design converts AvNav speeds from m/s to knots with `1 m/s = 1.94384 kt` before binning, display, and export (PLAN1 section 6.A).
+- Polar Recorder converts AvNav speeds from m/s to knots with `1 m/s = 1.94384 kt` before binning, display, and export.
 
 ## Related
 

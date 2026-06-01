@@ -1,6 +1,6 @@
 # Quality
 
-**Status:** Phase 1 stub. Complete quality checklist is scheduled for Phase 11.
+**Status:** Pending final manual checklist.
 
 ## Overview
 
@@ -9,8 +9,8 @@ Quality is enforced by a deterministic gate plus human inspection for the bootst
 ## Key Details
 
 - `tools/check-all.sh` is the binding automated gate.
-- Phase 1 also requires human inspection that gate scripts actually enforce their claims.
-- Later phases must remain green at every handoff.
+- Bootstrap quality also required human inspection that gate scripts actually enforce their claims.
+- All handoffs must keep the automated gate green.
 
 ## Related
 

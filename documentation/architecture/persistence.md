@@ -1,6 +1,6 @@
 # Persistence
 
-**Status:** Complete for Phase 6 persistence.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -44,7 +44,7 @@ exists, status is `fresh`. If files exist but none can be loaded, status is `cor
 with an empty model and counters. A schema version newer than this code supports returns
 `schema_too_new` with an empty model so `plugin.py` can surface an AvNav ERROR status.
 
-Older schemas migrate through ordered version steps. The Phase 6 migration path supports a
+Older schemas migrate through ordered version steps. The current migration path supports a
 test-only schema version 0 and fills the version 1 metadata defaults before deserializing.
 
 Only the plugin thread writes the polar files. It serializes the live model under

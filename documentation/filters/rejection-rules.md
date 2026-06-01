@@ -1,6 +1,6 @@
 # Rejection Rules
 
-**Status:** Complete for Phase 4 validation.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -41,8 +41,8 @@ R15 evaluates the rolling buffer before the current sample is appended. A warmin
 is not a sailing candidate; `reject_unstable` is a quality-gate rejection and is a sailing
 candidate.
 
-Two pre-pipeline reason codes are reserved for plugin integration phases: `reject_user_paused`
-and `reject_disabled`. They are not emitted by the Phase 4 validation runner.
+Two pre-pipeline reason codes are emitted by plugin integration: `reject_user_paused`
+and `reject_disabled`. They are not emitted by the pure validation runner.
 
 ## Related
 

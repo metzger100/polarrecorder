@@ -1,22 +1,18 @@
 # Roadmap
 
-**Status:** Complete for Phase 1 bootstrap.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
-The MVP is built phase by phase from infrastructure through domain model, validation, persistence, API endpoints, UI, and release packaging.
+Polar Recorder 1.0.0 provides the MVP: learned polar recording, validation, persistence, API endpoints, static viewer UI, and runtime-only release packaging.
 
 ## Key Details
 
-- Phase 1: repository bootstrap, instructions, quality gate, stubs.
-- Phase 2: source-verified AvNav integration documentation.
-- Phases 3-6: pure model, validation, poisoning-resistance scenarios, persistence.
-- Phases 7-9: AvNav integration, API endpoints, UI.
-- Phases 10-11: final documentation, release packaging, and final gate.
+- Current release: core learning model, validation pipeline, persistence, AvNav integration, API endpoints, viewer UI, and release packaging.
+- Maintenance focus: keep the automated quality gate green, keep docs current, and verify the AvNav install/update flow before publishing artifacts.
 
 Post-MVP ideas include optional signal hooks, port/starboard comparisons, restore/import flows, target polar overlays, and dashboard widgets.
 
 ## Related
 
-- [Active execution plan](exec-plans/active/PLAN1.md)
 - [Technical debt](documentation/TECH-DEBT.md)

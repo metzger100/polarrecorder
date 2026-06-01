@@ -1,6 +1,6 @@
 # Documentation Table Of Contents
 
-**Status:** Complete for Phase 1 bootstrap.
+**Status:** Current for version 1.0.0.
 
 ## Overview
 
@@ -22,6 +22,7 @@ Start here for project documentation. Read this file first, then choose only the
 - [AvNav keys and units](avnav/keys-and-units.md)
 - [Configuration](user/configuration.md)
 - [Export and import](user/export-import.md)
+- [Troubleshooting](user/troubleshooting.md)
 - [Coding standards](conventions/coding-standards.md)
 - [Smell prevention](conventions/smell-prevention.md)
 - [Testing infrastructure](conventions/testing-infrastructure.md)
