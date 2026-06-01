@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Settings
-Name=US
-Path=/usr/lib
-Exec=setxkbmap us
-

@@ -1,1 +1,0 @@
-@powershell -WindowStyle Hidden -executionpolicy unrestricted -File "%~dp0\sound.ps1" "%1%"

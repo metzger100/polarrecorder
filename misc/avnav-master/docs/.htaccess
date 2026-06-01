@@ -1,8 +1,0 @@
-#aha!
-#RewriteEngine On
-RewriteOptions Inherit
-
-RewriteRule "viewerimages/icons-new/(.*)" "../viewern/images/$1" [L]
-RewriteRule "viewerimages/(.*)" "../viewern/images/$1" [L]
-
-RewriteRule "mist" "aha"
