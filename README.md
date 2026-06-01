@@ -19,10 +19,11 @@ bundler, or build step is required.
 
 Manual installation:
 
-1. Create `<DATADIR>/plugins/polarrecorder/` on the AvNav system if it does not
+1. Download the release zip from GitHub Releases or from `releases/` in this repository.
+2. Create `<DATADIR>/plugins/polarrecorder/` on the AvNav system if it does not
    already exist.
-2. Extract `releases/polarrecorder-1.0.0.zip` directly into that directory.
-3. Restart AvNav or reload plugins from the AvNav plugin page.
+3. Extract `releases/polarrecorder-1.0.0.zip` directly into that directory.
+4. Restart AvNav or reload plugins from the AvNav plugin page.
 
 The zip is intentionally built without an outer wrapper directory. Its root
 contains `plugin.py`, `plugin.json`, the `viewer/` assets, the

@@ -1,0 +1,46 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository at tag ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Verify release artifacts
+        id: release_assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+          zip_path="releases/polarrecorder-${version}.zip"
+          notes_path="releases/polarrecorder-${version}.md"
+
+          if [[ ! -f "$zip_path" || ! -f "$notes_path" ]]; then
+            echo "Release artifacts not found. Run the local release workflow first."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
+          echo "notes_path=$notes_path" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Polar Recorder v${{ steps.release_assets.outputs.version }}
+          body_path: ${{ steps.release_assets.outputs.notes_path }}
+          files: ${{ steps.release_assets.outputs.zip_path }}

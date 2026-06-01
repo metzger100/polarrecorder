@@ -1,8 +1,4 @@
 data/
-releases/*
-!releases/
-!releases/polarrecorder-1.0.0.md
-!releases/polarrecorder-1.0.0.zip
 __pycache__/
 *.pyc
 .pytest_cache/

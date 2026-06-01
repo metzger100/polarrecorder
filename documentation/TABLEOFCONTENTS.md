@@ -26,7 +26,10 @@ Start here for project documentation. Read this file first, then choose only the
 - [Coding standards](conventions/coding-standards.md)
 - [Smell prevention](conventions/smell-prevention.md)
 - [Testing infrastructure](conventions/testing-infrastructure.md)
+- [Documentation maintenance](guides/documentation-maintenance.md)
 - [Execution plan authoring](guides/exec-plan-authoring.md)
+- [Garbage collection](guides/garbage-collection.md)
+- [Release workflow](guides/release-workflow.md)
 
 ## Related
 

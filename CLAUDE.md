@@ -24,7 +24,7 @@ If guidance conflicts, precedence is:
 3. `documentation/conventions/smell-prevention.md`
 4. Task-specific documentation
 
-Phase 0 and Phase 1 are human-authored bootstrap phases. Agent-driven implementation begins only at Phase 2, after the human has inspected the foundation, run the full gate, and marked Phase 0 and Phase 1 done in the progress ledger.
+The initial implementation is complete. New work uses normal development flow: read the focused docs, make scoped changes, keep docs synchronized with behavior, and run the quality gate before handoff.
 
 ---
 
@@ -51,7 +51,7 @@ Every documentation file uses this structure:
 3. `Key Details`
 4. `Related`
 
-Documentation may be stubbed only when PLAN1 explicitly marks a stub-to-complete lifecycle. In Phase 1, only `README.md` and `documentation/QUALITY.md` are stubs.
+Documentation must be complete when added or changed. Do not leave stub sections unless a current execution plan explicitly records the lifecycle and owner.
 
 ---
 
@@ -95,7 +95,7 @@ Use `documentation/conventions/smell-prevention.md` for the full catalog.
 
 ## 5. Quality Gate
 
-`tools/check-all.sh` must pass before any commit and before any phase is marked complete. The script auto-detects the project virtualenv at `/tmp/polarrecorder-venv/bin` and prepends it to `PATH`. The gate runs:
+`tools/check-all.sh` must pass before any commit, release, or handoff. The script auto-detects the project virtualenv at `/tmp/polarrecorder-venv/bin` and prepends it to `PATH`. The gate runs:
 
 - `python -m ruff check .`
 - `python -m ruff format --check .`
@@ -106,7 +106,7 @@ Use `documentation/conventions/smell-prevention.md` for the full catalog.
 - `python tools/check-release.py --dry-run`
 - `npm run check:all`
 
-Agents must fix all failures before proceeding. A green gate is required but does not replace human inspection for the Phase 1 foundation.
+Agents must fix all failures before proceeding. A green gate is required for normal development handoff.
 
 ---
 
@@ -124,27 +124,25 @@ Agents must fix all failures before proceeding. A green gate is required but doe
 - [documentation/conventions/coding-standards.md](documentation/conventions/coding-standards.md): coding rules.
 - [documentation/conventions/smell-prevention.md](documentation/conventions/smell-prevention.md): smell catalog.
 - [documentation/conventions/testing-infrastructure.md](documentation/conventions/testing-infrastructure.md): test fakes and strategy.
-- [documentation/guides/exec-plan-authoring.md](documentation/guides/exec-plan-authoring.md): execution-plan workflow.
-- `exec-plans/active/`: active execution plans and progress ledgers.
-- `exec-plans/completed/`: completed execution plans.
+- [documentation/guides/documentation-maintenance.md](documentation/guides/documentation-maintenance.md): documentation synchronization workflow.
+- [documentation/guides/exec-plan-authoring.md](documentation/guides/exec-plan-authoring.md): optional execution-plan workflow for complex work.
+- [documentation/guides/garbage-collection.md](documentation/guides/garbage-collection.md): cleanup workflow.
+- [documentation/guides/release-workflow.md](documentation/guides/release-workflow.md): release packaging workflow.
 - `releases/`: generated release artifacts.
 - `plugin.json`: plugin metadata and user app declaration.
 - `viewer/`: viewer HTML, CSS, icon, and plain JS files.
 
 ---
 
-## 7. Exec-Plan Workflow
+## 7. Normal Development Workflow
 
-Active plans live in `exec-plans/active/`; completed plans move to `exec-plans/completed/`. Sequential numbering uses `PLAN{N}.md`.
+Use the guides in `documentation/guides/` when a task needs a repeatable workflow.
 
-Implementation follows the active plan unless an amendment is explicitly recorded. Do not skip phases, reorder deliverables, or infer completion from repository contents. The progress ledger beside the active plan is the source of truth for the next incomplete phase.
-
-The agent-driven loop starts at Phase 2. Before running it, confirm Phase 0 and Phase 1 are marked done by the human and `tools/check-all.sh` is green.
+For routine work, keep changes small and source-driven: update the implementation, update the mapped documentation, add or adjust tests when behavior changes, and run `tools/check-all.sh`. For complex multi-session work, author a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
 <!-- END SHARED_INSTRUCTIONS -->
 
 ## Claude-Specific Notes
 
 - Keep responses concise and cite exact files when reporting changes.
 - Prefer targeted reads through `documentation/TABLEOFCONTENTS.md` over broad context loading.
-- Treat PLAN1 and its progress ledger as the durable task state across sessions.
 - Do not use Pro-style verification language unless the deterministic gate output and actual files have been inspected.

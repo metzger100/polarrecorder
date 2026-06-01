@@ -37,7 +37,7 @@ def run(
     config: Config,
     logger: Logger | None = None,
 ) -> tuple[PipelineResult, Sample | None]:
-    """Run validation rules in the PLAN1 order.
+    """Run validation rules in deterministic rejection order.
 
     Args:
         read_result: Raw store read.

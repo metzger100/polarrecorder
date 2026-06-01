@@ -12,7 +12,9 @@
     "check:deps": "node tools/check-dependencies.mjs",
     "check:core": "npm run check:patterns && npm run check:docs && npm run check:filesize && npm run check:headers && npm run check:namespace && npm run check:naming && npm run check:deps",
     "check:all": "npm run check:core",
-    "hooks:install": "node tools/install-hooks.mjs"
+    "hooks:install": "node tools/install-hooks.mjs",
+    "release:prepare": "node tools/release-prepare.mjs",
+    "release:create": "node tools/release-create.mjs"
   },
   "devDependencies": {}
 }
