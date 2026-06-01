@@ -13,6 +13,7 @@ Start here for project documentation. Read this file first, then choose only the
 - [Technical debt](TECH-DEBT.md)
 - [Plugin lifecycle](architecture/plugin-lifecycle.md)
 - [API shape](architecture/api.md)
+- [UI architecture](architecture/ui.md)
 - [Data pipeline](architecture/data-pipeline.md)
 - [Polar model](architecture/polar-model.md)
 - [Persistence](architecture/persistence.md)

@@ -1,0 +1,2529 @@
+{
+  "status": "OK",
+  "data": {
+    "buckets": [
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925660.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925720.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925780.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925840.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925900.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769925960.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926020.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926080.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926140.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926200.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926260.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926320.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926380.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926440.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926500.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926560.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926620.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926800.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926860.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926920.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769926980.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927040.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927100.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927160.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927220.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927280.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927340.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927400.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927460.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927520.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927580.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927640.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927700.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927760.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927820.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927880.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769927940.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769928000.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769928060.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769928120.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928180.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928240.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928300.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928360.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928420.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928480.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928540.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928600.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928660.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928720.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928780.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928840.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928900.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769928960.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929020.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929080.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929140.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929200.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929260.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929320.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929380.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929440.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929500.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929560.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929620.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929680.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929740.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929800.0
+      },
+      {
+        "accepted": 0,
+        "rejected": 60,
+        "quarantined": 0,
+        "reasons": {
+          "reject_anchored": 60
+        },
+        "t": 1769929860.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769929920.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769929980.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930040.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930100.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930160.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930220.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930280.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930340.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930400.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930460.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930520.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930580.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930640.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930700.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930760.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930820.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930880.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769930940.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931000.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931060.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931120.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931180.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931240.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931300.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931420.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931480.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931540.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931600.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931660.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931720.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931780.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931840.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931900.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769931960.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932020.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932080.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932140.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932200.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932260.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932320.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932380.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932440.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932500.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932560.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932620.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932680.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932740.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932800.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932860.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932920.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769932980.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933040.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933100.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933160.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933220.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933280.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933340.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769933400.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933460.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933520.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933580.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933640.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933700.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933760.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933820.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933880.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769933940.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934000.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934060.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934120.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934180.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934240.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934300.0
+      },
+      {
+        "accepted": 22,
+        "rejected": 16,
+        "quarantined": 22,
+        "reasons": {
+          "reject_unstable": 16,
+          "quarantine_engine_suspected": 22
+        },
+        "t": 1769934360.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934420.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934480.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934540.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934600.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934660.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934720.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934780.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934840.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934900.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769934960.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935020.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935080.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935140.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935200.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935260.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935380.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935440.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935500.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935560.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935620.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935680.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935740.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935800.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935860.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935920.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769935980.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936040.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936100.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936160.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936220.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936280.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936340.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936400.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936460.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936520.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936580.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936640.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936700.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936760.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936820.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936880.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769936940.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937000.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937060.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937120.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937180.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937240.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937300.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937360.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937420.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937480.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937540.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937600.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937660.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937720.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937780.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937840.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937900.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769937960.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938020.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938080.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938140.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938200.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938260.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938320.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938380.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938440.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938500.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938560.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938620.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938680.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938740.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938800.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938860.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938920.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769938980.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939040.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939100.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939160.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939220.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939280.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939340.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939400.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939460.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939520.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939580.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939640.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939700.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939760.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939820.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939880.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769939940.0
+      },
+      {
+        "accepted": 48,
+        "rejected": 9,
+        "quarantined": 3,
+        "reasons": {
+          "reject_low_wind": 5,
+          "reject_unstable": 4,
+          "quarantine_engine_suspected": 3
+        },
+        "t": 1769940000.0
+      }
+    ]
+  }
+}

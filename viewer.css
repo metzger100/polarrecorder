@@ -1,0 +1,798 @@
+:root {
+  --polarrecorder-fore-color: black;
+  --polarrecorder-back-color: white;
+  --polarrecorder-main-color: #546E7A;
+  --polarrecorder-second-color: #E6E6E6;
+  --polarrecorder-attention-color: #C62828;
+  --polarrecorder-active-color: #1DE9B6;
+  --polarrecorder-border-color: #acacac;
+  --polarrecorder-widget-head-color: #E2DFDF;
+  --polarrecorder-accepted-color: #1DE9B6;
+  --polarrecorder-rejected-color: #FF8A80;
+  --polarrecorder-quarantined-color: #FFD54F;
+  --polarrecorder-surface-color: #f8fafa;
+  --polarrecorder-surface-variant: #eef2f3;
+  --polarrecorder-shadow-color: rgba(31, 43, 48, 0.18);
+  --polarrecorder-radius-card: 16px;
+  --polarrecorder-radius-control: 999px;
+  --polarrecorder-font-stack: Verdana, Arial, sans-serif;
+}
+
+.nightMode {
+  --polarrecorder-fore-color: rgba(252, 11, 11, 0.6);
+  --polarrecorder-back-color: black;
+  --polarrecorder-main-color: rgba(84, 110, 122, 0.6);
+  --polarrecorder-second-color: #5a5a5a;
+  --polarrecorder-attention-color: rgba(198, 40, 40, 0.6);
+  --polarrecorder-active-color: rgba(252, 11, 11, 0.6);
+  --polarrecorder-border-color: rgba(252, 11, 11, 0.6);
+  --polarrecorder-widget-head-color: rgba(50, 47, 47, 0.6);
+  --polarrecorder-accepted-color: rgba(252, 11, 11, 0.5);
+  --polarrecorder-rejected-color: rgba(252, 11, 11, 0.3);
+  --polarrecorder-quarantined-color: rgba(252, 11, 11, 0.4);
+  --polarrecorder-surface-color: #090909;
+  --polarrecorder-surface-variant: #151515;
+  --polarrecorder-shadow-color: rgba(252, 11, 11, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: var(--polarrecorder-font-stack);
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select,
+input[type="number"],
+input[type="text"] {
+  min-height: 44px;
+  font-size: 16px;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.polarrecorder-app {
+  min-height: 100vh;
+  padding-bottom: 86px;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 12px clamp(16px, 4vw, 32px);
+  background: var(--polarrecorder-main-color);
+  color: white;
+  box-shadow: 0 2px 8px var(--polarrecorder-shadow-color);
+}
+
+.nightMode .app-header {
+  color: var(--polarrecorder-fore-color);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin-bottom: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  opacity: 0.76;
+  text-transform: uppercase;
+}
+
+.tab-shell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.is-active {
+  display: block;
+}
+
+.connection-banner {
+  position: sticky;
+  top: 72px;
+  z-index: 19;
+  padding: 10px 16px;
+  background: var(--polarrecorder-attention-color);
+  color: white;
+  font-weight: 700;
+  text-align: center;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--polarrecorder-border-color) 65%, transparent);
+  border-radius: var(--polarrecorder-radius-card);
+  background: var(--polarrecorder-surface-color);
+  box-shadow: 0 2px 8px var(--polarrecorder-shadow-color);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  background: var(--polarrecorder-widget-head-color);
+}
+
+.chart-card {
+  min-height: calc(100vh - 180px);
+}
+
+.chart-host {
+  position: relative;
+  min-height: 280px;
+  padding: 12px;
+}
+
+.loading-host {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--polarrecorder-main-color);
+  font-weight: 700;
+}
+
+.loading-host::before {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  border: 3px solid var(--polarrecorder-second-color);
+  border-top-color: var(--polarrecorder-active-color);
+  border-radius: 50%;
+  animation: polarrecorder-spin 900ms linear infinite;
+  content: "";
+}
+
+.loading-host.has-data::before {
+  display: none;
+}
+
+@keyframes polarrecorder-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--polarrecorder-second-color) 92%, var(--polarrecorder-back-color));
+  border-top: 1px solid var(--polarrecorder-border-color);
+}
+
+.nav-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 56px;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--polarrecorder-fore-color);
+  isolation: isolate;
+}
+
+.nav-item span:first-child {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 28px;
+  border-radius: var(--polarrecorder-radius-control);
+  font-size: 1.4rem;
+}
+
+.nav-item span:last-child {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.nav-item.is-active span:first-child {
+  background: var(--polarrecorder-active-color);
+  color: black;
+}
+
+.state-layer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.state-layer::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  content: "";
+}
+
+.state-layer:hover::before {
+  opacity: 0.08;
+}
+
+.state-layer:active::before {
+  opacity: 0.16;
+}
+
+.icon-action,
+.primary-action,
+.secondary-action,
+.danger-action,
+.chip,
+.segmented button {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--polarrecorder-radius-control);
+}
+
+.icon-action {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.primary-action {
+  padding: 0 18px;
+  background: var(--polarrecorder-main-color);
+  color: white;
+  font-weight: 700;
+}
+
+.secondary-action,
+.danger-action {
+  padding: 0 16px;
+  border: 1px solid var(--polarrecorder-border-color);
+  background: var(--polarrecorder-surface-color);
+  color: var(--polarrecorder-fore-color);
+  font-weight: 700;
+}
+
+.danger-action {
+  border-color: var(--polarrecorder-attention-color);
+  color: var(--polarrecorder-attention-color);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.compact-field {
+  min-width: min(260px, 48vw);
+}
+
+select,
+input,
+textarea {
+  border: 1px solid var(--polarrecorder-border-color);
+  border-radius: 12px;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+  padding: 8px 10px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 180px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.chip-row,
+.action-row,
+.segmented,
+.grid-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-row {
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.legend-title {
+  padding: 12px 12px 0;
+  font-weight: 700;
+}
+
+.chip {
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
+  background: var(--polarrecorder-surface-color);
+  color: var(--chip-color, var(--polarrecorder-main-color));
+  font-weight: 700;
+  padding: 0 14px;
+}
+
+.chip.is-active {
+  background: var(--chip-color, var(--polarrecorder-active-color));
+  color: black;
+}
+
+.segmented {
+  flex-wrap: wrap;
+}
+
+.segmented button {
+  padding: 0 14px;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.segmented button.is-active {
+  background: var(--polarrecorder-active-color);
+  color: black;
+}
+
+.status-grid,
+.export-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.status-grid.has-data,
+.export-stack.has-data {
+  display: grid;
+  place-items: stretch;
+  min-height: 0;
+}
+
+.status-grid.has-data::before,
+.export-stack.has-data::before {
+  display: none;
+}
+
+.card > .helper,
+.card > .error-text {
+  margin: 0 14px 14px;
+}
+
+.card > .value-tile,
+.card > .decision-strip {
+  margin: 0 14px 14px;
+}
+
+.status-state,
+.value-grid,
+.stat-grid,
+.export-card {
+  padding: 14px;
+}
+
+.status-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.state-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--polarrecorder-second-color);
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.dot.accepted,
+.decision-accepted {
+  background: var(--polarrecorder-accepted-color);
+}
+
+.dot.rejected,
+.decision-rejected {
+  background: var(--polarrecorder-rejected-color);
+}
+
+.dot.quarantined,
+.decision-quarantined {
+  background: var(--polarrecorder-quarantined-color);
+}
+
+.dot.stale {
+  background: var(--polarrecorder-attention-color);
+}
+
+.value-grid,
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.value-tile,
+.stat-tile {
+  border-radius: 12px;
+  background: var(--polarrecorder-surface-variant);
+  padding: 12px;
+}
+
+.value-number,
+.stat-number {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.helper,
+.error-text {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  opacity: 0.78;
+}
+
+.error-text {
+  color: var(--polarrecorder-attention-color);
+  opacity: 1;
+}
+
+.decision-strip {
+  display: grid;
+  grid-template-columns: repeat(60, minmax(5px, 1fr));
+  align-items: stretch;
+  min-height: 44px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--polarrecorder-second-color);
+}
+
+.decision-cell {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  background: var(--polarrecorder-second-color);
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 8px 12px 0;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.chart-svg {
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 230px);
+  touch-action: manipulation;
+}
+
+#polar-chart.has-data {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#polar-chart.has-data .chart-svg {
+  width: min(100%, calc(100vh - 170px), 900px);
+  max-height: none;
+}
+
+.chart-grid-line {
+  stroke: color-mix(in srgb, var(--polarrecorder-fore-color) 28%, transparent);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-angle-label,
+.chart-axis-label {
+  fill: color-mix(in srgb, var(--polarrecorder-fore-color) 66%, transparent);
+  font-size: 10px;
+}
+
+.chart-angle-label {
+  font-size: 11px;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-point {
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-hit-point {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: min(280px, 80vw);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--polarrecorder-main-color);
+  color: white;
+  box-shadow: 0 6px 20px var(--polarrecorder-shadow-color);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.export-card {
+  display: grid;
+  gap: 12px;
+}
+
+.export-card > .section-head {
+  margin: -14px -14px 0;
+}
+
+.grid-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.grid-row {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.grid-token {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.grid-token input {
+  width: 64px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.grid-token input.is-invalid {
+  border-color: var(--polarrecorder-attention-color);
+  outline: 2px solid color-mix(in srgb, var(--polarrecorder-attention-color) 25%, transparent);
+}
+
+.small-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.reset-card {
+  border-color: var(--polarrecorder-attention-color);
+}
+
+.switch-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: center;
+  border-radius: 16px;
+  background: var(--polarrecorder-surface-variant);
+  padding: 12px;
+}
+
+.switch-field input {
+  position: absolute;
+  opacity: 0;
+}
+
+.switch-track {
+  position: relative;
+  width: 58px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--polarrecorder-second-color);
+  border: 1px solid var(--polarrecorder-border-color);
+}
+
+.switch-track::after {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--polarrecorder-fore-color);
+  transition: transform 150ms ease, background-color 150ms ease;
+  content: "";
+}
+
+.switch-field input:checked + .switch-track {
+  background: var(--polarrecorder-active-color);
+}
+
+.switch-field input:checked + .switch-track::after {
+  transform: translateX(24px);
+  background: black;
+}
+
+.switch-copy {
+  font-weight: 700;
+}
+
+.switch-field .helper {
+  grid-column: 2;
+}
+
+.settings-list {
+  margin: 0 14px 0 28px;
+  padding: 0;
+  line-height: 1.6;
+}
+
+@media (min-width: 600px) {
+  .polarrecorder-app {
+    padding-top: 74px;
+    padding-bottom: 0;
+  }
+
+  .app-header {
+    position: fixed;
+    right: 0;
+    left: 0;
+  }
+
+  .connection-banner {
+    top: 74px;
+  }
+
+  .bottom-nav {
+    top: 0;
+    right: clamp(76px, 10vw, 120px);
+    bottom: auto;
+    left: auto;
+    width: min(650px, 68vw);
+    background: transparent;
+    border: 0;
+    border-top: 0;
+    box-shadow: none;
+  }
+
+  .nav-item {
+    color: white;
+  }
+
+  .nightMode .nav-item {
+    color: var(--polarrecorder-fore-color);
+  }
+
+  .tab-shell {
+    padding: 20px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .status-grid.has-data {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .status-grid .wide-span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 599px) {
+  .section-head,
+  .status-state {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .value-grid,
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    min-height: calc(100vh - 170px);
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "status": "OK",
+  "data": {
+    "record_enabled": true,
+    "recording": true,
+    "data_status": "receiving",
+    "warming_up": true,
+    "uptime_seconds": 1840,
+    "current_values": {
+      "twa_deg": 127.3,
+      "tws_kt": 14.2,
+      "stw_kt": 6.1,
+      "twa_age_s": 0.4,
+      "tws_age_s": 0.5,
+      "stw_age_s": 0.4,
+      "twa_stale": false,
+      "tws_stale": false,
+      "stw_stale": false
+    },
+    "current_decision": {
+      "state": "rejected",
+      "reason_codes": [
+        "reject_warming_up"
+      ]
+    },
+    "counters": {
+      "total_seen": 12480,
+      "total_accepted": 7360,
+      "total_rejected": 4210,
+      "total_quarantined": 910,
+      "acceptance_rate": 0.59
+    },
+    "top_rejections": [
+      {
+        "reason": "reject_anchored",
+        "count": 1220
+      },
+      {
+        "reason": "reject_low_wind",
+        "count": 940
+      },
+      {
+        "reason": "reject_unstable",
+        "count": 710
+      },
+      {
+        "reason": "reject_warming_up",
+        "count": 530
+      },
+      {
+        "reason": "quarantine_engine_suspected",
+        "count": 260
+      }
+    ],
+    "persistence": {
+      "last_flush_wall": 1769939580.0,
+      "file_size_bytes": 58264,
+      "bins_with_data": 386,
+      "bins_total": 21960
+    },
+    "generation": 4527
+  }
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Polar Recorder</title>
+    <link rel="stylesheet" href="viewer.css">
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: white;
+        color: black;
+        font-family: Verdana, Arial, sans-serif;
+      }
+      .polarrecorder-app {
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="polarrecorder-app" id="polarrecorder-app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">AvNav Plugin</p>
+          <h1>Polar Recorder</h1>
+        </div>
+        <button class="icon-action state-layer" id="night-toggle" type="button" aria-label="Toggle night mode">
+          <span aria-hidden="true">☾</span>
+        </button>
+      </header>
+
+      <div class="connection-banner" id="connection-banner" hidden>Connection lost — retrying...</div>
+
+      <main class="tab-shell">
+        <section class="tab-panel is-active" id="tab-polar" data-tab-panel="polar" aria-labelledby="nav-polar">
+          <div class="card chart-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Learned Performance</p>
+                <h2>Polar Diagram</h2>
+              </div>
+              <label class="field compact-field">
+                <span>Preset</span>
+                <select id="polar-preset"></select>
+              </label>
+            </div>
+            <div id="polar-chart" class="chart-host loading-host">Connecting to Polar Recorder...</div>
+            <div class="legend-title">TWS bands</div>
+            <div id="polar-chips" class="chip-row" aria-label="TWS bands"></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-status" data-tab-panel="status" aria-labelledby="nav-status">
+          <div id="status-panel" class="status-grid loading-host">Connecting to Polar Recorder...</div>
+        </section>
+
+        <section class="tab-panel" id="tab-timeline" data-tab-panel="timeline" aria-labelledby="nav-timeline">
+          <div class="card chart-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Rejection History</p>
+                <h2>Timeline</h2>
+              </div>
+              <div id="timeline-ranges" class="segmented" aria-label="Timeline range"></div>
+            </div>
+            <div id="timeline-chart" class="chart-host loading-host">Connecting to Polar Recorder...</div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-export" data-tab-panel="export" aria-labelledby="nav-export">
+          <div id="export-panel" class="export-stack loading-host">Connecting to Polar Recorder...</div>
+        </section>
+
+        <section class="tab-panel" id="tab-settings" data-tab-panel="settings" aria-labelledby="nav-settings">
+          <div id="settings-panel" class="export-stack loading-host">Connecting to Polar Recorder...</div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Polar Recorder tabs">
+        <button class="nav-item is-active state-layer" id="nav-polar" type="button" data-tab="polar">
+          <span aria-hidden="true">⌖</span>
+          <span>Polar</span>
+        </button>
+        <button class="nav-item state-layer" id="nav-status" type="button" data-tab="status">
+          <span aria-hidden="true">●</span>
+          <span>Status</span>
+        </button>
+        <button class="nav-item state-layer" id="nav-timeline" type="button" data-tab="timeline">
+          <span aria-hidden="true">◴</span>
+          <span>Timeline</span>
+        </button>
+        <button class="nav-item state-layer" id="nav-export" type="button" data-tab="export">
+          <span aria-hidden="true">⇩</span>
+          <span>Export</span>
+        </button>
+        <button class="nav-item state-layer" id="nav-settings" type="button" data-tab="settings">
+          <span aria-hidden="true">⚙</span>
+          <span>Settings</span>
+        </button>
+      </nav>
+    </div>
+
+    <script src="viewer.js"></script>
+    <script src="polar-chart.js"></script>
+    <script src="timeline-chart.js"></script>
+    <script src="grid-editor.js"></script>
+    <script src="export-ui.js"></script>
+    <script src="settings-ui.js"></script>
+  </body>
+</html>

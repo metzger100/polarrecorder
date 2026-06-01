@@ -1,0 +1,11 @@
+{
+  "status": "OK",
+  "data": {
+    "record_enabled": true,
+    "sample_interval": 1.0,
+    "percentile": 65,
+    "flush_interval": 300,
+    "min_samples_for_export": 10,
+    "max_tws": 60
+  }
+}

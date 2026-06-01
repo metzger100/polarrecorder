@@ -1,0 +1,33 @@
+{
+  "status": "OK",
+  "data": {
+    "schema_version": 1,
+    "plugin_version": "1.0.0",
+    "created_wall": 1769853600.0,
+    "last_flush_wall": 1769939580.0,
+    "config": {
+      "percentile": 65,
+      "max_tws": 60,
+      "twa_bin_size": 1,
+      "tws_bin_size": 1
+    },
+    "model": {
+      "bins": {
+        "90_12": {
+          "histogram": {
+            "61": 3,
+            "62": 8,
+            "63": 6
+          }
+        }
+      }
+    },
+    "counters": {
+      "total_seen": 12480,
+      "total_accepted": 7360,
+      "total_rejected": 4210,
+      "total_quarantined": 910,
+      "acceptance_rate": 0.59
+    }
+  }
+}

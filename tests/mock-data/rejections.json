@@ -1,0 +1,21 @@
+{
+  "status": "OK",
+  "data": {
+    "global": {
+      "reject_anchored": 1220,
+      "reject_low_wind": 940,
+      "reject_unstable": 710,
+      "reject_warming_up": 530,
+      "quarantine_engine_suspected": 260
+    },
+    "per_bin": {
+      "90_12": {
+        "reject_unstable": 15,
+        "reject_stw_roc": 8
+      },
+      "120_14": {
+        "quarantine_engine_suspected": 3
+      }
+    }
+  }
+}
