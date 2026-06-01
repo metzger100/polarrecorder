@@ -19,7 +19,7 @@ _plugin_dir = os.path.dirname(os.path.abspath(__file__))
 if _plugin_dir not in sys.path:
     sys.path.insert(0, _plugin_dir)
 
-from polarrecorder import commit, persistence, reader
+from polarrecorder import api_dispatch, commit, persistence, reader
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
 from polarrecorder.logger import AvNavLogger
@@ -275,46 +275,10 @@ class Plugin:
     ) -> dict[str, object]:
         del handler
         try:
-            flat_args = _normalize_args(args)
-            with self._lock:
-                snapshot = self._status_snapshot(flat_args)
-            if url == "status":
-                return {"status": "OK", "data": snapshot}
-            return {"status": "ERROR", "error": "not implemented"}
+            return api_dispatch.handle_request(self, url, _normalize_args(args))
         except Exception as exc:
             self.api.error("Polar Recorder request error: %s", exc)
             return {"status": "ERROR", "error": "Internal error"}
-
-    def _status_snapshot(self, args: Mapping[str, str]) -> dict[str, object]:
-        del args
-        now = self._clock()
-        return {
-            "record_enabled": self.config.record_enabled,
-            "recording": self.config.record_enabled and not self._paused,
-            "data_status": self._last_data_status,
-            "warming_up": self._warming_up,
-            "uptime_seconds": now - self._run_start_monotonic,
-            "current_values": self._format_current_values(now),
-            "current_decision": self._last_decision,
-            "counters": self._counters.to_dict(),
-            "timeline": self._timeline.query(240),
-            "generation": self._model.generation,
-            "last_flush_wall": self._last_flush_wall,
-            "last_flush_size_bytes": self._last_flush_size_bytes,
-        }
-
-    def _format_current_values(self, now: float) -> dict[str, float] | None:
-        values = self._last_current_values
-        if values is None:
-            return None
-        return {
-            "twa_deg": values.twa_deg,
-            "tws_kt": values.tws_kt,
-            "stw_kt": values.stw_kt,
-            "twa_age_s": now - values.twa_timestamp,
-            "tws_age_s": now - values.tws_timestamp,
-            "stw_age_s": now - values.stw_timestamp,
-        }
 
     def _restart(self) -> None:
         self._stop_requested = True
