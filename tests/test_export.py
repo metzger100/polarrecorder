@@ -4,7 +4,6 @@ import json
 from typing import TYPE_CHECKING
 
 from conftest import FakeLogger
-
 from polarrecorder import export
 
 if TYPE_CHECKING:

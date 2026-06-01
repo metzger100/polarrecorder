@@ -4,12 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
+const VIEWER_ROOT = path.join(ROOT, "viewer");
 const MAX_ALLOWED_LINES = 400;
 const ONELINER_LONG_LINE_THRESHOLD = 180;
 const onelinerMode = process.argv.includes("--oneliner=block") ? "block" : "warn";
 const failures = [];
 const onelinerFindings = [];
-const targetFiles = collectRootJsFiles();
+const targetFiles = collectViewerJsFiles();
 
 for (const file of targetFiles) {
   const content = fs.readFileSync(file.abs, "utf8");
@@ -43,11 +44,11 @@ if (failures.length > 0) {
 console.log("File size check passed.");
 console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 
-function collectRootJsFiles() {
-  return fs.readdirSync(ROOT)
+function collectViewerJsFiles() {
+  return fs.readdirSync(VIEWER_ROOT)
     .filter((name) => name.endsWith(".js") && name !== "plugin.mjs")
     .sort()
-    .map((name) => ({ abs: path.join(ROOT, name), rel: name }));
+    .map((name) => ({ abs: path.join(VIEWER_ROOT, name), rel: `viewer/${name}` }));
 }
 
 function detectOneliners(file, content) {

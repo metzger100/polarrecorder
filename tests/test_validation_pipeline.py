@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import cast
 
-from validation_helpers import make_read_result, make_warmed_state
-
 from polarrecorder.config import default_config
 from polarrecorder.sample import ReadResult
 from polarrecorder.validation.pipeline import run
 from polarrecorder.validation.state import ValidationState
+from validation_helpers import make_read_result, make_warmed_state
 
 
 def test_runner_returns_none_sample_for_r1_and_r2_rejections() -> None:

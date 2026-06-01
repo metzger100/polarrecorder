@@ -9,7 +9,7 @@ python_files = ["test_*.py"]
 # Put the repo root on sys.path so `import polarrecorder` / `import plugin` resolve from
 # tests regardless of invocation. `python -m pytest` already does this via the -m flag, but
 # this makes bare `pytest` work too (the layout has conftest.py under tests/, not at root).
-pythonpath = ["."]
+pythonpath = [".", "server"]
 
 [tool.ruff]
 target-version = "py39"
@@ -55,12 +55,12 @@ max-statements = 40
 convention = "google"
 
 [tool.ruff.lint.flake8-tidy-imports]
-# Ban AvNav imports in polarrecorder/ — AvNav API is injected via reader.py's StoreAPI protocol
+# Ban AvNav imports in server/polarrecorder/ — AvNav API is injected via reader.py's StoreAPI protocol
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"avnav_api".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
-"pluginhandler".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
-"avnav_store".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
-"avnav_nmea".msg = "AvNav imports are not allowed in polarrecorder/. Use dependency injection via StoreAPI."
+"avnav_api".msg = "AvNav imports are not allowed in server/polarrecorder/. Use dependency injection via StoreAPI."
+"pluginhandler".msg = "AvNav imports are not allowed in server/polarrecorder/. Use dependency injection via StoreAPI."
+"avnav_store".msg = "AvNav imports are not allowed in server/polarrecorder/. Use dependency injection via StoreAPI."
+"avnav_nmea".msg = "AvNav imports are not allowed in server/polarrecorder/. Use dependency injection via StoreAPI."
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -72,7 +72,7 @@ convention = "google"
   "N802",    # FakeAvNavAPI mirrors AvNav method names (getSingleValue, setStatus, ...)
   "N803",    # FakeAvNavAPI mirrors AvNav arg names (includeInfo, iconFile, ...)
 ]
-"polarrecorder/__init__.py" = ["D104"]  # __init__.py needs no docstring
+"server/polarrecorder/__init__.py" = ["D104"]  # __init__.py needs no docstring
 "plugin.py" = ["D100", "TID251", "E402", "N802"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo
 
 [tool.mypy]
@@ -92,7 +92,7 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["polarrecorder"]
-# Coverage is gated on polarrecorder/ only. plugin.py is the AvNav integration boundary and is
+# Coverage is gated on server/polarrecorder/ only. plugin.py is the AvNav integration boundary and is
 # exercised by test_plugin_integration.py but NOT included in the 90% gate; its ~70%
 # figure in "Coverage Targets" is an informational guideline, not an enforced threshold
 # (it cannot be unit-tested fully without a real AvNav server).

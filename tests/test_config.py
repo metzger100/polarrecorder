@@ -3,9 +3,8 @@ from __future__ import annotations
 from dataclasses import fields
 from typing import cast
 
-from conftest import FakeLogger
-
 import polarrecorder.logger as logger_module
+from conftest import FakeLogger
 from polarrecorder.config import Config, default_config, parse_config_values
 from polarrecorder.params import EDITABLE_PARAMETERS
 

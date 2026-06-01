@@ -13,7 +13,7 @@ cd "$REPO_ROOT"
 # Python checks
 python -m ruff check .
 python -m ruff format --check .
-python -m mypy polarrecorder tests plugin.py --strict
+python -m mypy server/polarrecorder tests plugin.py --strict
 python -m pytest tests/ --tb=short
 python -m pytest tests/ --cov=polarrecorder --cov-report=term-missing --cov-fail-under=90
 python tools/check-python-filesize.py

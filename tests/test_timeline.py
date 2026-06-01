@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from conftest import FakeClock
-
 from polarrecorder.timeline import Timeline
 
 

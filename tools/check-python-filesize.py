@@ -33,7 +33,7 @@ def iter_python_targets() -> list[Path]:
     plugin = ROOT / "plugin.py"
     if plugin.exists():
         paths.append(plugin)
-    for root_name in ("polarrecorder", "tests"):
+    for root_name in ("server/polarrecorder", "tests"):
         root = ROOT / root_name
         if root.exists():
             paths.extend(sorted(root.rglob("*.py")))
@@ -46,7 +46,7 @@ def count_non_empty_lines(path: Path) -> int:
 
 def needs_header(path: Path) -> bool:
     try:
-        relative = path.relative_to(ROOT / "polarrecorder")
+        relative = path.relative_to(ROOT / "server" / "polarrecorder")
     except ValueError:
         return False
     return relative.name != "__init__.py"

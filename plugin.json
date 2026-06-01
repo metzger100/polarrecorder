@@ -2,8 +2,8 @@
   "version": "1.0.0",
   "userApps": [
     {
-      "url": "viewer.html",
-      "iconFile": "icon.svg",
+      "url": "viewer/viewer.html",
+      "iconFile": "viewer/icon.svg",
       "title": "Polar Recorder"
     }
   ]

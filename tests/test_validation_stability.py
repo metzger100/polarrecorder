@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from validation_helpers import make_sample, make_warmed_state
-
 from polarrecorder.config import default_config
 from polarrecorder.validation import rules_stability
 from polarrecorder.validation.state import ValidationState
+from validation_helpers import make_sample, make_warmed_state
 
 
 def test_r11_sets_cooldown_on_twa_rate_of_change() -> None:

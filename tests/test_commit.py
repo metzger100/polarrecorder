@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from validation_helpers import make_sample
-
 from polarrecorder.commit import commit_sample
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.validation.pipeline import PipelineResult
+from validation_helpers import make_sample
 
 
 def test_accepted_sample_updates_histogram_and_generation() -> None:

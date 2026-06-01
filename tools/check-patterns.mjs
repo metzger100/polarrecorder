@@ -4,19 +4,21 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
+const VIEWER_ROOT = path.join(ROOT, "viewer");
+const SERVER_PACKAGE_ROOT = path.join(ROOT, "server", "polarrecorder");
 const failures = [];
 
-for (const file of collectRootJsFiles()) {
+for (const file of collectViewerJsFiles()) {
   checkJavaScript(file);
 }
-for (const file of collectPythonFiles(path.join(ROOT, "polarrecorder"))) {
+for (const file of collectPythonFiles(SERVER_PACKAGE_ROOT)) {
   checkPython(file);
 }
 
 const summary = {
   ok: failures.length === 0,
-  checkedJsFiles: collectRootJsFiles().length,
-  checkedPythonFiles: collectPythonFiles(path.join(ROOT, "polarrecorder")).length,
+  checkedJsFiles: collectViewerJsFiles().length,
+  checkedPythonFiles: collectPythonFiles(SERVER_PACKAGE_ROOT).length,
   failures: failures.length
 };
 
@@ -65,7 +67,7 @@ function checkPython(file) {
       fail(file.rel, index, "plugin.py import forbidden");
     }
     if (/\bthreading\.(Lock|RLock|Condition)\s*\(/.test(line)) {
-      fail(file.rel, index, "threading lock acquisition forbidden in polarrecorder/");
+      fail(file.rel, index, "threading lock acquisition forbidden in server/polarrecorder/");
     }
     if (/\btime\.sleep\s*\(/.test(line)) fail(file.rel, index, "time.sleep forbidden");
   }
@@ -75,11 +77,11 @@ function fail(file, zeroBasedLine, message) {
   failures.push(`${file}:${zeroBasedLine + 1}: ${message}`);
 }
 
-function collectRootJsFiles() {
-  return fs.readdirSync(ROOT)
+function collectViewerJsFiles() {
+  return fs.readdirSync(VIEWER_ROOT)
     .filter((name) => name.endsWith(".js"))
     .sort()
-    .map((name) => ({ abs: path.join(ROOT, name), rel: name }));
+    .map((name) => ({ abs: path.join(VIEWER_ROOT, name), rel: `viewer/${name}` }));
 }
 
 function collectPythonFiles(start) {

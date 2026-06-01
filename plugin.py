@@ -16,8 +16,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar
 
 _plugin_dir = os.path.dirname(os.path.abspath(__file__))
-if _plugin_dir not in sys.path:
-    sys.path.insert(0, _plugin_dir)
+_server_dir = os.path.join(_plugin_dir, "server")
+if _server_dir not in sys.path:
+    sys.path.insert(0, _server_dir)
 
 from polarrecorder import api_dispatch, commit, persistence, reader
 from polarrecorder.config import Config, parse_config_values
@@ -34,7 +35,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from avnav_api import AVNApi
-
     from polarrecorder.validation.pipeline import PipelineResult
 
 DESCRIPTION = (

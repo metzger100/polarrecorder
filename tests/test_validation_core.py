@@ -3,11 +3,10 @@ from __future__ import annotations
 import math
 from typing import cast
 
-from validation_helpers import make_read_result, make_sample
-
 from polarrecorder.config import default_config
 from polarrecorder.sample import ReadResult
 from polarrecorder.validation import rules_core
+from validation_helpers import make_read_result, make_sample
 
 
 def test_r1_reports_all_non_finite_raw_values() -> None:

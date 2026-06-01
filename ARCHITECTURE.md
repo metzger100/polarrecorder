@@ -4,12 +4,12 @@
 
 ## Overview
 
-Polar Recorder is a Python-first AvNav plugin. `plugin.py` is the thin AvNav boundary, while product behavior lives in the stdlib-only `polarrecorder/` package.
+Polar Recorder is a Python-first AvNav plugin. `plugin.py` is the thin AvNav boundary, while product behavior lives in the stdlib-only `server/polarrecorder/` package.
 
 ## Key Details
 
 - `plugin.py` owns AvNav lifecycle integration and is the only runtime file that may touch AvNav APIs.
-- `polarrecorder/` contains pure domain modules with injected dependencies and no AvNav imports.
+- `server/polarrecorder/` contains pure domain modules with injected dependencies and no AvNav imports.
 - Runtime browser files are static files served by AvNav without a build step.
 - Threading and locks belong at the integration boundary; domain modules remain lock-unaware.
 - Release packaging ships only runtime files and keeps development docs, tests, and tooling out of the AvNav artifact.

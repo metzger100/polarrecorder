@@ -4,7 +4,6 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from conftest import drive_read_results
-
 from polarrecorder import histogram
 from polarrecorder.config import default_config
 from polarrecorder.polar_model import PolarModel

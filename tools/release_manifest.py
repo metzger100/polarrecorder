@@ -12,13 +12,13 @@ SECTION_RE = re.compile(r"^\[[^]]+\]\s*$")
 VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"')
 ROOT_RUNTIME_FILES = (
     "README.md",
-    "icon.svg",
     "plugin.css",
     "plugin.json",
     "plugin.mjs",
     "plugin.py",
-    "viewer.css",
-    "viewer.html",
+    "viewer/icon.svg",
+    "viewer/viewer.css",
+    "viewer/viewer.html",
 )
 EXCLUDED_PREFIXES = (
     ".git/",
@@ -85,12 +85,15 @@ def expected_runtime_files() -> list[tuple[str, Path]]:
             raise ReleaseError(f"Missing runtime file: {relative}")
         entries.append((relative, source))
 
-    for source in sorted(ROOT.glob("*.js"), key=lambda path: path.name):
-        entries.append((source.name, source))
+    viewer_root = ROOT / "viewer"
+    if not viewer_root.is_dir():
+        raise ReleaseError("Missing runtime viewer directory: viewer")
+    for source in sorted(viewer_root.glob("*.js"), key=lambda path: path.name):
+        entries.append((source.relative_to(ROOT).as_posix(), source))
 
-    package_root = ROOT / "polarrecorder"
+    package_root = ROOT / "server" / "polarrecorder"
     if not package_root.is_dir():
-        raise ReleaseError("Missing runtime package directory: polarrecorder")
+        raise ReleaseError("Missing runtime package directory: server/polarrecorder")
     for source in sorted(package_root.rglob("*.py"), key=lambda path: path.as_posix()):
         entries.append((source.relative_to(ROOT).as_posix(), source))
 

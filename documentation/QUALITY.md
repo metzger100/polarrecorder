@@ -12,7 +12,7 @@ The binding automated gate is `tools/check-all.sh`. It runs:
 
 - `python -m ruff check .`
 - `python -m ruff format --check .`
-- `python -m mypy polarrecorder tests plugin.py --strict`
+- `python -m mypy server/polarrecorder tests plugin.py --strict`
 - `python -m pytest tests/ --tb=short`
 - `python -m pytest tests/ --cov=polarrecorder --cov-report=term-missing --cov-fail-under=90`
 - `python tools/check-python-filesize.py`
@@ -21,9 +21,9 @@ The binding automated gate is `tools/check-all.sh`. It runs:
 
 Coverage requirements are:
 
-- `polarrecorder/` overall: at least 90%.
-- `polarrecorder/validation/`: at least 95%.
-- `polarrecorder/histogram.py`: at least 95%.
+- `server/polarrecorder/` overall: at least 90%.
+- `server/polarrecorder/validation/`: at least 95%.
+- `server/polarrecorder/histogram.py`: at least 95%.
 
 Smell prevention is enforced by the Python gate, the JavaScript check scripts, and review. Blocking smells include AvNav imports outside the plugin boundary, reverse dependencies from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic validation thresholds outside named configuration, unsafe browser patterns, and dead commented-out code.
 

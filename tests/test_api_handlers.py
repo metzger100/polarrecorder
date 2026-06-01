@@ -4,12 +4,12 @@ import math
 from typing import TYPE_CHECKING, cast
 
 from conftest import FakeAvNavAPI
-
-import plugin as plugin_module
 from polarrecorder import api_handlers, export
 from polarrecorder.config import default_config
 from polarrecorder.sample import ReadResult, build_sample
 from polarrecorder.units import knots_to_meters_per_second
+
+import plugin as plugin_module
 
 if TYPE_CHECKING:
     from pathlib import Path

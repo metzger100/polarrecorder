@@ -116,7 +116,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def serve_static(self, raw_path: str) -> None:
-        path = unquote(raw_path).lstrip("/") or "viewer.html"
+        path = unquote(raw_path).lstrip("/") or "viewer/viewer.html"
         target = (ROOT / path).resolve()
         if not str(target).startswith(str(ROOT)) or not target.is_file():
             self.send_error(404)
@@ -496,7 +496,7 @@ def backup_response() -> dict[str, object]:
 
 def main() -> None:
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"Serving Polar Recorder mock UI at http://localhost:{PORT}/viewer.html")
+    print(f"Serving Polar Recorder mock UI at http://localhost:{PORT}/viewer/viewer.html")
     server.serve_forever()
 
 

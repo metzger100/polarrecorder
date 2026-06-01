@@ -23,9 +23,9 @@ directory; AvNav extracts the runtime files directly into the existing
 
 The zip contains no wrapper directory. It includes only:
 
-- `plugin.py`, `plugin.mjs`, `plugin.css`, `plugin.json`, and `icon.svg`
-- `viewer.html`, `viewer.css`, and all root viewer/helper `*.js` files
-- the `polarrecorder/` Python package
+- `plugin.py`, `plugin.mjs`, `plugin.css`, and `plugin.json`
+- `viewer/`, containing `viewer.html`, `viewer.css`, `icon.svg`, and viewer/helper `*.js` files
+- the `server/polarrecorder/` Python package
 - `README.md`
 
 It excludes tests, tools, documentation, execution plans, data, release sources,

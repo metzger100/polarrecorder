@@ -6,14 +6,14 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 
 from conftest import FakeAvNavAPI, FakeClock
-
-import plugin as plugin_module
 from polarrecorder import export, persistence, reader
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.timeline import Timeline
 from polarrecorder.units import knots_to_meters_per_second
+
+import plugin as plugin_module
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -32,11 +32,11 @@ Phase 0 and Phase 1 are human-authored bootstrap phases. Agent-driven implementa
 
 - Runtime Python is Python 3.9+ stdlib only. Users install by dropping this plugin directory into AvNav; no `pip install` is allowed on target devices.
 - Runtime browser files are served as plain static files by AvNav. There is no bundler and no runtime build step.
-- Plain JS uses the single namespace `window.Polarrecorder`. CSS custom properties use the `--polarrecorder-` prefix.
+- Plain viewer JS uses the single namespace `window.Polarrecorder`. CSS custom properties use the `--polarrecorder-` prefix.
 - The Python package and plugin identifier are `polarrecorder`; the display title is `Polar Recorder`.
 - Dev-only tooling is allowed: pytest, ruff, mypy, coverage, and Node.js check scripts.
 - `avnav_api` may be referenced only in `plugin.py`, and only as a `TYPE_CHECKING`-guarded type import. It must never be imported at runtime.
-- `polarrecorder/` modules must not import AvNav modules or `plugin.py`; AvNav API access is injected through protocols/fakes.
+- `server/polarrecorder/` modules must not import AvNav modules or `plugin.py`; AvNav API access is injected through protocols/fakes.
 
 ---
 
@@ -59,20 +59,20 @@ Documentation may be stubbed only when PLAN1 explicitly marks a stub-to-complete
 
 Python:
 
-- Every Python file in `plugin.py`, `polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
-- `plugin.py`, `polarrecorder/`, and `tests/` have a 400 non-empty-line hard limit; `tools/` is exempt.
-- `polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
+- Every Python file in `plugin.py`, `server/polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
+- `plugin.py`, `server/polarrecorder/`, and `tests/` have a 400 non-empty-line hard limit; `tools/` is exempt.
+- `server/polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
 - All functions are typed; public functions have Google-style docstrings.
 - Ruff formatting and `mypy --strict` are binding.
 - No `print()` calls; use the logging protocol or AvNav boundary logging.
-- No broad unchecked exception handling in `polarrecorder/`.
+- No broad unchecked exception handling in `server/polarrecorder/`.
 
 JavaScript:
 
-- Root `*.js` files are plain scripts, not ES modules. `plugin.mjs` is the only planned ES module exception.
-- Root `*.js` files must use `window.Polarrecorder`.
+- `viewer/*.js` files are plain scripts, not ES modules. `plugin.mjs` is the only planned ES module exception.
+- `viewer/*.js` files must use `window.Polarrecorder`.
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
-- Root JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers.
+- Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers.
 
 ---
 
@@ -80,9 +80,9 @@ JavaScript:
 
 Blocking smells include:
 
-- AvNav imports in `polarrecorder/`.
-- Reverse dependency from `polarrecorder/` to `plugin.py`.
-- Lock acquisition in `polarrecorder/`; locking is exclusively the integration shell's responsibility.
+- AvNav imports in `server/polarrecorder/`.
+- Reverse dependency from `server/polarrecorder/` to `plugin.py`.
+- Lock acquisition in `server/polarrecorder/`; locking is exclusively the integration shell's responsibility.
 - Product/domain logic accumulating in `plugin.py`.
 - Hidden real-time dependencies in domain modules instead of injected clocks.
 - Magic thresholds outside named config/constants modules.
@@ -99,7 +99,7 @@ Use `documentation/conventions/smell-prevention.md` for the full catalog.
 
 - `python -m ruff check .`
 - `python -m ruff format --check .`
-- `python -m mypy polarrecorder tests plugin.py --strict`
+- `python -m mypy server/polarrecorder tests plugin.py --strict`
 - `python -m pytest tests/ --tb=short`
 - `python -m pytest tests/ --cov=polarrecorder --cov-report=term-missing --cov-fail-under=90`
 - `python tools/check-python-filesize.py`
@@ -113,8 +113,8 @@ Agents must fix all failures before proceeding. A green gate is required but doe
 ## 6. File Map
 
 - `plugin.py`: thin AvNav integration shell only.
-- `polarrecorder/`: domain logic, no AvNav dependency.
-- `polarrecorder/validation/`: validation pipeline and rules in later phases.
+- `server/polarrecorder/`: domain logic, no AvNav dependency.
+- `server/polarrecorder/validation/`: validation pipeline and rules in later phases.
 - `tests/`: unit and integration tests with fakes.
 - `tools/`: quality gate scripts and release tooling.
 - [documentation/TABLEOFCONTENTS.md](documentation/TABLEOFCONTENTS.md): modular documentation index.
@@ -129,7 +129,7 @@ Agents must fix all failures before proceeding. A green gate is required but doe
 - `exec-plans/completed/`: completed execution plans.
 - `releases/`: generated release artifacts.
 - `plugin.json`: plugin metadata and user app declaration.
-- `viewer.html`, `viewer.css`, and root viewer JS files: Phase 9 UI files.
+- `viewer/`: viewer HTML, CSS, icon, and plain JS files.
 
 ---
 

@@ -25,8 +25,8 @@ Manual installation:
 3. Restart AvNav or reload plugins from the AvNav plugin page.
 
 The zip is intentionally built without an outer wrapper directory. Its root
-contains `plugin.py`, `plugin.json`, viewer assets, the `polarrecorder/` Python
-package, and this `README.md`. This matches AvNav's upload flow, which extracts
+contains `plugin.py`, `plugin.json`, the `viewer/` assets, the
+`server/polarrecorder/` Python package, and this `README.md`. This matches AvNav's upload flow, which extracts
 the uploaded zip into the existing plugin directory.
 
 When using AvNav's plugin upload UI, upload the release zip for the

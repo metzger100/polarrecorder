@@ -4,15 +4,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const VIEWER_FILE = "viewer.js";
+const VIEWER_ROOT = path.join(ROOT, "viewer");
+const VIEWER_FILE = "viewer/viewer.js";
 const LATE_WIRED_MODULES = new Set([
-  "polar-chart.js",
-  "timeline-chart.js",
-  "export-ui.js",
-  "grid-editor.js"
+  "viewer/polar-chart.js",
+  "viewer/timeline-chart.js",
+  "viewer/export-ui.js",
+  "viewer/grid-editor.js"
 ]);
 const failures = [];
-const files = collectRootJsFiles();
+const files = collectViewerJsFiles();
 const definitions = mapDefinitions(files);
 const graph = mapReferences(files, definitions);
 
@@ -36,11 +37,11 @@ if (failures.length > 0) {
 console.log("Dependency check passed.");
 console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 
-function collectRootJsFiles() {
-  return fs.readdirSync(ROOT)
+function collectViewerJsFiles() {
+  return fs.readdirSync(VIEWER_ROOT)
     .filter((name) => name.endsWith(".js"))
     .sort()
-    .map((name) => ({ abs: path.join(ROOT, name), rel: name }));
+    .map((name) => ({ abs: path.join(VIEWER_ROOT, name), rel: `viewer/${name}` }));
 }
 
 function mapDefinitions(jsFiles) {

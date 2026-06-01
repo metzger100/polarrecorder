@@ -12,7 +12,7 @@ rejected and quarantined samples are diagnostic signals, not polar-speed inputs.
 
 Each populated TWA/TWS bin stores a 0.1-knot STW histogram. `PolarModel.query(percentile)`
 computes the configured percentile from that histogram on demand, using the nearest-rank
-algorithm in `polarrecorder/histogram.py`. The default P65 naturally ignores slow tails from
+algorithm in `server/polarrecorder/histogram.py`. The default P65 naturally ignores slow tails from
 undetected drag, bad trim, current, or moderate drift better than a mean would.
 
 The validation pipeline is the first defense. R1 through R10 reject samples that are missing,

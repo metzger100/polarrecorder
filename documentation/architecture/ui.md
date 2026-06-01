@@ -10,13 +10,13 @@ AvNav without a build step, network access, or runtime dependencies.
 
 ## Key Details
 
-- `viewer.html` provides the shell, five tab panels, Material-style navigation,
+- `viewer/viewer.html` provides the shell, five tab panels, Material-style navigation,
   and fixed script load order.
-- `viewer.css` owns the AvNav-derived day/night color tokens and the Material
+- `viewer/viewer.css` owns the AvNav-derived day/night color tokens and the Material
   You-inspired shape, type, elevation, state-layer, card, chip, and responsive
   layout rules.
-- Root JavaScript files are plain scripts that register functionality only on
-  `window.Polarrecorder`. `viewer.js` owns startup, API access, polling, tab
+- `viewer/*.js` files are plain scripts that register functionality only on
+  `window.Polarrecorder`. `viewer/viewer.js` owns startup, API access, polling, tab
   switching, status rendering, and shared caches. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited

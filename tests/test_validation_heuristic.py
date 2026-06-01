@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from validation_helpers import make_sample
-
 from polarrecorder.config import default_config
 from polarrecorder.validation import rules_enhanced
 from polarrecorder.validation.rules_heuristic import engine_heuristic
+from validation_helpers import make_sample
 
 
 def test_r16_quarantines_suspected_engine_use() -> None:

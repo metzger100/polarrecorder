@@ -40,7 +40,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function readApiBase() {
-    const base = document.body.dataset.apiBase || "api/";
+    const base = document.body.dataset.apiBase || "../api/";
     return base.endsWith("/") ? base : base + "/";
   }
 

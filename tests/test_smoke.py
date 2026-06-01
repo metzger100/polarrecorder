@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import polarrecorder
 from conftest import FakeAvNavAPI
 
-import polarrecorder
 from plugin import Plugin
 
 

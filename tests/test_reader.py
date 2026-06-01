@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from conftest import FakeClock, FakeDataEntry, FakeLogger
-
 from polarrecorder.config import default_config
 from polarrecorder.reader import STW_KEY, TWA_KEY, TWS_KEY, StoreReader, read_store
 from polarrecorder.sample import build_sample

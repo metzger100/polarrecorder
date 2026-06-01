@@ -4,9 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
+const VIEWER_ROOT = path.join(ROOT, "viewer");
 const failures = [];
 
-for (const file of collectRootJsFiles()) {
+for (const file of collectViewerJsFiles()) {
   const content = fs.readFileSync(file.abs, "utf8");
   const header = extractTopHeader(content);
   if (!header) {
@@ -29,7 +30,7 @@ for (const file of collectRootJsFiles()) {
 
 const summary = {
   ok: failures.length === 0,
-  checkedJsFiles: collectRootJsFiles().length,
+  checkedJsFiles: collectViewerJsFiles().length,
   failures: failures.length
 };
 
@@ -42,12 +43,12 @@ if (failures.length > 0) {
 console.log("Header check passed.");
 console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 
-function collectRootJsFiles() {
-  if (!fs.existsSync(ROOT)) return [];
-  return fs.readdirSync(ROOT)
+function collectViewerJsFiles() {
+  if (!fs.existsSync(VIEWER_ROOT)) return [];
+  return fs.readdirSync(VIEWER_ROOT)
     .filter((name) => name.endsWith(".js"))
     .sort()
-    .map((name) => ({ abs: path.join(ROOT, name), rel: name }));
+    .map((name) => ({ abs: path.join(VIEWER_ROOT, name), rel: `viewer/${name}` }));
 }
 
 function extractTopHeader(content) {
