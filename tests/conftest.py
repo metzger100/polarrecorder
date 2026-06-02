@@ -68,7 +68,7 @@ class FakeLogger:
     def info(self, msg: str) -> None:
         self.messages.append(("info", msg))
 
-    def warn(self, msg: str) -> None:
+    def warning(self, msg: str) -> None:
         self.messages.append(("warn", msg))
 
     def debug(self, msg: str) -> None:

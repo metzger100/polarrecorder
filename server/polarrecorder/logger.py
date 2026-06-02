@@ -32,7 +32,7 @@ class Logger(Protocol):
         """Log an informational message."""
         ...
 
-    def warn(self, msg: str) -> None:
+    def warning(self, msg: str) -> None:
         """Log a warning message."""
         ...
 
@@ -60,7 +60,7 @@ class AvNavLogger:
         """Log an informational message."""
         self._api.log(msg)
 
-    def warn(self, msg: str) -> None:
+    def warning(self, msg: str) -> None:
         """Log a warning message via AvNav's info log."""
         self._api.log(f"[WARN] {msg}")
 

@@ -26,12 +26,16 @@ class WindowEntry:
     stw_kt: float
 
 
+def _new_window() -> deque[WindowEntry]:
+    return deque(maxlen=MAX_WINDOW_ENTRIES)
+
+
 @dataclass
 class ValidationState:
     """Mutable rolling state used by stateful validation rules."""
 
     stability_window_seconds: float = 15.0
-    window: deque[WindowEntry] = field(default_factory=lambda: deque(maxlen=MAX_WINDOW_ENTRIES))
+    window: deque[WindowEntry] = field(default_factory=_new_window)
     cooldown_expires: float = 0.0
     previous_sample: WindowEntry | None = None
 

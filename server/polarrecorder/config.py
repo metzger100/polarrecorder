@@ -104,7 +104,8 @@ def _parse_supplied_value(
     except (AttributeError, TypeError, ValueError):
         name = _spec_string(spec, "name")
         if logger is not None:
-            logger.warn(f"Invalid config {name}={raw_value!r}; keeping previous/default value")
+            message = f"Invalid config {name}={raw_value!r}; keeping previous/default value"
+            logger.warning(message)
         if previous is not None:
             return getattr(previous, name)
         return _parse_spec_value(spec, _spec_string(spec, "default"), logger)
@@ -116,7 +117,8 @@ def _clamp(value: float, spec: Mapping[str, object], logger: Logger | None) -> f
     upper = float(bounds[1])
     clamped = min(max(value, lower), upper)
     if clamped != value and logger is not None:
-        logger.debug(f"Clamped config {spec['name']} from {value} to {clamped}")
+        message = f"Clamped config {spec['name']} from {value} to {clamped}"
+        logger.debug(message)
     return clamped
 
 

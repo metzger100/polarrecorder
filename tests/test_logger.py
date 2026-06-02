@@ -22,7 +22,7 @@ def test_avnav_logger_delegates_all_levels() -> None:
     logger = AvNavLogger(api)
 
     logger.info("info message")
-    logger.warn("warn message")
+    logger.warning("warn message")
     logger.debug("debug message")
     logger.error("error message")
 

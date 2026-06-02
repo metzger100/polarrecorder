@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import json
-import os
-from typing import TYPE_CHECKING, Any
+from pathlib import Path
+from typing import Any
 
 from polarrecorder import persistence
 from polarrecorder.counters import Counters
 from polarrecorder.persistence import PersistenceMetadata
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, Sample
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class CapturingLogger:
@@ -21,7 +18,7 @@ class CapturingLogger:
     def info(self, msg: str) -> None:
         self.messages.append(("info", msg))
 
-    def warn(self, msg: str) -> None:
+    def warning(self, msg: str) -> None:
         self.messages.append(("warn", msg))
 
     def debug(self, msg: str) -> None:
@@ -229,10 +226,16 @@ def test_save_handles_makedirs_failure_without_raising(
 ) -> None:
     logger = CapturingLogger()
 
-    def fail_makedirs(path: object, exist_ok: bool = False) -> None:
-        raise OSError("read-only filesystem")
+    def fail_mkdir(
+        self: Path,
+        mode: int = 0o777,
+        parents: bool = False,
+        exist_ok: bool = False,
+    ) -> None:
+        msg = "read-only filesystem"
+        raise OSError(msg)
 
-    monkeypatch.setattr(os, "makedirs", fail_makedirs)
+    monkeypatch.setattr(Path, "mkdir", fail_mkdir)
 
     saved_size = persistence.save(
         tmp_path,

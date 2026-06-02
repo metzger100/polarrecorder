@@ -8,15 +8,16 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 import threading
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
-_plugin_dir = os.path.dirname(os.path.abspath(__file__))
-_server_dir = os.path.join(_plugin_dir, "server")
+_plugin_path = Path(__file__).resolve().parent
+_plugin_dir = str(_plugin_path)
+_server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
@@ -33,6 +34,7 @@ from polarrecorder.validation.state import ValidationState
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from os import PathLike
 
     from avnav_api import AVNApi
     from polarrecorder.validation.pipeline import PipelineResult
@@ -81,7 +83,7 @@ class Plugin:
         self._paused = False
         self._incomplete_reads = 0
         self._run_start_monotonic = self._clock()
-        self._data_dir = os.path.join(_plugin_dir, "data")
+        self._data_dir: str | PathLike[str] = _plugin_path / "data"
         api.registerEditableParameters(EDITABLE_PARAMETERS, self._on_config_change)
         self.config = self._load_initial_config()
         self._state = ValidationState(float(self.config.stability_window_seconds))
@@ -140,10 +142,11 @@ class Plugin:
         if sample is not None:
             self._state.observe(sample)
         if config.debug_logging:
-            self._logger.debug(
+            message = (
                 f"sample decision={pipeline_result.decision} "
                 f"reasons={','.join(pipeline_result.reason_codes)}"
             )
+            self._logger.debug(message)
         with self._lock:
             commit.commit_sample(pipeline_result, sample, self._model)
             self._record_counters(pipeline_result)
@@ -291,9 +294,9 @@ class Plugin:
 
 
 def _read_plugin_version() -> str:
-    plugin_json = os.path.join(_plugin_dir, "plugin.json")
+    plugin_json = Path(_plugin_dir) / "plugin.json"
     try:
-        with open(plugin_json, encoding="utf-8") as handle:
+        with plugin_json.open(encoding="utf-8") as handle:
             data = json.load(handle)
     except (OSError, json.JSONDecodeError) as exc:
         logging.warning("Could not read polarrecorder plugin.json version: %s", exc)

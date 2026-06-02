@@ -297,9 +297,7 @@ def _load_user_presets(
             _log_warn(logger, "presets.json schema is too new; discarding user presets")
             return {}
         raw_presets = data.get("presets", {})
-        if not isinstance(raw_presets, dict):
-            raise ValueError("presets block is not an object")
-        return _decode_presets(raw_presets)
+        return _decode_presets(_require_presets_dict(raw_presets))
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
         _log_warn(logger, f"presets.json is corrupt; using built-in presets only: {exc}")
         return {}
@@ -316,6 +314,13 @@ def _decode_presets(raw_presets: dict[object, object]) -> dict[str, Preset]:
         if twa and tws and name.lower() != WINDY_NAME:
             presets[name] = Preset(name, builtin=False, twa=sorted(twa), tws=sorted(tws))
     return presets
+
+
+def _require_presets_dict(raw_presets: object) -> dict[object, object]:
+    if isinstance(raw_presets, dict):
+        return raw_presets
+    msg = "presets block is not an object"
+    raise TypeError(msg)
 
 
 def _write_user_presets(
@@ -335,12 +340,12 @@ def _write_user_presets(
     }
     text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     try:
-        os.makedirs(root, exist_ok=True)
+        root.mkdir(parents=True, exist_ok=True)
         with tmp.open("w", encoding="utf-8") as handle:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp, path)
+        tmp.replace(path)
     except OSError as exc:
         _cleanup_tmp(tmp, logger)
         msg = f"Failed to save presets.json: {exc}"
@@ -415,4 +420,4 @@ def _cleanup_tmp(path: Path, logger: Logger | None) -> None:
 
 def _log_warn(logger: Logger | None, message: str) -> None:
     if logger is not None:
-        logger.warn(message)
+        logger.warning(message)

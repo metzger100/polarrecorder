@@ -123,14 +123,14 @@ def save(
     size_bytes = len(json_text.encode("utf-8"))
     paths = _paths(data_dir)
     try:
-        os.makedirs(paths.data_dir, exist_ok=True)
+        paths.data_dir.mkdir(parents=True, exist_ok=True)
         with paths.tmp.open("w", encoding="utf-8") as handle:
             handle.write(json_text)
             handle.flush()
             os.fsync(handle.fileno())
         if paths.primary.exists():
-            os.replace(paths.primary, paths.backup)
-        os.replace(paths.tmp, paths.primary)
+            paths.primary.replace(paths.backup)
+        paths.tmp.replace(paths.primary)
     except OSError as exc:
         _log_error(logger, f"Failed to save polar.json: {exc}")
         _cleanup_tmp(paths.tmp, logger)
@@ -230,16 +230,20 @@ def _read_payload(path: Path) -> _ReadResult:
     try:
         raw_text = path.read_text(encoding="utf-8")
         decoded = json.loads(raw_text)
-        if not isinstance(decoded, dict):
-            msg = f"{path.name} does not contain a JSON object"
-            raise ValueError(msg)
-        migrated = _migrate(cast("SerializedDict", decoded))
+        migrated = _migrate(_require_serialized_dict(decoded, path))
         _validate_payload(migrated)
     except _SchemaTooNewError as exc:
         return _ReadResult(None, 0, "schema_too_new", str(exc))
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         return _ReadResult(None, 0, "corrupt", f"{path.name} is corrupt: {exc}")
     return _ReadResult(migrated, len(raw_text.encode("utf-8")), "loaded", f"Loaded {path.name}")
+
+
+def _require_serialized_dict(decoded: object, path: Path) -> SerializedDict:
+    if isinstance(decoded, dict):
+        return cast("SerializedDict", decoded)
+    msg = f"{path.name} does not contain a JSON object"
+    raise TypeError(msg)
 
 
 def _migrate(data: SerializedDict) -> SerializedDict:
@@ -318,7 +322,7 @@ def _model_from_dict(data: object) -> PolarModel:
     for raw_address, raw_bin in data.items():
         if not isinstance(raw_bin, dict):
             msg = f"bin {raw_address!r} is not an object"
-            raise ValueError(msg)
+            raise TypeError(msg)
         address = _parse_address(str(raw_address))
         bin_data = cast("dict[object, object]", raw_bin)
         model.bins[address] = Bin(
@@ -392,7 +396,7 @@ def _cleanup_tmp(path: Path, logger: Logger | None) -> None:
 
 def _log_warn(logger: Logger | None, msg: str) -> None:
     if logger is not None:
-        logger.warn(msg)
+        logger.warning(msg)
 
 
 def _log_error(logger: Logger | None, msg: str) -> None:

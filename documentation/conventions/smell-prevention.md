@@ -17,7 +17,7 @@ The smell catalog defines blocking anti-patterns and the required replacement pa
 | Broad domain exception | Bare or broad `except` in `server/polarrecorder/` | Catch specific exceptions; boundary handles crash safety | ruff and review | block |
 | Print statement | `print()` | Use logger protocol or AvNav logging boundary | ruff `T20` | block |
 | Magic threshold | Hardcoded model or validation threshold | Use named config/constants | review | block |
-| File size bypass | One-line compression to evade limits | Split modules and keep readable formatting | filesize checks | block |
+| File size bypass | One-line compression to evade limits in Python or JS | Split modules and keep readable formatting | Python and JS filesize/oneliner checks | block |
 | Commented-out code | Dead code left in comments | Delete it; version control keeps history | ruff and `check-patterns.mjs` | block |
 | JS global pollution | Globals outside `window.Polarrecorder` | Namespace all browser exports | `check-namespace.mjs` | block |
 | JS ES module syntax | `import`/`export` in `viewer/*.js` | Plain scripts; `plugin.mjs` only for AvNav module entry | `check-patterns.mjs` | block |

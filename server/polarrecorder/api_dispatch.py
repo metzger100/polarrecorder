@@ -233,8 +233,13 @@ def _parse_int_arg(
 def _top_rejections(histogram: dict[str, int]) -> list[dict[str, object]]:
     return [
         {"reason": reason, "count": count}
-        for reason, count in sorted(histogram.items(), key=lambda item: (-item[1], item[0]))[:5]
+        for reason, count in sorted(histogram.items(), key=_rejection_sort_key)[:5]
     ]
+
+
+def _rejection_sort_key(item: tuple[str, int]) -> tuple[int, str]:
+    reason, count = item
+    return -count, reason
 
 
 def _copy_decision(decision: dict[str, object] | None) -> dict[str, object] | None:

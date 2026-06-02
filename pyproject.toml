@@ -23,7 +23,8 @@ extend-exclude = ["tools"]
 select = [
   "E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH", "RUF",
   "C90", "D", "PT", "ARG", "ERA", "S", "PIE", "RSE", "RET", "FBT", "PL",
-  "T20", "TID", "FA",
+  "T20", "TID", "FA", "C4", "BLE", "TRY", "EM", "G", "PERF", "PTH", "YTT",
+  "DTZ", "FURB",
 ]
 # E=pycodestyle, F=pyflakes, W=warnings, I=isort, N=naming,
 # UP=pyupgrade, B=bugbear, A=builtins, SIM=simplify, TCH=type-checking, RUF=ruff-specific,
@@ -31,7 +32,10 @@ select = [
 # ERA=commented-out code, S=bandit security, PIE=unnecessary-pass/reimplemented-builtins,
 # RSE=raise-without-message, RET=return-consistency, FBT=boolean-trap, PL=pylint-subset,
 # T20=flake8-print (no print() calls), TID=flake8-tidy-imports (banned imports),
-# FA=flake8-future-annotations (enforces `from __future__ import annotations` in every file)
+# FA=flake8-future-annotations (enforces `from __future__ import annotations` in every file),
+# C4=comprehensions, BLE=blind-except, TRY=exception style, EM=exception messages,
+# G=logging format, PERF=performance, PTH=pathlib, YTT=sys.version checks,
+# DTZ=datetime timezone checks, FURB=refurb
 ignore = [
   "D100",   # missing module docstring (covered by file headers)
   "D104",   # missing __init__.py docstring
@@ -73,7 +77,7 @@ convention = "google"
   "N803",    # FakeAvNavAPI mirrors AvNav arg names (includeInfo, iconFile, ...)
 ]
 "server/polarrecorder/__init__.py" = ["D104"]  # __init__.py needs no docstring
-"plugin.py" = ["D100", "TID251", "E402", "N802"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo
+"plugin.py" = ["D100", "TID251", "E402", "N802", "BLE001"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo; BLE001 catches are AvNav boundary crash safety
 
 [tool.mypy]
 python_version = "3.9"
@@ -81,6 +85,7 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+strict_equality_for_none = true
 
 # `avnav_api` lives in the AvNav server source tree, not on the dev/CI sys.path. plugin.py
 # imports `AVNApi` only under `if TYPE_CHECKING:` (never at runtime — see Layer 1 / Python

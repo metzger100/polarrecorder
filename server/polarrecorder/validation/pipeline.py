@@ -58,7 +58,8 @@ def run(
         result = _run_sample_rules(sample, state, config)
 
     if logger is not None:
-        logger.debug(f"validation pipeline decision={result.decision}")
+        message = f"validation pipeline decision={result.decision}"
+        logger.debug(message)
     return result, sample
 
 

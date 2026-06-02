@@ -53,8 +53,15 @@ def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
 
 
 def test_reserved_windy_save_and_delete_are_rejected(tmp_path: Path) -> None:
-    _assert_export_error(lambda: export.save_preset(tmp_path, "Windy", "0", "4", max_tws=20))
-    _assert_export_error(lambda: export.delete_preset(tmp_path, "windy", "yes"))
+    def save_windy() -> object:
+        return export.save_preset(tmp_path, "Windy", "0", "4", max_tws=20)
+
+    def delete_windy() -> object:
+        export.delete_preset(tmp_path, "windy", "yes")
+        return None
+
+    _assert_export_error(save_windy)
+    _assert_export_error(delete_windy)
 
 
 def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> None:
@@ -87,7 +94,8 @@ def test_name_and_grid_validation(tmp_path: Path) -> None:
             export.save_preset(tmp_path, name, twa, tws, max_tws=20)
         except export.ExportError:
             continue
-        raise AssertionError("expected ExportError")
+        msg = "expected ExportError"
+        raise AssertionError(msg)
 
 
 def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> None:
@@ -101,10 +109,20 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
     assert named.twa == [0, 90]
     assert inline.name == "custom"
     assert inline.tws == [4, 8]
-    _assert_export_error(
-        lambda: export.resolve_export_selection(tmp_path, {"format": "windy", "twa": "0"}, 20, 10)
-    )
-    _assert_export_error(lambda: export.resolve_export_selection(tmp_path, {"twa": "0"}, 20, 10))
+
+    def mixed_builtin_and_inline() -> object:
+        return export.resolve_export_selection(
+            tmp_path,
+            {"format": "windy", "twa": "0"},
+            20,
+            10,
+        )
+
+    def incomplete_inline() -> object:
+        return export.resolve_export_selection(tmp_path, {"twa": "0"}, 20, 10)
+
+    _assert_export_error(mixed_builtin_and_inline)
+    _assert_export_error(incomplete_inline)
 
 
 def test_floor_selection_changes_projected_cells_and_csv() -> None:
@@ -137,4 +155,5 @@ def _assert_export_error(call: Callable[[], object]) -> None:
         call()
     except export.ExportError:
         return
-    raise AssertionError("expected ExportError")
+    msg = "expected ExportError"
+    raise AssertionError(msg)
