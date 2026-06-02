@@ -424,8 +424,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     const existing = document.querySelector(".tooltip");
     if (existing) existing.remove();
     const tip = el("div", "tooltip", text);
-    tip.style.left = String(Math.min(x + 12, window.innerWidth - 300)) + "px";
-    tip.style.top = String(Math.max(12, y - 12)) + "px";
+    if (x > window.innerWidth * 0.7) tip.classList.add("is-left");
+    if (y < window.innerHeight * 0.2) tip.classList.add("is-below");
+    tip.style.left = String(x / window.innerWidth * 100) + "%";
+    tip.style.top = String(y / window.innerHeight * 100) + "%";
     document.body.appendChild(tip);
     window.setTimeout(function () {
       tip.remove();

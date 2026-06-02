@@ -13,8 +13,8 @@
   --polarrecorder-surface-color: #f8fafa;
   --polarrecorder-surface-variant: #eef2f3;
   --polarrecorder-shadow-color: rgba(31, 43, 48, 0.18);
-  --polarrecorder-radius-card: 16px;
-  --polarrecorder-radius-control: 999px;
+  --polarrecorder-radius-card: 1.1429rem;
+  --polarrecorder-radius-control: 999em;
   --polarrecorder-font-stack: Verdana, Arial, sans-serif;
 }
 
@@ -41,9 +41,8 @@
 
 html,
 body {
-  min-height: 100%;
   font-family: var(--polarrecorder-font-stack);
-  font-size: 14px;
+  font-size: 87.5%;
 }
 
 body {
@@ -64,8 +63,7 @@ button,
 select,
 input[type="number"],
 input[type="text"] {
-  min-height: 44px;
-  font-size: 16px;
+  font-size: 1.1429rem;
 }
 
 button {
@@ -79,8 +77,7 @@ button:disabled {
 }
 
 .polarrecorder-app {
-  min-height: 100vh;
-  padding-bottom: 86px;
+  padding-bottom: 6.1429rem;
   background: var(--polarrecorder-back-color);
   color: var(--polarrecorder-fore-color);
 }
@@ -92,12 +89,11 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 72px;
-  padding: 12px clamp(16px, 4vw, 32px);
+  gap: 1.1429rem;
+  padding: 0.8571rem 1.1429rem;
   background: var(--polarrecorder-main-color);
   color: white;
-  box-shadow: 0 2px 8px var(--polarrecorder-shadow-color);
+  box-shadow: 0 0.1429rem 0.5714rem var(--polarrecorder-shadow-color);
 }
 
 .nightMode .app-header {
@@ -112,7 +108,7 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-size: 1.5rem;
   font-weight: 700;
 }
 
@@ -127,7 +123,7 @@ h3 {
 }
 
 .eyebrow {
-  margin-bottom: 3px;
+  margin-bottom: 0.2143rem;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -136,9 +132,9 @@ h3 {
 }
 
 .tab-shell {
-  width: min(1180px, 100%);
+  width: 100%;
   margin: 0 auto;
-  padding: 16px;
+  padding: 1.1429rem;
 }
 
 .tab-panel {
@@ -151,9 +147,9 @@ h3 {
 
 .connection-banner {
   position: sticky;
-  top: 72px;
+  top: 4.8571rem;
   z-index: 19;
-  padding: 10px 16px;
+  padding: 0.7143rem 1.1429rem;
   background: var(--polarrecorder-attention-color);
   color: white;
   font-weight: 700;
@@ -162,44 +158,47 @@ h3 {
 
 .card {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--polarrecorder-border-color) 65%, transparent);
+  border: 0.0714rem solid color-mix(in srgb, var(--polarrecorder-border-color) 65%, transparent);
   border-radius: var(--polarrecorder-radius-card);
   background: var(--polarrecorder-surface-color);
-  box-shadow: 0 2px 8px var(--polarrecorder-shadow-color);
+  box-shadow: 0 0.1429rem 0.5714rem var(--polarrecorder-shadow-color);
 }
 
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px;
+  gap: 1.1429rem;
+  padding: 1rem;
   background: var(--polarrecorder-widget-head-color);
 }
 
 .chart-card {
-  min-height: calc(100vh - 180px);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  height: calc(100svh - 12.5rem);
 }
 
 .chart-host {
   position: relative;
-  min-height: 280px;
-  padding: 12px;
+  display: grid;
+  overflow: hidden;
+  padding: 0.8571rem;
 }
 
 .loading-host {
   display: grid;
   place-items: center;
-  min-height: 220px;
+  padding-block: 7.8571rem;
   color: var(--polarrecorder-main-color);
   font-weight: 700;
 }
 
 .loading-host::before {
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
-  border: 3px solid var(--polarrecorder-second-color);
+  width: 2.1429rem;
+  height: 2.1429rem;
+  margin-right: 0.7143rem;
+  border: 0.2143rem solid var(--polarrecorder-second-color);
   border-top-color: var(--polarrecorder-active-color);
   border-radius: 50%;
   animation: polarrecorder-spin 900ms linear infinite;
@@ -208,6 +207,10 @@ h3 {
 
 .loading-host.has-data::before {
   display: none;
+}
+
+.loading-host.has-data {
+  padding-block: 0;
 }
 
 @keyframes polarrecorder-spin {
@@ -224,18 +227,20 @@ h3 {
   z-index: 30;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  padding: 8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+  gap: 0.4286rem;
+  padding: 0.5714rem 0.5714rem calc(0.5714rem + env(safe-area-inset-bottom));
+  padding-right: calc(0.5714rem + env(safe-area-inset-right));
+  padding-left: calc(0.5714rem + env(safe-area-inset-left));
   background: color-mix(in srgb, var(--polarrecorder-second-color) 92%, var(--polarrecorder-back-color));
-  border-top: 1px solid var(--polarrecorder-border-color);
+  border-top: 0.0714rem solid var(--polarrecorder-border-color);
 }
 
 .nav-item {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 56px;
-  border-radius: 20px;
+  padding: 0.4286rem;
+  border-radius: 1.4286rem;
   background: transparent;
   color: var(--polarrecorder-fore-color);
   isolation: isolate;
@@ -244,8 +249,8 @@ h3 {
 .nav-item span:first-child {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 28px;
+  width: 2.7143rem;
+  height: 2rem;
   border-radius: var(--polarrecorder-radius-control);
   font-size: 1.4rem;
 }
@@ -290,22 +295,22 @@ h3 {
 .danger-action,
 .chip,
 .segmented button {
-  min-width: 44px;
-  min-height: 44px;
+  padding: 0.8571rem;
   border-radius: var(--polarrecorder-radius-control);
 }
 
 .icon-action {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 3.4286rem;
+  height: 3.4286rem;
+  padding: 0;
   background: var(--polarrecorder-second-color);
   color: var(--polarrecorder-fore-color);
 }
 
 .primary-action {
-  padding: 0 18px;
+  padding-inline: 1.2857rem;
   background: var(--polarrecorder-main-color);
   color: white;
   font-weight: 700;
@@ -313,8 +318,8 @@ h3 {
 
 .secondary-action,
 .danger-action {
-  padding: 0 16px;
-  border: 1px solid var(--polarrecorder-border-color);
+  padding-inline: 1.1429rem;
+  border: 0.0714rem solid var(--polarrecorder-border-color);
   background: var(--polarrecorder-surface-color);
   color: var(--polarrecorder-fore-color);
   font-weight: 700;
@@ -327,28 +332,24 @@ h3 {
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: 0.4286rem;
   font-size: 0.85rem;
   font-weight: 700;
-}
-
-.compact-field {
-  min-width: min(260px, 48vw);
 }
 
 select,
 input,
 textarea {
-  border: 1px solid var(--polarrecorder-border-color);
-  border-radius: 12px;
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+  border-radius: 0.8571rem;
   background: var(--polarrecorder-back-color);
   color: var(--polarrecorder-fore-color);
-  padding: 8px 10px;
+  padding: 0.5714rem 0.7143rem;
 }
 
 textarea {
   width: 100%;
-  min-height: 180px;
+  block-size: 12.8571rem;
   font-family: ui-monospace, Menlo, Consolas, monospace;
 }
 
@@ -358,26 +359,26 @@ textarea {
 .grid-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5714rem;
 }
 
 .chip-row {
   overflow-x: auto;
-  padding: 12px;
+  padding: 0.8571rem;
 }
 
 .legend-title {
-  padding: 12px 12px 0;
+  padding: 0.8571rem 0.8571rem 0;
   font-weight: 700;
 }
 
 .chip {
   flex: 0 0 auto;
-  border: 1px solid currentColor;
+  border: 0.0714rem solid currentColor;
   background: var(--polarrecorder-surface-color);
   color: var(--chip-color, var(--polarrecorder-main-color));
   font-weight: 700;
-  padding: 0 14px;
+  padding-inline: 1rem;
 }
 
 .chip.is-active {
@@ -390,7 +391,7 @@ textarea {
 }
 
 .segmented button {
-  padding: 0 14px;
+  padding-inline: 1rem;
   background: var(--polarrecorder-second-color);
   color: var(--polarrecorder-fore-color);
 }
@@ -403,59 +404,53 @@ textarea {
 .status-grid,
 .export-stack {
   display: grid;
-  gap: 14px;
+  gap: 1rem;
 }
 
 .status-grid.has-data,
 .export-stack.has-data {
   display: grid;
   place-items: stretch;
-  min-height: 0;
-}
-
-.status-grid.has-data::before,
-.export-stack.has-data::before {
-  display: none;
 }
 
 .card > .helper,
 .card > .error-text {
-  margin: 0 14px 14px;
+  margin: 0 1rem 1rem;
 }
 
 .card > .value-tile,
 .card > .decision-strip {
-  margin: 0 14px 14px;
+  margin: 0 1rem 1rem;
 }
 
 .status-state,
 .value-grid,
 .stat-grid,
 .export-card {
-  padding: 14px;
+  padding: 1rem;
 }
 
 .status-state {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0.8571rem;
 }
 
 .state-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.7143rem;
   font-size: 1.45rem;
   font-weight: 700;
 }
 
 .dot {
-  width: 14px;
-  height: 14px;
+  width: 1rem;
+  height: 1rem;
   border-radius: 50%;
   background: var(--polarrecorder-second-color);
-  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+  box-shadow: 0 0 0 0.2857rem color-mix(in srgb, currentColor 14%, transparent);
 }
 
 .dot.accepted,
@@ -480,19 +475,19 @@ textarea {
 .value-grid,
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7143rem;
 }
 
 .stat-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .value-tile,
 .stat-tile {
-  border-radius: 12px;
+  border-radius: 0.8571rem;
   background: var(--polarrecorder-surface-variant);
-  padding: 12px;
+  padding: 0.8571rem;
 }
 
 .value-number,
@@ -516,47 +511,46 @@ textarea {
 
 .decision-strip {
   display: grid;
-  grid-template-columns: repeat(60, minmax(5px, 1fr));
+  grid-template-columns: repeat(60, 1fr);
   align-items: stretch;
-  min-height: 44px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 0.8571rem;
   background: var(--polarrecorder-second-color);
 }
 
 .decision-cell {
-  min-height: 44px;
   border: 0;
   border-radius: 0;
   background: var(--polarrecorder-second-color);
+  aspect-ratio: 1;
 }
 
 .legend-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  padding: 8px 12px 0;
+  gap: 1rem;
+  padding: 0.5714rem 0.8571rem 0;
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 0.5rem;
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .legend-swatch {
-  width: 12px;
-  height: 12px;
+  width: 0.8571rem;
+  height: 0.8571rem;
   border-radius: 50%;
   background: currentColor;
 }
 
 .chart-svg {
+  align-self: stretch;
   width: 100%;
-  height: auto;
-  max-height: calc(100vh - 230px);
+  height: 100%;
   touch-action: manipulation;
 }
 
@@ -567,8 +561,7 @@ textarea {
 }
 
 #polar-chart.has-data .chart-svg {
-  width: min(100%, calc(100vh - 170px), 900px);
-  max-height: none;
+  width: 100%;
 }
 
 .chart-grid-line {
@@ -580,11 +573,11 @@ textarea {
 .chart-angle-label,
 .chart-axis-label {
   fill: color-mix(in srgb, var(--polarrecorder-fore-color) 66%, transparent);
-  font-size: 10px;
+  font-size: 0.7143rem;
 }
 
 .chart-angle-label {
-  font-size: 11px;
+  font-size: 0.7857rem;
 }
 
 .chart-line {
@@ -599,6 +592,11 @@ textarea {
   vector-effect: non-scaling-stroke;
 }
 
+.nightMode .chart-line,
+.nightMode .chart-point {
+  opacity: 0.5;
+}
+
 .chart-hit-point {
   fill: transparent;
   pointer-events: all;
@@ -607,60 +605,70 @@ textarea {
 .tooltip {
   position: fixed;
   z-index: 80;
-  max-width: min(280px, 80vw);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 0.8571rem;
+  padding: 0.7143rem 0.8571rem;
   background: var(--polarrecorder-main-color);
   color: white;
-  box-shadow: 0 6px 20px var(--polarrecorder-shadow-color);
+  box-shadow: 0 0.4286rem 1.4286rem var(--polarrecorder-shadow-color);
   font-size: 0.85rem;
   pointer-events: none;
+  transform: translate(0.8571rem, -0.8571rem);
+}
+
+.tooltip.is-left {
+  transform: translate(calc(-100% - 0.8571rem), -0.8571rem);
+}
+
+.tooltip.is-below {
+  transform: translate(0.8571rem, 0.8571rem);
+}
+
+.tooltip.is-left.is-below {
+  transform: translate(calc(-100% - 0.8571rem), 0.8571rem);
 }
 
 .export-card {
   display: grid;
-  gap: 12px;
+  gap: 0.8571rem;
 }
 
 .export-card > .section-head {
-  margin: -14px -14px 0;
+  margin: -1rem -1rem 0;
 }
 
 .grid-editor {
   display: grid;
-  gap: 8px;
+  gap: 0.5714rem;
 }
 
 .grid-row {
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 0.2857rem;
 }
 
 .grid-token {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.2857rem;
   flex: 0 0 auto;
 }
 
 .grid-token input {
-  width: 64px;
-  min-width: 48px;
+  width: 4.5714rem;
   text-align: center;
 }
 
 .grid-token input.is-invalid {
   border-color: var(--polarrecorder-attention-color);
-  outline: 2px solid color-mix(in srgb, var(--polarrecorder-attention-color) 25%, transparent);
+  outline: 0.1429rem solid color-mix(in srgb, var(--polarrecorder-attention-color) 25%, transparent);
 }
 
 .small-icon {
   display: grid;
   place-items: center;
-  width: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 3.1429rem;
+  height: 3.1429rem;
   border-radius: 50%;
   background: var(--polarrecorder-second-color);
   color: var(--polarrecorder-fore-color);
@@ -673,11 +681,11 @@ textarea {
 .switch-field {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 4px 12px;
+  gap: 0.2857rem 0.8571rem;
   align-items: center;
-  border-radius: 16px;
+  border-radius: 1.1429rem;
   background: var(--polarrecorder-surface-variant);
-  padding: 12px;
+  padding: 0.8571rem;
 }
 
 .switch-field input {
@@ -687,19 +695,19 @@ textarea {
 
 .switch-track {
   position: relative;
-  width: 58px;
-  height: 34px;
-  border-radius: 999px;
+  width: 4.1429rem;
+  height: 2.4286rem;
+  border-radius: 999em;
   background: var(--polarrecorder-second-color);
-  border: 1px solid var(--polarrecorder-border-color);
+  border: 0.0714rem solid var(--polarrecorder-border-color);
 }
 
 .switch-track::after {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 24px;
-  height: 24px;
+  top: 0.2857rem;
+  left: 0.2857rem;
+  width: 1.7143rem;
+  height: 1.7143rem;
   border-radius: 50%;
   background: var(--polarrecorder-fore-color);
   transition: transform 150ms ease, background-color 150ms ease;
@@ -711,7 +719,7 @@ textarea {
 }
 
 .switch-field input:checked + .switch-track::after {
-  transform: translateX(24px);
+  transform: translateX(1.7143rem);
   background: black;
 }
 
@@ -724,14 +732,14 @@ textarea {
 }
 
 .settings-list {
-  margin: 0 14px 0 28px;
+  margin: 0 1rem 0 2rem;
   padding: 0;
   line-height: 1.6;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 37.5em) {
   .polarrecorder-app {
-    padding-top: 74px;
+    padding-top: 5.2857rem;
     padding-bottom: 0;
   }
 
@@ -742,18 +750,17 @@ textarea {
   }
 
   .connection-banner {
-    top: 74px;
+    top: 5.2857rem;
   }
 
   .bottom-nav {
     top: 0;
-    right: clamp(76px, 10vw, 120px);
+    right: 7vw;
     bottom: auto;
     left: auto;
-    width: min(650px, 68vw);
+    width: 68vw;
     background: transparent;
     border: 0;
-    border-top: 0;
     box-shadow: none;
   }
 
@@ -766,11 +773,15 @@ textarea {
   }
 
   .tab-shell {
-    padding: 20px;
+    padding: 1.4286rem;
+  }
+
+  .chart-card {
+    height: calc(100svh - 8.1429rem);
   }
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 64.0625em) {
   .status-grid.has-data {
     grid-template-columns: 1.2fr 0.8fr;
   }
@@ -780,7 +791,7 @@ textarea {
   }
 }
 
-@media (max-width: 599px) {
+@media (max-width: 37.4375em) {
   .section-head,
   .status-state {
     align-items: stretch;
@@ -790,9 +801,5 @@ textarea {
   .value-grid,
   .stat-grid {
     grid-template-columns: 1fr;
-  }
-
-  .chart-card {
-    min-height: calc(100vh - 170px);
   }
 }
