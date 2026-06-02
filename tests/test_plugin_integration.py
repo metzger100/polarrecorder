@@ -3,13 +3,13 @@ from __future__ import annotations
 import json
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal
 
-from conftest import FakeAvNavAPI, FakeClock
-from polarrecorder import export, persistence, reader
+from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
+from plugin_integration_support import assert_all_mvp_routes, response_data, sample_at
+from polarrecorder import api_dispatch, export, persistence, reader
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
-from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.timeline import Timeline
 from polarrecorder.units import knots_to_meters_per_second
 
@@ -22,12 +22,24 @@ if TYPE_CHECKING:
 
 
 class LoopAvNavAPI(FakeAvNavAPI):
-    def __init__(self, max_fetches: int, monotonic: FakeClock, wall: FakeClock) -> None:
+    def __init__(
+        self,
+        max_fetches: int,
+        monotonic: FakeClock,
+        wall: FakeClock,
+        data_mode: Literal["receiving", "partial", "no_data"] = "receiving",
+        restart_on_fetch: int | None = None,
+        fail_read_at_fetch: int | None = None,
+    ) -> None:
         super().__init__()
         self.max_fetches = max_fetches
         self.fetches = 0
         self.monotonic = monotonic
         self.wall = wall
+        self.data_mode = data_mode
+        self.restart_on_fetch = restart_on_fetch
+        self.fail_read_at_fetch = fail_read_at_fetch
+        self.failed_reads = 0
 
     def fetchFromQueue(
         self,
@@ -40,13 +52,25 @@ class LoopAvNavAPI(FakeAvNavAPI):
         self.fetches += 1
         self.monotonic.advance(1.0)
         self.wall.advance(1.0)
-        self.set_value(reader.TWA_KEY, 90.0, self.monotonic())
-        self.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), self.monotonic())
-        self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
+        self.values.clear()
+        if self.data_mode in {"receiving", "partial"}:
+            self.set_value(reader.TWA_KEY, 90.0, self.monotonic())
+        if self.data_mode == "receiving":
+            self.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), self.monotonic())
+            self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
+        if self.fetches == self.restart_on_fetch and self.restart_callback is not None:
+            self.restart_callback()
         return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter)
 
     def shouldStopMainThread(self) -> bool:
         return self.fetches >= self.max_fetches
+
+    def getSingleValue(self, key: str, includeInfo: bool = False) -> float | FakeDataEntry | None:
+        if self.fetches == self.fail_read_at_fetch and self.failed_reads == 0:
+            self.failed_reads += 1
+            msg = "store read failed"
+            raise RuntimeError(msg)
+        return super().getSingleValue(key, includeInfo)
 
 
 def make_plugin(tmp_path: Path, api: FakeAvNavAPI) -> plugin_module.Plugin:
@@ -117,7 +141,7 @@ def test_concurrent_model_update_and_snapshot_read_are_detached(tmp_path: Path) 
 
     with plugin._lock:
         snapshot = plugin._model.snapshot_bins()
-    sample = _sample_at(monotonic() + 1.0, wall() + 1.0, stw_kt=6.5)
+    sample = sample_at(monotonic() + 1.0, wall() + 1.0, stw_kt=6.5)
     assert sample is not None
     plugin._model.update_accepted(sample)
 
@@ -148,7 +172,7 @@ def test_reset_pause_resume_and_export_json_endpoints(tmp_path: Path) -> None:
     wall = FakeClock(1000.0)
     api = LoopAvNavAPI(max_fetches=1, monotonic=monotonic, wall=wall)
     plugin = make_plugin(tmp_path, api)
-    sample = _sample_at(monotonic(), wall())
+    sample = sample_at(monotonic(), wall())
     assert sample is not None
     plugin._model.update_accepted(sample)
     plugin._counters.record_accepted()
@@ -205,107 +229,7 @@ def test_all_mvp_routes_handle_avnav_style_args(tmp_path: Path) -> None:
     wall = FakeClock(1000.0)
     api = FakeAvNavAPI()
     plugin = make_plugin(tmp_path, api)
-    _populate_route_model(plugin, monotonic, wall)
-
-    _assert_read_routes(plugin)
-    _assert_export_routes(plugin)
-    _assert_mutation_routes(plugin)
-
-
-def _assert_read_routes(plugin: plugin_module.Plugin) -> None:
-    status = _data(plugin._handle_request("status", object(), {}))
-    polar_first = plugin._handle_request("polar", object(), {"format": ["windy"]})
-    polar_second = plugin._handle_request("polar", object(), {"format": ["windy"]})
-    polar_inline = plugin._handle_request("polar", object(), {"twa": ["90"], "tws": ["12"]})
-    polar_mixed = plugin._handle_request(
-        "polar",
-        object(),
-        {"format": ["windy"], "twa": ["90"], "tws": ["12"]},
-    )
-    rejections = _data(plugin._handle_request("rejections", object(), {}))
-    timeline = _data(plugin._handle_request("timeline", object(), {"minutes": ["30"]}))
-    invalid_timeline = plugin._handle_request("timeline", object(), {"minutes": ["bad"]})
-    config = _data(plugin._handle_request("config", object(), {}))
-    backup = _data(plugin._handle_request("export/json", object(), {}))
-    unknown = plugin._handle_request("unknown", object(), {})
-
-    assert status["generation"] == 5
-    assert polar_first == polar_second
-    assert polar_first["status"] == "OK"
-    assert polar_inline["status"] == "ERROR"
-    assert polar_mixed["status"] == "ERROR"
-    assert "does not accept inline" in str(polar_inline["error"])
-    assert cast("dict[str, object]", rejections["per_bin"])["90_12"] == {"reject_unstable": 1}
-    assert timeline["buckets"]
-    assert invalid_timeline["status"] == "ERROR"
-    assert config["percentile"] == 65
-    assert backup["bins"]
-    assert unknown["status"] == "ERROR"
-
-
-def _assert_export_routes(plugin: plugin_module.Plugin) -> None:
-    windy_csv = _csv(plugin._handle_request("export", object(), {"format": ["windy"]}))
-    save = plugin._handle_request(
-        "presets/save",
-        object(),
-        {"name": ["route preset"], "twa": ["90"], "tws": ["12"]},
-    )
-    preset_csv = _csv(plugin._handle_request("export", object(), {"format": ["route preset"]}))
-    inline_csv = _csv(plugin._handle_request("export", object(), {"twa": ["90"], "tws": ["12"]}))
-    repeat_csv = _csv(plugin._handle_request("export", object(), {"twa": ["90"], "tws": ["12"]}))
-    high_csv = _csv(
-        plugin._handle_request(
-            "export",
-            object(),
-            {"twa": ["90"], "tws": ["12"], "high_confidence": ["yes"]},
-        )
-    )
-    mixed = plugin._handle_request(
-        "export",
-        object(),
-        {"format": ["windy"], "twa": ["90"], "tws": ["12"]},
-    )
-    one_sided = plugin._handle_request("export", object(), {"twa": ["90"]})
-    presets = _data(plugin._handle_request("presets", object(), {}))
-    delete_windy = plugin._handle_request(
-        "presets/delete",
-        object(),
-        {"name": ["windy"], "confirm": ["yes"]},
-    )
-    delete_preset = plugin._handle_request(
-        "presets/delete",
-        object(),
-        {"name": ["route preset"], "confirm": ["yes"]},
-    )
-
-    assert windy_csv.startswith("TWA\\TWS;4;6;8;10;12")
-    assert "6.0" in windy_csv
-    assert save["status"] == "OK"
-    assert preset_csv == "TWA\\TWS;12\r\n90;6.0\r\n"
-    assert inline_csv == repeat_csv == preset_csv
-    assert high_csv == "TWA\\TWS;12\r\n90;\r\n"
-    assert mixed["status"] == "ERROR"
-    assert one_sided["status"] == "ERROR"
-    assert "route preset" in [preset["name"] for preset in _preset_items(presets)]
-    assert delete_windy["status"] == "ERROR"
-    assert delete_preset["status"] == "OK"
-
-
-def _assert_mutation_routes(plugin: plugin_module.Plugin) -> None:
-    reset_denied = plugin._handle_request("reset", object(), {})
-    pause = plugin._handle_request("pause", object(), {})
-    resume = plugin._handle_request("resume", object(), {})
-    reset = plugin._handle_request("reset", object(), {"confirm": ["yes"]})
-    backup = _data(plugin._handle_request("export/json", object(), {}))
-
-    assert reset_denied["status"] == "ERROR"
-    assert pause == {"status": "OK", "data": {"recording": False}}
-    assert resume == {"status": "OK", "data": {"recording": True}}
-    assert reset["status"] == "OK"
-    assert plugin._model.snapshot_bins() == {}
-    assert plugin._counters.total_seen == 0
-    assert plugin._flush_requested is True
-    assert backup["bins"] == {}
+    assert_all_mvp_routes(plugin, monotonic, wall)
 
 
 def test_plugin_info_reads_plugin_json_version(
@@ -404,50 +328,98 @@ def test_fresh_persistence_startup_can_promote_status_normally(tmp_path: Path) -
     assert ("NMEA", "Recording sailing polar") in api.statuses
 
 
-def _populate_route_model(
-    plugin: plugin_module.Plugin,
-    monotonic: FakeClock,
-    wall: FakeClock,
-) -> None:
-    for _ in range(5):
-        sample = _sample_at(monotonic(), wall())
-        assert sample is not None
-        plugin._model.update_accepted(sample)
-        plugin._counters.record_accepted()
-        monotonic.advance(1.0)
-        wall.advance(1.0)
-    rejected = _sample_at(monotonic(), wall())
-    assert rejected is not None
-    plugin._model.record_rejection(rejected, ["reject_unstable"])
-    plugin._counters.record_rejected(["reject_unstable"])
-    plugin._timeline.record("rejected", ["reject_unstable"])
-
-
-def _data(response: dict[str, object]) -> dict[str, object]:
-    assert response["status"] == "OK"
-    return cast("dict[str, object]", response["data"])
-
-
-def _csv(response: dict[str, object]) -> str:
-    data = _data(response)
-    csv = data["csv"]
-    assert isinstance(csv, str)
-    return csv
-
-
-def _preset_items(data: dict[str, object]) -> list[dict[str, object]]:
-    return cast("list[dict[str, object]]", data["presets"])
-
-
-def _sample_at(timestamp: float, wall_time: float, stw_kt: float = 6.0) -> Sample | None:
-    read_result = ReadResult(
-        timestamp_monotonic=timestamp,
-        timestamp_wall=wall_time,
-        twa_raw=90.0,
-        tws_raw=knots_to_meters_per_second(12.0),
-        stw_raw=knots_to_meters_per_second(stw_kt),
-        twa_timestamp=timestamp,
-        tws_timestamp=timestamp,
-        stw_timestamp=timestamp,
+def test_loop_survives_iteration_error_and_final_flushes(tmp_path: Path) -> None:
+    monotonic = FakeClock(100.0)
+    wall = FakeClock(1000.0)
+    api = LoopAvNavAPI(
+        max_fetches=20,
+        monotonic=monotonic,
+        wall=wall,
+        fail_read_at_fetch=1,
     )
-    return build_sample(read_result)
+    plugin = make_plugin(tmp_path, api)
+
+    plugin.run()
+
+    assert api.fetches == api.max_fetches
+    assert api.failed_reads == 1
+    assert any(
+        level == "error" and "Polar Recorder loop error: store read failed" in message
+        for level, message in api.logs
+    )
+    assert plugin._counters.total_accepted > 0
+    assert (tmp_path / persistence.PRIMARY_NAME).exists()
+
+
+def test_incomplete_data_demotes_status_even_when_paused(tmp_path: Path) -> None:
+    data_modes: tuple[Literal["partial", "no_data"], ...] = ("partial", "no_data")
+    for data_mode in data_modes:
+        for paused in (False, True):
+            monotonic = FakeClock(100.0)
+            wall = FakeClock(1000.0)
+            api = LoopAvNavAPI(
+                max_fetches=31,
+                monotonic=monotonic,
+                wall=wall,
+                data_mode=data_mode,
+            )
+            case_dir = tmp_path / f"{data_mode}_{paused}"
+            plugin = make_plugin(case_dir, api)
+            if paused:
+                pause_response = plugin._handle_request("pause", object(), {})
+                assert pause_response == {"status": "OK", "data": {"recording": False}}
+
+            plugin.run()
+
+            status = response_data(plugin._handle_request("status", object(), {}))
+            assert status["data_status"] == data_mode
+            assert status["recording"] is not paused
+            assert ("STARTED", "No instrument data") in api.statuses
+
+
+def test_request_handler_returns_error_for_internal_dispatch_failure(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    api = FakeAvNavAPI()
+    make_plugin(tmp_path, api)
+
+    def fail_dispatch(
+        plugin: object,
+        url: str,
+        args: dict[str, str],
+    ) -> dict[str, object]:
+        del plugin, url, args
+        msg = "dispatcher failed"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(api_dispatch, "handle_request", fail_dispatch)
+    handler = api.request_handler
+    assert handler is not None
+
+    response = handler("status", object(), {"minutes": ["30"]})
+
+    assert response == {"status": "ERROR", "error": "Internal error"}
+    assert any(
+        level == "error" and "Polar Recorder request error: dispatcher failed" in message
+        for level, message in api.logs
+    )
+
+
+def test_restart_callback_stops_loop_and_final_flushes(tmp_path: Path) -> None:
+    monotonic = FakeClock(100.0)
+    wall = FakeClock(1000.0)
+    api = LoopAvNavAPI(
+        max_fetches=50,
+        monotonic=monotonic,
+        wall=wall,
+        restart_on_fetch=4,
+    )
+    plugin = make_plugin(tmp_path, api)
+    assert api.restart_callback is not None
+
+    plugin.run()
+
+    assert api.fetches == 4
+    assert api.fetches < api.max_fetches
+    assert (tmp_path / persistence.PRIMARY_NAME).exists()
