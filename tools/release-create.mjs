@@ -7,7 +7,7 @@ import {
   validateManifest
 } from "./release-runtime.mjs";
 
-const VERSION_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const VERSION_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 
 export function parseReleaseCreateArgs(argv) {
   const out = { version: "" };
@@ -53,7 +53,12 @@ export function createRelease(options) {
   const zipAbs = path.join(releasesDir, zipName);
   const releaseNotesAbs = notesAbs;
 
-  runRequiredCheck(runCommand, rootDir, ["python", "tools/release-zip.py"], "python tools/release-zip.py");
+  runRequiredCheck(
+    runCommand,
+    rootDir,
+    ["python", "tools/release-zip.py", "--version", version],
+    `python tools/release-zip.py --version ${version}`
+  );
   runRequiredCheck(
     runCommand,
     rootDir,

@@ -75,7 +75,7 @@ def populated_counters() -> Counters:
 
 def metadata(last_flush_wall: float = 2000.0) -> PersistenceMetadata:
     return PersistenceMetadata(
-        plugin_version="1.0.0",
+        plugin_version="test-version",
         created_wall=1234.0,
         last_flush_wall=last_flush_wall,
         percentile=65,

@@ -484,7 +484,7 @@ def backup_response() -> dict[str, object]:
         "status": "OK",
         "data": {
             "schema_version": 1,
-            "plugin_version": "1.0.0",
+            "plugin_version": "0.0.0-dev",
             "created_wall": NOW - 86400,
             "last_flush_wall": NOW - 420,
             "config": {"percentile": 65, "max_tws": 60, "twa_bin_size": 1, "tws_bin_size": 1},

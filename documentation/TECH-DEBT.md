@@ -1,6 +1,6 @@
 # Technical Debt
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -8,7 +8,7 @@ This file records known debt and intentional temporary states.
 
 ## Key Details
 
-No open technical debt is currently recorded for version 1.0.0.
+No open technical debt is currently recorded.
 
 ## Related
 

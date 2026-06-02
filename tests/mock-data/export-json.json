@@ -2,7 +2,7 @@
   "status": "OK",
   "data": {
     "schema_version": 1,
-    "plugin_version": "1.0.0",
+    "plugin_version": "0.0.0-dev",
     "created_wall": 1769853600.0,
     "last_flush_wall": 1769939580.0,
     "config": {

@@ -27,6 +27,11 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           zip_path="releases/polarrecorder-${version}.zip"
           notes_path="releases/polarrecorder-${version}.md"
+          prerelease=false
+
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+(\+[0-9A-Za-z.-]+)?$ ]]; then
+            prerelease=true
+          fi
 
           if [[ ! -f "$zip_path" || ! -f "$notes_path" ]]; then
             echo "Release artifacts not found. Run the local release workflow first."
@@ -36,6 +41,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
           echo "notes_path=$notes_path" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -44,3 +50,4 @@ jobs:
           name: Polar Recorder v${{ steps.release_assets.outputs.version }}
           body_path: ${{ steps.release_assets.outputs.notes_path }}
           files: ${{ steps.release_assets.outputs.zip_path }}
+          prerelease: ${{ steps.release_assets.outputs.prerelease }}

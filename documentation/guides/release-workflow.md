@@ -1,6 +1,6 @@
 # Release Workflow
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -10,20 +10,28 @@ Polar Recorder releases are created locally as runtime-only AvNav plugin artifac
 
 Release artifact names:
 
-- `releases/polarrecorder-X.Y.Z.zip`
-- `releases/polarrecorder-X.Y.Z.md`
+- `releases/polarrecorder-X.Y.Z[-prerelease][+build].zip`
+- `releases/polarrecorder-X.Y.Z[-prerelease][+build].md`
 
-Version sources must match:
+Version authority:
 
-- `plugin.json`
-- `pyproject.toml`
+- The release version is supplied to local release tooling with `--version` and
+  becomes the `vX.Y.Z[-prerelease][+build]` git tag.
+- The development checkout does not carry a release version in `plugin.json`.
+- `pyproject.toml` declares the project version as dynamic.
+- `tools/release-zip.py --version <version>` stamps that version into the
+  packaged copy of `plugin.json`, which is what runtime `pluginInfo()` reads
+  from an installed release zip.
+- A development checkout without a stamped `plugin.json` reports the benign
+  fallback version `0.0.0-dev`.
 
 Prerequisites:
 
 - Python dev tools available in the project virtual environment or on `PATH`.
 - Node.js available for documentation and viewer checks.
 - No runtime dependency that requires `pip install` on target AvNav devices.
-- GitHub publishing requires the committed release zip, committed release notes, and an annotated tag named `vX.Y.Z`.
+- GitHub publishing requires the committed release zip, committed release notes,
+  and an annotated tag named `vX.Y.Z` or `vX.Y.Z-prerelease`.
 
 Step-by-step release flow:
 
@@ -34,23 +42,31 @@ npm run release:prepare
 ```
 
 2. Review the JSON evidence and decide the next SemVer version from actual user and compatibility impact.
-3. Update `plugin.json` and `pyproject.toml` to the same version.
-4. Update `CHANGELOG.md` with concrete user-facing notes.
-5. Write the release notes markdown directly in the canonical release notes file: `releases/polarrecorder-X.Y.Z.md`.
+3. Update `CHANGELOG.md` with concrete user-facing notes.
+4. Write the release notes markdown directly in the canonical release notes file:
+   `releases/polarrecorder-X.Y.Z[-prerelease][+build].md`.
 
 ```bash
 $EDITOR releases/polarrecorder-X.Y.Z.md
 ```
 
-6. Create the release artifacts, commit, and annotated tag.
+5. Create the release artifacts, commit, and annotated tag.
 
 ```bash
 npm run release:create -- --version=X.Y.Z
 ```
 
-`release:create` runs the required gate (`tools/check-all.sh`), builds the runtime zip with `python tools/release-zip.py`, validates it with `python tools/check-release.py`, commits the zip and notes, and creates an annotated `vX.Y.Z` tag.
+`release:create` accepts full SemVer release versions, including prereleases
+such as `1.0.0-beta.1`. It runs the required gate (`tools/check-all.sh`), builds
+the runtime zip with `python tools/release-zip.py --version <version>`, validates
+it with `python tools/check-release.py`, commits the zip and notes, and creates
+an annotated `v<version>` tag.
 
-The zip must contain only runtime files: `plugin.py`, `plugin.mjs`, `plugin.css`, `plugin.json`, `README.md`, `viewer/`, and `server/polarrecorder/`. It must not contain tests, tools, documentation, release sources, data files, caches, or development configuration.
+The zip must contain only runtime files: `plugin.py`, `plugin.mjs`,
+`plugin.css`, stamped `plugin.json`, `viewer/`, and
+`server/polarrecorder/**/*.py`. It must not contain README, tests, tools,
+documentation, release sources, data files, caches, licenses, or development
+configuration.
 
 Manual inspection commands remain useful before publishing:
 
@@ -62,9 +78,13 @@ python tools/check-release.py releases/polarrecorder-X.Y.Z.zip
 GitHub release publishing:
 
 - `.github/workflows/publish-release.yml` runs when a `v*` tag is pushed.
-- The workflow checks out the tag ref, verifies `releases/polarrecorder-X.Y.Z.zip` and `releases/polarrecorder-X.Y.Z.md` exist, then creates the GitHub Release from those artifacts.
+- The workflow checks out the tag ref, verifies the matching committed zip and
+  notes exist, then creates the GitHub Release from those artifacts.
 - Build and commit release artifacts locally before pushing the tag. The workflow does not build artifacts on GitHub.
 - If the artifacts are not present at the tagged commit, the workflow fails closed.
+- Tags with a SemVer prerelease suffix, such as `v1.0.0-beta.1` or
+  `v1.0.0-rc.1`, publish GitHub prereleases. Plain `vX.Y.Z` tags publish normal
+  releases.
 
 SemVer decision guide:
 

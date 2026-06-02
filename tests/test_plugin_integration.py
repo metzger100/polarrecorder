@@ -325,6 +325,21 @@ def test_plugin_info_reads_plugin_json_version(
     assert "config" not in info
 
 
+def test_plugin_info_uses_dev_fallback_when_plugin_json_has_no_version(
+    monkeypatch: Any,
+    tmp_path: Path,
+    caplog: Any,
+) -> None:
+    plugin_json = tmp_path / "plugin.json"
+    plugin_json.write_text(json.dumps({"userApps": []}), encoding="utf-8")
+    monkeypatch.setattr(plugin_module, "_plugin_dir", str(tmp_path))
+
+    info = plugin_module.Plugin.pluginInfo()
+
+    assert info["version"] == "0.0.0-dev"
+    assert "plugin.json version" not in caplog.text
+
+
 def test_plugin_info_falls_back_when_plugin_json_is_missing(
     monkeypatch: Any,
     tmp_path: Path,
@@ -334,7 +349,7 @@ def test_plugin_info_falls_back_when_plugin_json_is_missing(
 
     info = plugin_module.Plugin.pluginInfo()
 
-    assert info["version"] == "1.0.0"
+    assert info["version"] == "0.0.0-dev"
     assert "plugin.json version" in caplog.text
 
 

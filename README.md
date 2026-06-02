@@ -1,6 +1,6 @@
 # Polar Recorder
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -22,13 +22,13 @@ Manual installation:
 1. Download the release zip from GitHub Releases or from `releases/` in this repository.
 2. Create `<DATADIR>/plugins/polarrecorder/` on the AvNav system if it does not
    already exist.
-3. Extract `releases/polarrecorder-1.0.0.zip` directly into that directory.
+3. Extract the release zip directly into that directory.
 4. Restart AvNav or reload plugins from the AvNav plugin page.
 
 The zip is intentionally built without an outer wrapper directory. Its root
 contains `plugin.py`, `plugin.json`, the `viewer/` assets, the
-`server/polarrecorder/` Python package, and this `README.md`. This matches AvNav's upload flow, which extracts
-the uploaded zip into the existing plugin directory.
+`server/polarrecorder/` Python package. This matches AvNav's upload flow, which
+extracts the uploaded zip into the existing plugin directory.
 
 When using AvNav's plugin upload UI, upload the release zip for the
 `polarrecorder` plugin directory and let AvNav extract it. Do not upload a zip
@@ -62,8 +62,8 @@ post-maneuver data before updating the learned polar.
 
 ### Screenshots
 
-Screenshots are intentionally left as a release-page placeholder for 1.0.0.
-Add current AvNav device screenshots before wider public distribution.
+Screenshots are intentionally left as a release-page placeholder. Add current
+AvNav device screenshots before wider public distribution.
 
 ### Known limitations
 

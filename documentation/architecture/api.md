@@ -1,6 +1,6 @@
 # API Shape
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -55,7 +55,7 @@ MVP endpoints:
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
 
-There is no import/restore endpoint in version 1.0.0. Restore from a JSON backup is Post-MVP.
+There is no import/restore endpoint. Restore from a JSON backup is Post-MVP.
 
 `GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
 grids are not accepted by the polar endpoint. The response always uses a 181

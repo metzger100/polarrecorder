@@ -1,6 +1,6 @@
 # Changelog
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -8,7 +8,7 @@ This file records release history for Polar Recorder.
 
 ## Key Details
 
-### 1.0.0 - Initial Release
+### Unreleased
 
 - Added the learning polar recorder for AvNav using TWA, TWS, and STW samples.
 - Added the validation pipeline for stale, missing, implausible, unstable, and

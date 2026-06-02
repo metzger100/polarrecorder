@@ -199,7 +199,7 @@ def _persistence_metadata(plugin: Any, last_flush_wall: float) -> persistence.Pe
     created_wall = (
         plugin._created_wall if plugin._created_wall is not None else plugin._wall_clock()
     )
-    version = plugin.__class__.pluginInfo().get("version", "1.0.0")
+    version = plugin.__class__.pluginInfo().get("version", "0.0.0-dev")
     return persistence.PersistenceMetadata(
         plugin_version=str(version),
         created_wall=created_wall,

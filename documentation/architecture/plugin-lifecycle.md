@@ -1,6 +1,6 @@
 # Plugin Lifecycle
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
@@ -11,6 +11,9 @@ This document records the AvNav plugin lifecycle facts Polar Recorder relies on.
 - AvNav recognizes `plugin.py`, `plugin.js`, `plugin.css`, `plugin.mjs`, and `plugin.json` as plugin files via `ApiImpl.CLIENTFILES`, `ApiImpl.SERVERFILES`, and `ApiImpl.PLUGINFILES` (`handler/pluginhandler.py:79-83`).
 - A Python plugin module must provide `class Plugin` with a classmethod `pluginInfo()`, an `__init__(self, api)` constructor, and a `run(self)` method; the test plugin demonstrates all three (`server/plugins/testPlugin/plugin.py:6-10`, `server/plugins/testPlugin/plugin.py:30-42`, `server/plugins/testPlugin/plugin.py:51-64`).
 - `pluginInfo()` returns the plugin description metadata; AvNav validates the return is a dict and reads optional `data` entries with `path` values (`handler/pluginhandler.py:922-931`). Example plugins return `description`, optional `data`, optional `config`, and optional `version` fields (`server/plugins/testPlugin/plugin.py:20-28`, `server/plugins/canboat/plugin.py:116-121`).
+- Polar Recorder's `pluginInfo()` reads `version` from the local `plugin.json`.
+  Release packaging stamps that field into the packaged `plugin.json`; a
+  development checkout without a stamped version reports `0.0.0-dev`.
 - `__init__(self, api)` runs before `run()` and must not start threads; the AvNav test and canboat examples state this in their constructors and register request, restart, or editable-parameter callbacks there (`server/plugins/testPlugin/plugin.py:30-42`, `server/plugins/canboat/plugin.py:123-137`).
 - AvNav creates the plugin instance once, through `PluginApiProxy`, and stores it on `api.plugin` (`handler/pluginhandler.py:932-936`). Starting or re-enabling the plugin creates a new daemon thread for `runPlugin`, but reuses the stored plugin instance (`handler/pluginhandler.py:668-680`).
 - Because AvNav reuses the same instance across disable and re-enable, Polar Recorder resets its own `_stop_requested` flag at the start of each `run()` entry.

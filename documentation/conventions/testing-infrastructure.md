@@ -1,6 +1,6 @@
 # Testing Infrastructure
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 

@@ -1,6 +1,6 @@
 [project]
 name = "polarrecorder"
-version = "1.0.0"
+dynamic = ["version"]
 requires-python = ">=3.9"
 
 [tool.pytest.ini_options]

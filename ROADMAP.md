@@ -1,10 +1,10 @@
 # Roadmap
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 
-Polar Recorder 1.0.0 provides the MVP: learned polar recording, validation, persistence, API endpoints, static viewer UI, and runtime-only release packaging.
+Polar Recorder currently provides the MVP: learned polar recording, validation, persistence, API endpoints, static viewer UI, and runtime-only release packaging.
 
 ## Key Details
 

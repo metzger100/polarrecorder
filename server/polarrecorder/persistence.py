@@ -37,7 +37,7 @@ class PersistenceMetadata:
     """Metadata supplied by the integration boundary when serializing."""
 
     schema_version: int = CURRENT_SCHEMA_VERSION
-    plugin_version: str = "1.0.0"
+    plugin_version: str = ""
     created_wall: float | None = None
     last_flush_wall: float = 0.0
     percentile: int = DEFAULT_PERCENTILE

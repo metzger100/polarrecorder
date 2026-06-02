@@ -1,6 +1,6 @@
 # Documentation Table Of Contents
 
-**Status:** Current for version 1.0.0.
+**Status:** Current.
 
 ## Overview
 

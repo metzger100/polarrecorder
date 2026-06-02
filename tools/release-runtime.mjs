@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 const FIXED_RUNTIME_FILES = [
-  "README.md",
   "plugin.css",
   "plugin.json",
   "plugin.mjs",

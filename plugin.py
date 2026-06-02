@@ -43,7 +43,7 @@ DESCRIPTION = (
     "Polar Recorder: automatically learns your boat's sailing polar "
     "(TWA/TWS → boat speed) from live NMEA data with no user interaction."
 )
-FALLBACK_VERSION = "1.0.0"
+FALLBACK_VERSION = "0.0.0-dev"
 INCOMPLETE_DEMOTE_COUNT = 30
 QUEUE_WAIT_SECONDS = 0.5
 
@@ -295,16 +295,22 @@ class Plugin:
 
 def _read_plugin_version() -> str:
     plugin_json = Path(_plugin_dir) / "plugin.json"
+    fallback = FALLBACK_VERSION
     try:
         with plugin_json.open(encoding="utf-8") as handle:
             data = json.load(handle)
     except (OSError, json.JSONDecodeError) as exc:
         logging.warning("Could not read polarrecorder plugin.json version: %s", exc)
-        return FALLBACK_VERSION
-    version = data.get("version") if isinstance(data, dict) else None
-    if not isinstance(version, str):
+        return fallback
+    if not isinstance(data, dict):
         logging.warning("Could not read polarrecorder plugin.json version")
-        return FALLBACK_VERSION
+        return fallback
+    version = data.get("version")
+    if version is None:
+        version = fallback
+    elif not isinstance(version, str):
+        logging.warning("Could not read polarrecorder plugin.json version")
+        version = fallback
     return version
 
 
