@@ -4,7 +4,7 @@
 
 ## Overview
 
-Polar Recorder quality is enforced by the full project gate, coverage review, smell-prevention checks, release validation, and manual AvNav verification. The automated gate is required before commits and was rerun after final reference-source cleanup.
+Polar Recorder quality is enforced by the full project gate, coverage review, smell-prevention checks, release validation, documentation reachability, and manual AvNav verification. The automated gate is required before commits and handoff.
 
 ## Key Details
 
@@ -28,6 +28,12 @@ Coverage requirements are:
 Smell prevention is enforced by the Python gate, the JavaScript check scripts, and review. Blocking smells include AvNav imports outside the plugin boundary, reverse dependencies from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic validation thresholds outside named configuration, unsafe browser patterns, and dead commented-out code.
 
 JavaScript and documentation checks run through `npm run check:all`. These checks cover browser script patterns, namespace use, file sizes, headers, naming, dependency shape, documentation table-of-contents sync, documentation format, internal link reachability, and AI-instruction sync.
+
+Documentation quality requirements:
+
+- Every `documentation/*.md` file is listed in [the documentation index](TABLEOFCONTENTS.md).
+- AvNav-focused docs describe portable behavior contracts and do not depend on machine-specific paths.
+- `AGENTS.md` and `CLAUDE.md` keep the shared instruction block byte-identical.
 
 Manual test checklist:
 

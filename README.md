@@ -53,7 +53,7 @@ Open the Polar Recorder user app from AvNav. The viewer has these tabs:
 - Timeline: recent accepted, rejected, quarantined, paused, and disabled sample
   buckets.
 - Export: Windy CSV export and custom/user preset management.
-- Settings: JSON Backup, a disabled Post-MVP Restore JSON affordance, and Reset
+- Settings: JSON Backup, a disabled future Restore JSON affordance, and Reset
   Learned Polar.
 
 The plugin learns gradually. Leave recording enabled while sailing normally with

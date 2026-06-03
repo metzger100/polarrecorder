@@ -34,9 +34,10 @@ Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples ente
 histogram. Quality-gate rejections and quarantines update per-bin diagnostics. Candidacy-gate
 rejections and `reject_warming_up` do not touch the model.
 
-Optional signal rules will be added through `rules_enhanced.py` after the MVP core rules.
-They should read optional values from `Sample.enhanced`, return `RuleResult`, and keep the
-same no-AvNav, no-I/O, no-threading purity as the core rules.
+Optional signal hooks are reserved through `Sample.enhanced` and `rules_enhanced.py`, but
+the current reader does not populate enhanced values. Any future enhanced rule must read
+optional values from `Sample.enhanced`, return `RuleResult`, and keep the same no-AvNav,
+no-I/O, no-threading purity as the core rules.
 
 Worked enhanced sketches:
 

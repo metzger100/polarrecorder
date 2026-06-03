@@ -18,6 +18,8 @@ Python standards:
 - No `print()` calls in runtime or tests.
 - `server/polarrecorder/` does not import AvNav modules or `plugin.py`.
 - `plugin.py` is the only AvNav boundary and stays thin.
+- `plugin.py` owns the single lock and snapshots live state for API, export, and persistence handoff.
+- Domain modules receive clocks, raw data, configs, snapshots, protocols, or fakes; they do not reach outward to runtime services.
 - `plugin.py`, `server/polarrecorder/`, and `tests/` have a 400 non-empty-line hard limit.
 - `server/polarrecorder/**/*.py`, except `__init__.py`, must begin with:
 
@@ -38,8 +40,16 @@ JavaScript standards:
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
 - Viewer JS files have mandatory `/** Module: ... */` headers and a 400-line hard limit.
 
+Documentation standards:
+
+- Every `documentation/*.md` file has a title, `Status`, `Overview`, `Key Details`, and `Related`.
+- New docs must be linked from [the documentation index](../TABLEOFCONTENTS.md).
+- AvNav behavior docs must be self-contained contracts, not references to machine-specific paths.
+- Keep `AGENTS.md` and `CLAUDE.md` shared instruction blocks byte-identical.
+
 ## Related
 
 - [Core principles](../core-principles.md)
 - [Smell prevention](smell-prevention.md)
 - [Testing infrastructure](testing-infrastructure.md)
+- [AvNav plugin lifecycle](../avnav/plugin-lifecycle.md)

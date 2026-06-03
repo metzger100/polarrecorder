@@ -1,4 +1,4 @@
-# AGENTS.md - Project Standards and Workflow
+# AGENTS.md - Project Standards & Workflow
 
 This file is guidance for agents working in this repository.
 
@@ -24,25 +24,33 @@ If guidance conflicts, precedence is:
 3. `documentation/conventions/smell-prevention.md`
 4. Task-specific documentation
 
-The initial implementation is complete. New work uses normal development flow: read the focused docs, make scoped changes, keep docs synchronized with behavior, and run the quality gate before handoff.
-
 ---
 
 ## 1. Project Constraints (AvNav Plugin Environment)
 
-- Runtime Python is Python 3.9+ stdlib only. Users install by dropping this plugin directory into AvNav; no `pip install` is allowed on target devices.
+- Runtime Python is Python 3.9+ stdlib only. Users install by dropping this plugin directory into AvNav; no target-device `pip install` is allowed.
 - Runtime browser files are served as plain static files by AvNav. There is no bundler and no runtime build step.
 - Plain viewer JS uses the single namespace `window.Polarrecorder`. CSS custom properties use the `--polarrecorder-` prefix.
 - The Python package and plugin identifier are `polarrecorder`; the display title is `Polar Recorder`.
 - Dev-only tooling is allowed: pytest, ruff, mypy, coverage, and Node.js check scripts.
 - `avnav_api` may be referenced only in `plugin.py`, and only as a `TYPE_CHECKING`-guarded type import. It must never be imported at runtime.
-- `server/polarrecorder/` modules must not import AvNav modules or `plugin.py`; AvNav API access is injected through protocols/fakes.
+- `server/polarrecorder/` modules must not import AvNav modules or `plugin.py`; AvNav API access is injected through protocols and fakes.
+- Locks are owned by `plugin.py`. Domain modules are lock-unaware and thread-unaware.
+- Runtime configuration is AvNav editable-parameter state; `polar.json` stores learned-model data and metadata, not active settings.
 
 ---
 
 ## 2. Token-Efficient Documentation System
 
-Read `documentation/TABLEOFCONTENTS.md` first, then identify one to three relevant documents for the task. Do not read every documentation file sequentially.
+### Rule: Always Start with the Table of Contents
+
+1. Read `documentation/TABLEOFCONTENTS.md` first.
+2. Read `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md` for every task.
+3. Identify one to three additional relevant files from the routing index.
+4. Read only those additional files unless the task genuinely needs more context.
+5. Do not read every documentation file sequentially.
+
+### Required Documentation Shape
 
 Every documentation file uses this structure:
 
@@ -55,7 +63,7 @@ Documentation must be complete when added or changed. Do not leave stub sections
 
 ---
 
-## 3. Coding Standards Summary
+## 3. Code Hygiene Rules for AI Agents
 
 Python:
 
@@ -74,63 +82,52 @@ JavaScript:
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
 - Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers.
 
----
+State and threading:
 
-## 4. Smell Prevention Summary
-
-Blocking smells include:
-
-- AvNav imports in `server/polarrecorder/`.
-- Reverse dependency from `server/polarrecorder/` to `plugin.py`.
-- Lock acquisition in `server/polarrecorder/`; locking is exclusively the integration shell's responsibility.
-- Product/domain logic accumulating in `plugin.py`.
-- Hidden real-time dependencies in domain modules instead of injected clocks.
-- Magic thresholds outside named config/constants modules.
-- One-line compression to bypass file-size limits.
-- Dead/commented-out code blocks.
-
-Use `documentation/conventions/smell-prevention.md` for the full catalog.
+- Keep product/domain logic out of `plugin.py`; it is the AvNav integration shell.
+- Keep live shared state behind the single `plugin.py` lock.
+- Snapshot live state under the lock, then format API/export responses through pure helpers.
+- Do not add locks, sleeps, hidden real-time dependencies, or AvNav imports to `server/polarrecorder/`.
 
 ---
 
-## 5. Quality Gate
+## 4. File Map
 
-`tools/check-all.sh` must pass before any commit, release, or handoff. The script auto-detects the project virtualenv at `/tmp/polarrecorder-venv/bin` and prepends it to `PATH`. The gate runs:
-
-- `python -m ruff check .`
-- `python -m ruff format --check .`
-- `python -m mypy server/polarrecorder tests plugin.py --strict`
-- `python -m pytest tests/ --tb=short`
-- `python -m pytest tests/ --cov=polarrecorder --cov-report=term-missing --cov-fail-under=90`
-- `python tools/check-python-filesize.py`
-- `python tools/check-release.py --dry-run`
-- `npm run check:all`
-
-Agents must fix all failures before proceeding. A green gate is required for normal development handoff.
-
----
-
-## 6. File Map
-
+- Feature and API lookups: [documentation/TABLEOFCONTENTS.md](documentation/TABLEOFCONTENTS.md)
+- Non-negotiable project rules: [documentation/core-principles.md](documentation/core-principles.md)
+- Root structural orientation map: [ARCHITECTURE.md](ARCHITECTURE.md)
+- User-facing documentation: [README.md](README.md)
+- AvNav host contracts: [documentation/avnav/](documentation/avnav/)
+- Runtime architecture docs: [documentation/architecture/](documentation/architecture/)
+- Validation and poisoning docs: [documentation/filters/](documentation/filters/)
+- Step-by-step maintenance workflows: [documentation/guides/](documentation/guides/)
 - `plugin.py`: thin AvNav integration shell only.
 - `server/polarrecorder/`: domain logic, no AvNav dependency.
-- `server/polarrecorder/validation/`: validation pipeline and rules in later phases.
 - `tests/`: unit and integration tests with fakes.
 - `tools/`: quality gate scripts and release tooling.
-- [documentation/TABLEOFCONTENTS.md](documentation/TABLEOFCONTENTS.md): modular documentation index.
-- [documentation/core-principles.md](documentation/core-principles.md): highest-precedence rules.
-- [documentation/QUALITY.md](documentation/QUALITY.md): quality policy and checklist home.
-- [documentation/TECH-DEBT.md](documentation/TECH-DEBT.md): known debt ledger.
-- [documentation/conventions/coding-standards.md](documentation/conventions/coding-standards.md): coding rules.
-- [documentation/conventions/smell-prevention.md](documentation/conventions/smell-prevention.md): smell catalog.
-- [documentation/conventions/testing-infrastructure.md](documentation/conventions/testing-infrastructure.md): test fakes and strategy.
-- [documentation/guides/documentation-maintenance.md](documentation/guides/documentation-maintenance.md): documentation synchronization workflow.
-- [documentation/guides/exec-plan-authoring.md](documentation/guides/exec-plan-authoring.md): optional execution-plan workflow for complex work.
-- [documentation/guides/garbage-collection.md](documentation/guides/garbage-collection.md): cleanup workflow.
-- [documentation/guides/release-workflow.md](documentation/guides/release-workflow.md): release packaging workflow.
-- `releases/`: generated release artifacts.
-- `plugin.json`: plugin metadata and user app declaration.
-- `viewer/`: viewer HTML, CSS, icon, and plain JS files.
+- `viewer/`: static user app files served by AvNav.
+
+---
+
+## 5. Quality Checklist
+
+- [ ] Completed mandatory preflight reads: `TABLEOFCONTENTS.md`, coding standards, and smell prevention.
+- [ ] Read only necessary additional documentation beyond mandatory preflight.
+- [ ] Kept changes scoped to the requested behavior/docs.
+- [ ] Updated mapped documentation when behavior changes.
+- [ ] Updated user-facing `README.md` when installation, configuration, export/import, requirements, or viewer behavior changes.
+- [ ] Updated `documentation/TABLEOFCONTENTS.md` when adding, moving, or deleting docs.
+- [ ] Preserved the shared instruction block in `AGENTS.md` and `CLAUDE.md`.
+- [ ] Ran `tools/check-all.sh` before handoff for normal development work.
+
+---
+
+## 6. Smell Prevention & Fail-Closed Rules
+
+- Mandatory on every task: follow `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md`.
+- Blocking smells include AvNav imports in `server/polarrecorder/`, reverse imports from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic thresholds outside named config/constants, unsafe browser patterns, and dead commented-out code.
+- Required completion gate: `tools/check-all.sh`.
+- Documentation reachability and AI instruction sync are enforced by `npm run check:docs`.
 
 ---
 
@@ -138,5 +135,6 @@ Agents must fix all failures before proceeding. A green gate is required for nor
 
 Use the guides in `documentation/guides/` when a task needs a repeatable workflow.
 
-For routine work, keep changes small and source-driven: update the implementation, update the mapped documentation, add or adjust tests when behavior changes, and run `tools/check-all.sh`. For complex multi-session work, author a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
+For routine work, keep changes small and source-driven: update the implementation, update the mapped documentation, add or adjust tests when behavior changes, and run the quality gate before handoff. For complex multi-session work, author a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
+
 <!-- END SHARED_INSTRUCTIONS -->

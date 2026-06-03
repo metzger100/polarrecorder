@@ -6,7 +6,7 @@
 
 Polar Recorder can export the learned polar as Windy-compatible CSV or as a
 full JSON backup. CSV export is for planners and spreadsheets. JSON export is a
-backup of the internal persistence schema. Import/restore is Post-MVP.
+backup of the internal persistence schema. Import/restore is not implemented.
 
 ## Key Details
 
@@ -42,7 +42,7 @@ uses the display floor `MIN_SAMPLES_DISPLAY = 3`. Adding
 
 `GET /api/export/json` returns the full persistence JSON shape used by
 `polar.json`. It is intended for backup and inspection. Restore/import from this
-backup is Post-MVP and is not implemented.
+backup is not implemented.
 
 ## Related
 

@@ -23,7 +23,7 @@ Version authority:
   packaged copy of `plugin.json`, which is what runtime `pluginInfo()` reads
   from an installed release zip.
 - A development checkout without a stamped `plugin.json` reports the benign
-  fallback version `0.0.0-dev`.
+  development fallback defined in release tooling.
 
 Prerequisites:
 
@@ -82,9 +82,8 @@ GitHub release publishing:
   notes exist, then creates the GitHub Release from those artifacts.
 - Build and commit release artifacts locally before pushing the tag. The workflow does not build artifacts on GitHub.
 - If the artifacts are not present at the tagged commit, the workflow fails closed.
-- Tags with a SemVer prerelease suffix, such as `v1.0.0-beta.1` or
-  `v1.0.0-rc.1`, publish GitHub prereleases. Plain `vX.Y.Z` tags publish normal
-  releases.
+- Tags with a SemVer prerelease suffix publish GitHub prereleases. Plain
+  `vX.Y.Z` tags publish normal releases.
 
 SemVer decision guide:
 

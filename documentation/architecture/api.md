@@ -11,7 +11,7 @@ and formats read responses outside the lock through pure helpers.
 
 ## Key Details
 
-Source-verified AvNav request-handler facts:
+AvNav request-handler contract:
 
 - `AVNApi.getBaseUrl()` documents that appending `/api` reaches plugin API
   requests. For Polar Recorder the design URL is
@@ -27,7 +27,7 @@ Source-verified AvNav request-handler facts:
 - Polar Recorder's OK/ERROR envelopes are a project convention layered on top
   of AvNav's dict-to-JSON behavior.
 
-All MVP endpoints return dictionaries for AvNav to serialize as JSON. Success
+All endpoints return dictionaries for AvNav to serialize as JSON. Success
 responses use `{"status": "OK", "data": ...}`. Application errors use
 `{"status": "ERROR", "error": "..."}`. Unexpected exceptions are caught at the
 `plugin.py` request boundary and returned as `Internal error`.
@@ -37,7 +37,7 @@ so raw values are lists. `plugin.py` takes the first value per key before
 dispatch. Blank values remain blank strings and fail normal validation, such as
 `confirm=yes`.
 
-MVP endpoints:
+Endpoints:
 
 | Method | Endpoint | Params | Response data |
 |---|---|---|---|
@@ -55,7 +55,7 @@ MVP endpoints:
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
 
-There is no import/restore endpoint. Restore from a JSON backup is Post-MVP.
+There is no import/restore endpoint. Restore from a JSON backup is not implemented.
 
 `GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
 grids are not accepted by the polar endpoint. The response always uses a 181
@@ -93,5 +93,6 @@ wraps the finished dict.
 ## Related
 
 - [Plugin lifecycle](plugin-lifecycle.md)
+- [Request routing and static files](../avnav/request-routing-and-static-files.md)
 - [Persistence](persistence.md)
 - [Export and import](../user/export-import.md)

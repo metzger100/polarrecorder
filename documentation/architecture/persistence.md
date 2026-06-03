@@ -6,7 +6,7 @@
 
 Polar Recorder keeps the learned polar in memory and writes it rarely to JSON. The
 persistence boundary owns only `polar.json`, `polar.backup.json`, and `polar.tmp.json`
-under the plugin data directory; export presets are a later `export.py` concern.
+under the plugin data directory. Export presets are stored separately by `export.py`.
 
 ## Key Details
 
@@ -49,10 +49,11 @@ test-only schema version 0 and fills the version 1 metadata defaults before dese
 
 Only the plugin thread writes the polar files. It serializes the live model under
 `plugin.py`'s lock via `serialize_to_dict()`, releases the lock, then performs disk I/O.
-The serializer is pure and also supplies the future `export/json` response shape.
+The serializer is pure and also supplies the `export/json` response shape.
 
 ## Related
 
 - [Polar model](polar-model.md)
 - [Data pipeline](data-pipeline.md)
+- [API shape](api.md)
 - [Coding standards](../conventions/coding-standards.md)

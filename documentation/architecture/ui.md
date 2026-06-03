@@ -20,7 +20,7 @@ AvNav without a build step, network access, or runtime dependencies.
   switching, status rendering, and shared caches. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
-  to CSV and preset workflows. Settings owns JSON backup, a disabled Post-MVP
+  to CSV and preset workflows. Settings owns JSON backup, a disabled future
   restore affordance, and destructive reset confirmation.
 - Polling is gated to the active tab. The Status tab appends its recent-decision
   strip from the existing status poll and never performs an extra fetch.

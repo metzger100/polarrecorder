@@ -19,11 +19,15 @@ percentile recalculates the learned speed without relearning from raw samples.
 - Percentiles use a nearest-rank crossing algorithm over deciknot
   histogram keys. There is no interpolation or midpoint averaging.
 - `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh
-  nested histogram copies so API formatting can run outside the future plugin
+  nested histogram copies so API formatting can run outside the plugin
   lock without sharing mutable state.
+- Accepted samples update speed histograms. Quality-gate rejections and
+  quarantines update per-bin diagnostics. Candidacy-gate rejections do not
+  touch bins.
 
 ## Related
 
 - [API shape](api.md)
 - [Plugin lifecycle](plugin-lifecycle.md)
+- [Rejection rules](../filters/rejection-rules.md)
 - [Coding standards](../conventions/coding-standards.md)
