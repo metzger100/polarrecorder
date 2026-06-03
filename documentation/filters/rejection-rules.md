@@ -41,6 +41,11 @@ R15 evaluates the rolling buffer before the current sample is appended. A warmin
 is not a sailing candidate; `reject_unstable` is a quality-gate rejection and is a sailing
 candidate.
 
+The rolling buffer keeps one boundary anchor sample just outside the active window when a newer
+sample is present. This lets normal sampling jitter, such as a one-second loop running slightly
+late, prove that the prior data spans the configured window while still resetting warm-up after a
+gap longer than the window.
+
 Two pre-pipeline reason codes are emitted by plugin integration: `reject_user_paused`
 and `reject_disabled`. They are not emitted by the pure validation runner.
 

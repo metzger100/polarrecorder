@@ -82,6 +82,29 @@ def test_r15_passes_stable_filled_window() -> None:
     assert not state.is_warming_up(100.0)
 
 
+def test_r15_passes_with_jittered_one_second_samples() -> None:
+    config = default_config()
+    state = ValidationState(stability_window_seconds=config.stability_window_seconds)
+    for index in range(15):
+        state.observe(make_sample(now=index * 1.01))
+
+    result = rules_stability.stability_window(make_sample(now=15.15), state, config)
+
+    assert result.decision == "pass"
+    assert not state.is_warming_up(15.15)
+
+
+def test_r15_restarts_warmup_after_sample_gap() -> None:
+    config = default_config()
+    state = make_warmed_state(now=100.0)
+
+    result = rules_stability.stability_window(make_sample(now=130.0), state, config)
+
+    assert result.decision == "reject"
+    assert result.reason_codes == ["reject_warming_up"]
+    assert state.is_warming_up(130.0)
+
+
 def test_r15_uses_runtime_config_window_for_warming_up_status() -> None:
     config = replace(default_config(), stability_window_seconds=60)
     state = make_warmed_state(now=100.0)

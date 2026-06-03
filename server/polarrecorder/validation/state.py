@@ -63,13 +63,16 @@ class ValidationState:
         return not self.is_filled(now_monotonic)
 
     def prune(self, now_monotonic: float) -> None:
-        """Remove entries strictly older than the current stability window.
+        """Trim old entries while retaining one boundary anchor when available.
 
         Args:
             now_monotonic: Current monotonic timestamp.
         """
         oldest_allowed = now_monotonic - self.stability_window_seconds
-        while self.window and self.window[0].timestamp_monotonic < oldest_allowed:
+        if self.window and self.window[-1].timestamp_monotonic < oldest_allowed:
+            self.window.clear()
+            return
+        while len(self.window) > 1 and self.window[1].timestamp_monotonic <= oldest_allowed:
             self.window.popleft()
 
     def is_filled(self, now_monotonic: float) -> bool:
