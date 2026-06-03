@@ -12,9 +12,12 @@ AvNav without a build step, network access, or runtime dependencies.
 
 - `viewer/viewer.html` provides the shell, five tab panels, Material-style navigation,
   and fixed script load order.
-- `viewer/viewer.css` owns the AvNav-derived day/night color tokens and the Material
+- `viewer/viewer.css` owns fallback day/night tokens and the Material
   You-inspired shape, type, elevation, state-layer, card, chip, and responsive
-  layout rules.
+  layout rules. `viewer/theme.js` derives AvNav colors and font family from the
+  same-origin parent viewer when embedded, mirrors AvNav's surrounding
+  `.nightMode` page state into the standalone viewer body, and falls back to the
+  local tokens when no parent AvNav document is available.
 - `viewer/*.js` files are plain scripts that register functionality only on
   `window.Polarrecorder`. `viewer/viewer.js` owns startup, API access, polling, tab
   switching, status rendering, and shared caches. Component modules add
@@ -31,6 +34,8 @@ AvNav without a build step, network access, or runtime dependencies.
   units, while tooltips include explicit TWA, TWS, STW, and sample units. It
   skips redraws only when requested format, returned format, generation,
   percentile, TWS bands, and the preset TWA grid still describe the same view.
+  When no polar data can be plotted, the empty grid remains visible and a
+  centered overlay box reports that no data is available yet.
 - The timeline chart draws server-supplied one-minute buckets with colored
   swatches for Accepted, Rejected, and Quarantined and a time scale with
   range-relative ticks.

@@ -15,6 +15,7 @@ Tests are deterministic, stdlib-friendly, and independent of a live AvNav server
 - The smoke test imports `polarrecorder` and instantiates `plugin.py` so pytest never exits with zero collected tests.
 - Plugin integration tests exercise the single-lock API/persistence boundary with fakes rather than a live AvNav process.
 - Mock API fixture files under `tests/mock-data/` mirror the viewer/mock-server starting state and should change with user-visible API shape changes.
+- `npm run test:viewer` runs stdlib-only Node.js tests for static viewer behavior that needs DOM-like fakes without a browser, including the AvNav theme bridge and polar chart empty state. It is part of `npm run check:all`.
 
 ## Related
 

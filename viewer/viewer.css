@@ -29,7 +29,7 @@
   --polarrecorder-widget-head-color: rgba(50, 47, 47, 0.6);
   --polarrecorder-accepted-color: rgba(252, 11, 11, 0.5);
   --polarrecorder-rejected-color: rgba(252, 11, 11, 0.3);
-  --polarrecorder-quarantined-color: rgba(252, 11, 11, 0.4);
+  --polarrecorder-quarantined-color: rgba(255, 213, 79, 0.7);
   --polarrecorder-surface-color: #090909;
   --polarrecorder-surface-variant: #151515;
   --polarrecorder-shadow-color: rgba(252, 11, 11, 0.12);
@@ -289,7 +289,6 @@ h3 {
   opacity: 0.16;
 }
 
-.icon-action,
 .primary-action,
 .secondary-action,
 .danger-action,
@@ -297,16 +296,6 @@ h3 {
 .segmented button {
   padding: 0.8571rem;
   border-radius: var(--polarrecorder-radius-control);
-}
-
-.icon-action {
-  display: grid;
-  place-items: center;
-  width: 3.4286rem;
-  height: 3.4286rem;
-  padding: 0;
-  background: var(--polarrecorder-second-color);
-  color: var(--polarrecorder-fore-color);
 }
 
 .primary-action {
@@ -564,6 +553,25 @@ textarea {
   width: 100%;
 }
 
+.chart-empty-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  max-width: min(26rem, calc(100% - 2rem));
+  padding: 1.1429rem 1.4286rem;
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+  border-radius: 0.8571rem;
+  background: color-mix(in srgb, var(--polarrecorder-surface-color) 94%, var(--polarrecorder-back-color));
+  box-shadow: 0 0.4286rem 1.4286rem var(--polarrecorder-shadow-color);
+  color: var(--polarrecorder-fore-color);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
 .chart-grid-line {
   stroke: color-mix(in srgb, var(--polarrecorder-fore-color) 28%, transparent);
   stroke-width: 0.75;
@@ -747,6 +755,8 @@ textarea {
     position: fixed;
     right: 0;
     left: 0;
+    background: var(--polarrecorder-second-color);
+    color: var(--polarrecorder-fore-color);
   }
 
   .connection-banner {
@@ -765,10 +775,6 @@ textarea {
   }
 
   .nav-item {
-    color: white;
-  }
-
-  .nightMode .nav-item {
     color: var(--polarrecorder-fore-color);
   }
 

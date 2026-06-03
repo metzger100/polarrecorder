@@ -32,7 +32,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     Object.defineProperty(Polarrecorder, "fetchJson", { value: fetchJson });
     Polarrecorder.FetchJson = fetchJson;
     wireTabs();
-    wireNightMode();
     fetchPresets().then(function () {
       populatePresetSelects();
       activateTab("polar");
@@ -64,16 +63,6 @@ window.Polarrecorder = window.Polarrecorder || {};
       button.addEventListener("click", function () {
         activateTab(button.dataset.tab || "polar");
       });
-    });
-  }
-
-  function wireNightMode() {
-    const enabled = localStorage.getItem("polarrecorder-night") === "yes";
-    document.body.classList.toggle("nightMode", enabled);
-    byId("night-toggle").addEventListener("click", function () {
-      const next = !document.body.classList.contains("nightMode");
-      document.body.classList.toggle("nightMode", next);
-      localStorage.setItem("polarrecorder-night", next ? "yes" : "no");
     });
   }
 

@@ -96,7 +96,6 @@ State and threading:
 - Feature and API lookups: [documentation/TABLEOFCONTENTS.md](documentation/TABLEOFCONTENTS.md)
 - Non-negotiable project rules: [documentation/core-principles.md](documentation/core-principles.md)
 - Root structural orientation map: [ARCHITECTURE.md](ARCHITECTURE.md)
-- User-facing documentation: [README.md](README.md)
 - AvNav host contracts: [documentation/avnav/](documentation/avnav/)
 - Runtime architecture docs: [documentation/architecture/](documentation/architecture/)
 - Validation and poisoning docs: [documentation/filters/](documentation/filters/)

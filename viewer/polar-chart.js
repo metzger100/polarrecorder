@@ -47,13 +47,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     }
     host.replaceChildren();
     chips.replaceChildren();
-    if (!data.tws_bands || data.tws_bands.length === 0) {
-      host.appendChild(emptySvg("No data yet — start sailing!"));
-      return;
-    }
     data.tws_bands.forEach(function (band, index) {
       chips.appendChild(chipForBand(data, band, index));
     });
+    if (!hasRenderableData(data, lastPresetTwa)) {
+      host.appendChild(emptySvg());
+      host.appendChild(emptyOverlay());
+      return;
+    }
     host.appendChild(buildSvg(data, lastPresetTwa));
   }
 
@@ -94,16 +95,21 @@ window.Polarrecorder = window.Polarrecorder || {};
     return svg;
   }
 
-  function emptySvg(message) {
+  function emptySvg() {
     const svg = svgNode("svg");
     svg.setAttribute("viewBox", "0 0 560 560");
     svg.setAttribute("class", "chart-svg");
+    svg.setAttribute("aria-hidden", "true");
     addGrid(svg, 4);
-    const text = svgText(200, 205, message);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("font-weight", "700");
-    svg.appendChild(text);
     return svg;
+  }
+
+  function emptyOverlay() {
+    const overlay = document.createElement("div");
+    overlay.className = "chart-empty-overlay";
+    overlay.setAttribute("role", "status");
+    overlay.textContent = "No Data available yet!";
+    return overlay;
   }
 
   function radiusMax(data) {
@@ -276,6 +282,15 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
     return out.sort(function (a, b) {
       return a - b;
+    });
+  }
+
+  function hasRenderableData(data, presetTwa) {
+    return (data.tws_bands || []).some(function (band) {
+      const curve = data.curves[String(band)] || [];
+      return renderIndexes(curve, presetTwa).some(function (twa) {
+        return !!curve[twa];
+      });
     });
   }
 
