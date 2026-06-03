@@ -12,7 +12,7 @@ Default workflow:
 
 1. Identify touched areas: `plugin.py`, `server/polarrecorder/`, `viewer/`, `plugin.json`, `plugin.mjs`, `tools/`, `documentation/avnav/`, and root project docs.
 2. Update the mapped documentation in `documentation/`.
-3. Update root docs (`README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `ROADMAP.md`, or `CHANGELOG.md`) when user-facing behavior or development workflow changes.
+3. Update root docs (`README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, or `ROADMAP.md`) when user-facing behavior or development workflow changes.
 4. Add every new documentation file to `documentation/TABLEOFCONTENTS.md`.
 5. Keep every documentation file structurally complete: `Status`, `Overview`, `Key Details`, and `Related`.
 6. Run targeted checks while iterating when useful, then run the full gate before handoff.
@@ -48,7 +48,7 @@ Touchpoint matrix:
 | Viewer behavior, tabs, charts, editor, export UI, or CSS | `documentation/architecture/ui.md`, `README.md` when user-facing |
 | Export/import format or backup behavior | `documentation/user/export-import.md`, `README.md`, related mock data |
 | Troubleshooting-relevant behavior or known failure mode | `documentation/user/troubleshooting.md`, `documentation/TECH-DEBT.md` when unresolved |
-| Release packaging, versioning, or install flow | `documentation/guides/release-workflow.md`, `README.md`, `CHANGELOG.md` |
+| Release packaging, versioning, or install flow | `documentation/guides/release-workflow.md`, `README.md`, companion release notes under `releases/` |
 | Development workflow, checks, or agent guidance | `documentation/guides/documentation-maintenance.md`, `documentation/QUALITY.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
 
 Documentation checks:

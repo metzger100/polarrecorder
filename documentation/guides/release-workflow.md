@@ -42,15 +42,14 @@ npm run release:prepare
 ```
 
 2. Review the JSON evidence and decide the next SemVer version from actual user and compatibility impact.
-3. Update `CHANGELOG.md` with concrete user-facing notes.
-4. Write the release notes markdown directly in the canonical release notes file:
+3. Write concrete user-facing release notes directly in the canonical release notes file:
    `releases/polarrecorder-X.Y.Z[-prerelease][+build].md`.
 
 ```bash
 $EDITOR releases/polarrecorder-X.Y.Z.md
 ```
 
-5. Create the release artifacts, commit, and annotated tag.
+4. Create the release artifacts, commit, and annotated tag.
 
 ```bash
 npm run release:create -- --version=X.Y.Z

@@ -1434,7 +1434,6 @@ polarrecorder/
 ├── CONTRIBUTING.md                    # Contributor guide
 ├── ARCHITECTURE.md                    # Root architectural orientation
 ├── ROADMAP.md                         # Post-MVP roadmap
-├── CHANGELOG.md                       # Release history
 ├── pyproject.toml                     # Python project config (pytest, ruff, mypy, coverage)
 ├── package.json                       # Node.js quality scripts (doc checks, JS linting, hooks)
 ├── .gitignore                         # Ignores data/, releases/, __pycache__/, .pytest_cache/, etc.
@@ -2140,7 +2139,7 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 
 **Deliverables:**
 
-- Top-level files at the repository root (the `polarrecorder/` root already exists — it holds `exec-plans/active/PLAN1.md` and `misc/`; this phase **adds** the files, it does not create the root): `AGENTS.md`, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `CHANGELOG.md`, `pyproject.toml`, `package.json`, `.gitignore`.
+- Top-level files at the repository root (the `polarrecorder/` root already exists — it holds `exec-plans/active/PLAN1.md` and `misc/`; this phase **adds** the files, it does not create the root): `AGENTS.md`, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `pyproject.toml`, `package.json`, `.gitignore`.
 - `.gitignore` entries: `data/`, `releases/`, `__pycache__/`, `*.pyc`, `.pytest_cache/`, `.mypy_cache/`, `node_modules/`, `.coverage`, `htmlcov/`, `*.egg-info/`, `.ruff_cache/`.
 - `documentation/` skeleton: `TABLEOFCONTENTS.md`, `core-principles.md`, `QUALITY.md`, `TECH-DEBT.md`, all convention and guide files listed in Section 7. Any file that is a stub at end of Phase 1 (only those §12 marks with a stub→complete lifecycle — currently `README.md` and `QUALITY.md`) must still carry all four required sections (Status/Overview/Key Details/Related) so the now-blocking `check-doc-format` stays green; every other documentation file introduced in Phase 1 is written complete (see the §10 per-phase completeness invariant).
 - `documentation/conventions/coding-standards.md` — complete (not a stub). Content specified in Section 8 AGENTS.md Section 3.
@@ -2428,12 +2427,12 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 **Deliverables:**
 
 - `documentation/user/troubleshooting.md` — known limitations and recovery guidance, including: undetectable threats (motor-sailing, waves, reefing, current, shallow water, bad trim — §5), corrupt-file recovery behavior, that setting `cooldown_seconds` < `stability_window_seconds` breaks the post-maneuver stability guarantee (§6.C), and that wall-clock-based displays (the rejection timeline buckets and the Status "last flush, N min ago") can briefly look wrong right after a system clock correction — e.g. an NTP step on a Raspberry Pi with no RTC at boot. These self-heal (out-of-range timeline buckets age out within 4 h; `last_flush_wall` is re-stamped on the next flush); the only lasting effect is that `created_wall` (debug/future-restore metadata only, never shown on the Status tab) keeps whatever wall time was current when the dataset was first written. Also note that lowering `max_tws` below a preset's largest TWS column disables **inline** download/save of that column in the Export tab (the editor flags any TWS field above `max_tws` as out-of-range), while **preset-mode** export (`GET /api/export?format=<name>`) is unaffected because the projection sweeps the fixed 0–60 bin grid, not `max_tws` (§6.B). Add to `TABLEOFCONTENTS.md`.
-- Final documentation sweep: confirm every documentation file is complete (not a stub) and current — by the per-phase completeness invariant most are already done in their own phases, so this is a verification pass plus the Phase 10 docs (`troubleshooting.md`, complete `README.md`, `CHANGELOG.md`).
+- Final documentation sweep: confirm every documentation file is complete (not a stub) and current — by the per-phase completeness invariant most are already done in their own phases, so this is a verification pass plus the Phase 10 docs (`troubleshooting.md`, complete `README.md`, and release notes).
 - `README.md` complete with: overview, installation, configuration, usage, screenshots placeholder, known limitations, development setup.
 - `tools/release-zip.py` — builds a release zip containing only runtime files: `plugin.py`, `plugin.mjs`, `plugin.css`, `plugin.json`, `icon.svg`, `viewer.html`, `viewer.css`, all `*.js` files in the project root (i.e. `viewer.js`, `polar-chart.js`, `timeline-chart.js`, `export-ui.js`, and any split files such as `grid-editor.js`), `polarrecorder/` (Python package), `README.md`. Excludes: `tests/`, `tools/`, `documentation/`, `exec-plans/`, `data/`, `releases/`, `*.pyc`, `__pycache__`, dev config files. **Zip internal structure:** all files at the zip root (no wrapping `polarrecorder/` directory). This matches AvNav's upload flow (`zip.extractall()` into the existing plugin directory). For manual install, the user creates `<DATADIR>/plugins/polarrecorder/` and extracts the zip into it.
 - `tools/check-release.py` — validates release zip contents (expected files present, no dev files).
 - First release zip in `releases/polarrecorder-1.0.0.zip` with companion `polarrecorder-1.0.0.md`.
-- `CHANGELOG.md` entry for 1.0.0.
+- Companion release notes entry for 1.0.0.
 
 **Exit conditions:**
 - `npm run check:docs` passes — all referenced docs exist, TABLEOFCONTENTS is complete.
@@ -2652,7 +2651,6 @@ Documents that PLAN1 requires to be created (all paths relative to repository ro
 | `CONTRIBUTING.md` | Phase 1 |
 | `ARCHITECTURE.md` | Phase 1 |
 | `ROADMAP.md` | Phase 1 |
-| `CHANGELOG.md` | Phase 10 |
 | `documentation/TABLEOFCONTENTS.md` | Phase 1, updated every phase |
 | `documentation/core-principles.md` | Phase 1 |
 | `documentation/QUALITY.md` | Phase 1 (stub), Phase 11 (complete with checklist) |
