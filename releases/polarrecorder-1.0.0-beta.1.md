@@ -15,6 +15,5 @@ First beta release of Polar Recorder as an installable AvNav plugin.
 ## Upgrade Notes
 
 - This is the first beta release, so there is no migration from an earlier release.
-- Install the release zip into `<DATADIR>/plugins/polarrecorder/` or upload the zip through AvNav's plugin page.
+- Extract the release zip into `<DATADIR>/plugins/` or upload it through AvNav's plugin page; the zip contains the `polarrecorder/` plugin directory.
 - Polar quality depends on calibrated TWA, TWS, and STW data and on pausing recording when motoring or sailing in conditions you do not want in the learned polar.
-

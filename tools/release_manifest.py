@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RELEASES = ROOT / "releases"
 FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 DEV_VERSION = "0.0.0-dev"
+PLUGIN_DIR = "polarrecorder"
 PROJECT_RE = re.compile(r"^\[project\]\s*$")
 SECTION_RE = re.compile(r"^\[[^]]+\]\s*$")
 VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"')
@@ -183,6 +184,22 @@ def runtime_file_bytes(name: str, source: Path, version: str | None = None) -> b
     if name == "plugin.json" and version is not None:
         return stamp_plugin_json(version)
     return source.read_bytes()
+
+
+def archive_name(runtime_name: str) -> str:
+    validate_runtime_name(runtime_name)
+    return f"{PLUGIN_DIR}/{runtime_name}"
+
+
+def runtime_name_from_archive(name: str) -> str:
+    archive_prefix = f"{PLUGIN_DIR}/"
+    if not name.startswith(archive_prefix):
+        raise ReleaseError(f"Release zip entry is not under {PLUGIN_DIR}/: {name}")
+    runtime_name = name[len(archive_prefix) :]
+    if not runtime_name:
+        raise ReleaseError(f"Release zip contains empty path under {PLUGIN_DIR}/")
+    validate_runtime_name(runtime_name)
+    return runtime_name
 
 
 def validate_runtime_name(name: str) -> None:

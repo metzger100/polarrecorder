@@ -16,11 +16,12 @@ def main() -> int:
     manifest.RELEASES.mkdir(exist_ok=True)
     zip_path = manifest.default_zip_path(version)
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for archive_name, source in entries:
+        for runtime_name, source in entries:
+            archive_name = manifest.archive_name(runtime_name)
             info = zipfile.ZipInfo(archive_name, manifest.FIXED_ZIP_TIME)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            archive.writestr(info, manifest.runtime_file_bytes(archive_name, source, version))
+            archive.writestr(info, manifest.runtime_file_bytes(runtime_name, source, version))
     print(f"Wrote {zip_path.relative_to(manifest.ROOT)} with {len(entries)} files.")
     return 0
 

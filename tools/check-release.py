@@ -75,12 +75,15 @@ def validate_zip(
     try:
         with zipfile.ZipFile(zip_path) as archive:
             names = [info.filename for info in archive.infolist() if not info.is_dir()]
-            normalized_to_original = {normalize_zip_name(name): name for name in names}
+            normalized_to_original = {
+                manifest.runtime_name_from_archive(normalize_zip_name(name)): name
+                for name in names
+            }
             validate_zip_contents(archive, normalized_to_original, expected_entries, release_version)
     except zipfile.BadZipFile as exc:
         raise manifest.ReleaseError(f"Release artifact is not a valid zip: {zip_path}") from exc
 
-    normalized = {normalize_zip_name(name) for name in names}
+    normalized = {manifest.runtime_name_from_archive(normalize_zip_name(name)) for name in names}
     if len(normalized) != len(names):
         raise manifest.ReleaseError("Release zip contains duplicate entries after normalization")
 

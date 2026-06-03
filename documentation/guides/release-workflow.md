@@ -61,7 +61,8 @@ the runtime zip with `python tools/release-zip.py --version <version>`, validate
 it with `python tools/check-release.py`, commits the zip and notes, and creates
 an annotated `v<version>` tag.
 
-The zip must contain only runtime files: `plugin.py`, `plugin.mjs`,
+The zip must contain a single top-level `polarrecorder/` directory. Inside that
+directory, it must contain only runtime files: `plugin.py`, `plugin.mjs`,
 `plugin.css`, stamped `plugin.json`, `viewer/`, and
 `server/polarrecorder/**/*.py`. It must not contain README, tests, tools,
 documentation, release sources, data files, caches, licenses, or development

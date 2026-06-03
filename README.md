@@ -53,9 +53,8 @@ Manual installation:
 
 1. Download the release zip from GitHub Releases or from `releases/` in this
    repository.
-2. Create `<DATADIR>/plugins/polarrecorder/` on the AvNav system if it does not
-   already exist.
-3. Extract the release zip directly into that directory.
+2. Extract the release zip into `<DATADIR>/plugins/` on the AvNav system. The
+   zip contains the `polarrecorder/` plugin directory.
 4. Restart AvNav or reload plugins from the AvNav plugin page.
 
 When using AvNav's plugin upload page, upload the release zip and let AvNav extract it.
