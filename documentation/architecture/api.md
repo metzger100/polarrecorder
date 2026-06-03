@@ -64,9 +64,12 @@ columns the viewer plots, and a TWS enters `tws_bands` only when one of those
 preset columns has data. The response still uses a 181 entry TWA curve array per
 populated TWS band, with array index equal to TWA 0-180; non-preset indices are
 `null`. Each populated band is anchored at index 0 with `{stw: 0.0, samples: 0}`
-so the viewer curve starts at 0 deg TWA / 0 STW. The anchor is added only after
-band membership is decided, so it never creates a band, and it is display-only:
-`GET export` does not emit a 0 deg / 0 STW row.
+so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared
+`export.anchor_origin` boundary condition (head to wind is 0 STW) applied to the
+projection that both `GET polar` and `GET export` consume: it is added only for
+bands that already carry data and never overwrites a real cell, so it never
+creates a band. When the requested TWA grid includes 0 deg, `GET export` emits
+`0.0` in the TWA 0 row of every populated band; grids without 0 deg omit the row.
 
 `GET export` mode resolution is deterministic: inline `twa`+`tws` wins and
 cannot be combined with `format`; otherwise `format` resolves first against the

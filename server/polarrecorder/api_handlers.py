@@ -107,19 +107,21 @@ def format_polar(
     """Format the polar diagram endpoint.
 
     Projects onto the preset ``twa_grid`` so band membership and per-cell
-    midpoint merging match the CSV export and the preset columns the viewer
-    plots. Cells are placed into a 181-entry array indexed by TWA 0-180. Each
-    populated band is anchored at 0 deg TWA / 0 STW so the curve starts at the
-    origin; the anchor is added only after band membership is decided, so it
-    never creates a band, and it carries 0 samples for the viewer to treat as
-    full confidence.
+    midpoint merging match the CSV export, then shares ``export.anchor_origin``
+    so each populated band starts at 0 deg TWA / 0 STW. Cells are placed into a
+    181-entry array indexed by TWA 0-180; non-preset indices are ``None``. The
+    origin cell carries 0 samples for the viewer to treat as full confidence, and
+    because the anchor only touches bands that already have data it never creates
+    a band.
     """
-    projected = export.project_grid(
-        model_bins,
-        twa_grid,
-        tws_grid,
-        percentile,
-        export.MIN_SAMPLES_DISPLAY,
+    projected = export.anchor_origin(
+        export.project_grid(
+            model_bins,
+            twa_grid,
+            tws_grid,
+            percentile,
+            export.MIN_SAMPLES_DISPLAY,
+        )
     )
     curves: dict[str, list[dict[str, object] | None]] = {}
     bands: list[int] = []
@@ -127,8 +129,6 @@ def format_polar(
         curve = [_polar_entry(projected.get((twa, tws))) for twa in range(181)]
         if any(entry is not None for entry in curve):
             bands.append(tws)
-            if curve[0] is None:
-                curve[0] = {"stw": 0.0, "samples": 0}
             curves[str(tws)] = curve
     return ok(
         {

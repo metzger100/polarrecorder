@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from polarrecorder.logger import Logger
 
 MIN_SAMPLES_DISPLAY = 3
+ORIGIN_TWA = 0
+ORIGIN_STW = 0.0
 PERCENTILE_MIN = 1
 PERCENTILE_MAX = 99
 PRESET_NAME_MAX_LENGTH = 30
@@ -212,6 +214,30 @@ def project_grid(
     return projected
 
 
+def anchor_origin(
+    projected: Mapping[tuple[int, int], ProjectedCell],
+) -> dict[tuple[int, int], ProjectedCell]:
+    """Anchor each populated TWS band to 0 deg TWA / 0 STW (head to wind).
+
+    At 0 deg TWA boat speed is physically zero, so this is a grid boundary
+    condition shared by the polar diagram and the CSV export rather than learned
+    data. For every TWS band that already carries genuine data, an origin cell is
+    added at TWA 0 unless real data already occupies it, so the rule never creates
+    or promotes an empty band. Consumers whose TWA grid omits 0 deg simply never
+    read the added cells.
+
+    Args:
+        projected: Genuine projected cells keyed by ``(twa, tws)``.
+
+    Returns:
+        A new projection mapping with origin cells added for populated bands.
+    """
+    anchored = dict(projected)
+    for _twa, tws in projected:
+        anchored.setdefault((ORIGIN_TWA, tws), ProjectedCell(stw=ORIGIN_STW, samples=0))
+    return anchored
+
+
 def csv_from_projection(
     projected: Mapping[tuple[int, int], ProjectedCell],
     twa_grid: Sequence[int],
@@ -234,12 +260,14 @@ def csv_export(
     percentile: int,
 ) -> str:
     """Project model bins and return CSV text."""
-    projected = project_grid(
-        model_bins,
-        selection.twa,
-        selection.tws,
-        percentile,
-        selection.min_samples,
+    projected = anchor_origin(
+        project_grid(
+            model_bins,
+            selection.twa,
+            selection.tws,
+            percentile,
+            selection.min_samples,
+        )
     )
     return csv_from_projection(projected, selection.twa, selection.tws)
 

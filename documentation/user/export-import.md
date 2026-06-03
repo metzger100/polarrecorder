@@ -40,6 +40,11 @@ uses the display floor `MIN_SAMPLES_DISPLAY = 3`. Adding
 `high_confidence=yes`, `true`, or `1` uses the stricter
 `min_samples_for_export` setting.
 
+When the requested TWA grid includes 0 deg, each populated TWS band is anchored
+to 0 STW at TWA 0 (head to wind), matching the polar diagram through the shared
+`anchor_origin` boundary condition. Bands with no data, and grids without a 0 deg
+row, leave that cell blank.
+
 `GET /api/export/json` returns the full persistence JSON shape used by
 `polar.json`. It is intended for backup and inspection. Restore/import from this
 backup is not implemented.

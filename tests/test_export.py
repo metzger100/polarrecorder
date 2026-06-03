@@ -40,6 +40,35 @@ def test_csv_format_is_semicolon_crlf_and_blank_for_missing_cells() -> None:
     assert ";\r\n" in csv
 
 
+def test_anchor_origin_adds_zero_stw_to_populated_bands_only() -> None:
+    projected = {(90, 12): export.ProjectedCell(stw=6.0, samples=3)}
+
+    anchored = export.anchor_origin(projected)
+
+    # The populated 12 kt band gains a 0 deg / 0 STW origin cell and nothing else.
+    assert anchored[(0, 12)] == export.ProjectedCell(stw=0.0, samples=0)
+    assert anchored[(90, 12)] == export.ProjectedCell(stw=6.0, samples=3)
+    assert len(anchored) == 2
+
+
+def test_anchor_origin_preserves_real_zero_twa_cell() -> None:
+    projected = {(0, 12): export.ProjectedCell(stw=1.5, samples=4)}
+
+    # Genuine data at 0 deg is never overwritten by the anchor.
+    assert export.anchor_origin(projected)[(0, 12)] == export.ProjectedCell(stw=1.5, samples=4)
+
+
+def test_csv_export_emits_zero_stw_origin_row_for_populated_bands() -> None:
+    bins = {(90, 12): {"histogram": {60: 3}}}
+    selection = export.ExportSelection("custom", [0, 90], [8, 12], 3)
+
+    csv = export.csv_export(bins, selection, percentile=65)
+
+    # Only the populated 12 kt band gets 0.0 at TWA 0; the empty 8 kt column and
+    # every cell without data stay blank.
+    assert csv == "TWA\\TWS;8;12\r\n0;;0.0\r\n90;;6.0\r\n"
+
+
 def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
     saved = export.save_preset(tmp_path, "my plan", "90,0", "8,4", max_tws=20)
 

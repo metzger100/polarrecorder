@@ -358,13 +358,22 @@ def export_csv(query: dict[str, list[str]]) -> str:
         twa_values = [int(value) for value in preset["twa"]]
         tws_values = [int(value) for value in preset["tws"]]
     rows = [["TWA\\TWS"] + [str(value) for value in tws_values]]
+    populated = {tws: False for tws in tws_values}
     for twa in twa_values:
         row = [str(twa)]
         for tws in tws_values:
             enough = samples(twa, tws) >= 10 if high_confidence else has_data(twa, tws)
             enough = enough and not reset_model
-            row.append(str(speed(twa, tws, percentile)) if enough and has_data(twa, tws) else "")
+            cell = str(speed(twa, tws, percentile)) if enough and has_data(twa, tws) else ""
+            if cell:
+                populated[tws] = True
+            row.append(cell)
         rows.append(row)
+    if 0 in twa_values:
+        zero_row = rows[twa_values.index(0) + 1]
+        for index, tws in enumerate(tws_values):
+            if populated[tws] and zero_row[index + 1] == "":
+                zero_row[index + 1] = "0.0"
     return "\r\n".join(";".join(row) for row in rows) + "\r\n"
 
 

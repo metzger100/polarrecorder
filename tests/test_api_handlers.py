@@ -95,10 +95,10 @@ def test_format_polar_and_export_reuse_projection() -> None:
     # preset column the viewer plots, matching the CSV export projection.
     assert curves["12"][90] == {"stw": 6.0, "samples": 3}
     assert curves["12"][100] is None
-    # Each populated band is anchored at 0 deg / 0 STW for display only; the CSV
-    # export keeps the 0 deg row empty.
+    # Each populated band shares the 0 deg / 0 STW origin anchor, so the polar
+    # curve and the CSV TWA 0 row agree instead of diverging.
     assert curves["12"][0] == {"stw": 0.0, "samples": 0}
-    assert export_response["csv"] == "TWA\\TWS;12\r\n0;\r\n90;6.0\r\n"
+    assert export_response["csv"] == "TWA\\TWS;12\r\n0;0.0\r\n90;6.0\r\n"
 
 
 def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
