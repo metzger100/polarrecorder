@@ -98,13 +98,22 @@ def format_status(snapshot: StatusSnapshot) -> Response:
 
 def format_polar(
     model_bins: export.SnapshotBins,
+    twa_grid: Sequence[int],
     tws_grid: Sequence[int],
     percentile: int,
     generation: int,
     format_name: str,
 ) -> Response:
-    """Format the polar diagram endpoint."""
-    twa_grid = list(range(181))
+    """Format the polar diagram endpoint.
+
+    Projects onto the preset ``twa_grid`` so band membership and per-cell
+    midpoint merging match the CSV export and the preset columns the viewer
+    plots. Cells are placed into a 181-entry array indexed by TWA 0-180. Each
+    populated band is anchored at 0 deg TWA / 0 STW so the curve starts at the
+    origin; the anchor is added only after band membership is decided, so it
+    never creates a band, and it carries 0 samples for the viewer to treat as
+    full confidence.
+    """
     projected = export.project_grid(
         model_bins,
         twa_grid,
@@ -115,9 +124,11 @@ def format_polar(
     curves: dict[str, list[dict[str, object] | None]] = {}
     bands: list[int] = []
     for tws in tws_grid:
-        curve = [_polar_entry(projected.get((twa, tws))) for twa in twa_grid]
+        curve = [_polar_entry(projected.get((twa, tws))) for twa in range(181)]
         if any(entry is not None for entry in curve):
             bands.append(tws)
+            if curve[0] is None:
+                curve[0] = {"stw": 0.0, "samples": 0}
             curves[str(tws)] = curve
     return ok(
         {

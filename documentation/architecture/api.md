@@ -58,9 +58,15 @@ Endpoints:
 There is no import/restore endpoint. Restore from a JSON backup is not implemented.
 
 `GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
-grids are not accepted by the polar endpoint. The response always uses a 181
-entry TWA curve array for each populated TWS band, with array index equal to TWA
-0-180.
+grids are not accepted by the polar endpoint. Projection uses the resolved
+preset's TWA grid, so each curve carries projected cells only at the preset TWA
+columns the viewer plots, and a TWS enters `tws_bands` only when one of those
+preset columns has data. The response still uses a 181 entry TWA curve array per
+populated TWS band, with array index equal to TWA 0-180; non-preset indices are
+`null`. Each populated band is anchored at index 0 with `{stw: 0.0, samples: 0}`
+so the viewer curve starts at 0 deg TWA / 0 STW. The anchor is added only after
+band membership is decided, so it never creates a band, and it is display-only:
+`GET export` does not emit a 0 deg / 0 STW row.
 
 `GET export` mode resolution is deterministic: inline `twa`+`tws` wins and
 cannot be combined with `format`; otherwise `format` resolves first against the

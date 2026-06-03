@@ -25,12 +25,26 @@ AvNav without a build step, network access, or runtime dependencies.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
   to CSV and preset workflows. Settings owns JSON backup, a disabled future
   restore affordance, and destructive reset confirmation.
-- Polling is gated to the active tab. The Status tab appends its recent-decision
-  strip from the existing status poll and never performs an extra fetch.
+- A single two-second heartbeat is the only timer and the shared sync anchor. It
+  always fetches `status`, which carries the monotonic `generation` token, and
+  keeps the recent-decision strip filled without any extra fetch. The active tab
+  refreshes off that heartbeat: Status re-renders every beat; Polar refetches
+  only when `generation` advances, so new curves and TWS bands appear within one
+  beat of the sample entering the model; the Export CSV preview, once shown,
+  silently refreshes when `generation` advances; Timeline refetches once per
+  minute. Switching tabs immediately fetches that tab's data, so every tab shows
+  the same model state within one beat.
+- New TWS bands merge into the current chip selection and appear selected; band
+  selection only resets on a format/preset change or an explicit reset, so a live
+  band arriving never wipes the user's chip choices.
 - SVG rendering is used for both charts. The polar chart renders only the
   selected preset's TWA columns, draws dots where those preset columns have
   data, and connects datapoints with thin straight segments without pointed
-  gap styling or closing 180 degrees back to 0. Radial STW labels include `kn`
+  gap styling or closing 180 degrees back to 0. The server anchors each
+  populated band at 0 deg TWA / 0 STW (the chart center), and the viewer treats
+  the 0 deg point as full confidence regardless of its sample count so the
+  zero-sample anchor never dims the curve. Radial TWA angle labels sit a fixed
+  distance outside the outer ring at every scale. Radial STW labels include `kn`
   units, while tooltips include explicit TWA, TWS, STW, and sample units. It
   skips redraws only when requested format, returned format, generation,
   percentile, TWS bands, and the preset TWA grid still describe the same view.

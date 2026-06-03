@@ -18,6 +18,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     message: "",
     messageKind: "info",
     saveOpen: false,
+    previewActive: false,
     hooks: {}
   };
 
@@ -34,6 +35,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function render() {
+    state.previewActive = false;
     state.host.replaceChildren();
     state.host.appendChild(configCard());
     applyValidity();
@@ -224,12 +226,24 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function previewCsv() {
     requestCsv().then(function (csv) {
-      const rows = csv.split(/\r?\n/).slice(0, 11).join("\n");
-      document.getElementById("csv-preview").value = rows;
+      state.previewActive = true;
+      document.getElementById("csv-preview").value = previewRows(csv);
       setMessage("Preview updated.", "info");
     }).catch(function (error) {
       setMessage(error.message, "error");
     });
+  }
+
+  function refreshPreview() {
+    if (!state.previewActive || !isValid()) return;
+    requestCsv().then(function (csv) {
+      const node = document.getElementById("csv-preview");
+      if (node) node.value = previewRows(csv);
+    }).catch(function () {});
+  }
+
+  function previewRows(csv) {
+    return csv.split(/\r?\n/).slice(0, 11).join("\n");
   }
 
   function downloadCsv() {
@@ -380,6 +394,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   Polarrecorder.ExportUI = {
     Init: init,
-    RefreshPresets: refreshPresets
+    RefreshPresets: refreshPresets,
+    RefreshPreview: refreshPreview
   };
 }());

@@ -12,6 +12,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const CENTER_X = 280;
   const CENTER_Y = 280;
   const PLOT_RADIUS = 220;
+  const ANGLE_LABEL_OFFSET = 18;
   const LOW_CONFIDENCE = 10;
   const SOLID_GAP_LIMIT = 2;
   const SPARSE_GAP_LIMIT = 35;
@@ -35,16 +36,16 @@ window.Polarrecorder = window.Polarrecorder || {};
     lastKey = key;
     lastData = data;
     lastPresetTwa = presetTwa;
-    if (lastBandsKey !== bandsKey(data.tws_bands) || lastFormat !== data.format || options.resetBands) {
-      selectedBands.clear();
-      data.tws_bands.forEach(function (band) {
-        selectedBands.add(String(band));
-      });
-      lastBandsKey = bandsKey(data.tws_bands);
-      lastFormat = data.format;
+    const nextBandsKey = bandsKey(data.tws_bands);
+    if (lastFormat !== data.format || options.resetBands) {
+      selectAllBands(data.tws_bands);
+    } else if (lastBandsKey !== nextBandsKey) {
+      mergeBands(data.tws_bands, lastBandsKey);
     } else {
       reconcileBands(data.tws_bands);
     }
+    lastBandsKey = nextBandsKey;
+    lastFormat = data.format;
     host.replaceChildren();
     chips.replaceChildren();
     data.tws_bands.forEach(function (band, index) {
@@ -151,7 +152,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       line.setAttribute("y2", String(point.y));
       line.setAttribute("class", "chart-grid-line");
       svg.appendChild(line);
-      const labelPoint = mapPoint(angle, max + 0.72, max);
+      const labelPoint = anglePoint(angle, PLOT_RADIUS + ANGLE_LABEL_OFFSET);
       const label = svgText(labelPoint.x, labelPoint.y, String(angle) + "°");
       label.setAttribute("class", "chart-angle-label");
       label.setAttribute("text-anchor", "middle");
@@ -219,18 +220,23 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function runOpacity(points) {
     return points.some(function (point) {
-      return point.entry.samples < LOW_CONFIDENCE;
+      return isLowConfidence(point.twa, point.entry);
     }) ? "0.65" : "1";
   }
 
+  function isLowConfidence(twa, entry) {
+    return twa !== 0 && entry.samples < LOW_CONFIDENCE;
+  }
+
   function addPoint(svg, point, band, twa, entry, color) {
+    const lowConfidence = isLowConfidence(twa, entry);
     const dot = svgNode("circle");
     dot.setAttribute("cx", point.x.toFixed(1));
     dot.setAttribute("cy", point.y.toFixed(1));
-    dot.setAttribute("r", entry.samples < LOW_CONFIDENCE ? "2.4" : "3.4");
+    dot.setAttribute("r", lowConfidence ? "2.4" : "3.4");
     dot.setAttribute("class", "chart-point");
     dot.setAttribute("fill", color);
-    dot.setAttribute("opacity", entry.samples < LOW_CONFIDENCE ? "0.5" : "1");
+    dot.setAttribute("opacity", lowConfidence ? "0.5" : "1");
     const message = String(twa) + "° TWA · " + String(band) + " kt TWS · " + entry.stw.toFixed(1) + " kt STW · " + String(entry.samples) + " samples";
     const hit = svgNode("circle");
     hit.setAttribute("cx", point.x.toFixed(1));
@@ -248,8 +254,11 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function mapPoint(twa, stw, max) {
-    const radians = twa * Math.PI / 180;
-    const radius = stw / max * PLOT_RADIUS;
+    return anglePoint(twa, stw / max * PLOT_RADIUS);
+  }
+
+  function anglePoint(angle, radius) {
+    const radians = angle * Math.PI / 180;
     return {
       x: CENTER_X + radius * Math.sin(radians),
       y: CENTER_Y - radius * Math.cos(radians)
@@ -299,6 +308,26 @@ window.Polarrecorder = window.Polarrecorder || {};
     return curve.map(function (_entry, index) {
       return index;
     });
+  }
+
+  function selectAllBands(bands) {
+    selectedBands.clear();
+    bands.forEach(function (band) {
+      selectedBands.add(String(band));
+    });
+  }
+
+  function mergeBands(bands, previousKey) {
+    const previous = new Set(previousKey ? previousKey.split(",") : []);
+    const next = new Set(bands.map(String));
+    selectedBands.forEach(function (band) {
+      if (!next.has(band)) selectedBands.delete(band);
+    });
+    bands.forEach(function (band) {
+      const key = String(band);
+      if (!previous.has(key)) selectedBands.add(key);
+    });
+    if (selectedBands.size === 0) selectAllBands(bands);
   }
 
   function reconcileBands(bands) {

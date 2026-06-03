@@ -8,14 +8,18 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  const POLL_MS = { polar: 30000, status: 2000, timeline: 10000 };
+  const HEARTBEAT_MS = 2000;
+  const TIMELINE_TICKS = 30;
   const state = {
     activeTab: "polar",
-    timers: {},
+    heartbeat: null,
+    tick: 0,
+    lastTimelineTick: 0,
+    polarGen: null,
+    csvGen: null,
     statusData: null,
     timelineMinutes: 240,
     polarFormat: "windy",
-    polarPercentile: "",
     initializedExport: false,
     initializedSettings: false
   };
@@ -74,18 +78,21 @@ window.Polarrecorder = window.Polarrecorder || {};
     document.querySelectorAll("[data-tab-panel]").forEach(function (panel) {
       panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
     });
-    stopPolling();
     fetchActiveTab();
-    if (POLL_MS[tab]) {
-      state.timers[tab] = window.setInterval(fetchActiveTab, POLL_MS[tab]);
-    }
+    startHeartbeat();
   }
 
-  function stopPolling() {
-    Object.keys(state.timers).forEach(function (key) {
-      window.clearInterval(state.timers[key]);
-      delete state.timers[key];
-    });
+  function startHeartbeat() {
+    if (state.heartbeat) return;
+    state.heartbeat = window.setInterval(heartbeat, HEARTBEAT_MS);
+  }
+
+  function heartbeat() {
+    state.tick += 1;
+    fetchStatus();
+    if (state.activeTab === "timeline" && state.tick - state.lastTimelineTick >= TIMELINE_TICKS) {
+      fetchTimeline(state.timelineMinutes);
+    }
   }
 
   function fetchActiveTab() {
@@ -162,6 +169,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     params.set("format", state.polarFormat);
     const endpoint = "polar?" + params.toString();
     fetchJson(endpoint).then(function (data) {
+      state.polarGen = data.generation;
       byId("polar-chart").classList.add("has-data");
       Polarrecorder.PolarChart.Render(data, {
         presetTwa: selectedPolarPreset().twa,
@@ -182,12 +190,21 @@ window.Polarrecorder = window.Polarrecorder || {};
     fetchJson("status").then(function (data) {
       state.statusData = data;
       appendRecentDecision(data);
-      renderStatus(data);
+      if (state.activeTab === "status") renderStatus(data);
+      if (state.activeTab === "polar" && data.generation !== state.polarGen) fetchPolar();
+      if (state.activeTab === "export" && data.generation !== state.csvGen) refreshPreview(data.generation);
     }).catch(function () {});
+  }
+
+  function refreshPreview(generation) {
+    state.csvGen = generation;
+    const ui = Polarrecorder.ExportUI;
+    if (ui && ui.RefreshPreview) ui.RefreshPreview();
   }
 
   function fetchTimeline(minutes) {
     state.timelineMinutes = minutes;
+    state.lastTimelineTick = state.tick;
     fetchJson("timeline?minutes=" + encodeURIComponent(String(minutes))).then(function (data) {
       byId("timeline-chart").classList.add("has-data");
       Polarrecorder.TimelineChart.Render(data, minutes);

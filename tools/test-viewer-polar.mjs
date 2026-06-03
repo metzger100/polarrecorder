@@ -10,6 +10,7 @@ const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js")
 
 testEmptyPolarShowsCenteredOverlay();
 testPolarWithDataDoesNotShowEmptyOverlay();
+testZeroTwaAnchorRendersAtFullConfidence();
 
 console.log("Viewer polar chart tests passed.");
 
@@ -46,6 +47,39 @@ function testPolarWithDataDoesNotShowEmptyOverlay() {
   assert.equal(env.host.children.some(function (node) {
     return node.className === "chart-empty-overlay";
   }), false);
+}
+
+function testZeroTwaAnchorRendersAtFullConfidence() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[0] = { stw: 0.0, samples: 0 };
+  curve[30] = { stw: 5.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "windy",
+    generation: 3,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [0, 30, 60, 90] });
+
+  const svg = env.host.children[0];
+  const dots = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-point";
+  });
+  assert.equal(dots.length, 2);
+  // The server-prefilled 0 deg / 0 STW anchor sits at the center and is rendered
+  // at full confidence despite 0 samples, so it never dims the curve.
+  const anchor = dots.find(function (node) {
+    return node.attributes.get("cx") === "280.0" && node.attributes.get("cy") === "280.0";
+  });
+  assert.ok(anchor, "expected a 0 deg anchor dot at the center");
+  assert.equal(anchor.attributes.get("r"), "3.4");
+  assert.equal(anchor.attributes.get("opacity"), "1");
+  const connector = svg.children.find(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.equal(connector.attributes.get("opacity"), "1");
 }
 
 function loadPolarChart() {

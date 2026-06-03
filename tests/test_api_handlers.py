@@ -84,15 +84,34 @@ def test_format_status_nulls_before_first_values_and_decision() -> None:
 
 
 def test_format_polar_and_export_reuse_projection() -> None:
-    bins = {(90, 12): {"histogram": {60: 3}}}
+    bins = {(100, 12): {"histogram": {60: 3}}}
 
-    polar = _data(api_handlers.format_polar(bins, [12], 65, 7, "windy"))
-    export_response = _data(api_handlers.format_export(bins, [90], [12], 65, 3))
+    polar = _data(api_handlers.format_polar(bins, [0, 90], [12], 65, 7, "windy"))
+    export_response = _data(api_handlers.format_export(bins, [0, 90], [12], 65, 3))
     curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
 
     assert polar["tws_bands"] == [12]
+    # An off-preset-angle sample (100 deg) midpoint-merges into the 90 deg
+    # preset column the viewer plots, matching the CSV export projection.
     assert curves["12"][90] == {"stw": 6.0, "samples": 3}
-    assert export_response["csv"] == "TWA\\TWS;12\r\n90;6.0\r\n"
+    assert curves["12"][100] is None
+    # Each populated band is anchored at 0 deg / 0 STW for display only; the CSV
+    # export keeps the 0 deg row empty.
+    assert curves["12"][0] == {"stw": 0.0, "samples": 0}
+    assert export_response["csv"] == "TWA\\TWS;12\r\n0;\r\n90;6.0\r\n"
+
+
+def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
+    bins = {(90, 12): {"histogram": {60: 3}}}
+
+    polar = _data(api_handlers.format_polar(bins, [0, 90], [8, 12], 65, 1, "windy"))
+    curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
+
+    # Only the band with real data is returned; the anchor never promotes the
+    # empty 8 kt band, and the populated 12 kt band gains its 0 deg anchor.
+    assert polar["tws_bands"] == [12]
+    assert "8" not in curves
+    assert curves["12"][0] == {"stw": 0.0, "samples": 0}
 
 
 def test_other_read_formatters_wrap_detached_data() -> None:

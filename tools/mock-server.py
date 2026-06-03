@@ -323,6 +323,8 @@ def polar_response(format_name: str, percentile: int) -> dict[str, object]:
                 curve.append({"stw": speed(twa, tws, percentile), "samples": samples(twa, tws)})
             else:
                 curve.append(None)
+        if any(entry is not None for entry in curve) and curve[0] is None:
+            curve[0] = {"stw": 0.0, "samples": 0}
         curves[str(tws)] = curve
     return {
         "status": "OK",

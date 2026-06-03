@@ -43,7 +43,9 @@ def _polar(plugin: Any, args: dict[str, str]) -> dict[str, object]:
         percentile = export.parse_percentile(args, plugin.config.percentile)
         model_bins = plugin._model.snapshot_bins()
         generation = plugin._model.generation
-    return api_handlers.format_polar(model_bins, preset.tws, percentile, generation, preset.name)
+    return api_handlers.format_polar(
+        model_bins, preset.twa, preset.tws, percentile, generation, preset.name
+    )
 
 
 def _rejections(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
