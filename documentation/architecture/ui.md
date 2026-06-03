@@ -39,8 +39,10 @@ AvNav without a build step, network access, or runtime dependencies.
   band arriving never wipes the user's chip choices.
 - SVG rendering is used for both charts. The polar chart renders only the
   selected preset's TWA columns, draws dots where those preset columns have
-  data, and connects datapoints with thin straight segments without pointed
-  gap styling or closing 180 degrees back to 0. The server anchors each
+  data, and connects datapoints with thin straight segments only between
+  adjacent TWA grid columns, so a column the selected preset can hold but has no
+  data leaves a true gap with no connecting line, and never closes 180 degrees
+  back to 0. The server anchors each
   populated band at 0 deg TWA / 0 STW (the chart center), and the viewer treats
   the 0 deg point as full confidence regardless of its sample count so the
   zero-sample anchor never dims the curve. Radial TWA angle labels sit a fixed

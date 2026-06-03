@@ -11,6 +11,7 @@ const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js")
 testEmptyPolarShowsCenteredOverlay();
 testPolarWithDataDoesNotShowEmptyOverlay();
 testZeroTwaAnchorRendersAtFullConfidence();
+testMissingGridColumnBreaksLine();
 
 console.log("Viewer polar chart tests passed.");
 
@@ -80,6 +81,33 @@ function testZeroTwaAnchorRendersAtFullConfidence() {
     return node.attributes.get("class") === "chart-line";
   });
   assert.equal(connector.attributes.get("opacity"), "1");
+}
+
+function testMissingGridColumnBreaksLine() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[30] = { stw: 5.0, samples: 12 };
+  curve[52] = { stw: 6.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "windy",
+    generation: 4,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [30, 40, 52] });
+
+  const svg = env.host.children[0];
+  const dots = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-point";
+  });
+  assert.equal(dots.length, 2);
+  // The 40 deg grid column has no data, so 30 deg and 52 deg are not adjacent
+  // columns and must not be joined by a connecting line.
+  const lines = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.equal(lines.length, 0, "expected no connector across a missing grid column");
 }
 
 function loadPolarChart() {

@@ -14,8 +14,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   const PLOT_RADIUS = 220;
   const ANGLE_LABEL_OFFSET = 18;
   const LOW_CONFIDENCE = 10;
-  const SOLID_GAP_LIMIT = 2;
-  const SPARSE_GAP_LIMIT = 35;
   const selectedBands = new Set();
   let lastKey = "";
   let lastData = null;
@@ -164,12 +162,13 @@ window.Polarrecorder = window.Polarrecorder || {};
   function addCurve(svg, curve, presetTwa, band, index, count, max) {
     const color = bandColor(index, count);
     const points = [];
-    renderIndexes(curve, presetTwa).forEach(function (twa) {
+    renderIndexes(curve, presetTwa).forEach(function (twa, gridIndex) {
       const entry = curve[twa];
       if (!entry) return;
       const point = mapPoint(twa, entry.stw, max);
       point.twa = twa;
       point.entry = entry;
+      point.gridIndex = gridIndex;
       points.push(point);
     });
     addConnectors(svg, points, color);
@@ -179,16 +178,14 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function addConnectors(svg, points, color) {
-    const limit = gapLimit(points);
     let run = [];
     points.forEach(function (point) {
       const previous = run[run.length - 1];
-      if (!previous || point.twa - previous.twa <= limit) {
+      if (!previous || point.gridIndex - previous.gridIndex === 1) {
         run.push(point);
         return;
       }
       addRun(svg, run, color);
-      addGap(svg, previous, point, color);
       run = [point];
     });
     addRun(svg, run, color);
@@ -203,18 +200,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     line.setAttribute("class", "chart-line");
     line.setAttribute("stroke", color);
     line.setAttribute("opacity", runOpacity(points));
-    svg.appendChild(line);
-  }
-
-  function addGap(svg, a, b, color) {
-    const line = svgNode("line");
-    line.setAttribute("x1", a.x.toFixed(1));
-    line.setAttribute("y1", a.y.toFixed(1));
-    line.setAttribute("x2", b.x.toFixed(1));
-    line.setAttribute("y2", b.y.toFixed(1));
-    line.setAttribute("class", "chart-line");
-    line.setAttribute("stroke", color);
-    line.setAttribute("opacity", runOpacity([a, b]));
     svg.appendChild(line);
   }
 
@@ -268,10 +253,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   function bandColor(index, count) {
     const hue = count <= 1 ? 190 : 210 - index / Math.max(1, count - 1) * 185;
     return "hsl(" + hue.toFixed(0) + " 70% 50%)";
-  }
-
-  function gapLimit(points) {
-    return points.length > 30 ? SOLID_GAP_LIMIT : SPARSE_GAP_LIMIT;
   }
 
   function bandsKey(bands) {
