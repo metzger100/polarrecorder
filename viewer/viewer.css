@@ -574,7 +574,7 @@ textarea {
 
 .chart-grid-line {
   stroke: color-mix(in srgb, var(--polarrecorder-fore-color) 28%, transparent);
-  stroke-width: 0.75;
+  stroke-width: 1.125;
   vector-effect: non-scaling-stroke;
 }
 
@@ -590,7 +590,7 @@ textarea {
 
 .chart-line {
   fill: none;
-  stroke-width: 1.6;
+  stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;

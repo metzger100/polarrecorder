@@ -75,7 +75,7 @@ function testZeroTwaAnchorRendersAtFullConfidence() {
     return node.attributes.get("cx") === "280.0" && node.attributes.get("cy") === "280.0";
   });
   assert.ok(anchor, "expected a 0 deg anchor dot at the center");
-  assert.equal(anchor.attributes.get("r"), "3.4");
+  assert.equal(anchor.attributes.get("r"), "5.1");
   assert.equal(anchor.attributes.get("opacity"), "1");
   const connector = svg.children.find(function (node) {
     return node.attributes.get("class") === "chart-line";

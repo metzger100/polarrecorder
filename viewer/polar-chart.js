@@ -218,7 +218,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const dot = svgNode("circle");
     dot.setAttribute("cx", point.x.toFixed(1));
     dot.setAttribute("cy", point.y.toFixed(1));
-    dot.setAttribute("r", lowConfidence ? "2.4" : "3.4");
+    dot.setAttribute("r", lowConfidence ? "3.6" : "5.1");
     dot.setAttribute("class", "chart-point");
     dot.setAttribute("fill", color);
     dot.setAttribute("opacity", lowConfidence ? "0.5" : "1");
