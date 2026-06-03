@@ -11,9 +11,8 @@ import logging
 import sys
 import threading
 import time
-from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 _plugin_path = Path(__file__).resolve().parent
 _plugin_dir = str(_plugin_path)
@@ -48,8 +47,7 @@ INCOMPLETE_DEMOTE_COUNT = 30
 QUEUE_WAIT_SECONDS = 0.5
 
 
-@dataclass(frozen=True)
-class _CurrentValues:
+class _CurrentValues(NamedTuple):
     twa_deg: float
     tws_kt: float
     stw_kt: float
