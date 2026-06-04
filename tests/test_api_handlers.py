@@ -101,6 +101,20 @@ def test_format_polar_and_export_reuse_projection() -> None:
     assert export_response["csv"] == "TWA\\TWS;12\r\n0;0.0\r\n90;6.0\r\n"
 
 
+def test_format_polar_curve_spans_full_circle_for_port_cells() -> None:
+    bins = {(210, 12): {"histogram": {50: 3}}}
+    grid = [0, 180, 210, 270]
+
+    polar = _data(api_handlers.format_polar(bins, grid, [12], 65, 3, "Default360"))
+    curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
+
+    assert polar["tws_bands"] == [12]
+    # A projected port cell at 210 deg is addressable in the full-circle curve.
+    assert len(curves["12"]) == 360
+    assert curves["12"][210] == {"stw": 5.0, "samples": 3}
+    assert curves["12"][0] == {"stw": 0.0, "samples": 0}
+
+
 def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
     bins = {(90, 12): {"histogram": {60: 3}}}
 

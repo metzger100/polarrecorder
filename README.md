@@ -96,6 +96,8 @@ The Polar tab shows the learned polar diagram.
 
 The Preset selector changes the TWA and TWS grid used for viewing. It does not delete or change the learned data.
 
+With a `180°` preset (the default), the diagram shows the starboard half only, exactly as a classic symmetric polar. With a `360°` preset, the diagram additionally draws the port (left) half with absolute-degree labels (`210°`, `240°`, `270°`, `300°`, `330°`) and closes the curve around the full circle, so genuine port/starboard differences are visible instead of being averaged together.
+
 ### Status
 
 The Status tab is the "what is happening right now?" page.
@@ -146,6 +148,8 @@ You can:
 
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
+A `360°` preset (or any custom grid with angles above `180°`) exports true port/starboard asymmetry, emitting TWA rows above `180°`. Note that a `360°` CSV is not Windy.com-importable by design; use the `Windy Passage Planner` preset for Windy import.
+
 ### Settings
 
 The Settings tab contains maintenance actions:
@@ -170,12 +174,13 @@ Example of a simple custom grid:
 - TWA: `0, 30, 60, 90, 120, 150, 180`
 - TWS: `4, 6, 8, 10, 12, 14, 16, 20, 25`
 
-The built-in `windy` preset is meant for Windy Passage Planner. It cannot be deleted. It uses:
+There are three built-in presets. They cannot be deleted or overwritten, and all three share the same TWS bands (`4, 6, 8, 10, 12, 14, 16, 20, 25`):
 
-- TWA: `0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180`
-- TWS: `4, 6, 8, 10, 12, 14, 16, 20, 25`
+- `Default (180°)` is the default view and export grid. It covers the starboard half only, `0°` to `180°` in `15°` steps (`0, 15, 30, ... , 180`). This behaves like a classic symmetric polar: only starboard samples are shown.
+- `Default (360°)` covers the full circle, `0°` to `345°` in `15°` steps (`0, 15, 30, ... , 345`, wrapping at `360°` back to `0°`). It draws and exports true port/starboard asymmetry so you can compare both tacks directly.
+- `Windy Passage Planner` (internal name `windy`) keeps the irregular Windy.com angles `0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180` for importing into Windy. It is no longer the default.
 
-You can create your own presets if another program or your own habits need different angles or wind speeds.
+You can create your own presets if another program or your own habits need different angles or wind speeds. Custom and saved presets may use TWA angles above `180°` (up to `359°`) to capture port-side data.
 
 Presets do not change what the plugin has learned. They only change how the learned data is displayed or exported.
 
@@ -278,6 +283,8 @@ It cannot reliably detect:
 - wrong instrument calibration
 
 Because of that, the learned polar is best understood as "how my boat usually performed in the data I allowed it to record", not a perfect manufacturer-style target polar.
+
+Port and starboard are no longer folded together. A `180°` view counts only starboard samples for each cell, so per-bin sample counts are lower than in older versions that mirrored port data onto starboard. Confidence therefore builds more slowly per side, and a `360°` view splits the data across twice as many cells. This is intentional: it keeps genuine port/starboard differences honest instead of averaging them away.
 
 ## Where is the data stored?
 

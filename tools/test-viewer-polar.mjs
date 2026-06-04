@@ -12,6 +12,8 @@ testEmptyPolarShowsCenteredOverlay();
 testPolarWithDataDoesNotShowEmptyOverlay();
 testZeroTwaAnchorRendersAtFullConfidence();
 testMissingGridColumnBreaksLine();
+testCircularPresetDrawsPortLabelsAndClosesCurve();
+testNonCircularPresetKeepsStarboardOnlyGrid();
 
 console.log("Viewer polar chart tests passed.");
 
@@ -108,6 +110,62 @@ function testMissingGridColumnBreaksLine() {
     return node.attributes.get("class") === "chart-line";
   });
   assert.equal(lines.length, 0, "expected no connector across a missing grid column");
+}
+
+function testCircularPresetDrawsPortLabelsAndClosesCurve() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[0] = { stw: 0.0, samples: 0 };
+  curve[90] = { stw: 6.0, samples: 12 };
+  curve[270] = { stw: 5.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "Default360",
+    generation: 9,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [0, 90, 180, 270] });
+
+  const svg = env.host.children[0];
+  const labels = angleLabels(svg);
+  // Port-half spokes carry absolute degree labels (210 deg .. 330 deg).
+  assert.ok(labels.includes("210°"), "expected absolute port spoke label 210°");
+  assert.ok(labels.includes("270°"), "expected absolute port spoke label 270°");
+  // The full-circle curve closes: a wrap connector joins the last port point
+  // (270 deg) back to the 0 deg origin, so two connectors are drawn.
+  const lines = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.equal(lines.length, 2, "expected a closing wrap connector for a circular preset");
+}
+
+function testNonCircularPresetKeepsStarboardOnlyGrid() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[0] = { stw: 0.0, samples: 0 };
+  curve[90] = { stw: 6.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "Default180",
+    generation: 10,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [0, 90, 180] });
+
+  const labels = angleLabels(env.host.children[0]);
+  // A 180 deg preset draws only the starboard spokes and no port-half labels.
+  assert.ok(labels.includes("180°"));
+  assert.equal(labels.includes("210°"), false, "180 deg preset must not draw port spokes");
+}
+
+function angleLabels(svg) {
+  return svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-angle-label";
+  }).map(function (node) {
+    return node.textContent;
+  });
 }
 
 function loadPolarChart() {

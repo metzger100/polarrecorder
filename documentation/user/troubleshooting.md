@@ -40,8 +40,8 @@ model and counters.
 
 User export presets are stored in `<plugin_dir>/data/presets.json`. If that file
 is missing, corrupt, or from a newer unsupported schema, Polar Recorder discards
-the user presets for that run and keeps only the built-in Windy preset. Preset
-save operations write a fresh `presets.json`.
+the user presets for that run and keeps only the built-in presets (`Default180`,
+`Default360`, `windy`). Preset save operations write a fresh `presets.json`.
 
 ### Maneuver cooldown and stability window
 

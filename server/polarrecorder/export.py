@@ -1,7 +1,7 @@
-"""Module: Export - Polar projection, CSV export, and preset persistence.
+"""Module: Export - CSV export and preset persistence over pure projection.
 
 Documentation: documentation/user/export-import.md
-Depends: polarrecorder.bins, polarrecorder.histogram
+Depends: polarrecorder.projection
 """
 
 from __future__ import annotations
@@ -9,20 +9,37 @@ from __future__ import annotations
 import json
 import os
 import re
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from polarrecorder import histogram
-from polarrecorder.bins import TWS_BIN_MAX
+from polarrecorder.projection import (
+    TWA_FOLD_MAX,
+    TWA_FULL_CIRCLE,
+    ProjectedCell,
+    SnapshotBins,
+    anchor_origin,
+    project_grid,
+    to_int,
+)
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from polarrecorder.logger import Logger
 
+# Re-exported so API handlers and tests keep addressing ``export.<name>``.
+__all__ = [
+    "TWA_FOLD_MAX",
+    "TWA_FULL_CIRCLE",
+    "ProjectedCell",
+    "SnapshotBins",
+    "anchor_origin",
+    "project_grid",
+    "to_int",
+]
+
 MIN_SAMPLES_DISPLAY = 3
-ORIGIN_TWA = 0
-ORIGIN_STW = 0.0
 PERCENTILE_MIN = 1
 PERCENTILE_MAX = 99
 PRESET_NAME_MAX_LENGTH = 30
@@ -30,10 +47,14 @@ PRESET_SCHEMA_VERSION = 1
 PRESETS_NAME = "presets.json"
 PRESETS_TMP_NAME = "presets.tmp.json"
 WINDY_NAME = "windy"
-TWA_FOLD_MAX = 180
-TWA_FULL_CIRCLE = 360
+DEFAULT180_NAME = "Default180"
+DEFAULT360_NAME = "Default360"
+TWA_GRID_MAX = TWA_FULL_CIRCLE - 1
+TWA_GRID_STEP = 15
 WINDY_TWA = [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
 WINDY_TWS = [4, 6, 8, 10, 12, 14, 16, 20, 25]
+DEFAULT_TWA_180 = list(range(0, TWA_FOLD_MAX + 1, TWA_GRID_STEP))
+DEFAULT_TWA_360 = list(range(0, TWA_FULL_CIRCLE, TWA_GRID_STEP))
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9 -]+$")
 
 
@@ -52,14 +73,6 @@ class Preset:
 
 
 @dataclass(frozen=True)
-class ProjectedCell:
-    """One projected polar grid cell."""
-
-    stw: float
-    samples: int
-
-
-@dataclass(frozen=True)
 class ExportSelection:
     """Resolved export grid and confidence floor."""
 
@@ -69,17 +82,35 @@ class ExportSelection:
     min_samples: int
 
 
-SnapshotBins = Mapping[tuple[int, int], Mapping[str, object]]
+def _builtin_presets() -> list[Preset]:
+    """Return the ordered built-in presets (Default180 first as the default)."""
+    return [
+        Preset(DEFAULT180_NAME, builtin=True, twa=list(DEFAULT_TWA_180), tws=list(WINDY_TWS)),
+        Preset(DEFAULT360_NAME, builtin=True, twa=list(DEFAULT_TWA_360), tws=list(WINDY_TWS)),
+        Preset(WINDY_NAME, builtin=True, twa=list(WINDY_TWA), tws=list(WINDY_TWS)),
+    ]
+
+
+def _builtin_by_name(name: str) -> Preset | None:
+    lowered = name.strip().lower()
+    for preset in _builtin_presets():
+        if preset.name.lower() == lowered:
+            return preset
+    return None
+
+
+def _is_builtin_name(name: str) -> bool:
+    return _builtin_by_name(name) is not None
 
 
 def builtin_preset() -> Preset:
-    """Return the hardcoded Windy Passage Planner preset."""
-    return Preset(WINDY_NAME, builtin=True, twa=list(WINDY_TWA), tws=list(WINDY_TWS))
+    """Return the default built-in preset (Default180)."""
+    return _builtin_presets()[0]
 
 
 def list_presets(data_dir: str | os.PathLike[str], logger: Logger | None = None) -> list[Preset]:
-    """Return Windy plus user presets from disk."""
-    presets = [builtin_preset()]
+    """Return the built-in presets followed by sorted user presets from disk."""
+    presets = _builtin_presets()
     for name, preset in sorted(_load_user_presets(data_dir, logger).items()):
         presets.append(Preset(name, builtin=False, twa=list(preset.twa), tws=list(preset.tws)))
     return presets
@@ -97,7 +128,7 @@ def save_preset(
     preset = Preset(
         name=_validate_name(name),
         builtin=False,
-        twa=_parse_grid("twa", twa_text, 0, TWA_FOLD_MAX),
+        twa=_parse_grid("twa", twa_text, 0, TWA_GRID_MAX),
         tws=_parse_grid("tws", tws_text, 1, max_tws),
     )
     presets = _load_user_presets(data_dir, logger)
@@ -117,8 +148,8 @@ def delete_preset(
         msg = "Invalid parameter 'confirm': expected 'yes'"
         raise ExportError(msg)
     trimmed = name.strip()
-    if trimmed.lower() == WINDY_NAME:
-        msg = "Preset 'windy' is built in and cannot be deleted"
+    if _is_builtin_name(trimmed):
+        msg = f"Preset '{trimmed}' is built in and cannot be deleted"
         raise ExportError(msg)
     presets = _load_user_presets(data_dir, logger)
     if trimmed not in presets:
@@ -134,9 +165,10 @@ def resolve_polar_preset(
     logger: Logger | None = None,
 ) -> Preset:
     """Resolve the named preset used by the polar diagram."""
-    name = args.get("format", WINDY_NAME)
-    if name.lower() == WINDY_NAME:
-        return builtin_preset()
+    name = args.get("format", DEFAULT180_NAME)
+    builtin = _builtin_by_name(name)
+    if builtin is not None:
+        return builtin
     user = _load_user_presets(data_dir, logger).get(name)
     if user is None:
         msg = f"Unknown format '{name}'"
@@ -164,7 +196,7 @@ def resolve_export_selection(
     if has_twa and has_tws:
         return ExportSelection(
             "custom",
-            _parse_grid("twa", args["twa"], 0, TWA_FOLD_MAX),
+            _parse_grid("twa", args["twa"], 0, TWA_GRID_MAX),
             _parse_grid("tws", args["tws"], 1, max_tws),
             min_samples,
         )
@@ -186,56 +218,6 @@ def parse_percentile(args: Mapping[str, str], default: int) -> int:
         return value
     msg = f"Invalid parameter 'percentile': expected integer 1-99, got {raw!r}"
     raise ExportError(msg)
-
-
-def project_grid(
-    model_bins: SnapshotBins,
-    twa_grid: Sequence[int],
-    tws_grid: Sequence[int],
-    percentile: int,
-    min_samples: int,
-) -> dict[tuple[int, int], ProjectedCell]:
-    """Project sparse raw bins onto a target TWA/TWS grid."""
-    projected: dict[tuple[int, int], ProjectedCell] = {}
-    folded = _folded_bins(model_bins)
-    twa_intervals = _intervals(twa_grid, TWA_FOLD_MAX)
-    tws_intervals = _intervals(tws_grid, TWS_BIN_MAX)
-    for twa, twa_lower, twa_upper, twa_last in twa_intervals:
-        for tws, tws_lower, tws_upper, tws_last in tws_intervals:
-            merged = _cell_histogram(
-                folded,
-                (twa_lower, twa_upper, twa_last),
-                (tws_lower, tws_upper, tws_last),
-            )
-            samples = sum(merged.values())
-            speed = histogram.percentile(merged, percentile)
-            if samples >= min_samples and speed is not None:
-                projected[(twa, tws)] = ProjectedCell(stw=speed, samples=samples)
-    return projected
-
-
-def anchor_origin(
-    projected: Mapping[tuple[int, int], ProjectedCell],
-) -> dict[tuple[int, int], ProjectedCell]:
-    """Anchor each populated TWS band to 0 deg TWA / 0 STW (head to wind).
-
-    At 0 deg TWA boat speed is physically zero, so this is a grid boundary
-    condition shared by the polar diagram and the CSV export rather than learned
-    data. For every TWS band that already carries genuine data, an origin cell is
-    added at TWA 0 unless real data already occupies it, so the rule never creates
-    or promotes an empty band. Consumers whose TWA grid omits 0 deg simply never
-    read the added cells.
-
-    Args:
-        projected: Genuine projected cells keyed by ``(twa, tws)``.
-
-    Returns:
-        A new projection mapping with origin cells added for populated bands.
-    """
-    anchored = dict(projected)
-    for _twa, tws in projected:
-        anchored.setdefault((ORIGIN_TWA, tws), ProjectedCell(stw=ORIGIN_STW, samples=0))
-    return anchored
 
 
 def csv_from_projection(
@@ -280,8 +262,8 @@ def _resolve_min_samples(args: Mapping[str, str], min_samples_for_export: int) -
 
 def _validate_name(name: str) -> str:
     trimmed = name.strip()
-    if trimmed.lower() == WINDY_NAME:
-        msg = "Preset name 'windy' is reserved"
+    if _is_builtin_name(trimmed):
+        msg = f"Preset name '{trimmed}' is reserved"
         raise ExportError(msg)
     if not 1 <= len(trimmed) <= PRESET_NAME_MAX_LENGTH or NAME_PATTERN.fullmatch(trimmed) is None:
         msg = "Invalid parameter 'name': expected 1-30 alphanumeric, hyphen, or space chars"
@@ -321,7 +303,7 @@ def _load_user_presets(
     try:
         decoded = json.loads(path.read_text(encoding="utf-8"))
         data = cast("dict[str, object]", decoded)
-        if _to_int(data.get("schema_version", 0)) > PRESET_SCHEMA_VERSION:
+        if to_int(data.get("schema_version", 0)) > PRESET_SCHEMA_VERSION:
             _log_warn(logger, "presets.json schema is too new; discarding user presets")
             return {}
         raw_presets = data.get("presets", {})
@@ -339,7 +321,7 @@ def _decode_presets(raw_presets: dict[object, object]) -> dict[str, Preset]:
         name = str(raw_name)
         twa = _int_list(raw_preset.get("twa", []))
         tws = _int_list(raw_preset.get("tws", []))
-        if twa and tws and name.lower() != WINDY_NAME:
+        if twa and tws and not _is_builtin_name(name):
             presets[name] = Preset(name, builtin=False, twa=sorted(twa), tws=sorted(tws))
     return presets
 
@@ -380,63 +362,10 @@ def _write_user_presets(
         raise ExportError(msg) from exc
 
 
-def _folded_bins(model_bins: SnapshotBins) -> list[tuple[int, int, Mapping[int, int]]]:
-    folded: list[tuple[int, int, Mapping[int, int]]] = []
-    for (twa, tws), data in sorted(model_bins.items()):
-        raw_histogram = data.get("histogram", {})
-        if isinstance(raw_histogram, dict):
-            folded_twa = twa if twa <= TWA_FOLD_MAX else TWA_FULL_CIRCLE - twa
-            folded.append((folded_twa, tws, _int_histogram(raw_histogram)))
-    return folded
-
-
-def _cell_histogram(
-    folded: Sequence[tuple[int, int, Mapping[int, int]]],
-    twa_interval: tuple[float, float, bool],
-    tws_interval: tuple[float, float, bool],
-) -> dict[int, int]:
-    merged: dict[int, int] = {}
-    for twa, tws, source in folded:
-        if _inside(twa, twa_interval) and _inside(tws, tws_interval):
-            for key, count in source.items():
-                merged[key] = merged.get(key, 0) + count
-    return merged
-
-
-def _intervals(values: Sequence[int], upper_axis: int) -> list[tuple[int, float, float, bool]]:
-    return [
-        (
-            value,
-            0.0 if index == 0 else (values[index - 1] + value) / 2.0,
-            float(upper_axis) if index == len(values) - 1 else (value + values[index + 1]) / 2.0,
-            index == len(values) - 1,
-        )
-        for index, value in enumerate(values)
-    ]
-
-
-def _inside(value: int, interval: tuple[float, float, bool]) -> bool:
-    lower, upper, closed_upper = interval
-    if closed_upper:
-        return lower <= value <= upper
-    return lower <= value < upper
-
-
-def _int_histogram(raw: dict[object, object]) -> dict[int, int]:
-    return {_to_int(key): _to_int(count) for key, count in raw.items()}
-
-
 def _int_list(raw: object) -> list[int]:
     if not isinstance(raw, list):
         return []
-    return [_to_int(item) for item in raw]
-
-
-def _to_int(value: object) -> int:
-    if isinstance(value, (str, bytes, bytearray, int, float)):
-        return int(value)
-    msg = f"Expected int-compatible value, got {type(value).__name__}"
-    raise TypeError(msg)
+    return [to_int(item) for item in raw]
 
 
 def _cleanup_tmp(path: Path, logger: Logger | None) -> None:

@@ -14,6 +14,9 @@ window.Polarrecorder = window.Polarrecorder || {};
   const PLOT_RADIUS = 220;
   const ANGLE_LABEL_OFFSET = 18;
   const LOW_CONFIDENCE = 10;
+  const STARBOARD_SPOKES = [0, 30, 60, 90, 120, 150, 180];
+  const PORT_SPOKES = [210, 240, 270, 300, 330];
+  const CIRCULAR_MIN_TWA = 180;
   const selectedBands = new Set();
   let lastKey = "";
   let lastData = null;
@@ -86,10 +89,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "Polar diagram");
     const max = radiusMax(data);
-    addGrid(svg, max);
+    const circular = isCircular(presetTwa);
+    addGrid(svg, max, circular);
     data.tws_bands.forEach(function (band, index) {
       const key = String(band);
-      if (selectedBands.has(key)) addCurve(svg, data.curves[key] || [], presetTwa, band, index, data.tws_bands.length, max);
+      if (!selectedBands.has(key)) return;
+      const curve = data.curves[key] || [];
+      addCurve(svg, curve, presetTwa, band, index, data.tws_bands.length, max, circular);
     });
     return svg;
   }
@@ -99,8 +105,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     svg.setAttribute("viewBox", "0 0 560 560");
     svg.setAttribute("class", "chart-svg");
     svg.setAttribute("aria-hidden", "true");
-    addGrid(svg, 4);
+    addGrid(svg, 4, false);
     return svg;
+  }
+
+  function isCircular(presetTwa) {
+    return presetTwa.some(function (twa) {
+      return twa > CIRCULAR_MIN_TWA;
+    });
   }
 
   function emptyOverlay() {
@@ -125,7 +137,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     return Math.ceil(max / 2) * 2;
   }
 
-  function addGrid(svg, max) {
+  function addGrid(svg, max, circular) {
     const step = 1;
     for (let speed = step; speed <= max; speed += step) {
       const radius = speed / max * PLOT_RADIUS;
@@ -141,7 +153,8 @@ window.Polarrecorder = window.Polarrecorder || {};
       label.setAttribute("text-anchor", "start");
       svg.appendChild(label);
     }
-    [0, 30, 60, 90, 120, 150, 180].forEach(function (angle) {
+    const spokes = circular ? STARBOARD_SPOKES.concat(PORT_SPOKES) : STARBOARD_SPOKES;
+    spokes.forEach(function (angle) {
       const point = mapPoint(angle, max, max);
       const line = svgNode("line");
       line.setAttribute("x1", String(CENTER_X));
@@ -159,7 +172,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
-  function addCurve(svg, curve, presetTwa, band, index, count, max) {
+  function addCurve(svg, curve, presetTwa, band, index, count, max, circular) {
     const color = bandColor(index, count);
     const points = [];
     renderIndexes(curve, presetTwa).forEach(function (twa, gridIndex) {
@@ -171,13 +184,13 @@ window.Polarrecorder = window.Polarrecorder || {};
       point.gridIndex = gridIndex;
       points.push(point);
     });
-    addConnectors(svg, points, color);
+    addConnectors(svg, points, color, circular);
     points.forEach(function (point) {
       addPoint(svg, point, band, point.twa, point.entry, color);
     });
   }
 
-  function addConnectors(svg, points, color) {
+  function addConnectors(svg, points, color, circular) {
     let run = [];
     points.forEach(function (point) {
       const previous = run[run.length - 1];
@@ -189,6 +202,11 @@ window.Polarrecorder = window.Polarrecorder || {};
       run = [point];
     });
     addRun(svg, run, color);
+    // A circular preset closes the full-circle curve by joining the last rendered
+    // grid point back to the first (the 0 deg/360 deg head-to-wind origin).
+    if (circular && points.length >= 2) {
+      addRun(svg, [points[points.length - 1], points[0]], color);
+    }
   }
 
   function addRun(svg, points, color) {
@@ -266,7 +284,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       const twa = Number(value);
       if (!Number.isFinite(twa)) return;
       const rounded = Math.round(twa);
-      if (rounded < 0 || rounded > 180 || seen.has(rounded)) return;
+      if (rounded < 0 || rounded > 359 || seen.has(rounded)) return;
       seen.add(rounded);
       out.push(rounded);
     });

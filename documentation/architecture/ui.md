@@ -22,6 +22,12 @@ AvNav without a build step, network access, or runtime dependencies.
   `window.Polarrecorder`. `viewer/viewer.js` owns startup, API access, polling, tab
   switching, status rendering, and shared caches. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
+  `viewer/presets.js` adds `Presets`, owning the built-in fallback list and
+  display labels so `viewer.js` stays within its line budget.
+- The viewer defaults to the `Default180` preset (label "Default (180°)"). The
+  preset selector also offers `Default360` ("Default (360°)") and the legacy
+  `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all three when
+  the `presets` fetch fails.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
   to CSV and preset workflows. Settings owns JSON backup, a disabled future
   restore affordance, and destructive reset confirmation.
@@ -41,10 +47,16 @@ AvNav without a build step, network access, or runtime dependencies.
   selected preset's TWA columns, draws dots where those preset columns have
   data, and connects datapoints with thin straight segments only between
   adjacent TWA grid columns, so a column the selected preset can hold but has no
-  data leaves a true gap with no connecting line, and never closes 180 degrees
-  back to 0. The server anchors each
-  populated band at 0 deg TWA / 0 STW (the chart center), and the viewer treats
-  the 0 deg point as full confidence regardless of its sample count so the
+  data leaves a true gap with no connecting line. A preset is circular when its
+  resolved TWA grid contains any value above 180 deg. A non-circular (180 deg)
+  preset draws only the starboard spokes `[0, 30, 60, 90, 120, 150, 180]`, plots
+  the starboard half, and does not close the curve back to 0 deg. A circular
+  preset additionally draws port-half spokes and absolute-degree labels at
+  `210, 240, 270, 300, 330`, plots port cells (geometry is already full-circle
+  via `sin`/`cos`), and closes the full-circle curve by joining the last rendered
+  grid point back to the 0 deg/360 deg head-to-wind origin. The server anchors
+  each populated band at 0 deg TWA / 0 STW (the chart center), and the viewer
+  treats the 0 deg point as full confidence regardless of its sample count so the
   zero-sample anchor never dims the curve. Radial TWA angle labels sit a fixed
   distance outside the outer ring at every scale. Radial STW labels include `kn`
   units, while tooltips include explicit TWA, TWS, STW, and sample units. It

@@ -19,7 +19,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     csvGen: null,
     statusData: null,
     timelineMinutes: 240,
-    polarFormat: "windy",
+    polarFormat: "Default180",
     initializedExport: false,
     initializedSettings: false
   };
@@ -130,9 +130,9 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function fetchPresets() {
     return fetchJson("presets").then(function (data) {
-      Polarrecorder.PresetsCache = (data && data.presets) || fallbackPresets();
+      Polarrecorder.PresetsCache = (data && data.presets) || Polarrecorder.Presets.Fallback();
     }).catch(function () {
-      Polarrecorder.PresetsCache = fallbackPresets();
+      Polarrecorder.PresetsCache = Polarrecorder.Presets.Fallback();
     });
   }
 
@@ -140,19 +140,11 @@ window.Polarrecorder = window.Polarrecorder || {};
     return fetchPresets().then(populatePresetSelects);
   }
 
-  function fallbackPresets() {
-    return [{ name: "windy", builtin: true, twa: [0, 30, 60, 90, 120, 150, 180], tws: [4, 6, 8, 10, 12, 14, 16, 20, 25] }];
-  }
-
-  function presetLabel(preset) {
-    return preset.builtin ? "Windy Passage Planner" : preset.name;
-  }
-
   function populatePresetSelects() {
     const polar = byId("polar-preset");
     clear(polar);
     Polarrecorder.PresetsCache.forEach(function (preset) {
-      const option = el("option", "", presetLabel(preset));
+      const option = el("option", "", Polarrecorder.Presets.Label(preset));
       option.value = preset.name;
       polar.appendChild(option);
     });
@@ -183,7 +175,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function selectedPolarPreset() {
     return Polarrecorder.PresetsCache.find(function (preset) {
       return preset.name === state.polarFormat;
-    }) || fallbackPresets()[0];
+    }) || Polarrecorder.Presets.Fallback()[0];
   }
 
   function fetchStatus() {
