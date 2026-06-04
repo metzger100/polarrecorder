@@ -4,6 +4,8 @@ Polar Recorder is an AvNav plugin that learns how fast your own boat usually sai
 
 In plain sailor language: it watches your instruments while you sail, throws away readings that look unusable, and slowly builds a polar diagram and CSV table from your real boat instead of from a brochure.
 
+<img width="1920" height="937" alt="image" src="https://github.com/user-attachments/assets/e4276264-305d-48bd-9ac3-df27538e51f0" />
+
 ## Why would I use it?
 
 A polar tells you the boat speed through water you can normally expect for a given:
