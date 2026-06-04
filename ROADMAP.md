@@ -14,6 +14,10 @@ here is committed or scheduled; ordering does not imply priority.
 
 ### 1. Full 360° polar support (port/starboard asymmetry)
 
+**Status:** Done. The projection-time fold is removed end to end; `Default180`
+(new default) and `Default360` are built in, `windy` stays selectable, and the
+viewer, CSV export, and polar API carry true 0-359° TWA.
+
 **Goal:** Let the polar describe how the boat actually performs on each side,
 instead of folding both tacks into one mirrored 0-180° curve.
 

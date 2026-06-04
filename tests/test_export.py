@@ -11,24 +11,70 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def test_windy_preset_values_are_exact() -> None:
-    preset = export.builtin_preset()
+def test_builtin_preset_values_are_exact(tmp_path: Path) -> None:
+    presets = {preset.name: preset for preset in export.list_presets(tmp_path)}
 
-    assert preset.name == "windy"
-    assert preset.builtin is True
-    assert preset.twa == [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
-    assert preset.tws == [4, 6, 8, 10, 12, 14, 16, 20, 25]
+    shared_tws = [4, 6, 8, 10, 12, 14, 16, 20, 25]
+
+    default180 = presets["Default180"]
+    assert default180.builtin is True
+    assert default180.twa == list(range(0, 181, 15))
+    assert default180.tws == shared_tws
+
+    default360 = presets["Default360"]
+    assert default360.builtin is True
+    assert default360.twa == list(range(0, 360, 15))
+    assert default360.tws == shared_tws
+
+    windy = presets["windy"]
+    assert windy.builtin is True
+    assert windy.twa == [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
+    assert windy.tws == shared_tws
+
+    # builtin_preset() resolves the default view (Default180).
+    assert export.builtin_preset().name == "Default180"
 
 
-def test_projection_folds_and_merges_bins() -> None:
+def test_resolve_polar_preset_defaults_to_default180(tmp_path: Path) -> None:
+    assert export.resolve_polar_preset(tmp_path, {}).name == "Default180"
+    assert export.resolve_polar_preset(tmp_path, {"format": "Default360"}).name == "Default360"
+    assert export.resolve_polar_preset(tmp_path, {"format": "windy"}).name == "windy"
+
+
+def test_projection_does_not_fold_port_bins_into_starboard() -> None:
     bins = {
         (30, 4): {"histogram": {50: 2}},
         (330, 4): {"histogram": {60: 1}},
     }
 
-    projected = export.project_grid(bins, [30], [4], percentile=65, min_samples=3)
+    # A 180 deg grid is starboard-only: the 30 deg bin projects on its own and the
+    # 330 deg port bin is excluded instead of being mirrored onto 30 deg.
+    starboard = export.project_grid(bins, [30], [4], percentile=65, min_samples=1)
+    assert starboard[(30, 4)] == export.ProjectedCell(stw=5.0, samples=2)
 
-    assert projected[(30, 4)] == export.ProjectedCell(stw=5.0, samples=3)
+    # A circular grid containing the port angle keeps starboard and port separate.
+    circular = export.project_grid(bins, [30, 330], [4], percentile=65, min_samples=1)
+    assert circular[(30, 4)] == export.ProjectedCell(stw=5.0, samples=2)
+    assert circular[(330, 4)] == export.ProjectedCell(stw=6.0, samples=1)
+
+
+def test_circular_projection_assigns_nearest_grid_point_across_wrap() -> None:
+    grid = list(range(0, 360, 15))
+    bins = {
+        (358, 6): {"histogram": {50: 2}},
+        (5, 6): {"histogram": {50: 1}},
+        (185, 6): {"histogram": {60: 2}},
+        (175, 6): {"histogram": {60: 1}},
+    }
+
+    projected = export.project_grid(bins, grid, [6], percentile=65, min_samples=1)
+
+    # 358 deg and 5 deg both wrap onto the 0 deg grid point across 360 deg/0 deg.
+    assert projected[(0, 6)].samples == 3
+    # 175 deg and 185 deg share the single 180 deg dead-downwind sector.
+    assert projected[(180, 6)].samples == 3
+    assert (358, 6) not in projected
+    assert (185, 6) not in projected
 
 
 def test_csv_format_is_semicolon_crlf_and_blank_for_missing_cells() -> None:
@@ -69,28 +115,52 @@ def test_csv_export_emits_zero_stw_origin_row_for_populated_bands() -> None:
     assert csv == "TWA\\TWS;8;12\r\n0;;0.0\r\n90;;6.0\r\n"
 
 
+def test_csv_export_emits_rows_above_180_for_circular_grid() -> None:
+    bins = {
+        (90, 12): {"histogram": {60: 3}},
+        (270, 12): {"histogram": {50: 3}},
+    }
+    selection = export.ExportSelection("custom", [0, 90, 180, 270], [12], 3)
+
+    csv = export.csv_export(bins, selection, percentile=65)
+
+    # The 270 deg port bin emits its own row above 180 deg instead of folding onto 90 deg.
+    assert csv == "TWA\\TWS;12\r\n0;0.0\r\n90;6.0\r\n180;\r\n270;5.0\r\n"
+
+
 def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
     saved = export.save_preset(tmp_path, "my plan", "90,0", "8,4", max_tws=20)
 
     assert saved.twa == [0, 90]
     assert saved.tws == [4, 8]
-    assert [preset.name for preset in export.list_presets(tmp_path)] == ["windy", "my plan"]
+    assert [preset.name for preset in export.list_presets(tmp_path)] == [
+        "Default180",
+        "Default360",
+        "windy",
+        "my plan",
+    ]
 
     export.delete_preset(tmp_path, "my plan", "yes")
 
-    assert [preset.name for preset in export.list_presets(tmp_path)] == ["windy"]
+    assert [preset.name for preset in export.list_presets(tmp_path)] == [
+        "Default180",
+        "Default360",
+        "windy",
+    ]
 
 
-def test_reserved_windy_save_and_delete_are_rejected(tmp_path: Path) -> None:
-    def save_windy() -> object:
-        return export.save_preset(tmp_path, "Windy", "0", "4", max_tws=20)
+def test_reserved_builtin_names_save_and_delete_are_rejected(tmp_path: Path) -> None:
+    for reserved in ("Windy", "default180", "DEFAULT360"):
 
-    def delete_windy() -> object:
-        export.delete_preset(tmp_path, "windy", "yes")
-        return None
+        def save_reserved(name: str = reserved) -> object:
+            return export.save_preset(tmp_path, name, "0", "4", max_tws=20)
 
-    _assert_export_error(save_windy)
-    _assert_export_error(delete_windy)
+        def delete_reserved(name: str = reserved) -> object:
+            export.delete_preset(tmp_path, name, "yes")
+            return None
+
+        _assert_export_error(save_reserved)
+        _assert_export_error(delete_reserved)
 
 
 def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> None:
@@ -98,14 +168,22 @@ def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> Non
     presets_path = tmp_path / export.PRESETS_NAME
     presets_path.write_text("{bad", encoding="utf-8")
 
-    assert [preset.name for preset in export.list_presets(tmp_path, logger)] == ["windy"]
+    assert [preset.name for preset in export.list_presets(tmp_path, logger)] == [
+        "Default180",
+        "Default360",
+        "windy",
+    ]
     assert any("corrupt" in message for level, message in logger.messages if level == "warn")
 
     presets_path.write_text(
         json.dumps({"schema_version": export.PRESET_SCHEMA_VERSION + 1, "presets": {}}),
         encoding="utf-8",
     )
-    assert [preset.name for preset in export.list_presets(tmp_path, logger)] == ["windy"]
+    assert [preset.name for preset in export.list_presets(tmp_path, logger)] == [
+        "Default180",
+        "Default360",
+        "windy",
+    ]
     assert any("too new" in message for level, message in logger.messages if level == "warn")
 
 
@@ -114,7 +192,7 @@ def test_name_and_grid_validation(tmp_path: Path) -> None:
         ("", "0", "4"),
         ("bad_name", "0", "4"),
         ("valid", "", "4"),
-        ("valid", "181", "4"),
+        ("valid", "360", "4"),
         ("valid", "0", "0"),
         ("valid", "0", "99"),
     ]
@@ -126,6 +204,10 @@ def test_name_and_grid_validation(tmp_path: Path) -> None:
         msg = "expected ExportError"
         raise AssertionError(msg)
 
+    # TWA values up to 359 deg are now accepted so circular grids are storable.
+    saved = export.save_preset(tmp_path, "wide", "0,210,359", "4", max_tws=20)
+    assert saved.twa == [0, 210, 359]
+
 
 def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> None:
     export.save_preset(tmp_path, "mine", "0,90", "4,8", max_tws=20)
@@ -134,7 +216,7 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
     named = export.resolve_export_selection(tmp_path, {"format": "mine"}, 20, 10)
     inline = export.resolve_export_selection(tmp_path, {"twa": "90,0", "tws": "8,4"}, 20, 10)
 
-    assert default.name == "windy"
+    assert default.name == "Default180"
     assert named.twa == [0, 90]
     assert inline.name == "custom"
     assert inline.tws == [4, 8]

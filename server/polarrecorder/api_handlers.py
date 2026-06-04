@@ -109,10 +109,11 @@ def format_polar(
     Projects onto the preset ``twa_grid`` so band membership and per-cell
     midpoint merging match the CSV export, then shares ``export.anchor_origin``
     so each populated band starts at 0 deg TWA / 0 STW. Cells are placed into a
-    181-entry array indexed by TWA 0-180; non-preset indices are ``None``. The
-    origin cell carries 0 samples for the viewer to treat as full confidence, and
-    because the anchor only touches bands that already have data it never creates
-    a band.
+    360-entry array indexed by absolute TWA 0-359 deg, so projected port cells
+    (181-359 deg) are addressable alongside starboard cells; non-preset indices
+    are ``None``. The origin cell carries 0 samples for the viewer to treat as
+    full confidence, and because the anchor only touches bands that already have
+    data it never creates a band.
     """
     projected = export.anchor_origin(
         export.project_grid(
@@ -126,7 +127,7 @@ def format_polar(
     curves: dict[str, list[dict[str, object] | None]] = {}
     bands: list[int] = []
     for tws in tws_grid:
-        curve = [_polar_entry(projected.get((twa, tws))) for twa in range(181)]
+        curve = [_polar_entry(projected.get((twa, tws))) for twa in range(export.TWA_FULL_CIRCLE)]
         if any(entry is not None for entry in curve):
             bands.append(tws)
             curves[str(tws)] = curve

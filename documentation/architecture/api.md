@@ -42,14 +42,14 @@ Endpoints:
 | Method | Endpoint | Params | Response data |
 |---|---|---|---|
 | GET | `status` | none | Recording flags, `data_status`, `warming_up`, uptime, current finite values plus ages/stale flags, current decision or `null`, counters plus acceptance rate, top rejections, persistence status, generation. |
-| GET | `polar` | `format` optional named preset, `percentile` optional 1-99 | `{format, percentile, generation, tws_bands, curves}`. TWA is always 0-180 by array index; curves are keyed by TWS string and contain `null` or `{stw, samples}`. |
+| GET | `polar` | `format` optional named preset, `percentile` optional 1-99 | `{format, percentile, generation, tws_bands, curves}`. TWA spans the full circle 0-359 by array index; curves are keyed by TWS string and contain `null` or `{stw, samples}`. |
 | GET | `rejections` | none | `{global, per_bin}` histograms. Per-bin keys are `"<twa>_<tws>"`. |
 | GET | `timeline` | `minutes` optional integer 1-240, default 240 | `{buckets}` oldest first, with minute wall time `t`, decision counts, and reason-code counts. |
-| GET | `export` | `format`, or inline `twa`+`tws`; optional `percentile`; optional `high_confidence=yes|true|1` | `{csv}` containing semicolon-delimited Windy-compatible CSV. |
+| GET | `export` | `format`, or inline `twa`+`tws`; optional `percentile`; optional `high_confidence=yes|true|1` | `{csv}` containing semicolon-delimited CSV. Circular grids emit TWA rows above 180 deg. |
 | GET | `config` | none | Parsed runtime config values in native JSON types. |
-| GET | `presets` | none | Windy built-in plus user presets as `{name, builtin, twa, tws}` entries. |
-| GET | `presets/save` | `name`, `twa`, `tws` | Saves or overwrites a user preset and returns the saved preset. |
-| GET | `presets/delete` | `name`, `confirm=yes` | Deletes a user preset. Windy cannot be deleted. |
+| GET | `presets` | none | Built-in presets (`Default180`, `Default360`, `windy`) first, then user presets, as `{name, builtin, twa, tws}` entries. |
+| GET | `presets/save` | `name`, `twa`, `tws` | Saves or overwrites a user preset and returns the saved preset. TWA values 0-359 are accepted. |
+| GET | `presets/delete` | `name`, `confirm=yes` | Deletes a user preset. Built-in presets cannot be deleted. |
 | GET | `reset` | `confirm=yes` required | Clears learned model and counters, keeps timeline and validation state, and sets `_flush_requested` for the plugin thread. |
 | GET | `pause` | none | Idempotently pauses recording. |
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
@@ -61,8 +61,9 @@ There is no import/restore endpoint. Restore from a JSON backup is not implement
 grids are not accepted by the polar endpoint. Projection uses the resolved
 preset's TWA grid, so each curve carries projected cells only at the preset TWA
 columns the viewer plots, and a TWS enters `tws_bands` only when one of those
-preset columns has data. The response still uses a 181 entry TWA curve array per
-populated TWS band, with array index equal to TWA 0-180; non-preset indices are
+preset columns has data. The response uses a 360 entry TWA curve array per
+populated TWS band, with array index equal to absolute TWA 0-359, so projected
+port cells (181-359 deg) are addressable; non-preset indices are
 `null`. Each populated band is anchored at index 0 with `{stw: 0.0, samples: 0}`
 so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared
 `export.anchor_origin` boundary condition (head to wind is 0 STW) applied to the
@@ -73,15 +74,19 @@ creates a band. When the requested TWA grid includes 0 deg, `GET export` emits
 
 `GET export` mode resolution is deterministic: inline `twa`+`tws` wins and
 cannot be combined with `format`; otherwise `format` resolves first against the
-case-insensitive Windy built-in and then case-sensitive user presets; absent
-mode defaults to Windy. One-sided inline grids are errors.
+case-insensitive built-in set (`Default180`, `Default360`, `windy`) and then
+case-sensitive user presets; absent mode defaults to `Default180`. One-sided
+inline grids are errors. Inline and saved `twa` grids accept values 0-359.
 
-`GET polar` and default `GET export` share the same midpoint-boundary projection
-function, configured percentile, and `MIN_SAMPLES_DISPLAY = 3` floor. Projection
-folds raw 0-359 TWA bins to 0-180, merges neighboring bins by midpoint
-boundaries across the requested TWA/TWS grid, and uses the fixed TWS upper bound
-`TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`, `true`, or
-`1` affects CSV export only and swaps the floor to `min_samples_for_export`.
+`GET polar` and default `GET export` share the same projection function,
+configured percentile, and `MIN_SAMPLES_DISPLAY = 3` floor. Projection never
+folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges starboard
+bins by linear midpoint boundaries capped at 180 deg, excluding port bins; a
+circular grid (any TWA above 180 deg) assigns each raw bin to its nearest grid
+point on the circle, including the 360 deg/0 deg wrap. Both use the fixed TWS
+upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`,
+`true`, or `1` affects CSV export only and swaps the floor to
+`min_samples_for_export`.
 
 No response may contain non-finite floats. Current values are updated only from
 a built finite `Sample`; later missing or non-finite reads leave the previous
