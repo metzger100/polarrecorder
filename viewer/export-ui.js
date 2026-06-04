@@ -10,7 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const state = {
     host: null,
-    selected: "windy",
+    selected: "Default180",
     twaEditor: null,
     twsEditor: null,
     percentile: "",
@@ -26,7 +26,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.host = document.getElementById("export-panel");
     state.hooks = hooks || {};
     state.host.classList.add("has-data");
-    if (!state.selected) state.selected = "windy";
+    if (!state.selected) state.selected = "Default180";
     render();
   }
 
@@ -166,7 +166,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     sortedPresets().forEach(function (preset) {
       const option = document.createElement("option");
       option.value = preset.name;
-      option.textContent = preset.builtin ? "Windy Passage Planner" : preset.name;
+      option.textContent = Polarrecorder.Presets.Label(preset);
       select.appendChild(option);
     });
   }
@@ -174,8 +174,8 @@ window.Polarrecorder = window.Polarrecorder || {};
   function sortedPresets() {
     const presets = Polarrecorder["PresetsCache"].slice();
     return presets.sort(function (a, b) {
-      if (a.builtin) return -1;
-      if (b.builtin) return 1;
+      if (a.builtin !== b.builtin) return a.builtin ? -1 : 1;
+      if (a.builtin && b.builtin) return 0;
       return a.name.localeCompare(b.name);
     });
   }
@@ -186,7 +186,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       state.twaEditor = Polarrecorder.GridEditor.Create({
         label: "TWA grid",
         min: 0,
-        max: 180,
+        max: 359,
         step: 10,
         values: preset.twa,
         onChange: applyValidity
@@ -307,7 +307,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function deletePreset() {
     const preset = selectedPreset();
     if (preset.builtin) {
-      setMessage("Windy cannot be deleted.", "error");
+      setMessage("Built-in presets cannot be deleted.", "error");
       return;
     }
     if (!window.confirm("Delete preset '" + preset.name + "'?")) return;
@@ -315,7 +315,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     params.set("name", preset.name);
     params.set("confirm", "yes");
     action("presets/delete?" + params.toString(), "Preset deleted.", function () {
-      state.selected = "windy";
+      state.selected = "Default180";
       if (state.hooks.refreshPresets) state.hooks.refreshPresets();
     });
   }
