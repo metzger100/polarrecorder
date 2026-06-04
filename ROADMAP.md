@@ -12,38 +12,7 @@ here is committed or scheduled; ordering does not imply priority.
 
 ## Key Details
 
-### 1. Full 360° polar support (port/starboard asymmetry)
-
-**Status:** Done. The projection-time fold is removed end to end; `Default180`
-(new default) and `Default360` are built in, `windy` stays selectable, and the
-viewer, CSV export, and polar API carry true 0-359° TWA.
-
-**Goal:** Let the polar describe how the boat actually performs on each side,
-instead of folding both tacks into one mirrored 0-180° curve.
-
-A real boat does not perform identically on port and starboard, but the model,
-viewer, and CSV export currently fold raw TWA 0-359° down to 0-180°, merging the
-two tacks into one mirrored curve. This idea removes that fold end to end so
-asymmetry is recorded, displayed, and exportable.
-
-- **Remove the 0-180° fold at the data level (foundational).** The model must
-  store true 0-359° TWA and never merge port into starboard. This is not a
-  360°-only change: it also applies to 180° presets. With the fold gone, a 180°
-  preset shows the real starboard half (0-180°) as-is, and port-side samples
-  (181-359°) are simply not included in that preset — they are never folded back
-  in. This likely drives supporting model/projection changes.
-- **Two new default presets**, both starting at 0° in 15° steps and reusing the
-  Windy preset's TWS bands:
-  - `Default180` — the new default preset, replacing `windy` as the default;
-    covers the starboard half only.
-  - `Default360` — full-circle coverage for true port/starboard comparison.
-- **Viewer:** the polar preview must label TWA sectors dynamically based on the
-  selected preset. A 180° preset looks exactly as it does today; a 360° preset
-  additionally draws labels on the left (port) half of the diagram.
-- **CSV export:** must accept and emit TWA bands above 180° (today it is capped
-  at 180°).
-
-### 2. Restore / import flows
+### 1. Restore / import flows
 
 **Goal:** Make the JSON backup round-trip, so a learned model can be recovered
 or moved between installs.
@@ -53,7 +22,7 @@ but there is no way to load it back — import/restore is not implemented. This
 idea adds an import path that validates a backup and restores the learned model,
 covering reinstall, device migration, and recovery after data loss.
 
-### 3. Optional signal hooks (enhanced rejection rules)
+### 2. Optional signal hooks (enhanced rejection rules)
 
 **Goal:** Improve recorded-data quality by rejecting samples that extra boat
 sensors prove are unrepresentative.
@@ -99,7 +68,7 @@ Any enhanced rule must keep the same no-AvNav, no-I/O, no-threading purity as th
 core rules, accept only the arguments it uses, read its inputs only from
 `Sample.enhanced`, and return the shared `RuleResult` type.
 
-### 4. AvNav dashboard widgets
+### 3. AvNav dashboard widgets
 
 **Goal:** Surface Polar Recorder data directly on the AvNav dashboard through one
 widget with three selectable kinds, themed to fit AvNav without fighting its CSS
@@ -112,7 +81,7 @@ responsiveness *patterns*, but deliberately stay far simpler: `renderHtml` only
 (no canvas), three kinds, and a small theme-token set. The notes below say what
 to implement and how.
 
-#### 4.1 Single widget, three kinds
+#### 3.1 Single widget, three kinds
 
 Register exactly one widget through the AvNav plugin API:
 `avnav.api.registerWidget(definition, editableParameters)` (see
@@ -144,7 +113,7 @@ do **not** copy the dyninstruments cluster-route / mapper / deferred-host-commit
 machinery (`cluster/ClusterWidget.js`, `runtime/cluster/*`); it solves a
 multi-surface, many-widget problem we do not have.
 
-#### 4.2 Per-kind configuration (editable parameters)
+#### 3.2 Per-kind configuration (editable parameters)
 
 Each kind exposes only its own options, using AvNav's conditional-parameter
 visibility. A parameter is shown only when its `condition` matches the current
@@ -162,7 +131,7 @@ in `dyninstruments/config/clusters/speed.js`). Parameter types we need are
 - **`timeline`** — a time-window control (`SELECT` or `NUMBER`) for how far back
   the timeline reaches, condition `{ kind: "timeline" }`.
 
-#### 4.3 Data sourcing (key divergence from dyninstruments)
+#### 3.3 Data sourcing (key divergence from dyninstruments)
 
 `dyninstruments` binds widgets to AvNav store keys via `storeKeys`. Polar
 Recorder's data is **not** in the AvNav store — it lives behind the plugin's own
@@ -182,7 +151,7 @@ exactly as it already does for the viewer; no new lock or threading behaviour is
 introduced because the API already snapshots live state under the `plugin.py`
 lock.
 
-#### 4.4 Rendering and safety
+#### 3.4 Rendering and safety
 
 All three kinds render with `renderHtml` (no canvas). The polar and timeline are
 drawn as inline **SVG** so they scale cleanly; status is plain HTML. Because the
@@ -194,7 +163,7 @@ viewer polar-drawing logic where possible instead of reimplementing it. All
 browser code stays under the `window.Polarrecorder` namespace and plain-script
 rules; only `plugin.mjs` may be a module.
 
-#### 4.5 Theming without clashing with AvNav CSS
+#### 3.5 Theming without clashing with AvNav CSS
 
 Follow the dyninstruments approach (`plugin.css`, README "Theming"):
 
@@ -209,7 +178,7 @@ Follow the dyninstruments approach (`plugin.css`, README "Theming"):
   our widget via a scoped class (dyninstruments uses a `*-hide-native-head`
   class), never globally.
 
-#### 4.6 Responsiveness across aspect ratios and sizes
+#### 3.6 Responsiveness across aspect ratios and sizes
 
 The widget must look correct in any dashboard cell, from a tiny square to a wide
 strip:
@@ -225,7 +194,7 @@ strip:
   queries or a simple ratio check, and only measure via `ResizeObserver` if CSS
   cannot express the breakpoint.
 
-#### 4.7 Scope discipline
+#### 3.7 Scope discipline
 
 Copy from dyninstruments: single-widget registration, the `kind` SELECT,
 conditional editable parameters, `.widget.<plugin>`-scoped CSS variables, and
@@ -235,7 +204,7 @@ controllers, deferred host commit, per-unit parameter generation, and the large
 geometry-token catalog. Those exist for a many-widget, multi-surface product;
 this is three `renderHtml` views.
 
-### 5. Adopt the dyninstruments color set
+### 4. Adopt the dyninstruments color set
 
 **Goal:** Replace Polar Recorder's current viewer palette with the default
 `dyninstruments` color palette for both day and night, because it looks better
