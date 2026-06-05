@@ -24,10 +24,12 @@ AvNav without a build step, network access, or runtime dependencies.
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
   `viewer/presets.js` adds `Presets`, owning the built-in fallback list and
   display labels so `viewer.js` stays within its line budget.
-- The viewer defaults to the `Default180` preset (label "Default (180°)"). The
-  preset selector also offers `Default360` ("Default (360°)") and the legacy
-  `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all three when
-  the `presets` fetch fails.
+- The viewer defaults to the `DefaultStarboard180` preset (label "Default
+  (Starboard 180°)"). The preset selector also offers `DefaultPort180` ("Default
+  (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"),
+  and the legacy `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors
+  all four when the `presets` fetch fails. The pre-rename `Default180` selection
+  still resolves to the starboard half server-side.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
   to CSV and preset workflows. Settings owns JSON backup, a disabled future
   restore affordance, and destructive reset confirmation.
@@ -47,14 +49,20 @@ AvNav without a build step, network access, or runtime dependencies.
   selected preset's TWA columns, draws dots where those preset columns have
   data, and connects datapoints with thin straight segments only between
   adjacent TWA grid columns, so a column the selected preset can hold but has no
-  data leaves a true gap with no connecting line. A preset is circular when its
-  resolved TWA grid contains any value above 180 deg. A non-circular (180 deg)
-  preset draws only the starboard spokes `[0, 30, 60, 90, 120, 150, 180]`, plots
-  the starboard half, and does not close the curve back to 0 deg. A circular
-  preset additionally draws port-half spokes and absolute-degree labels at
-  `210, 240, 270, 300, 330`, plots port cells (geometry is already full-circle
-  via `sin`/`cos`), and closes the full-circle curve by joining the last rendered
-  grid point back to the 0 deg/360 deg head-to-wind origin. The server anchors
+  data leaves a true gap with no connecting line. The chart picks one of three
+  modes from the resolved TWA grid, mirroring the server projection. A
+  `starboard` grid (no column above 180 deg) draws only the starboard spokes
+  `[0, 30, 60, 90, 120, 150, 180]`, plots the starboard half, and does not close
+  the curve back to 0 deg. A `port` grid (no column below 180 deg) is the mirror:
+  it draws the spokes `[180, 210, 240, 270, 300, 330, 360]`, plots the port half,
+  and likewise stays open. A `full` grid (columns on both sides of 180 deg) draws
+  both half spokes plus the absolute-degree port labels `210, 240, 270, 300, 330`,
+  plots port cells (geometry is already full-circle via `sin`/`cos`), and closes
+  the full-circle curve by joining the last grid column back to the 0 deg/360 deg
+  head-to-wind origin only when both columns adjacent to that origin hold data. A
+  full-circle curve that ends at 180 deg (no learned port cells) therefore leaves
+  the seam open instead of cutting a straight line across to 0 deg. The server
+  anchors
   each populated band at 0 deg TWA / 0 STW (the chart center), and the viewer
   treats the 0 deg point as full confidence regardless of its sample count so the
   zero-sample anchor never dims the curve. Radial TWA angle labels sit a fixed

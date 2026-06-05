@@ -16,6 +16,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const LOW_CONFIDENCE = 10;
   const STARBOARD_SPOKES = [0, 30, 60, 90, 120, 150, 180];
   const PORT_SPOKES = [210, 240, 270, 300, 330];
+  const PORT_HALF_SPOKES = [180, 210, 240, 270, 300, 330, 360];
   const CIRCULAR_MIN_TWA = 180;
   const selectedBands = new Set();
   let lastKey = "";
@@ -53,7 +54,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       chips.appendChild(chipForBand(data, band, index));
     });
     if (!hasRenderableData(data, lastPresetTwa)) {
-      host.appendChild(emptySvg());
+      host.appendChild(emptySvg(gridMode(lastPresetTwa)));
       host.appendChild(emptyOverlay());
       return;
     }
@@ -89,30 +90,46 @@ window.Polarrecorder = window.Polarrecorder || {};
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "Polar diagram");
     const max = radiusMax(data);
-    const circular = isCircular(presetTwa);
-    addGrid(svg, max, circular);
+    const mode = gridMode(presetTwa);
+    addGrid(svg, max, mode);
     data.tws_bands.forEach(function (band, index) {
       const key = String(band);
       if (!selectedBands.has(key)) return;
       const curve = data.curves[key] || [];
-      addCurve(svg, curve, presetTwa, band, index, data.tws_bands.length, max, circular);
+      addCurve(svg, curve, presetTwa, band, index, data.tws_bands.length, max, mode === "full");
     });
     return svg;
   }
 
-  function emptySvg() {
+  function emptySvg(mode) {
     const svg = svgNode("svg");
     svg.setAttribute("viewBox", "0 0 560 560");
     svg.setAttribute("class", "chart-svg");
     svg.setAttribute("aria-hidden", "true");
-    addGrid(svg, 4, false);
+    addGrid(svg, 4, mode || "starboard");
     return svg;
   }
 
-  function isCircular(presetTwa) {
-    return presetTwa.some(function (twa) {
+  // A preset spanning both sides of the centerline (some column below 180 deg and
+  // some above) is a full circle. A preset whose only off-centerline columns sit
+  // above 180 deg is a mirrored port half (180 deg .. 360 deg); anything else is
+  // the default starboard half (0 deg .. 180 deg).
+  function gridMode(presetTwa) {
+    const hasStarboard = presetTwa.some(function (twa) {
+      return twa > 0 && twa < CIRCULAR_MIN_TWA;
+    });
+    const hasPort = presetTwa.some(function (twa) {
       return twa > CIRCULAR_MIN_TWA;
     });
+    if (hasStarboard && hasPort) return "full";
+    if (hasPort) return "port";
+    return "starboard";
+  }
+
+  function spokesForMode(mode) {
+    if (mode === "full") return STARBOARD_SPOKES.concat(PORT_SPOKES);
+    if (mode === "port") return PORT_HALF_SPOKES;
+    return STARBOARD_SPOKES;
   }
 
   function emptyOverlay() {
@@ -137,7 +154,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     return Math.ceil(max / 2) * 2;
   }
 
-  function addGrid(svg, max, circular) {
+  function addGrid(svg, max, mode) {
     const step = 1;
     for (let speed = step; speed <= max; speed += step) {
       const radius = speed / max * PLOT_RADIUS;
@@ -153,7 +170,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       label.setAttribute("text-anchor", "start");
       svg.appendChild(label);
     }
-    const spokes = circular ? STARBOARD_SPOKES.concat(PORT_SPOKES) : STARBOARD_SPOKES;
+    const spokes = spokesForMode(mode);
     spokes.forEach(function (angle) {
       const point = mapPoint(angle, max, max);
       const line = svgNode("line");
@@ -184,13 +201,13 @@ window.Polarrecorder = window.Polarrecorder || {};
       point.gridIndex = gridIndex;
       points.push(point);
     });
-    addConnectors(svg, points, color, circular);
+    addConnectors(svg, points, color, circular, presetTwa.length);
     points.forEach(function (point) {
       addPoint(svg, point, band, point.twa, point.entry, color);
     });
   }
 
-  function addConnectors(svg, points, color, circular) {
+  function addConnectors(svg, points, color, circular, gridCount) {
     let run = [];
     points.forEach(function (point) {
       const previous = run[run.length - 1];
@@ -202,9 +219,14 @@ window.Polarrecorder = window.Polarrecorder || {};
       run = [point];
     });
     addRun(svg, run, color);
-    // A circular preset closes the full-circle curve by joining the last rendered
-    // grid point back to the first (the 0 deg/360 deg head-to-wind origin).
-    if (circular && points.length >= 2) {
+    // A circular preset closes the full-circle curve by joining the last grid
+    // column back to the first (the 0 deg/360 deg head-to-wind origin). This
+    // wrap seam is only drawn when both columns adjacent to that origin hold
+    // data; otherwise (for example a starboard-only curve ending at 180 deg)
+    // the gap stays open instead of cutting straight across to 0 deg.
+    if (circular && points.length >= 2
+      && points[0].gridIndex === 0
+      && points[points.length - 1].gridIndex === gridCount - 1) {
       addRun(svg, [points[points.length - 1], points[0]], color);
     }
   }

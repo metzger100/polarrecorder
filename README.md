@@ -96,7 +96,7 @@ The Polar tab shows the learned polar diagram.
 
 The Preset selector changes the TWA and TWS grid used for viewing. It does not delete or change the learned data.
 
-With a `180°` preset (the default), the diagram shows the starboard half only, exactly as a classic symmetric polar. With a `360°` preset, the diagram additionally draws the port (left) half with absolute-degree labels (`210°`, `240°`, `270°`, `300°`, `330°`) and closes the curve around the full circle, so genuine port/starboard differences are visible instead of being averaged together.
+With the `Default (Starboard 180°)` preset (the default), the diagram shows the starboard half only, exactly as a classic symmetric polar. The `Default (Port 180°)` preset is its mirror image, showing only the port (left) half from `180°` to `360°`. With a `360°` preset, the diagram draws both halves with absolute-degree labels (`210°`, `240°`, `270°`, `300°`, `330°`) and closes the curve around the full circle, so genuine port/starboard differences are visible instead of being averaged together.
 
 ### Status
 
@@ -174,9 +174,10 @@ Example of a simple custom grid:
 - TWA: `0, 30, 60, 90, 120, 150, 180`
 - TWS: `4, 6, 8, 10, 12, 14, 16, 20, 25`
 
-There are three built-in presets. They cannot be deleted or overwritten, and all three share the same TWS bands (`4, 6, 8, 10, 12, 14, 16, 20, 25`):
+There are four built-in presets. They cannot be deleted or overwritten, and all four share the same TWS bands (`4, 6, 8, 10, 12, 14, 16, 20, 25`):
 
-- `Default (180°)` is the default view and export grid. It covers the starboard half only, `0°` to `180°` in `15°` steps (`0, 15, 30, ... , 180`). This behaves like a classic symmetric polar: only starboard samples are shown.
+- `Default (Starboard 180°)` is the default view and export grid. It covers the starboard half only, `0°` to `180°` in `15°` steps (`0, 15, 30, ... , 180`). This behaves like a classic symmetric polar: only starboard samples are shown.
+- `Default (Port 180°)` is the mirror image, covering only the port half, `180°` to `345°` in `15°` steps (`180, 195, ... , 345`). Only port samples are shown; starboard data is excluded rather than mirrored in.
 - `Default (360°)` covers the full circle, `0°` to `345°` in `15°` steps (`0, 15, 30, ... , 345`, wrapping at `360°` back to `0°`). It draws and exports true port/starboard asymmetry so you can compare both tacks directly.
 - `Windy Passage Planner` (internal name `windy`) keeps the irregular Windy.com angles `0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180` for importing into Windy. It is no longer the default.
 
@@ -284,7 +285,7 @@ It cannot reliably detect:
 
 Because of that, the learned polar is best understood as "how my boat usually performed in the data I allowed it to record", not a perfect manufacturer-style target polar.
 
-Port and starboard are no longer folded together. A `180°` view counts only starboard samples for each cell, so per-bin sample counts are lower than in older versions that mirrored port data onto starboard. Confidence therefore builds more slowly per side, and a `360°` view splits the data across twice as many cells. This is intentional: it keeps genuine port/starboard differences honest instead of averaging them away.
+Port and starboard are no longer folded together. A single-side `180°` view (starboard or port) counts only that side's samples for each cell, so per-bin sample counts are lower than in older versions that mirrored port data onto starboard. Confidence therefore builds more slowly per side, and a `360°` view splits the data across twice as many cells. This is intentional: it keeps genuine port/starboard differences honest instead of averaging them away.
 
 ## Where is the data stored?
 

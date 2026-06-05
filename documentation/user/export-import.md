@@ -10,11 +10,14 @@ persistence schema. Import/restore is not implemented.
 
 ## Key Details
 
-Three built-in presets are always available and cannot be overwritten or
-deleted. All three share TWS columns `[4, 6, 8, 10, 12, 14, 16, 20, 25]`:
+Four built-in presets are always available and cannot be overwritten or
+deleted. All four share TWS columns `[4, 6, 8, 10, 12, 14, 16, 20, 25]`:
 
-- `Default180` (the default) uses TWA rows `[0, 15, 30, ... , 180]` (every
-  15 deg), covering the starboard half only.
+- `DefaultStarboard180` (the default, label "Default (Starboard 180°)") uses TWA
+  rows `[0, 15, 30, ... , 180]` (every 15 deg), covering the starboard half only.
+- `DefaultPort180` (label "Default (Port 180°)") uses TWA rows
+  `[180, 195, ... , 345]` (every 15 deg), the mirror image covering the port half
+  only. Starboard samples are excluded from a port grid, not folded onto it.
 - `Default360` uses TWA rows `[0, 15, 30, ... , 345]` (every 15 deg, wrapping at
   360 deg back to 0 deg), covering the full circle so port and starboard export
   separately. A `Default360` CSV is not Windy.com-importable by design.
@@ -23,17 +26,19 @@ deleted. All three share TWS columns `[4, 6, 8, 10, 12, 14, 16, 20, 25]`:
 
 User presets are stored in `<plugin_dir>/data/presets.json`, separate from the
 learned `polar.json`. Preset names are trimmed, case-sensitive, 1-30 characters,
-and may contain letters, digits, spaces, and hyphens. The names `Default180`,
-`Default360`, and `windy` are reserved case-insensitively. TWA values must be
-integers 0-359; values above 180 deg capture port-side data. TWS values must
-be integers 1 through the active `max_tws`. Values are sorted on save.
+and may contain letters, digits, spaces, and hyphens. The names
+`DefaultStarboard180`, `DefaultPort180`, `Default360`, and `windy` are reserved
+case-insensitively, as is the pre-rename `Default180` (it still resolves to the
+starboard half). TWA values must be integers 0-359; values above 180 deg capture
+port-side data. TWS values must be integers 1 through the active `max_tws`.
+Values are sorted on save.
 
 CSV export supports two modes:
 
-- Preset mode: `GET /api/export?format=Default180` or any built-in/user preset name.
+- Preset mode: `GET /api/export?format=DefaultStarboard180` or any built-in/user preset name.
 - Inline mode: `GET /api/export?twa=0,30,60,90,120,150,180&tws=4,8,12,16,20`.
 
-If neither mode is supplied, export defaults to `Default180`. Supplying `format`
+If neither mode is supplied, export defaults to `DefaultStarboard180`. Supplying `format`
 with inline `twa` or `tws` is an error, as is supplying only one inline grid.
 
 CSV format is semicolon-delimited UTF-8 text without a BOM. The first row is

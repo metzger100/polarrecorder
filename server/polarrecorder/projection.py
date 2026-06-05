@@ -37,18 +37,24 @@ def project_grid(
 ) -> dict[tuple[int, int], ProjectedCell]:
     """Project sparse raw bins onto a target TWA/TWS grid.
 
-    Raw bins carry true 0-359 deg TWA and are never folded. A grid is circular
-    when it contains any TWA above 180 deg; such grids assign each raw bin to its
-    nearest grid point on the circle. A non-circular (180 deg) grid keeps the
-    linear half-open midpoint intervals capped at ``TWA_FOLD_MAX``, so port bins
-    (181-359 deg) fall outside the top interval and are excluded.
+    Raw bins carry true 0-359 deg TWA and are never folded. The grid mode follows
+    which sides of the centerline carry columns. A grid with columns both below
+    and above 180 deg is ``full`` and assigns each raw bin to its nearest grid
+    point on the circle. A ``starboard`` grid (no column above 180 deg) keeps
+    linear half-open midpoint intervals over 0-180 deg, so port bins (181-359 deg)
+    fall outside the top interval and are excluded. A ``port`` grid (no column
+    below 180 deg, mirror of starboard) keeps linear intervals over 180-360 deg,
+    so starboard bins (1-179 deg) are excluded.
     """
     raw = _raw_bins(model_bins)
     tws_intervals = _intervals(tws_grid, TWS_BIN_MAX)
-    if _is_circular(twa_grid):
+    mode = _grid_mode(twa_grid)
+    if mode == "full":
         cells = _circular_cells(raw, twa_grid, tws_intervals)
+    elif mode == "port":
+        cells = _linear_cells(raw, twa_grid, tws_intervals, TWA_FOLD_MAX, TWA_FULL_CIRCLE)
     else:
-        cells = _linear_cells(raw, twa_grid, tws_intervals)
+        cells = _linear_cells(raw, twa_grid, tws_intervals, 0, TWA_FOLD_MAX)
     projected: dict[tuple[int, int], ProjectedCell] = {}
     for (twa, tws), merged in cells.items():
         samples = sum(merged.values())
@@ -91,17 +97,25 @@ def _raw_bins(model_bins: SnapshotBins) -> list[tuple[int, int, Mapping[int, int
     return raw
 
 
-def _is_circular(twa_grid: Sequence[int]) -> bool:
-    return any(value > TWA_FOLD_MAX for value in twa_grid)
+def _grid_mode(twa_grid: Sequence[int]) -> str:
+    has_starboard = any(0 < value < TWA_FOLD_MAX for value in twa_grid)
+    has_port = any(value > TWA_FOLD_MAX for value in twa_grid)
+    if has_starboard and has_port:
+        return "full"
+    if has_port:
+        return "port"
+    return "starboard"
 
 
 def _linear_cells(
     raw: Sequence[tuple[int, int, Mapping[int, int]]],
     twa_grid: Sequence[int],
     tws_intervals: Sequence[tuple[int, float, float, bool]],
+    lower_axis: int,
+    upper_axis: int,
 ) -> dict[tuple[int, int], dict[int, int]]:
     cells: dict[tuple[int, int], dict[int, int]] = {}
-    twa_intervals = _intervals(twa_grid, TWA_FOLD_MAX)
+    twa_intervals = _intervals(twa_grid, upper_axis, lower_axis)
     for twa, twa_lower, twa_upper, twa_last in twa_intervals:
         for tws, tws_lower, tws_upper, tws_last in tws_intervals:
             merged = _cell_histogram(
@@ -161,11 +175,13 @@ def _cell_histogram(
     return merged
 
 
-def _intervals(values: Sequence[int], upper_axis: int) -> list[tuple[int, float, float, bool]]:
+def _intervals(
+    values: Sequence[int], upper_axis: int, lower_axis: int = 0
+) -> list[tuple[int, float, float, bool]]:
     return [
         (
             value,
-            0.0 if index == 0 else (values[index - 1] + value) / 2.0,
+            float(lower_axis) if index == 0 else (values[index - 1] + value) / 2.0,
             float(upper_axis) if index == len(values) - 1 else (value + values[index + 1]) / 2.0,
             index == len(values) - 1,
         )

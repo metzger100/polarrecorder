@@ -11,22 +11,24 @@ window.Polarrecorder = window.Polarrecorder || {};
   const SHARED_TWS = [4, 6, 8, 10, 12, 14, 16, 20, 25];
   const WINDY_TWA = [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180];
   const LABELS = {
-    Default180: "Default (180°)",
+    DefaultStarboard180: "Default (Starboard 180°)",
+    DefaultPort180: "Default (Port 180°)",
     Default360: "Default (360°)",
     windy: "Windy Passage Planner"
   };
 
   function fallbackPresets() {
     return [
-      { name: "Default180", builtin: true, twa: range(180), tws: SHARED_TWS },
-      { name: "Default360", builtin: true, twa: range(345), tws: SHARED_TWS },
+      { name: "DefaultStarboard180", builtin: true, twa: range(0, 180), tws: SHARED_TWS },
+      { name: "DefaultPort180", builtin: true, twa: range(180, 345), tws: SHARED_TWS },
+      { name: "Default360", builtin: true, twa: range(0, 345), tws: SHARED_TWS },
       { name: "windy", builtin: true, twa: WINDY_TWA.slice(), tws: SHARED_TWS }
     ];
   }
 
-  function range(max) {
+  function range(min, max) {
     const values = [];
-    for (let angle = 0; angle <= max; angle += 15) {
+    for (let angle = min; angle <= max; angle += 15) {
       values.push(angle);
     }
     return values;

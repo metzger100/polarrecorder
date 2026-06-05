@@ -47,14 +47,18 @@ PRESET_SCHEMA_VERSION = 1
 PRESETS_NAME = "presets.json"
 PRESETS_TMP_NAME = "presets.tmp.json"
 WINDY_NAME = "windy"
-DEFAULT180_NAME = "Default180"
+DEFAULT_STARBOARD180_NAME = "DefaultStarboard180"
+DEFAULT_PORT180_NAME = "DefaultPort180"
 DEFAULT360_NAME = "Default360"
 TWA_GRID_MAX = TWA_FULL_CIRCLE - 1
 TWA_GRID_STEP = 15
 WINDY_TWA = [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
 WINDY_TWS = [4, 6, 8, 10, 12, 14, 16, 20, 25]
-DEFAULT_TWA_180 = list(range(0, TWA_FOLD_MAX + 1, TWA_GRID_STEP))
+DEFAULT_TWA_STARBOARD180 = list(range(0, TWA_FOLD_MAX + 1, TWA_GRID_STEP))
+DEFAULT_TWA_PORT180 = list(range(TWA_FOLD_MAX, TWA_FULL_CIRCLE, TWA_GRID_STEP))
 DEFAULT_TWA_360 = list(range(0, TWA_FULL_CIRCLE, TWA_GRID_STEP))
+# Pre-rename selections persisted by AvNav still resolve to the starboard half.
+LEGACY_PRESET_ALIASES = {"default180": DEFAULT_STARBOARD180_NAME.lower()}
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9 -]+$")
 
 
@@ -83,9 +87,20 @@ class ExportSelection:
 
 
 def _builtin_presets() -> list[Preset]:
-    """Return the ordered built-in presets (Default180 first as the default)."""
+    """Return the ordered built-in presets (starboard 180 deg first as the default)."""
     return [
-        Preset(DEFAULT180_NAME, builtin=True, twa=list(DEFAULT_TWA_180), tws=list(WINDY_TWS)),
+        Preset(
+            DEFAULT_STARBOARD180_NAME,
+            builtin=True,
+            twa=list(DEFAULT_TWA_STARBOARD180),
+            tws=list(WINDY_TWS),
+        ),
+        Preset(
+            DEFAULT_PORT180_NAME,
+            builtin=True,
+            twa=list(DEFAULT_TWA_PORT180),
+            tws=list(WINDY_TWS),
+        ),
         Preset(DEFAULT360_NAME, builtin=True, twa=list(DEFAULT_TWA_360), tws=list(WINDY_TWS)),
         Preset(WINDY_NAME, builtin=True, twa=list(WINDY_TWA), tws=list(WINDY_TWS)),
     ]
@@ -93,8 +108,9 @@ def _builtin_presets() -> list[Preset]:
 
 def _builtin_by_name(name: str) -> Preset | None:
     lowered = name.strip().lower()
+    target = LEGACY_PRESET_ALIASES.get(lowered, lowered)
     for preset in _builtin_presets():
-        if preset.name.lower() == lowered:
+        if preset.name.lower() == target:
             return preset
     return None
 
@@ -104,7 +120,7 @@ def _is_builtin_name(name: str) -> bool:
 
 
 def builtin_preset() -> Preset:
-    """Return the default built-in preset (Default180)."""
+    """Return the default built-in preset (DefaultStarboard180)."""
     return _builtin_presets()[0]
 
 
@@ -165,7 +181,7 @@ def resolve_polar_preset(
     logger: Logger | None = None,
 ) -> Preset:
     """Resolve the named preset used by the polar diagram."""
-    name = args.get("format", DEFAULT180_NAME)
+    name = args.get("format", DEFAULT_STARBOARD180_NAME)
     builtin = _builtin_by_name(name)
     if builtin is not None:
         return builtin
