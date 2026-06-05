@@ -355,6 +355,8 @@ If the AvNav computer corrects its clock after boot, timeline buckets can briefl
 
 ## For developers
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development setup (virtual environment, dev tooling, and git hooks).
+
 Runtime code must remain dependency-free on target devices. Development tooling is allowed and is checked by:
 
 ```sh

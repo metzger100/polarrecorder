@@ -3,7 +3,8 @@ set -euo pipefail
 
 export LC_ALL=C
 
-VENV_DIR="${POLARRECORDER_VENV:-/tmp/polarrecorder-venv}"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+VENV_DIR="${POLARRECORDER_VENV:-$REPO_ROOT/venv}"
 
 if [ -d "$VENV_DIR/bin" ]; then
   export PATH="$VENV_DIR/bin:$PATH"
