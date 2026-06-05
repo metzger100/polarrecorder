@@ -37,10 +37,10 @@ fail-closed rejects when the signal exists.
 Rules to implement (each fires only when its optional signal is present; absent
 signals leave the sample untouched):
 
-- **Engine RPM** → `reject_engine_rpm`. Signal: custom `rpm` key (selectable from the available store keys). Reject when RPM
+- **Engine RPM** → `reject_engine_rpm`. Signal: custom `rpm` key (selectable from the available store keys list in the settings tab). Reject when RPM
   exceeds a configured idle threshold — the definitive engine-use reject that R16
   only approximates.
-- **Engine state** → `reject_engine_on`. Signal: custom engine on/off key (selectable from the available store keys). Reject
+- **Engine state** → `reject_engine_on`. Signal: custom engine on/off key (selectable from the available store keys list in the settings tab). Reject
   any sample taken while the engine is running, for boats that expose a boolean
   state rather than RPM.
 - **Depth** → `reject_shallow`. Signal: `gps.depthBelowTransducer`. Reject samples
@@ -59,7 +59,7 @@ signals leave the sample untouched):
 - **Heel / roll** — infer overpowered/underpowered sailing state; could reject or
   tag samples once the rule is defined. Heel is the vessel roll angle, so the
   signal can come from a roll/attitude source (NMEA 2000 attitude PGN, SignalK
-  `navigation.attitude`, or a custom plugin) (selectable from the available store keys); AvNav core exposes no built-in
+  `navigation.attitude`, or a custom plugin) (selectable from the available store keys list in the settings tab); AvNav core exposes no built-in
   heel/pitch/roll store key today, so it remains a custom optional signal.
 - **Current set/drift** (`gps.currentSet`, `gps.currentDrift`) — detect and
   potentially compensate for current; this is more than a reject and needs design.
