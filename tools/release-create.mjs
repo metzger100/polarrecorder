@@ -183,7 +183,8 @@ function getCanonicalReleaseNotesPath(rootDir, version) {
 export function defaultRunCommand(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd,
-    encoding: "utf8"
+    encoding: "utf8",
+    env: withProjectVenv(process.env, options.cwd)
   });
 
   return {
@@ -192,6 +193,19 @@ export function defaultRunCommand(command, args, options = {}) {
     stderr: result.stderr || "",
     error: result.error || null
   };
+}
+
+// Prepend the project-local venv's bin directory to PATH so spawned `python`/dev
+// tooling resolves to the project venv by default, matching tools/check-all.sh and
+// the pre-push hook. Honors POLARRECORDER_VENV; falls back to system PATH if absent.
+function withProjectVenv(env, cwd) {
+  const venvDir = env.POLARRECORDER_VENV || path.join(cwd || process.cwd(), "venv");
+  const binDir = path.join(venvDir, "bin");
+  if (!fs.existsSync(binDir)) {
+    return env;
+  }
+  const sep = path.delimiter;
+  return { ...env, PATH: `${binDir}${sep}${env.PATH || ""}` };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

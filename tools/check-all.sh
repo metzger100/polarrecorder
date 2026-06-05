@@ -4,8 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-if [ -d "/tmp/polarrecorder-venv/bin" ]; then
-  export PATH="/tmp/polarrecorder-venv/bin:$PATH"
+VENV_DIR="${POLARRECORDER_VENV:-$REPO_ROOT/venv}"
+if [ -d "$VENV_DIR/bin" ]; then
+  export PATH="$VENV_DIR/bin:$PATH"
 fi
 
 cd "$REPO_ROOT"
