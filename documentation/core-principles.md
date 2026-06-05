@@ -4,7 +4,7 @@
 
 ## Overview
 
-These rules have the highest documentation precedence in the project. When another document conflicts with this file, this file wins.
+These rules have the highest documentation precedence in the project. When another document conflicts with this file, this file wins. They also outrank execution plans: when an exec-plan in `exec-plans/` conflicts with these principles or any mechanically enforced repo rule (file-size limit, quality gate, blocking smell), the repo rule wins and the plan must be amended rather than worked around.
 
 ## Key Details
 
@@ -19,7 +19,8 @@ These rules have the highest documentation precedence in the project. When anoth
 9. **Clock injection.** Time-dependent modules receive clock callables. Hidden real-clock calls in domain modules are forbidden.
 10. **Quality gate before commit.** `tools/check-all.sh` must pass. No exceptions.
 11. **Documentation before code.** Every module has a documentation target. Structural docs exist before implementation starts.
-12. **File size limits are absolute.** A 400 non-empty-line hard limit applies to `plugin.py`, `server/polarrecorder/`, `tests/`, and `viewer/*.js`; split modules instead of compressing code.
+12. **File size limits are absolute.** A 400 non-empty-line hard limit applies to `plugin.py`, `server/polarrecorder/`, `tests/`, and `viewer/*.js`; split modules instead of compressing code. This limit overrides exec-plan assumptions: if a phase would push a file past 400 lines, split it within that same phase rather than deferring to a later cleanup step or using one-liner compression.
+13. **Never fake a green gate.** Do not weaken or delete tests, lower a coverage threshold, skip a check, or suppress a smell to make `tools/check-all.sh` pass. Fix the root cause; a passing gate must reflect real behavior.
 
 ## Related
 

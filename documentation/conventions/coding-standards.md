@@ -47,6 +47,19 @@ Documentation standards:
 - AvNav behavior docs must be self-contained contracts, not references to machine-specific paths.
 - Keep `AGENTS.md` and `CLAUDE.md` shared instruction blocks byte-identical.
 
+## Repo Rules Override Exec-Plans
+
+Repo rules and core principles always outrank execution-plan instructions. A plan is the implementation source of truth for *what to build*, but it cannot waive a mechanically enforced repo rule.
+
+- The 400 non-empty-line limit is always in effect. If an exec-plan phase would cause a file to exceed it, refactor and split the file as part of that same phase. The plan does not need to mention splitting; do not defer to a later "cleanup" phase, and do not use one-liner compression to fit more logic into fewer lines.
+- The quality gate (`tools/check-all.sh`), coverage thresholds, and blocking smells bind every phase regardless of what the plan says.
+- If a plan conflicts with a repo rule, surface the defect and amend the plan rather than silently improvising around it.
+
+## Test and Gate Integrity
+
+- Never weaken or delete a test, lower a coverage threshold, skip a check, or suppress a smell to obtain a green gate. Fix the root cause instead.
+- Keep `tests/mock-data/` fixtures consistent with the behavior they assert; a green gate must reflect real, current behavior.
+
 ## Related
 
 - [Core principles](../core-principles.md)

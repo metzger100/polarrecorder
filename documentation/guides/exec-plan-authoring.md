@@ -11,7 +11,7 @@ Use this guide when complex work spans files, sessions, or architectural boundar
 - Store active plans in `exec-plans/active/` only while the work is active.
 - Move completed plans to `exec-plans/completed/`, or remove them when their historical detail no longer helps normal development.
 - Use sequential names such as `PLAN2.md` when multiple plans exist.
-- For complex tasks, the current plan is the implementation source of truth until completion.
+- For complex tasks, the current plan is the implementation source of truth for *what to build* until completion. It never overrides core principles or mechanically enforced repo rules (the 400-line limit, the quality gate, coverage thresholds, blocking smells); when they conflict, the repo rule wins and the plan must be amended.
 - Surface plan defects explicitly and amend the plan instead of silently improvising around contradictions.
 - Keep every phase small enough to leave `tools/check-all.sh` green after completion.
 
