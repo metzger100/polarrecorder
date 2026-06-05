@@ -16,10 +16,15 @@ def test_builtin_preset_values_are_exact(tmp_path: Path) -> None:
 
     shared_tws = [4, 6, 8, 10, 12, 14, 16, 20, 25]
 
-    default180 = presets["Default180"]
-    assert default180.builtin is True
-    assert default180.twa == list(range(0, 181, 15))
-    assert default180.tws == shared_tws
+    starboard = presets["DefaultStarboard180"]
+    assert starboard.builtin is True
+    assert starboard.twa == list(range(0, 181, 15))
+    assert starboard.tws == shared_tws
+
+    port = presets["DefaultPort180"]
+    assert port.builtin is True
+    assert port.twa == list(range(180, 360, 15))
+    assert port.tws == shared_tws
 
     default360 = presets["Default360"]
     assert default360.builtin is True
@@ -31,14 +36,20 @@ def test_builtin_preset_values_are_exact(tmp_path: Path) -> None:
     assert windy.twa == [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
     assert windy.tws == shared_tws
 
-    # builtin_preset() resolves the default view (Default180).
-    assert export.builtin_preset().name == "Default180"
+    # builtin_preset() resolves the default view (DefaultStarboard180).
+    assert export.builtin_preset().name == "DefaultStarboard180"
 
 
-def test_resolve_polar_preset_defaults_to_default180(tmp_path: Path) -> None:
-    assert export.resolve_polar_preset(tmp_path, {}).name == "Default180"
-    assert export.resolve_polar_preset(tmp_path, {"format": "Default360"}).name == "Default360"
-    assert export.resolve_polar_preset(tmp_path, {"format": "windy"}).name == "windy"
+def test_resolve_polar_preset_defaults_to_starboard180(tmp_path: Path) -> None:
+    def resolved(args: dict[str, str]) -> str:
+        return export.resolve_polar_preset(tmp_path, args).name
+
+    assert resolved({}) == "DefaultStarboard180"
+    assert resolved({"format": "DefaultPort180"}) == "DefaultPort180"
+    assert resolved({"format": "Default360"}) == "Default360"
+    assert resolved({"format": "windy"}) == "windy"
+    # Pre-rename selections persisted by AvNav still resolve to the starboard half.
+    assert resolved({"format": "Default180"}) == "DefaultStarboard180"
 
 
 def test_projection_does_not_fold_port_bins_into_starboard() -> None:
@@ -56,6 +67,21 @@ def test_projection_does_not_fold_port_bins_into_starboard() -> None:
     circular = export.project_grid(bins, [30, 330], [4], percentile=65, min_samples=1)
     assert circular[(30, 4)] == export.ProjectedCell(stw=5.0, samples=2)
     assert circular[(330, 4)] == export.ProjectedCell(stw=6.0, samples=1)
+
+
+def test_port_grid_excludes_starboard_bins() -> None:
+    bins = {
+        (30, 4): {"histogram": {50: 2}},
+        (270, 4): {"histogram": {60: 3}},
+    }
+
+    # A port-only (180-360 deg) grid is the mirror of the starboard half: it keeps
+    # the 270 deg bin and excludes the 30 deg starboard bin instead of pulling it
+    # onto the nearest port column.
+    port = export.project_grid(bins, [180, 270, 345], [4], percentile=65, min_samples=1)
+    assert port[(270, 4)] == export.ProjectedCell(stw=6.0, samples=3)
+    assert (30, 4) not in port
+    assert all(twa >= 180 for twa, _tws in port)
 
 
 def test_circular_projection_assigns_nearest_grid_point_across_wrap() -> None:
@@ -134,7 +160,8 @@ def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
     assert saved.twa == [0, 90]
     assert saved.tws == [4, 8]
     assert [preset.name for preset in export.list_presets(tmp_path)] == [
-        "Default180",
+        "DefaultStarboard180",
+        "DefaultPort180",
         "Default360",
         "windy",
         "my plan",
@@ -143,14 +170,22 @@ def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
     export.delete_preset(tmp_path, "my plan", "yes")
 
     assert [preset.name for preset in export.list_presets(tmp_path)] == [
-        "Default180",
+        "DefaultStarboard180",
+        "DefaultPort180",
         "Default360",
         "windy",
     ]
 
 
 def test_reserved_builtin_names_save_and_delete_are_rejected(tmp_path: Path) -> None:
-    for reserved in ("Windy", "default180", "DEFAULT360"):
+    reserved_names = (
+        "Windy",
+        "defaultstarboard180",
+        "defaultport180",
+        "DEFAULT360",
+        "default180",
+    )
+    for reserved in reserved_names:
 
         def save_reserved(name: str = reserved) -> object:
             return export.save_preset(tmp_path, name, "0", "4", max_tws=20)
@@ -169,7 +204,8 @@ def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> Non
     presets_path.write_text("{bad", encoding="utf-8")
 
     assert [preset.name for preset in export.list_presets(tmp_path, logger)] == [
-        "Default180",
+        "DefaultStarboard180",
+        "DefaultPort180",
         "Default360",
         "windy",
     ]
@@ -180,7 +216,8 @@ def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> Non
         encoding="utf-8",
     )
     assert [preset.name for preset in export.list_presets(tmp_path, logger)] == [
-        "Default180",
+        "DefaultStarboard180",
+        "DefaultPort180",
         "Default360",
         "windy",
     ]
@@ -216,7 +253,7 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
     named = export.resolve_export_selection(tmp_path, {"format": "mine"}, 20, 10)
     inline = export.resolve_export_selection(tmp_path, {"twa": "90,0", "tws": "8,4"}, 20, 10)
 
-    assert default.name == "Default180"
+    assert default.name == "DefaultStarboard180"
     assert named.twa == [0, 90]
     assert inline.name == "custom"
     assert inline.tws == [4, 8]

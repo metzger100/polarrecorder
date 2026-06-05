@@ -18,11 +18,14 @@ percentile recalculates the learned speed without relearning from raw samples.
   but the model write path consumes only the raw value.
 - Bin addresses use Python `round()` directly: TWA wraps with modulo 360 and
   TWS clamps to the fixed 0-60 kt grid.
-- Projection (`projection.py`) never folds. A non-circular (180 deg) grid keeps
-  starboard-only linear interval merging; a circular grid (any TWA above 180 deg)
-  assigns each raw bin to its nearest grid point on the circle. No 0-180 fold
-  occurs at or after projection, so a 360 deg grid preserves true port/starboard
-  asymmetry end to end.
+- Projection (`projection.py`) never folds and picks one of three modes from the
+  TWA grid. A `starboard` grid (no column above 180 deg) keeps linear interval
+  merging over 0-180 deg and excludes port bins. A `port` grid (no column below
+  180 deg) is its mirror: linear interval merging over 180-360 deg that excludes
+  starboard bins. A `full` grid (columns on both sides of 180 deg) assigns each
+  raw bin to its nearest grid point on the circle. No 0-180 fold occurs at or
+  after projection, so a 360 deg grid preserves true port/starboard asymmetry end
+  to end.
 - Percentiles use a nearest-rank crossing algorithm over deciknot
   histogram keys. There is no interpolation or midpoint averaging.
 - `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh

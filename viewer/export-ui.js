@@ -10,7 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const state = {
     host: null,
-    selected: "Default180",
+    selected: "DefaultStarboard180",
     twaEditor: null,
     twsEditor: null,
     percentile: "",
@@ -26,7 +26,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.host = document.getElementById("export-panel");
     state.hooks = hooks || {};
     state.host.classList.add("has-data");
-    if (!state.selected) state.selected = "Default180";
+    if (!state.selected) state.selected = "DefaultStarboard180";
     render();
   }
 
@@ -315,7 +315,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     params.set("name", preset.name);
     params.set("confirm", "yes");
     action("presets/delete?" + params.toString(), "Preset deleted.", function () {
-      state.selected = "Default180";
+      state.selected = "DefaultStarboard180";
       if (state.hooks.refreshPresets) state.hooks.refreshPresets();
     });
   }

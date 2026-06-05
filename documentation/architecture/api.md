@@ -47,7 +47,7 @@ Endpoints:
 | GET | `timeline` | `minutes` optional integer 1-240, default 240 | `{buckets}` oldest first, with minute wall time `t`, decision counts, and reason-code counts. |
 | GET | `export` | `format`, or inline `twa`+`tws`; optional `percentile`; optional `high_confidence=yes|true|1` | `{csv}` containing semicolon-delimited CSV. Circular grids emit TWA rows above 180 deg. |
 | GET | `config` | none | Parsed runtime config values in native JSON types. |
-| GET | `presets` | none | Built-in presets (`Default180`, `Default360`, `windy`) first, then user presets, as `{name, builtin, twa, tws}` entries. |
+| GET | `presets` | none | Built-in presets (`DefaultStarboard180`, `DefaultPort180`, `Default360`, `windy`) first, then user presets, as `{name, builtin, twa, tws}` entries. |
 | GET | `presets/save` | `name`, `twa`, `tws` | Saves or overwrites a user preset and returns the saved preset. TWA values 0-359 are accepted. |
 | GET | `presets/delete` | `name`, `confirm=yes` | Deletes a user preset. Built-in presets cannot be deleted. |
 | GET | `reset` | `confirm=yes` required | Clears learned model and counters, keeps timeline and validation state, and sets `_flush_requested` for the plugin thread. |
@@ -74,9 +74,11 @@ creates a band. When the requested TWA grid includes 0 deg, `GET export` emits
 
 `GET export` mode resolution is deterministic: inline `twa`+`tws` wins and
 cannot be combined with `format`; otherwise `format` resolves first against the
-case-insensitive built-in set (`Default180`, `Default360`, `windy`) and then
-case-sensitive user presets; absent mode defaults to `Default180`. One-sided
-inline grids are errors. Inline and saved `twa` grids accept values 0-359.
+case-insensitive built-in set (`DefaultStarboard180`, `DefaultPort180`,
+`Default360`, `windy`, plus the pre-rename `Default180` alias) and then
+case-sensitive user presets; absent mode defaults to `DefaultStarboard180`.
+One-sided inline grids are errors. Inline and saved `twa` grids accept values
+0-359.
 
 `GET polar` and default `GET export` share the same projection function,
 configured percentile, and `MIN_SAMPLES_DISPLAY = 3` floor. Projection never

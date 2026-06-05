@@ -19,7 +19,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     csvGen: null,
     statusData: null,
     timelineMinutes: 240,
-    polarFormat: "Default180",
+    polarFormat: "DefaultStarboard180",
     initializedExport: false,
     initializedSettings: false
   };

@@ -13,6 +13,8 @@ testPolarWithDataDoesNotShowEmptyOverlay();
 testZeroTwaAnchorRendersAtFullConfidence();
 testMissingGridColumnBreaksLine();
 testCircularPresetDrawsPortLabelsAndClosesCurve();
+testCircularPresetWithoutPortDataLeavesSeamOpen();
+testPortHalfPresetDrawsMirroredGrid();
 testNonCircularPresetKeepsStarboardOnlyGrid();
 
 console.log("Viewer polar chart tests passed.");
@@ -138,6 +140,62 @@ function testCircularPresetDrawsPortLabelsAndClosesCurve() {
     return node.attributes.get("class") === "chart-line";
   });
   assert.equal(lines.length, 2, "expected a closing wrap connector for a circular preset");
+}
+
+function testCircularPresetWithoutPortDataLeavesSeamOpen() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[0] = { stw: 0.0, samples: 0 };
+  curve[90] = { stw: 6.0, samples: 12 };
+  curve[180] = { stw: 4.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "Default360",
+    generation: 11,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [0, 90, 180, 270] });
+
+  const svg = env.host.children[0];
+  // Data ends at the 180 deg column while the grid's port-most column (270 deg)
+  // stays empty, so the wrap seam to 0 deg must not be drawn: only the single
+  // adjacent run 0 -> 90 -> 180 connects, leaving the curve open.
+  const lines = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.equal(lines.length, 1, "starboard-only circular curve must not close to 0 deg");
+}
+
+function testPortHalfPresetDrawsMirroredGrid() {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[180] = { stw: 4.0, samples: 12 };
+  curve[270] = { stw: 5.0, samples: 12 };
+  curve[345] = { stw: 3.0, samples: 12 };
+
+  env.chart.Render({
+    curves: { "12": curve },
+    format: "DefaultPort180",
+    generation: 12,
+    percentile: 65,
+    tws_bands: [12]
+  }, { force: true, presetTwa: [180, 270, 345] });
+
+  const svg = env.host.children[0];
+  const labels = angleLabels(svg);
+  // A port-only grid mirrors the starboard half: it draws the 180 deg .. 360 deg
+  // spokes and omits the starboard interior spokes and the 0 deg head label.
+  assert.ok(labels.includes("270°"), "expected mirrored port spoke label 270°");
+  assert.ok(labels.includes("360°"), "expected head label 360° on the port half");
+  assert.equal(labels.includes("90°"), false, "port half must not draw starboard spokes");
+  assert.equal(labels.includes("0°"), false, "port half labels the head as 360°, not 0°");
+  // The half curve stays open: the three adjacent columns form one run with no
+  // wrap connector back across the dial.
+  const lines = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.equal(lines.length, 1, "port half must not close across the dial");
 }
 
 function testNonCircularPresetKeepsStarboardOnlyGrid() {
