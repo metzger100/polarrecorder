@@ -2,9 +2,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
-const ROOT = process.cwd();
-const VIEWER_ROOT = path.join(ROOT, "viewer");
 const VIEWER_FILE = "viewer/viewer.js";
 const LATE_WIRED_MODULES = new Set([
   "viewer/polar-chart.js",
@@ -12,36 +11,45 @@ const LATE_WIRED_MODULES = new Set([
   "viewer/export-ui.js",
   "viewer/grid-editor.js"
 ]);
-const failures = [];
-const files = collectViewerJsFiles();
-const definitions = mapDefinitions(files);
-const graph = mapReferences(files, definitions);
 
-for (const cycle of findCycles(graph)) {
-  failures.push(`circular JS namespace reference: ${cycle.join(" -> ")}`);
+export function runDependencyCheck({ root = process.cwd(), print = true } = {}) {
+  const viewerRoot = path.join(root, "viewer");
+  const failures = [];
+  const files = collectViewerJsFiles(viewerRoot);
+  const definitions = mapDefinitions(files);
+  const graph = mapReferences(files, definitions);
+
+  for (const cycle of findCycles(graph)) {
+    failures.push(`circular JS namespace reference: ${cycle.join(" -> ")}`);
+  }
+  checkViewerModuleLoadReferences(files, definitions, failures);
+
+  const summary = {
+    ok: failures.length === 0,
+    checkedJsFiles: files.length,
+    failures: failures.length
+  };
+
+  if (print) reportDependencies(failures, summary);
+  return { ok: summary.ok, failures, summary };
 }
-checkViewerModuleLoadReferences(files, definitions);
 
-const summary = {
-  ok: failures.length === 0,
-  checkedJsFiles: files.length,
-  failures: failures.length
-};
-
-if (failures.length > 0) {
-  for (const failure of failures) console.error(`[dependencies] ${failure}`);
-  console.error("SUMMARY_JSON=" + JSON.stringify(summary));
-  process.exit(1);
+function reportDependencies(failures, summary) {
+  if (failures.length > 0) {
+    for (const failure of failures) console.error(`[dependencies] ${failure}`);
+    console.error("SUMMARY_JSON=" + JSON.stringify(summary));
+    return;
+  }
+  console.log("Dependency check passed.");
+  console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 }
 
-console.log("Dependency check passed.");
-console.log("SUMMARY_JSON=" + JSON.stringify(summary));
-
-function collectViewerJsFiles() {
-  return fs.readdirSync(VIEWER_ROOT)
+function collectViewerJsFiles(viewerRoot) {
+  if (!fs.existsSync(viewerRoot)) return [];
+  return fs.readdirSync(viewerRoot)
     .filter((name) => name.endsWith(".js"))
     .sort()
-    .map((name) => ({ abs: path.join(VIEWER_ROOT, name), rel: `viewer/${name}` }));
+    .map((name) => ({ abs: path.join(viewerRoot, name), rel: `viewer/${name}` }));
 }
 
 function mapDefinitions(jsFiles) {
@@ -91,7 +99,7 @@ function findCycles(referenceGraph) {
   }
 }
 
-function checkViewerModuleLoadReferences(jsFiles, definitionMap) {
+function checkViewerModuleLoadReferences(jsFiles, definitionMap, failures) {
   const viewer = jsFiles.find((file) => file.rel === VIEWER_FILE);
   if (!viewer) return;
   const content = fs.readFileSync(viewer.abs, "utf8");
@@ -102,4 +110,8 @@ function checkViewerModuleLoadReferences(jsFiles, definitionMap) {
       failures.push(`${VIEWER_FILE}: module-load reference to ${match[1]} from ${owner}`);
     }
   }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exit(runDependencyCheck().ok ? 0 : 1);
 }

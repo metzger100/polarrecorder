@@ -80,7 +80,9 @@ convention = "google"
 "plugin.py" = ["D100", "TID251", "E402", "N802", "BLE001"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo; BLE001 catches are AvNav boundary crash safety
 
 [tool.mypy]
-python_version = "3.9"
+# Current mypy releases only support analyzing Python 3.10+. Runtime Python 3.9
+# compatibility is enforced separately by tools/check-python-compat.py.
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

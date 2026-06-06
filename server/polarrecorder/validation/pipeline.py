@@ -1,9 +1,9 @@
 """Module: Validation Pipeline - Explicit runner for validation rules.
 
 Documentation: documentation/architecture/data-pipeline.md
-Depends: polarrecorder.config, polarrecorder.sample, polarrecorder.validation.rules_core,
-polarrecorder.validation.rules_heuristic, polarrecorder.validation.rules_stability,
-polarrecorder.validation.state
+Depends: polarrecorder.config, polarrecorder.logger, polarrecorder.sample,
+polarrecorder.validation.rules_core, polarrecorder.validation.rules_heuristic,
+polarrecorder.validation.rules_stability, polarrecorder.validation.state
 """
 
 from __future__ import annotations

@@ -1,13 +1,16 @@
 /**
  * Module: Settings UI
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js
+ * Depends: viewer.js, dom.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
+  const button = Polarrecorder.Dom.Button;
+  const actionRow = Polarrecorder.Dom.ActionRow;
+  const download = Polarrecorder.Dom.Download;
   const state = { host: null, message: "", messageKind: "info" };
 
   function init() {
@@ -112,24 +115,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     return { wrap: wrap, control: control };
   }
 
-  function button(text, handler, className) {
-    const node = document.createElement("button");
-    node.type = "button";
-    node.className = className + " state-layer";
-    node.textContent = text;
-    node.addEventListener("click", handler);
-    return node;
-  }
-
-  function actionRow(buttons) {
-    const row = document.createElement("div");
-    row.className = "action-row";
-    buttons.forEach(function (item) {
-      row.appendChild(item);
-    });
-    return row;
-  }
-
   function downloadJson() {
     fetchJson("export/json").then(function (data) {
       download("polarrecorder-backup.json", JSON.stringify(data, null, 2), "application/json");
@@ -142,18 +127,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   function fetchJson(endpoint) {
     const fn = Polarrecorder["FetchJson"];
     return fn(endpoint, { action: true });
-  }
-
-  function download(filename, text, type) {
-    const blob = new Blob([text], { type: type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
   }
 
   function messageNode() {

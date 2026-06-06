@@ -1,7 +1,7 @@
 /**
  * Module: Grid Editor
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js
+ * Depends: none
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {

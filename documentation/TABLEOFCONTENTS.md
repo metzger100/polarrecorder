@@ -48,6 +48,7 @@ Start here for project documentation. Use the questions below to open the smalle
 
 - **What Python and viewer JavaScript standards are binding?** -> [conventions/coding-standards.md](conventions/coding-standards.md)
 - **Which smells are blocking, and what replaces them?** -> [conventions/smell-prevention.md](conventions/smell-prevention.md)
+- **How do I fix a specific blocking smell at its root?** -> [conventions/smell-fix-playbooks.md](conventions/smell-fix-playbooks.md)
 - **How are fakes, clocks, integration tests, and mock data organized?** -> [conventions/testing-infrastructure.md](conventions/testing-infrastructure.md)
 
 ## Maintenance Guides

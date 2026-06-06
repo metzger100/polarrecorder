@@ -105,7 +105,9 @@ function loadTheme(parentDocument) {
   };
 
   localWindow.parent = { document: parentDocument };
-  vm.runInNewContext(THEME_SOURCE, { document: localDocument, window: localWindow });
+  vm.runInNewContext(THEME_SOURCE, { document: localDocument, window: localWindow }, {
+    filename: path.join(ROOT, "viewer", "theme.js")
+  });
 
   return {
     classList,

@@ -1,7 +1,7 @@
 """Module: Export - CSV export and preset persistence over pure projection.
 
 Documentation: documentation/user/export-import.md
-Depends: polarrecorder.projection
+Depends: polarrecorder.coerce, polarrecorder.logger, polarrecorder.projection
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from polarrecorder.coerce import to_int
 from polarrecorder.projection import (
     TWA_FOLD_MAX,
     TWA_FULL_CIRCLE,
@@ -20,7 +21,6 @@ from polarrecorder.projection import (
     SnapshotBins,
     anchor_origin,
     project_grid,
-    to_int,
 )
 
 if TYPE_CHECKING:

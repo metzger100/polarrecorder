@@ -1,7 +1,8 @@
 """Module: Persistence - JSON persistence for polar model data.
 
 Documentation: documentation/architecture/persistence.md
-Depends: polarrecorder.bins, polarrecorder.counters, polarrecorder.polar_model
+Depends: polarrecorder.bins, polarrecorder.coerce, polarrecorder.counters,
+polarrecorder.logger, polarrecorder.polar_model
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 
 from polarrecorder.bins import TWA_BIN_SIZE, TWS_BIN_SIZE, Bin
+from polarrecorder.coerce import to_float, to_int
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
 
@@ -247,14 +249,14 @@ def _require_serialized_dict(decoded: object, path: Path) -> SerializedDict:
 
 
 def _migrate(data: SerializedDict) -> SerializedDict:
-    version = _to_int(data.get("schema_version", 0))
+    version = to_int(data.get("schema_version", 0))
     if version > CURRENT_SCHEMA_VERSION:
         raise _SchemaTooNewError(version)
     migrated = dict(data)
     while version < CURRENT_SCHEMA_VERSION:
         migration = _MIGRATIONS[version]
         migrated = migration(migrated)
-        version = _to_int(migrated["schema_version"])
+        version = to_int(migrated["schema_version"])
     return migrated
 
 
@@ -289,7 +291,7 @@ def _load_from_data(
         model=model,
         counters=Counters.from_dict(data.get("counters", {})),
         created_wall=_optional_float(data.get("created_wall")),
-        last_flush_wall=_to_float(data.get("last_flush_wall", 0.0)),
+        last_flush_wall=to_float(data.get("last_flush_wall", 0.0)),
         file_size_bytes=size_bytes,
         status=status,
         status_message=message,
@@ -300,7 +302,7 @@ def _validate_payload(data: SerializedDict) -> None:
     _model_from_dict(data.get("bins", {}))
     Counters.from_dict(data.get("counters", {}))
     _optional_float(data.get("created_wall"))
-    _to_float(data.get("last_flush_wall", 0.0))
+    to_float(data.get("last_flush_wall", 0.0))
 
 
 def _empty_result(status: LoadStatus, message: str) -> LoadResult:
@@ -332,7 +334,7 @@ def _model_from_dict(data: object) -> PolarModel:
             total_accepted=_int_field(bin_data, "total_accepted"),
             total_rejected=_int_field(bin_data, "total_rejected"),
             total_quarantined=_int_field(bin_data, "total_quarantined"),
-            last_update_wall=_to_float(bin_data.get("last_update_wall", 0.0)),
+            last_update_wall=to_float(bin_data.get("last_update_wall", 0.0)),
             rejection_histogram=_str_int_histogram(bin_data.get("rejection_histogram", {})),
         )
     return model
@@ -340,19 +342,19 @@ def _model_from_dict(data: object) -> PolarModel:
 
 def _parse_address(raw_address: str) -> tuple[int, int]:
     twa_text, tws_text = raw_address.split("_", 1)
-    return _to_int(twa_text), _to_int(tws_text)
+    return to_int(twa_text), to_int(tws_text)
 
 
 def _int_histogram(data: object) -> dict[int, int]:
     if not isinstance(data, dict):
         return {}
-    return {_to_int(key): _to_int(value) for key, value in data.items()}
+    return {to_int(key): to_int(value) for key, value in data.items()}
 
 
 def _str_int_histogram(data: object) -> dict[str, int]:
     if not isinstance(data, dict):
         return {}
-    return {str(key): _to_int(value) for key, value in data.items()}
+    return {str(key): to_int(value) for key, value in data.items()}
 
 
 def _dict_field(data: SerializedDict, key: str) -> SerializedDict:
@@ -363,27 +365,13 @@ def _dict_field(data: SerializedDict, key: str) -> SerializedDict:
 
 
 def _int_field(data: dict[object, object], key: str) -> int:
-    return _to_int(data.get(key, 0))
+    return to_int(data.get(key, 0))
 
 
 def _optional_float(value: object) -> float | None:
     if value is None:
         return None
-    return _to_float(value)
-
-
-def _to_int(value: object) -> int:
-    if isinstance(value, (str, bytes, bytearray, int, float)):
-        return int(value)
-    msg = f"Expected int-compatible value, got {type(value).__name__}"
-    raise TypeError(msg)
-
-
-def _to_float(value: object) -> float:
-    if isinstance(value, (str, bytes, bytearray, int, float)):
-        return float(value)
-    msg = f"Expected float-compatible value, got {type(value).__name__}"
-    raise TypeError(msg)
+    return to_float(value)
 
 
 def _cleanup_tmp(path: Path, logger: Logger | None) -> None:

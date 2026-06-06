@@ -12,15 +12,15 @@ from typing import Protocol
 class AvNavLogAPI(Protocol):
     """Duck-typed AvNav logging surface."""
 
-    def log(self, format: str, *param: object) -> None:  # noqa: A002
+    def log(self, format: str, *param: object) -> None:  # noqa: A002  # mirrors AvNav logger signature
         """Log an informational message."""
         ...
 
-    def debug(self, format: str, *param: object) -> None:  # noqa: A002
+    def debug(self, format: str, *param: object) -> None:  # noqa: A002  # mirrors AvNav logger signature
         """Log a debug message."""
         ...
 
-    def error(self, format: str, *param: object) -> None:  # noqa: A002
+    def error(self, format: str, *param: object) -> None:  # noqa: A002  # mirrors AvNav logger signature
         """Log an error message."""
         ...
 

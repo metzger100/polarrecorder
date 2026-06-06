@@ -1,13 +1,16 @@
 /**
  * Module: Export UI
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, grid-editor.js
+ * Depends: viewer.js, dom.js, presets.js, grid-editor.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
+  const button = Polarrecorder.Dom.Button;
+  const actionRow = Polarrecorder.Dom.ActionRow;
+  const download = Polarrecorder.Dom.Download;
   const state = {
     host: null,
     selected: "DefaultStarboard180",
@@ -143,23 +146,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     return { wrap: wrap, control: control };
   }
 
-  function button(text, handler, className) {
-    const node = document.createElement("button");
-    node.type = "button";
-    node.className = className + " state-layer";
-    node.textContent = text;
-    node.addEventListener("click", handler);
-    return node;
-  }
-
-  function actionRow(buttons) {
-    const row = document.createElement("div");
-    row.className = "action-row";
-    buttons.forEach(function (item) {
-      row.appendChild(item);
-    });
-    return row;
-  }
 
   function fillPresets(select) {
     select.replaceChildren();
@@ -239,7 +225,9 @@ window.Polarrecorder = window.Polarrecorder || {};
     requestCsv().then(function (csv) {
       const node = document.getElementById("csv-preview");
       if (node) node.value = previewRows(csv);
-    }).catch(function () {});
+    }).catch(function (error) {
+      setMessage(error.message, "error");
+    });
   }
 
   function previewRows(csv) {
@@ -258,7 +246,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function requestCsv() {
     if (!isValid()) return Promise.reject(new Error("Fix invalid grid values first."));
     return fetchJson("export?" + currentParams().toString(), true).then(function (data) {
-      return data.csv || "";
+      return data.csv;
     });
   }
 
@@ -334,17 +322,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     return fn(endpoint, { action: isAction });
   }
 
-  function download(filename, text, type) {
-    const blob = new Blob([text], { type: type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
 
   function applyValidity() {
     if (!state.host || !state.twaEditor || !state.twsEditor) return;
@@ -361,13 +338,11 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function minSamples() {
-    const config = Polarrecorder["ConfigCache"] || {};
-    return String(config.min_samples_for_export || 10);
+    return String(Polarrecorder["ConfigCache"].min_samples_for_export);
   }
 
   function defaultPercentile() {
-    const config = Polarrecorder["ConfigCache"] || {};
-    return String(config.percentile || 65);
+    return String(Polarrecorder["ConfigCache"].percentile);
   }
 
   function messageNode() {

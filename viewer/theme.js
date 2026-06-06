@@ -55,6 +55,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     try {
       return window.parent && window.parent !== window ? window.parent.document : null;
     } catch (_error) {
+      // polarrecorder-boundary-fallback(avnav-parent-theme): Cross-origin
+      // parent access throws a SecurityError; treat an
+      // inaccessible parent as "no AvNav document" and fall back to local
+      // theming rather than surfacing a boundary error to the user.
       return null;
     }
   }

@@ -1,7 +1,8 @@
 """Module: API Dispatch - Request dispatch for the AvNav plugin shell.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_handlers, polarrecorder.export, polarrecorder.persistence
+Depends: polarrecorder.api_handlers, polarrecorder.bins, polarrecorder.export,
+polarrecorder.persistence
 """
 
 from __future__ import annotations

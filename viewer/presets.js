@@ -1,7 +1,7 @@
 /**
  * Module: Presets
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js
+ * Depends: none
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -19,8 +19,18 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function fallbackPresets() {
     return [
-      { name: "DefaultStarboard180", builtin: true, twa: range(0, 180), tws: SHARED_TWS },
-      { name: "DefaultPort180", builtin: true, twa: range(180, 345), tws: SHARED_TWS },
+      {
+        name: "DefaultStarboard180",
+        builtin: true,
+        twa: range(0, 180),
+        tws: SHARED_TWS
+      },
+      {
+        name: "DefaultPort180",
+        builtin: true,
+        twa: range(180, 345),
+        tws: SHARED_TWS
+      },
       { name: "Default360", builtin: true, twa: range(0, 345), tws: SHARED_TWS },
       { name: "windy", builtin: true, twa: WINDY_TWA.slice(), tws: SHARED_TWS }
     ];

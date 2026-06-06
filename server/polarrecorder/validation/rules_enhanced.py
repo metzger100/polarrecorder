@@ -1,7 +1,7 @@
 """Module: Enhanced Validation Rules - Future optional-signal rule interface.
 
 Documentation: documentation/architecture/data-pipeline.md
-Depends: polarrecorder.sample
+Depends: none
 """
 
 from __future__ import annotations
