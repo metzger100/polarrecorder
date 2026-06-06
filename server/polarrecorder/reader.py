@@ -1,7 +1,7 @@
 """Module: Reader - AvNav store value reader.
 
 Documentation: documentation/avnav/keys-and-units.md
-Depends: polarrecorder.sample
+Depends: polarrecorder.logger, polarrecorder.sample
 """
 
 from __future__ import annotations
@@ -29,10 +29,10 @@ class DataEntryLike(Protocol):
 class StoreAPI(Protocol):
     """Duck-typed subset of the AvNav store API used by the reader."""
 
-    def getSingleValue(  # noqa: N802
+    def getSingleValue(  # noqa: N802  # mirrors AvNav store API method name
         self,
         key: str,
-        includeInfo: bool = False,  # noqa: N803
+        includeInfo: bool = False,  # noqa: N803  # mirrors AvNav store API parameter name
     ) -> DataEntryLike | None:
         """Return a store value with optional metadata."""
         ...

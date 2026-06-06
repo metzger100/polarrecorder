@@ -1,7 +1,7 @@
 """Module: Config - Runtime configuration parsing.
 
 Documentation: documentation/user/configuration.md
-Depends: polarrecorder.params
+Depends: polarrecorder.logger, polarrecorder.params
 """
 
 from __future__ import annotations

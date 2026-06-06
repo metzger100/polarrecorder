@@ -1,13 +1,15 @@
 """Module: Counters - Aggregated rejection counter storage.
 
 Documentation: documentation/architecture/persistence.md
-Depends: none
+Depends: polarrecorder.coerce
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import TypedDict, cast
+
+from polarrecorder.coerce import to_int
 
 
 class CountersDict(TypedDict):
@@ -88,18 +90,11 @@ class Counters:
             total_rejected=_int_field(data, "total_rejected"),
             total_quarantined=_int_field(data, "total_quarantined"),
             rejection_histogram={
-                str(key): _to_int(value)
+                str(key): to_int(value)
                 for key, value in cast("dict[object, object]", histogram).items()
             },
         )
 
 
 def _int_field(data: dict[object, object], key: str) -> int:
-    return _to_int(data.get(key, 0))
-
-
-def _to_int(value: object) -> int:
-    if isinstance(value, (str, bytes, bytearray, int, float)):
-        return int(value)
-    msg = f"Expected int-compatible value, got {type(value).__name__}"
-    raise TypeError(msg)
+    return to_int(data.get(key, 0))

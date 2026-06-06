@@ -6,6 +6,7 @@ import path from "node:path";
 import vm from "node:vm";
 
 const ROOT = process.cwd();
+const PLACEHOLDERS_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "placeholders.js"), "utf8");
 const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js"), "utf8");
 
 testEmptyPolarShowsCenteredOverlay();
@@ -246,7 +247,12 @@ function loadPolarChart() {
     window: { Polarrecorder: {} }
   };
 
-  vm.runInNewContext(POLAR_SOURCE, context);
+  vm.runInNewContext(PLACEHOLDERS_SOURCE, context, {
+    filename: path.join(ROOT, "viewer", "placeholders.js")
+  });
+  vm.runInNewContext(POLAR_SOURCE, context, {
+    filename: path.join(ROOT, "viewer", "polar-chart.js")
+  });
   return {
     chart: context.window.Polarrecorder.PolarChart,
     chips: elements["polar-chips"],

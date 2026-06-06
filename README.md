@@ -363,11 +363,13 @@ Runtime code must remain dependency-free on target devices. Development tooling 
 tools/check-all.sh
 ```
 
-The full gate runs Python linting/format checks, `mypy --strict`, the pytest suite with coverage, release dry-run validation, and all Node.js checks via:
+The same full gate is available through npm so agents do not accidentally run only the viewer subgate:
 
 ```sh
 npm run check:all
 ```
+
+Targeted Node.js viewer and documentation checks run through `npm run check:js:all`.
 
 For local viewer/API work without AvNav, use the mock server:
 

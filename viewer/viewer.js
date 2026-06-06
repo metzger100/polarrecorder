@@ -169,7 +169,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         resetBands: Boolean(force),
         force: Boolean(force)
       });
-    }).catch(function () {});
+    }).catch(showBanner);
   }
 
   function selectedPolarPreset() {
@@ -185,7 +185,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       if (state.activeTab === "status") renderStatus(data);
       if (state.activeTab === "polar" && data.generation !== state.polarGen) fetchPolar();
       if (state.activeTab === "export" && data.generation !== state.csvGen) refreshPreview(data.generation);
-    }).catch(function () {});
+    }).catch(showBanner);
   }
 
   function refreshPreview(generation) {
@@ -200,7 +200,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     fetchJson("timeline?minutes=" + encodeURIComponent(String(minutes))).then(function (data) {
       byId("timeline-chart").classList.add("has-data");
       Polarrecorder.TimelineChart.Render(data, minutes);
-    }).catch(function () {});
+    }).catch(showBanner);
   }
 
   function initExport() {
@@ -221,8 +221,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       Polarrecorder.ConfigCache = data;
       finish();
     }).catch(function () {
-      Polarrecorder.ConfigCache = { min_samples_for_export: 10 };
-      finish();
+      showBanner();
     });
   }
 
@@ -249,7 +248,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       return { state: "paused", label: "Paused" };
     }
     if (data.data_status !== "receiving") {
-      return { state: "no_data", label: "No Data" };
+      return { state: "no_data", label: Polarrecorder.Placeholders.NoData };
     }
     const decision = data.current_decision || { state: "rejected", reason_codes: ["pending"] };
     const reasons = decision.reason_codes || [];
@@ -298,7 +297,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       return { text: "Paused", className: "quarantined", helper: "Recording is paused" };
     }
     if (data.data_status !== "receiving") {
-      return { text: "No Data", className: "", helper: "Waiting for instrument data" };
+      return { text: Polarrecorder.Placeholders.NoData, className: "", helper: "Waiting for instrument data" };
     }
     if (data.warming_up) {
       return { text: "Recording", className: "quarantined", helper: "Warming up stability checks" };
@@ -313,7 +312,11 @@ window.Polarrecorder = window.Polarrecorder || {};
     card.appendChild(head);
     const grid = el("div", "value-grid");
     const values = data.current_values;
-    [["TWA", "twa_deg", "°", "twa"], ["TWS", "tws_kt", " kt", "tws"], ["STW", "stw_kt", " kt", "stw"]].forEach(function (item) {
+    [
+      ["TWA", "twa_deg", "°", "twa"],
+      ["TWS", "tws_kt", " kt", "tws"],
+      ["STW", "stw_kt", " kt", "stw"]
+    ].forEach(function (item) {
       grid.appendChild(valueTile(item, values));
     });
     card.appendChild(grid);
@@ -324,7 +327,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function valueTile(item, values) {
     const tile = el("div", "value-tile");
-    const value = values ? Number(values[item[1]]).toFixed(1) + item[2] : "No Data";
+    const value = values ? Number(values[item[1]]).toFixed(1) + item[2] : Polarrecorder.Placeholders.NoData;
     tile.appendChild(el("span", "helper", item[0]));
     tile.appendChild(el("span", "value-number", value));
     const stale = values && values[item[3] + "_stale"];
@@ -360,7 +363,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     const card = el("section", "card");
     const counters = data.counters || {};
     const grid = el("div", "stat-grid");
-    [["Seen", counters.total_seen], ["Accepted", counters.total_accepted], ["Rejected", counters.total_rejected], ["Quarantined", counters.total_quarantined]].forEach(function (item) {
+    [
+      ["Seen", counters.total_seen],
+      ["Accepted", counters.total_accepted],
+      ["Rejected", counters.total_rejected],
+      ["Quarantined", counters.total_quarantined]
+    ].forEach(function (item) {
       const tile = el("div", "stat-tile");
       tile.appendChild(el("span", "helper", item[0]));
       tile.appendChild(el("span", "stat-number", String(item[1] || 0)));

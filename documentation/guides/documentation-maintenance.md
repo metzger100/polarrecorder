@@ -23,13 +23,13 @@ Default validation gate:
 tools/check-all.sh
 ```
 
-The full gate runs Python linting, formatting checks, strict typing, tests, coverage, Python file-size checks, release validation, and `npm run check:all`.
+The full gate runs Python linting, formatting checks, strict typing, tests, coverage, Python file-size checks, release validation, and `npm run check:js:all`.
 
 Useful targeted checks:
 
 ```bash
 npm run check:docs
-npm run check:core
+npm run check:js:all
 python -m pytest tests/ --tb=short
 python tools/check-release.py --dry-run
 ```

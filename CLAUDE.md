@@ -70,7 +70,7 @@ Documentation must be complete when added or changed. Do not leave stub sections
 Python:
 
 - Every Python file in `plugin.py`, `server/polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
-- `plugin.py`, `server/polarrecorder/`, and `tests/` have a 400 non-empty-line hard limit; `tools/` is exempt.
+- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
 - `server/polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
 - All functions are typed; public functions have Google-style docstrings.
 - Ruff formatting and `mypy --strict` are binding.
@@ -82,7 +82,8 @@ JavaScript:
 - `viewer/*.js` files are plain scripts, not ES modules. `plugin.mjs` is the only planned ES module exception.
 - `viewer/*.js` files must use `window.Polarrecorder`.
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
-- Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers.
+- Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers. `plugin.mjs` is also covered by the JS pattern and file-size gates.
+- Documentation and root project Markdown files have a 400 non-empty-line hard limit.
 
 State and threading:
 
@@ -151,15 +152,16 @@ These rules exist because AI agents reliably regress in specific ways: duplicati
 1. Search for an existing one first. Domain helpers live in `server/polarrecorder/` (for example `units.py`, `validation/angle_math.py`, `projection.py`, `bins.py`, `histogram.py`, `counters.py`); viewer helpers live under `window.Polarrecorder`.
 2. Grep before writing: `grep -rn "def <name>" server/` for Python, `grep -rn "Polarrecorder\." viewer/` for the viewer namespace.
 3. If a canonical helper exists, import and use it. Do not copy it into a local variant.
-4. If none exists but the helper is generic, add it to the appropriate existing module rather than a new ad hoc location.
+4. If none exists but the helper is generic, add it to the appropriate existing module rather than a new ad hoc location. `tools/check-duplication.py` blocks cross-file duplicate function bodies and long copied statement blocks, so extract and import one canonical helper.
 
 ### Forbidden patterns
 
-- Never add defensive fallback code that masks a contract gap: no `value or <default>`, `getattr(obj, "field", <fallback>)`, or JS `obj.field ?? <fallback>` where the field is guaranteed by the producer. If the contract is unmet, fail loudly instead of papering over it.
+- Never add defensive fallback code that masks a contract gap: no `value or <default>`, `getattr(obj, "field", <fallback>)`, or JS `obj.field ?? <fallback>` where the field is guaranteed by the producer. If the contract is unmet, fail loudly instead of papering over it. `tools/check-py-contracts.py` blocks the Python forms.
 - Never re-validate or re-normalize samples that already passed the validation pipeline. Accepted samples and `plugin.py` snapshots are contract-guaranteed; downstream formatting trusts them.
-- Never use `NaN`, `-1`, or `0` as a sentinel for an absent optional. Use `None` in Python and `undefined` in JS, and let the boundary decide presentation.
+- Never use `NaN`, `-1`, or `0` as a sentinel for an absent optional. Use `None` in Python and `undefined` in JS, and let the boundary decide presentation. `tools/check-py-contracts.py` blocks `float("nan")`, `math.nan`, and `math.inf` sentinels.
 - Never convert units or coerce types more than once. Conversion happens at the boundary (`units.py` / `reader.py`); downstream code consumes already-converted values.
-- Never duplicate a model or validation threshold inline. Reference the named config or constant (see the magic-threshold smell).
+- Never duplicate a model or validation threshold inline. Reference the named config or constant (see the magic-threshold smell); ruff `PLR2004` blocks magic values in comparisons.
+- Never silence the gate: lint and type suppressions must name specific codes and carry a reason (`# noqa: <CODES>  # <reason>`, `# type: ignore[<code>]  # <reason>`); blanket and file-level suppressions are blocked by `check-patterns.mjs`.
 - Never weaken or delete a test, lower a coverage threshold, skip a check, or suppress a smell to obtain a green gate. Fix the root cause; a passing `tools/check-all.sh` must reflect real behavior.
 
 ### Value and snapshot boundary rules

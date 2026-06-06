@@ -1,7 +1,7 @@
 """Module: API Handlers - Pure API response formatting.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.export
+Depends: polarrecorder.config, polarrecorder.export
 """
 
 from __future__ import annotations

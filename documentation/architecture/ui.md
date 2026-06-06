@@ -20,7 +20,9 @@ AvNav without a build step, network access, or runtime dependencies.
   local tokens when no parent AvNav document is available.
 - `viewer/*.js` files are plain scripts that register functionality only on
   `window.Polarrecorder`. `viewer/viewer.js` owns startup, API access, polling, tab
-  switching, status rendering, and shared caches. Component modules add
+  switching, status rendering, and shared caches. `viewer/placeholders.js` owns
+  shared absent-value display text so chart and status rendering reuse one
+  vocabulary. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
   `viewer/presets.js` adds `Presets`, owning the built-in fallback list and
   display labels so `viewer.js` stays within its line budget.

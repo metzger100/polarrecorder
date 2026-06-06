@@ -1,7 +1,7 @@
 """Module: Projection - Pure raw-bin to grid projection and origin anchoring.
 
 Documentation: documentation/architecture/polar-model.md
-Depends: polarrecorder.bins, polarrecorder.histogram
+Depends: polarrecorder.bins, polarrecorder.coerce, polarrecorder.histogram
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from polarrecorder import histogram
 from polarrecorder.bins import TWS_BIN_MAX
+from polarrecorder.coerce import to_int
 
 ORIGIN_TWA = 0
 ORIGIN_STW = 0.0
@@ -198,11 +199,3 @@ def _inside(value: int, interval: tuple[float, float, bool]) -> bool:
 
 def _int_histogram(raw: dict[object, object]) -> dict[int, int]:
     return {to_int(key): to_int(count) for key, count in raw.items()}
-
-
-def to_int(value: object) -> int:
-    """Coerce an int-compatible scalar to ``int`` or raise ``TypeError``."""
-    if isinstance(value, (str, bytes, bytearray, int, float)):
-        return int(value)
-    msg = f"Expected int-compatible value, got {type(value).__name__}"
-    raise TypeError(msg)

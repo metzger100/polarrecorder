@@ -1,7 +1,7 @@
 /**
  * Module: Polar Chart
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js
+ * Depends: placeholders.js, viewer.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -136,7 +136,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const overlay = document.createElement("div");
     overlay.className = "chart-empty-overlay";
     overlay.setAttribute("role", "status");
-    overlay.textContent = "No Data available yet!";
+    overlay.textContent = Polarrecorder.Placeholders.NoData + " available yet!";
     return overlay;
   }
 
