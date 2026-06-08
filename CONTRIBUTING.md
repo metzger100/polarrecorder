@@ -50,8 +50,8 @@ The Node.js checks run directly via `node` and need no `npm install`.
 
 ## Enforcement model
 
-- Every smell rule in this project is **blocking**: there is no warn-only tier and no rollout debt allowance. A rule either holds repo-wide or it is not added. `documentation/TECH-DEBT.md` records intentional temporary states, not silenced rules.
-- Adding or changing a custom check is part of the same change as the behavior it governs. A new `tools/check-patterns.mjs` rule must ship with a positive and a clean test case in `tools/test-check-patterns.mjs` (`npm run test:tools`); new Python checkers ship with a `tests/test_*_checker.py`. Before promoting a rule to blocking, run it across the whole repo and drive the violation count to zero so the gate stays green from the first commit.
+- Every smell rule in this project is **blocking**: there is no warn-only tier or deferred cleanup ledger. A rule either holds repo-wide in the same change or it is not added.
+- Adding or changing a custom check is part of the same change as the behavior it governs. A new `tools/check-patterns.mjs` rule must ship with a positive and a clean test case in `tools/test-check-patterns.mjs` (`npm run test:tools`); new Python checkers ship with a `tests/test_*_checker.py`. Before adding a rule to the gate, run it across the whole repo and drive the violation count to zero so the gate stays green from the first commit.
 
 ## Related
 

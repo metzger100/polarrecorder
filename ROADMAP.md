@@ -236,4 +236,3 @@ Implementation notes:
 - [Export and import](documentation/user/export-import.md)
 - [Data pipeline (enhanced signal hooks)](documentation/architecture/data-pipeline.md)
 - [Viewer UI](documentation/architecture/ui.md)
-- [Technical debt](documentation/TECH-DEBT.md)

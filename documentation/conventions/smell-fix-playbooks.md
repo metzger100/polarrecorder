@@ -127,5 +127,5 @@ and the concrete fix. Pair this with [smell-prevention.md](smell-prevention.md)
 
 - [Smell prevention](smell-prevention.md)
 - [Coding standards](coding-standards.md)
-- [Quality](../QUALITY.md)
+- [Testing infrastructure](testing-infrastructure.md)
 - [Contributing](../../CONTRIBUTING.md)

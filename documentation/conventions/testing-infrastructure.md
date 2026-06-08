@@ -25,6 +25,7 @@ Tests are deterministic, stdlib-friendly, and independent of a live AvNav server
 ## Related
 
 - [Coding standards](coding-standards.md)
+- [Quality gates](quality-gates.md)
 - [Core principles](../core-principles.md)
 - [API shape](../architecture/api.md)
 - [AvNav editable parameters](../avnav/editable-parameters.md)

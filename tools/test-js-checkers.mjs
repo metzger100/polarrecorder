@@ -19,6 +19,11 @@ import { runNamingCheck } from "./check-naming.mjs";
 import { runHeadersCheck } from "./check-headers.mjs";
 import { runDependencyCheck } from "./check-dependencies.mjs";
 import { runSmellContracts } from "./check-smell-contracts.mjs";
+import {
+  EXECUTABLE_SMELL_RULE_IDS,
+  REQUIRED_SMELL_RULES,
+  runSmellCatalogCheck
+} from "./check-smell-catalog.mjs";
 import { runJsDuplicationCheck } from "./check-js-duplication.mjs";
 import { runFileSizeCheck } from "./check-file-size.mjs";
 import { findLeakTokens } from "./check-viewer-contracts.mjs";
@@ -28,6 +33,7 @@ testNamingCheck();
 testHeadersCheck();
 testDependencyCheck();
 testSmellContracts();
+testSmellCatalogCheck();
 testJsDuplicationCheck();
 testFileSizeCheck();
 testViewerContractLeakScan();
@@ -124,6 +130,34 @@ function testSmellContracts() {
   const driftResult = runIn(drift, runSmellContracts);
   assert.equal(driftResult.ok, false);
   assert.ok(driftResult.failures.some((f) => f.includes("viewer-dependency-header-contract")));
+}
+
+function testSmellCatalogCheck() {
+  const clean = runIn(
+    { "documentation/conventions/smell-prevention.md": smellCatalogDocument(REQUIRED_SMELL_RULES) },
+    runSmellCatalogCheck
+  );
+  assert.equal(clean.ok, true, clean.failures.join("\n"));
+
+  const missing = runIn(
+    {
+      "documentation/conventions/smell-prevention.md":
+        smellCatalogDocument(REQUIRED_SMELL_RULES.filter((rule) => rule !== "Ruff format"))
+    },
+    runSmellCatalogCheck
+  );
+  assert.equal(missing.ok, false);
+  assert.ok(missing.failures.some((f) => f.includes("missing smell catalog row")));
+
+  const unknown = runIn(
+    {
+      "documentation/conventions/smell-prevention.md":
+        smellCatalogDocument(REQUIRED_SMELL_RULES.concat("Mystery rule"))
+    },
+    runSmellCatalogCheck
+  );
+  assert.equal(unknown.ok, false);
+  assert.ok(unknown.failures.some((f) => f.includes("unknown smell catalog row")));
 }
 
 function testJsDuplicationCheck() {
@@ -238,6 +272,28 @@ function smellContractsWorkspace() {
   files["tools/check-js-coverage.mjs"] =
     `const TEST_FILES = ["tools/test-viewer-smoke.mjs"];\nconst COVERAGE_TARGETS = {\n${targets}\n};\n`;
   return files;
+}
+
+function smellCatalogDocument(rules) {
+  const executableIds = EXECUTABLE_SMELL_RULE_IDS
+    .map((rule) => "`" + rule.id + "`")
+    .join(", ");
+  const rows = rules
+    .map((rule, index) => {
+      const enforcement = index === 0 ? `checker (${executableIds})` : "checker";
+      return `| ${rule} | forbidden | required | ${enforcement} |`;
+    })
+    .join("\n");
+  return "# Smell Prevention\n\n"
+    + "**Status:** Current.\n\n"
+    + "## Overview\n\n"
+    + "Catalog.\n\n"
+    + "## Key Details\n\n"
+    + "| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |\n"
+    + "|---|---|---|---|\n"
+    + rows
+    + "\n\n## Related\n\n"
+    + "- [Quality gates](quality-gates.md)\n";
 }
 
 function bodyFn(name) {

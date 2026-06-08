@@ -39,6 +39,42 @@ const CANVAS_METHODS = [
 let failures = [];
 let byRule = Object.create(null);
 
+export const PATTERN_RULE_IDS = [
+  "absolute-home-path",
+  "avnav-import",
+  "bare-isfinite",
+  "canvas-api-typeof-guard",
+  "catch-fallback",
+  "commented-out-code",
+  "console-log",
+  "dead-code",
+  "default-truthy-fallback",
+  "domain-lock-acquisition",
+  "domain-time-sleep",
+  "empty-catch",
+  "es-module-syntax",
+  "eval-call",
+  "framework-method-typeof-guard",
+  "hardcoded-runtime-default",
+  "inner-html-assignment",
+  "internal-namespace-fallback",
+  "loose-equality",
+  "placeholder-literal",
+  "pluginhandler-import",
+  "premature-legacy-support",
+  "promise-empty-catch",
+  "python-suppression",
+  "redundant-null-type-guard",
+  "responsive-layout-hard-floor",
+  "reverse-plugin-import",
+  "try-finally-canvas-drawing",
+  "unowned-todo",
+  "unused-fallback",
+  "var-declaration",
+  "viewer-suppression-comment"
+];
+const PATTERN_RULE_ID_SET = new Set(PATTERN_RULE_IDS);
+
 export function runPatternCheck(options = {}) {
   setRoot(options.root || process.cwd());
   failures = [];
@@ -111,31 +147,31 @@ function checkJavaScript(file) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     const code = stripStrings(line);
-    if (/\bconsole\.log\s*\(/.test(code)) fail(file.rel, index, "console.log is forbidden");
-    if (/\bvar\s+[A-Za-z_$]/.test(code)) fail(file.rel, index, "var declarations are forbidden");
-    if (/\beval\s*\(/.test(code)) fail(file.rel, index, "eval() is forbidden");
-    if (/\.innerHTML\s*=/.test(code)) fail(file.rel, index, "innerHTML assignment is forbidden");
+    if (/\bconsole\.log\s*\(/.test(code)) fail(file.rel, index, "console.log is forbidden", "console-log");
+    if (/\bvar\s+[A-Za-z_$]/.test(code)) fail(file.rel, index, "var declarations are forbidden", "var-declaration");
+    if (/\beval\s*\(/.test(code)) fail(file.rel, index, "eval() is forbidden", "eval-call");
+    if (/\.innerHTML\s*=/.test(code)) fail(file.rel, index, "innerHTML assignment is forbidden", "inner-html-assignment");
     if (/(?<!Number\.)\bisFinite\s*\(/.test(code)) {
-      fail(file.rel, index, "bare isFinite() is forbidden; use Number.isFinite()");
+      fail(file.rel, index, "bare isFinite() is forbidden; use Number.isFinite()", "bare-isfinite");
     }
     if (/(^|[^=!<>])==(?!=)|(^|[^=!<>])!=(?!=)/.test(code)) {
-      fail(file.rel, index, "loose equality is forbidden");
+      fail(file.rel, index, "loose equality is forbidden", "loose-equality");
     }
     if (!file.allowEsModuleSyntax && /^\s*(import|export)\b/.test(code)) {
-      fail(file.rel, index, "ES module syntax is forbidden");
+      fail(file.rel, index, "ES module syntax is forbidden", "es-module-syntax");
     }
 
     if (/^\s*\/\//.test(line) && /[={}(]|\b(function|return)\b/.test(line)) {
       commentedCodeRun += 1;
       if (commentedCodeRun === 3) {
-        fail(file.rel, index, "three or more consecutive commented-out code lines");
+        fail(file.rel, index, "three or more consecutive commented-out code lines", "commented-out-code");
       }
     } else {
       commentedCodeRun = 0;
     }
 
     if (/\beslint-disable\b|@ts-ignore\b|@ts-nocheck\b|@ts-expect-error\b|\bprettier-ignore\b|istanbul ignore\b/.test(line)) {
-      fail(file.rel, index, "lint/type-check suppression comment is forbidden; fix the root cause");
+      fail(file.rel, index, "lint/type-check suppression comment is forbidden; fix the root cause", "viewer-suppression-comment");
     }
     checkTodo(file.rel, index, code);
   }
@@ -438,15 +474,15 @@ function checkPython(file) {
   const lines = fs.readFileSync(file.abs, "utf8").split(/\r?\n/);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    if (/^\s*(import|from)\s+avnav/.test(line)) fail(file.rel, index, "AvNav import forbidden");
-    if (/^\s*import\s+pluginhandler\b/.test(line)) fail(file.rel, index, "pluginhandler import forbidden");
+    if (/^\s*(import|from)\s+avnav/.test(line)) fail(file.rel, index, "AvNav import forbidden", "avnav-import");
+    if (/^\s*import\s+pluginhandler\b/.test(line)) fail(file.rel, index, "pluginhandler import forbidden", "pluginhandler-import");
     if (/^\s*from\s+plugin\s+import\b|^\s*import\s+plugin\b/.test(line)) {
-      fail(file.rel, index, "plugin.py import forbidden");
+      fail(file.rel, index, "plugin.py import forbidden", "reverse-plugin-import");
     }
     if (/\bthreading\.(Lock|RLock|Condition)\s*\(/.test(line)) {
-      fail(file.rel, index, "threading lock acquisition forbidden in server/polarrecorder/");
+      fail(file.rel, index, "threading lock acquisition forbidden in server/polarrecorder/", "domain-lock-acquisition");
     }
-    if (/\btime\.sleep\s*\(/.test(line)) fail(file.rel, index, "time.sleep forbidden");
+    if (/\btime\.sleep\s*\(/.test(line)) fail(file.rel, index, "time.sleep forbidden", "domain-time-sleep");
     checkPythonSuppression(file.rel, index, line);
     checkTodo(file.rel, index, line);
   }
@@ -458,9 +494,9 @@ function checkPythonSuppression(file, index, line) {
     const after = line.slice(noqa.index);
     const coded = /#\s*noqa\s*:\s*[A-Z]+[0-9]+(?:[,\s]+[A-Z]+[0-9]+)*/i.exec(after);
     if (!coded) {
-      fail(file, index, "blanket '# noqa' is forbidden; use '# noqa: <CODES>  # <reason>'");
+      fail(file, index, "blanket '# noqa' is forbidden; use '# noqa: <CODES>  # <reason>'", "python-suppression");
     } else if (!/#\s*\S/.test(after.slice(coded[0].length))) {
-      fail(file, index, "'# noqa' must be justified with a trailing '# <reason>' comment");
+      fail(file, index, "'# noqa' must be justified with a trailing '# <reason>' comment", "python-suppression");
     }
   }
 
@@ -469,16 +505,16 @@ function checkPythonSuppression(file, index, line) {
     const after = line.slice(typeIgnore.index);
     const coded = /#\s*type:\s*ignore\[[^\]]+\]/i.exec(after);
     if (!coded) {
-      fail(file, index, "blanket '# type: ignore' is forbidden; use '# type: ignore[<code>]  # <reason>'");
+      fail(file, index, "blanket '# type: ignore' is forbidden; use '# type: ignore[<code>]  # <reason>'", "python-suppression");
     } else if (!/#\s*\S/.test(after.slice(coded.index + coded[0].length))) {
-      fail(file, index, "'# type: ignore' must be justified with a trailing '# <reason>' comment");
+      fail(file, index, "'# type: ignore' must be justified with a trailing '# <reason>' comment", "python-suppression");
     }
   }
 
   if (/#\s*ruff\s*:\s*noqa(?!\s*:)/i.test(line)
     || /#\s*flake8\s*:\s*noqa\b/i.test(line)
     || /#\s*mypy\s*:\s*ignore-errors\b/i.test(line)) {
-    fail(file, index, "file-level blanket suppression is forbidden; suppress specific codes with a reason");
+    fail(file, index, "file-level blanket suppression is forbidden; suppress specific codes with a reason", "python-suppression");
   }
 }
 
@@ -486,7 +522,7 @@ function checkTodo(file, index, code) {
   const marker = /\b(TODO|FIXME)\b/.exec(code);
   if (!marker) return;
   if (!/\b(TODO|FIXME)\([A-Za-z][\w.-]*,\s*\d{4}-\d{2}-\d{2}\)\s*:/.test(code)) {
-    fail(file, index, `${marker[1]} must use the format '${marker[1]}(owner, YYYY-MM-DD): ...'`);
+    fail(file, index, `${marker[1]} must use the format '${marker[1]}(owner, YYYY-MM-DD): ...'`, "unowned-todo");
   }
 }
 
@@ -498,7 +534,8 @@ function checkAbsolutePath(file) {
       fail(
         file.rel,
         index,
-        `absolute home path '${match[0]}' is forbidden; use a project-relative or redacted placeholder`
+        `absolute home path '${match[0]}' is forbidden; use a project-relative or redacted placeholder`,
+        "absolute-home-path"
       );
     }
   }
@@ -515,6 +552,9 @@ function checkMarkdownTodos(file) {
 }
 
 function fail(file, zeroBasedLine, message, ruleName = "pattern") {
+  if (!PATTERN_RULE_ID_SET.has(ruleName)) {
+    throw new Error(`Unknown check-patterns rule '${ruleName}' for ${file}:${zeroBasedLine + 1}`);
+  }
   byRule[ruleName] = (byRule[ruleName] || 0) + 1;
   failures.push(`${file}:${zeroBasedLine + 1}: ${message}`);
 }
