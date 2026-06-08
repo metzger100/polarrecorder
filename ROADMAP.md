@@ -12,23 +12,7 @@ here is committed or scheduled; ordering does not imply priority.
 
 ## Key Details
 
-### 1. Restore / import flows
-
-**Status:** Done — implemented per `exec-plans/` PLAN3. Both `GET
-/api/export/json` (polar) and `GET /api/export/presets` (presets) now round-trip:
-strict, fail-closed, replace-only restore from the Settings tab, uploaded over a
-chunked-GET protocol and validated by the pure `restore.py` / `preset_backup.py`
-modules. See [import and restore](documentation/architecture/import-restore.md).
-
-**Goal:** Make the JSON backup round-trip, so a learned model can be recovered
-or moved between installs.
-
-`GET /api/export/json` produces a full backup of the persistence schema, and
-`GET /api/export/presets` backs up user presets. The import path validates a
-backup and restores the learned model or presets, covering reinstall, device
-migration, and recovery after data loss.
-
-### 2. Optional signal hooks (enhanced rejection rules)
+### 1. Optional signal hooks (enhanced rejection rules)
 
 **Goal:** Improve recorded-data quality by rejecting samples that extra boat
 sensors prove are unrepresentative.
@@ -74,7 +58,7 @@ Any enhanced rule must keep the same no-AvNav, no-I/O, no-threading purity as th
 core rules, accept only the arguments it uses, read its inputs only from
 `Sample.enhanced`, and return the shared `RuleResult` type.
 
-### 3. AvNav dashboard widgets
+### 2. AvNav dashboard widgets
 
 **Goal:** Surface Polar Recorder data directly on the AvNav dashboard through one
 widget with three selectable kinds, themed to fit AvNav without fighting its CSS
@@ -87,7 +71,7 @@ responsiveness *patterns*, but deliberately stay far simpler: `renderHtml` only
 (no canvas), three kinds, and a small theme-token set. The notes below say what
 to implement and how.
 
-#### 3.1 Single widget, three kinds
+#### 2.1 Single widget, three kinds
 
 Register exactly one widget through the AvNav plugin API:
 `avnav.api.registerWidget(definition, editableParameters)` (see
@@ -119,7 +103,7 @@ do **not** copy the dyninstruments cluster-route / mapper / deferred-host-commit
 machinery (`cluster/ClusterWidget.js`, `runtime/cluster/*`); it solves a
 multi-surface, many-widget problem we do not have.
 
-#### 3.2 Per-kind configuration (editable parameters)
+#### 2.2 Per-kind configuration (editable parameters)
 
 Each kind exposes only its own options, using AvNav's conditional-parameter
 visibility. A parameter is shown only when its `condition` matches the current
@@ -137,7 +121,7 @@ in `dyninstruments/config/clusters/speed.js`). Parameter types we need are
 - **`timeline`** — a time-window control (`SELECT` or `NUMBER`) for how far back
   the timeline reaches, condition `{ kind: "timeline" }`.
 
-#### 3.3 Data sourcing (key divergence from dyninstruments)
+#### 2.3 Data sourcing (key divergence from dyninstruments)
 
 `dyninstruments` binds widgets to AvNav store keys via `storeKeys`. Polar
 Recorder's data is **not** in the AvNav store — it lives behind the plugin's own
@@ -157,7 +141,7 @@ exactly as it already does for the viewer; no new lock or threading behaviour is
 introduced because the API already snapshots live state under the `plugin.py`
 lock.
 
-#### 3.4 Rendering and safety
+#### 2.4 Rendering and safety
 
 All three kinds render with `renderHtml` (no canvas). The polar and timeline are
 drawn as inline **SVG** so they scale cleanly; status is plain HTML. Because the
@@ -169,7 +153,7 @@ viewer polar-drawing logic where possible instead of reimplementing it. All
 browser code stays under the `window.Polarrecorder` namespace and plain-script
 rules; only `plugin.mjs` may be a module.
 
-#### 3.5 Theming without clashing with AvNav CSS
+#### 2.5 Theming without clashing with AvNav CSS
 
 Follow the dyninstruments approach (`plugin.css`, README "Theming"):
 
@@ -184,7 +168,7 @@ Follow the dyninstruments approach (`plugin.css`, README "Theming"):
   our widget via a scoped class (dyninstruments uses a `*-hide-native-head`
   class), never globally.
 
-#### 3.6 Responsiveness across aspect ratios and sizes
+#### 2.6 Responsiveness across aspect ratios and sizes
 
 The widget must look correct in any dashboard cell, from a tiny square to a wide
 strip:
@@ -200,7 +184,7 @@ strip:
   queries or a simple ratio check, and only measure via `ResizeObserver` if CSS
   cannot express the breakpoint.
 
-#### 3.7 Scope discipline
+#### 2.7 Scope discipline
 
 Copy from dyninstruments: single-widget registration, the `kind` SELECT,
 conditional editable parameters, `.widget.<plugin>`-scoped CSS variables, and
@@ -210,7 +194,7 @@ controllers, deferred host commit, per-unit parameter generation, and the large
 geometry-token catalog. Those exist for a many-widget, multi-surface product;
 this is three `renderHtml` views.
 
-### 4. Adopt the dyninstruments color set
+### 3. Adopt the dyninstruments color set
 
 **Goal:** Replace Polar Recorder's current viewer palette with the default
 `dyninstruments` color palette for both day and night, because it looks better
