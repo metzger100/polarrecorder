@@ -47,6 +47,7 @@ Start here for project documentation. Use the questions below to open the smalle
 ## Conventions
 
 - **What Python and viewer JavaScript standards are binding?** -> [conventions/coding-standards.md](conventions/coding-standards.md)
+- **What structure must documentation files follow?** -> [conventions/documentation-format.md](conventions/documentation-format.md)
 - **Which smells are blocking, and what replaces them?** -> [conventions/smell-prevention.md](conventions/smell-prevention.md)
 - **Which command enforces each linter or checker rule?** -> [conventions/quality-gates.md](conventions/quality-gates.md), [conventions/smell-prevention.md](conventions/smell-prevention.md)
 - **How do I fix a specific blocking smell at its root?** -> [conventions/smell-fix-playbooks.md](conventions/smell-fix-playbooks.md)
