@@ -44,12 +44,12 @@ Touchpoint matrix:
 | Editable parameter registration, defaults, or parsing | `documentation/avnav/editable-parameters.md`, `documentation/user/configuration.md`, `README.md` when user-visible |
 | Runtime configuration defaults or editable parameters | `documentation/user/configuration.md`, `README.md`, affected tests or mock data |
 | Validation rules, rejection reasons, or poisoning defenses | `documentation/filters/rejection-rules.md`, `documentation/filters/poisoning-resistance.md`, `documentation/architecture/data-pipeline.md` |
-| Polar model, histogram bins, confidence, or persistence | `documentation/architecture/polar-model.md`, `documentation/architecture/persistence.md`, `documentation/TECH-DEBT.md` when debt changes |
+| Polar model, histogram bins, confidence, or persistence | `documentation/architecture/polar-model.md`, `documentation/architecture/persistence.md` |
 | Viewer behavior, tabs, charts, editor, export UI, or CSS | `documentation/architecture/ui.md`, `README.md` when user-facing |
 | Export/import format or backup behavior | `documentation/user/export-import.md`, `README.md`, related mock data |
-| Troubleshooting-relevant behavior or known failure mode | `documentation/user/troubleshooting.md`, `documentation/TECH-DEBT.md` when unresolved |
+| Troubleshooting-relevant behavior or known failure mode | `documentation/user/troubleshooting.md` |
 | Release packaging, versioning, or install flow | `documentation/guides/release-workflow.md`, `README.md`, companion release notes under `releases/` |
-| Development workflow, checks, or agent guidance | `documentation/guides/documentation-maintenance.md`, `documentation/QUALITY.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
+| Development workflow, checks, or agent guidance | `documentation/guides/documentation-maintenance.md`, `documentation/conventions/quality-gates.md`, `documentation/conventions/coding-standards.md`, `documentation/conventions/smell-prevention.md`, `documentation/conventions/testing-infrastructure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
 
 Documentation checks:
 
@@ -68,6 +68,7 @@ AvNav documentation rule:
 
 - [Documentation index](../TABLEOFCONTENTS.md)
 - [Core principles](../core-principles.md)
+- [Quality gates](../conventions/quality-gates.md)
 - [Coding standards](../conventions/coding-standards.md)
-- [Quality](../QUALITY.md)
+- [Testing infrastructure](../conventions/testing-infrastructure.md)
 - [Execution plan authoring](exec-plan-authoring.md)

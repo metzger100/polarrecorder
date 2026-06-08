@@ -4,72 +4,122 @@
 
 ## Overview
 
-The smell catalog defines blocking anti-patterns and the required replacement patterns. Treat these as fail-closed rules for code and docs.
+This catalog lists every blocking rule enforced by the repository linters, custom checkers, and quality-gate scripts. Treat each rule as fail-closed: fix the root cause in the same change instead of suppressing, deferring, or hiding it.
 
 ## Key Details
 
-| Smell Class | Anti-Pattern | Required Pattern | Enforcement | Severity |
-|---|---|---|---|---|
-| AvNav import leak | `server/polarrecorder/` imports `avnav_api`, `pluginhandler`, or AvNav internals | Inject AvNav dependencies through protocols/fakes | ruff banned imports and `check-patterns.mjs` | block |
-| Reverse dependency | `server/polarrecorder/` imports `plugin.py` | Dependency flows from `plugin.py` inward only | `check-patterns.mjs` and review | block |
-| Lock acquisition in domain code | `threading.Lock`, `RLock`, or `Condition` in `server/polarrecorder/` | Locks belong only in `plugin.py` | `check-patterns.mjs` | block |
-| Real sleep in domain code | `time.sleep()` in `server/polarrecorder/` | Use injected clocks and deterministic tests | `check-patterns.mjs` | block |
-| Broad domain exception | Bare or broad `except` in `server/polarrecorder/` | Catch specific exceptions; boundary handles crash safety | ruff and review | block |
-| Print statement | `print()` | Use logger protocol or AvNav logging boundary | ruff `T20` | block |
-| Python version drift | Python 3.10+ syntax, `tomllib`, newer `typing` names, or `dataclass(slots=True)` in covered Python files | Keep runtime and tests valid on Python 3.9, or raise the documented runtime floor deliberately | `check-python-compat.py` | block |
-| Magic threshold | Hardcoded model or validation threshold in a comparison | Use named config/constants | ruff `PLR2004` and review | block |
-| Defensive fallback masking a contract gap | `value or <falsy-default>`, `getattr(obj, "field", <default>)` on a guaranteed producer value | Access the value directly and fail loudly if the contract is unmet | `check-py-contracts.py` | block |
-| Absent-value sentinel | `float("nan")`, `math.nan`, `math.inf` (or `NaN`/`-1`/`0`) as an absent marker | Use `None` and let the boundary decide presentation | `check-py-contracts.py` and review | block |
-| Redundant type guard (Python) | `x if isinstance(x, list) else []` or `str(x if x is None else ...)` re-sanitizes a producer-guaranteed value | Trust the validated contract; do not re-check the type downstream (Python twin of the viewer `redundant-null-type-guard`) | `check-py-contracts.py` (`redundant-type-guard`) | block |
-| Framework method guard (Python) | `hasattr(self, "field")` or `callable(getattr(self, "field", ...))` probes a guaranteed attribute/method | Access `self.field` directly and fail loudly if the contract is unmet (Python twin of the viewer `framework-method-typeof-guard`) | `check-py-contracts.py` (`framework-method-guard`) | block |
-| Premature legacy support (Python) | A module/class-level `def` or constant named `*legacy*`/`*compat*`/`*deprecated*` that nothing references is a speculative shim | Remove it until a live boundary contract requires it; referenced aliases (e.g. `LEGACY_PRESET_ALIASES`) stay allowed | `check-py-contracts.py` (`premature-legacy-support`) | block |
-| Duplicate helper or function | A helper or long statement block re-implemented in another module instead of importing the canonical one | Extract one canonical helper and import it | `check-duplication.py` | block |
-| Hot-path algorithmic regression | Model update or polar-format hot paths become unexpectedly slow, or per-sample work turns super-linear (an accidental O(n^2)) | Keep per-sample updates and projection/formatting bounded and deterministic; generous absolute ceilings plus a machine-independent doubling-ratio guard | `check-performance.py` (absolute ceilings + `MAX_UPDATE_SCALING_RATIO`) | block |
-| Runtime non-finite leak | A NaN/Infinity produced at runtime reaches the polar/CSV/Windy boundary, or a `nan`/`inf` sentinel string reaches an export payload | Keep boundary numbers finite and absent values as `None`; the static `nan-sentinel` rule cannot see runtime-produced non-finites | `check-runtime-contracts.py` | block |
-| Duplicate viewer helper | A `viewer/*.js` function body or long function block re-implemented in another viewer file | Extract one canonical `window.Polarrecorder` helper and reuse it | `check-js-duplication.mjs` | block |
-| Absolute home path | Machine-local `/home/<user>/...` or `/Users/<user>/...` committed in source, docs, workflows, or release metadata | Project-relative or redacted placeholder (`/home/<user>/...`) | `check-patterns.mjs` | block |
-| Unjustified lint suppression | Blanket `# noqa`, `# type: ignore`, or file-level `# ruff: noqa` / `# mypy: ignore-errors`, or a coded suppression with no reason | Suppress specific codes with a trailing `# <reason>` | `check-patterns.mjs` | block |
-| Viewer lint/type suppression | `eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `prettier-ignore`, `istanbul ignore` in `viewer/*.js` | Fix the root cause | `check-patterns.mjs` | block |
-| Unowned TODO | `TODO`/`FIXME` without owner and date in source or Markdown | `TODO(owner, YYYY-MM-DD): ...` | `check-patterns.mjs` | block |
-| Untested viewer logic | A gated `viewer/*.js` file below its line-coverage floor | Add vm-based viewer tests until the floor is met | `check-js-coverage.mjs` | block |
-| Missing viewer coverage target | A new `viewer/*.js` file is not listed in the per-file coverage target map | Add a target and exercise it through vm-based viewer tests | `check-js-coverage.mjs` and `check-smell-contracts.mjs` | block |
-| Viewer dependency header drift | A `viewer/*.js` file's `Depends:` header omits or stales a real cross-file `window.Polarrecorder` dependency | Keep `Depends:` equal to the real viewer namespace references | `check-smell-contracts.mjs` | block |
-| Viewer script contract drift | `viewer/viewer.html` misses a viewer script or changes the approved load order accidentally | Keep the static script list explicit and ordered for the no-build runtime | `check-smell-contracts.mjs` | block |
-| Machine-specific host citation in docs | Docs depend on a machine-specific AvNav path | Describe the AvNav behavior contract directly | review and `check:docs` | block |
-| File size bypass | One-line compression to evade code limits, including stacked declarations, packed destructuring or `for` headers, comma assignment chains, collapsed literals/bodies, or oversized Markdown docs that bury routing/contract details | Split modules/docs and keep readable formatting | Python and JS filesize/oneliner checks plus Markdown filesize checks | block |
-| Commented-out code | Dead code left in comments | Delete it; version control keeps history | ruff and `check-patterns.mjs` | block |
-| JS global pollution | Globals outside `window.Polarrecorder` | Namespace all browser exports | `check-namespace.mjs` | block |
-| JS ES module syntax | `import`/`export` in `viewer/*.js` | Plain scripts; `plugin.mjs` only for AvNav module entry and is still pattern-scanned | `check-patterns.mjs` | block |
-| JS debug leftover | `console.log()` | Remove or use `console.warn`/`console.error` intentionally | `check-patterns.mjs` | block |
-| JS unsafe DOM mutation | `innerHTML` assignment or `eval()` | DOM APIs and safe text assignment | `check-patterns.mjs` | block |
-| JS bare isFinite | `isFinite(x)` (global coercion) | `Number.isFinite(x)` | `check-patterns.mjs` | block |
-| JS empty catch | A lexical `try { ... } catch (e) {}` that swallows errors silently | Rethrow, route to visible state, or use a structured boundary-fallback marker for an intentional host-boundary fallback | `check-patterns.mjs` | block |
-| JS empty Promise catch | `.catch(function () {})` or equivalent empty Promise catch swallows a rejected request | Route errors to a named handler or visible UI state | `check-patterns.mjs` (`promise-empty-catch`) | block |
-| JS silent catch fallback | A lexical `catch { ... }` that neither rethrows nor carries `polarrecorder-boundary-fallback(<owner>): ...` swallows the error and degrades to a fallback | Rethrow, route to visible state, or mark a real host/browser boundary fallback with the structured owner marker | `check-patterns.mjs` (`catch-fallback`) | block |
-| JS internal namespace re-default | `Polarrecorder.X.Helper(...) \|\| fb` / `?? fb` re-defaults a contract-guaranteed namespace result | Trust the namespace contract; fix caller order instead of adding a second default owner (boundary defaulting on optional API fields stays allowed) | `check-patterns.mjs` (`internal-namespace-fallback`) | block |
-| Canonical helper redefinition (Python) | A module-level `def` re-implements a canonical domain helper owned by another module (e.g. `twa_bin`, `circular_distance`) | Import the canonical helper from its owner module; do not fork the contract under the same name | `check-py-contracts.py` (`canonical-helper-redefinition`) | block |
-| Stale canonical-helper map | The `_CANONICAL_HELPERS` owner map points at a module/name that no longer defines that helper (renamed, moved, or deleted), silently disabling the redefinition guard | Keep the owner map equal to reality; restore the helper or fix the map (the static twin of the dyninstruments `canonical-helper-completeness` runtime check) | `check-py-contracts.py` (`canonical-helper-map-stale`) | block |
-| JS truthy default clobber | `x.default \|\| fallback` in `viewer/*.js`, clobbering an explicit `""`, `0`, or `false` | Use `??` or a presence check; only `.default` is targeted so boundary defaulting on optional API fields stays allowed | `check-patterns.mjs` (default-truthy-fallback) | block |
-| JS redundant re-sanitize | `Array.isArray(x) ? x : []` or `String(x == null ? ... : x)` on a producer-guaranteed value | Trust the validated contract; do not re-sanitize | `check-patterns.mjs` (redundant-null-type-guard) | block |
-| JS hardcoded runtime default | Viewer code duplicates config defaults after `Polarrecorder.ConfigCache` should be loaded, including literal `ConfigCache = { ... }`, `ConfigCache || {}`, or `config.<field> ||/?? <literal>` fallbacks | Trust the API/config boundary and surface boundary failures instead of adding a second default owner | `check-patterns.mjs` (`hardcoded-runtime-default`) | block |
-| JS placeholder literal duplication | Viewer code repeats absent-value placeholders such as `"No Data"`, `"---"`, or `"N/A"` outside the placeholder owner | Use `Polarrecorder.Placeholders` so placeholder vocabulary has one owner | `check-patterns.mjs` (`placeholder-literal`) | block |
-| JS responsive hard floor | Viewer code uses inline user-visible layout/text floors such as `Math.max(12, size)` or `clamp(value, 12, max)` | Put responsive floor policy in a shared owner and consume that result; technical `0`/`1` guards stay allowed | `check-patterns.mjs` (`responsive-layout-hard-floor`) | block |
-| JS canvas API paranoia | Viewer drawing code checks standard Canvas 2D methods with `typeof ctx.save === "function"` | Trust the validated canvas context inside drawing code; keep capability checks at real external boundaries only | `check-patterns.mjs` (`canvas-api-typeof-guard`) | block |
-| JS try/finally canvas drawing | Internal draw paths wrap `ctx.save()` / `ctx.restore()` in `try/finally` without an external throwing boundary | Use direct save/draw/restore pairing; reserve `try/finally` for boundary cleanup | `check-patterns.mjs` (`try-finally-canvas-drawing`) | block |
-| JS framework method guard | `typeof Polarrecorder.* === "function"` around guaranteed namespace methods | Trust loaded internal namespace contracts; branch only at optional external boundaries | `check-patterns.mjs` (`framework-method-typeof-guard`) | block |
-| JS dead code | Constant `if (true)` / `if (false)`, or a top-level `function` declared but never referenced | Delete the unreachable branch or stale function | `check-patterns.mjs` (dead-code) | block |
-| JS unused fallback | A `fallback`-named binding declared but never used | Remove the stale leftover or wire it into an active path | `check-patterns.mjs` (unused-fallback) | block |
-| JS premature legacy support | A declaration named `*legacy*` / `*compat*` / `*deprecated*` for a speculative path | Remove speculative compat unless an active boundary contract requires it | `check-patterns.mjs` (premature-legacy-support) | block |
-| Stale dependency header | A `server/polarrecorder/` module whose `Depends:` header omits an imported `polarrecorder.*` module or lists one it does not import (runtime and `TYPE_CHECKING` imports both count) | Keep the header equal to the module's real intra-package imports | `check-py-dependencies.py` (header-accuracy) | block |
-| Domain import cycle | A runtime import cycle among `server/polarrecorder/` modules | Break the cycle; move type-only edges under `TYPE_CHECKING` | `check-py-dependencies.py` (no-cycles) | block |
-| Backwards layer import | A `server/polarrecorder/` module imports a higher architectural layer (e.g. a primitive importing an orchestration module); dependencies must flow down only | Depend on the same or a lower layer; if a low module needs a high one, the design is inverted — move the shared logic down | `check-py-dependencies.py` (layer-direction) | block |
-| Stale layer map | The `_LAYER_RANK` map omits a real domain module or names one that no longer exists, silently disabling the layer-direction guard | Keep the map equal to reality; assign every module a layer (the Python twin of `canonical-helper-map-stale`) | `check-py-dependencies.py` (layer-map-stale) | block |
-| Rendered sentinel leak | The viewer renders a `NaN`/`undefined`/`null` token from a contract-valid payload, or clobbers a present `0` reading to a placeholder | Keep boundary numbers finite, route absent optionals to a placeholder, and presence-check the container not the value (the viewer twin of `check-runtime-contracts.py`) | `check-viewer-contracts.mjs` (viewer-render-no-sentinel, viewer-absent-placeholder, viewer-falsy-preservation) | block |
-| Untested custom checker rule | A custom `tools/check-*` rule (JS or Python) has no positive and clean test case | Add a self-test in the same task — `tools/test-js-checkers.mjs` / `tools/test-check-patterns.mjs` for JS, `tests/test_*_checker.py` for Python | `npm run test:tools`, `pytest` | block |
+The source of truth for the commands is [quality gates](quality-gates.md). This file is the source of truth for what those commands reject.
+
+Python rules:
+
+| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |
+|---|---|---|---|
+| Ruff selected families | Violations from the configured `E`, `F`, `W`, `I`, `N`, `UP`, `B`, `A`, `SIM`, `TCH`, `RUF`, `C90`, `D`, `PT`, `ARG`, `ERA`, `S`, `PIE`, `RSE`, `RET`, `FBT`, `PL`, `T20`, `TID`, `FA`, `C4`, `BLE`, `TRY`, `EM`, `G`, `PERF`, `PTH`, `YTT`, `DTZ`, and `FURB` rule families | Keep Python lint-clean under the project `pyproject.toml` configuration | `ruff check` |
+| Ruff format | Python files that are not Ruff-formatted | Run Ruff formatting and keep formatting stable | `ruff format --check` |
+| Strict typing | Untyped functions, unresolved strict typing issues, returning `Any`, unused mypy config, or weak `None` equality | Type every function and preserve strict contracts | `mypy --strict` |
+| Python 3.9 runtime floor | Python 3.10+ syntax, `tomllib`, 3.10+ or 3.11+ `typing` names, or `dataclass(slots=True)` in covered Python files | Use Python 3.9-compatible syntax and stdlib APIs | `check-python-compat.py` |
+| Future annotations | Covered Python files missing `from __future__ import annotations` | Add the future import | Ruff `FA` |
+| Public docstrings | Public Python functions without Google-style docstrings | Add concise Google-style docstrings | Ruff `D` |
+| Print statement | `print()` in runtime or tests | Use logger protocols or test assertions | Ruff `T20` |
+| Broad domain exception | Bare or broad `except` in domain code | Catch specific exceptions; let the boundary own crash safety | Ruff `BLE`, `TRY` |
+| Magic threshold | Hardcoded model or validation threshold in comparisons | Use named configuration or constants | Ruff `PLR2004` |
+| AvNav import leak | `server/polarrecorder/` imports `avnav_api`, `pluginhandler`, `avnav_store`, `avnav_nmea`, or AvNav internals | Inject AvNav dependencies through protocols and fakes | Ruff `TID`, `check-patterns.mjs` (`avnav-import`, `pluginhandler-import`) |
+| Reverse dependency | Domain modules import `plugin.py` | Dependency flow stays from `plugin.py` inward | `check-patterns.mjs` (`reverse-plugin-import`) |
+| Lock acquisition in domain code | `threading.Lock`, `RLock`, or `Condition` in `server/polarrecorder/` | Keep locking in `plugin.py` only | `check-patterns.mjs` (`domain-lock-acquisition`) |
+| Real sleep in domain code | `time.sleep()` in `server/polarrecorder/` | Use injected clocks and deterministic tests | `check-patterns.mjs` (`domain-time-sleep`) |
+| Defensive fallback masking a contract gap | `value or <fallback>` or `getattr(obj, "field", <fallback>)` on producer-guaranteed values | Access contract values directly and fail loudly | `check-py-contracts.py` |
+| Absent-value sentinel | `float("nan")`, `math.nan`, `math.inf`, or sentinel strings at runtime boundaries | Use `None`; boundary formatting decides presentation | `check-py-contracts.py`, `check-runtime-contracts.py` |
+| Redundant type guard | `x if isinstance(x, list) else []` or `str(x if x is None else ...)` on producer-guaranteed values | Trust the validated contract | `check-py-contracts.py` |
+| Framework method guard | `hasattr(self, ...)` or `callable(getattr(self, ...))` for guaranteed methods or attributes | Access the method or attribute directly | `check-py-contracts.py` |
+| Premature legacy support | Unreferenced `*legacy*`, `*compat*`, or `*deprecated*` module/class declarations | Remove speculative shims until a live boundary requires them | `check-py-contracts.py` |
+| Canonical helper redefinition | Re-defining helpers owned by canonical modules | Import the canonical helper | `check-py-contracts.py` |
+| Stale canonical-helper map | `_CANONICAL_HELPERS` points at missing or renamed helpers | Keep the helper owner map equal to reality | `check-py-contracts.py` |
+| Duplicate Python logic | Cross-file duplicate function bodies or long copied statement blocks | Extract one canonical helper and import it | `check-duplication.py` |
+| Python file size | Covered Python files over 400 non-empty lines | Split modules before the limit is exceeded | `check-python-filesize.py` |
+| Python module header | Covered domain modules missing the mandatory `Module`, `Documentation`, and `Depends` header | Add an accurate module header | `check-python-filesize.py` |
+| Python one-line compression | Semicolon packing, collapsed compound bodies, chained conditionals, collapsed literals, crammed comprehensions, packed lambdas, long packed lines, operator-dense lines, or deeply nested packed expressions | Keep code readable; split lines and helpers | `check-python-filesize.py` |
+| Python suppression comment | Blanket or unjustified `# noqa`, `# type: ignore`, file-level `# ruff: noqa`, `# flake8: noqa`, or `# mypy: ignore-errors` | Suppress specific codes only with a reason | `check-patterns.mjs` (`python-suppression`) |
+| Stale Python dependency header | `Depends:` omits a real intra-package import or lists a stale one | Keep headers equal to runtime and `TYPE_CHECKING` imports | `check-py-dependencies.py` |
+| Domain import cycle | Runtime cycle among `server/polarrecorder/` modules | Break cycles; move type-only edges under `TYPE_CHECKING` | `check-py-dependencies.py` |
+| Backwards layer import | A module imports a higher architectural layer | Move shared logic downward or invert the dependency | `check-py-dependencies.py` |
+| Stale layer map | `_LAYER_RANK` omits a real module or names a removed one | Assign every domain module to the correct layer | `check-py-dependencies.py` |
+| Hot-path regression | Model update or polar formatting becomes too slow or scales super-linearly | Keep per-sample and formatting paths bounded | `check-performance.py` |
+| Runtime non-finite leak | NaN/Infinity reaches polar, CSV, or Windy export output | Keep boundary numbers finite and optionals explicit | `check-runtime-contracts.py` |
+
+JavaScript and viewer rules:
+
+| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |
+|---|---|---|---|
+| Viewer namespace | Missing `window.Polarrecorder` usage or global assignments outside it | Export viewer functionality through `window.Polarrecorder` only | `check-namespace.mjs` |
+| JS naming | Non-kebab-case viewer filenames, non-PascalCase namespace exports, or non-camelCase functions | Follow the viewer naming convention | `check-naming.mjs` |
+| Viewer module header | Missing top `/** Module */` header, missing `Module`/`Documentation`/`Depends`, or dead documentation target | Keep headers complete and current | `check-headers.mjs` |
+| Viewer dependency header | `Depends:` omits or stales real `window.Polarrecorder` cross-file references | Keep `Depends:` equal to actual references | `check-smell-contracts.mjs` (`viewer-dependency-header-contract`) |
+| Viewer script order | `viewer.html` omits a viewer script or changes the approved load order | Load every viewer script in the documented static order | `check-smell-contracts.mjs` (`viewer-script-contract`) |
+| Viewer module-load dependency | `viewer.js` references late-wired modules before `DOMContentLoaded` | Resolve late modules after the viewer is initialized | `check-dependencies.mjs` |
+| JS namespace cycle | Circular `window.Polarrecorder` references among viewer modules | Break cycles or move shared helpers to a lower owner | `check-dependencies.mjs` |
+| JS ES module syntax | `import` or `export` in `viewer/*.js` | Keep viewer files as plain scripts; `plugin.mjs` is the exception | `check-patterns.mjs` (`es-module-syntax`) |
+| JS debug leftover | `console.log()` | Remove it or use intentional warning/error reporting | `check-patterns.mjs` (`console-log`) |
+| JS `var` declaration | `var` | Use `const` or `let` | `check-patterns.mjs` (`var-declaration`) |
+| JS loose equality | `==` or `!=` | Use `===` or `!==` | `check-patterns.mjs` (`loose-equality`) |
+| JS unsafe execution or DOM mutation | `eval()` or `innerHTML` assignment | Use safe DOM APIs and text assignment | `check-patterns.mjs` (`eval-call`, `inner-html-assignment`) |
+| JS bare finite check | Global `isFinite()` | Use `Number.isFinite()` | `check-patterns.mjs` (`bare-isfinite`) |
+| JS commented-out code | Three or more consecutive commented code lines | Delete dead code | `check-patterns.mjs` (`commented-out-code`) |
+| Viewer suppression comment | `eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `@ts-expect-error`, `prettier-ignore`, or `istanbul ignore` | Fix the root cause | `check-patterns.mjs` (`viewer-suppression-comment`) |
+| Empty catch | Lexical empty `catch` or empty Promise catch | Rethrow, route to visible state, or use a marked boundary fallback | `check-patterns.mjs` (`empty-catch`, `promise-empty-catch`) |
+| Silent catch fallback | Non-empty `catch` that swallows without visible state, rethrow, or `polarrecorder-boundary-fallback(...)` | Make the fallback explicit and owned | `check-patterns.mjs` (`catch-fallback`) |
+| Internal namespace re-default | Re-defaulting a guaranteed `Polarrecorder.*` helper result with `||` or `??` | Trust the namespace contract and fix caller order | `check-patterns.mjs` (`internal-namespace-fallback`) |
+| Truthy default clobber | `.default || fallback` clobbers explicit falsy values | Use `??` or presence checks | `check-patterns.mjs` (`default-truthy-fallback`) |
+| Redundant JS re-sanitize | `Array.isArray(x) ? x : []` or `String(x == null ? ... : x)` on producer-guaranteed values | Trust producer contracts | `check-patterns.mjs` (`redundant-null-type-guard`) |
+| Hardcoded runtime default | Duplicated `ConfigCache` or `config.<field>` defaults after config load | Keep defaults owned by the API/config boundary | `check-patterns.mjs` (`hardcoded-runtime-default`) |
+| Placeholder literal duplication | Repeating `"No Data"`, `"---"`, or `"N/A"` outside the placeholder owner | Use `Polarrecorder.Placeholders` | `check-patterns.mjs` (`placeholder-literal`) |
+| Responsive hard floor | Inline user-visible floors such as `Math.max(12, ...)` or `clamp(..., 12, ...)` | Put responsive policy in a shared owner | `check-patterns.mjs` (`responsive-layout-hard-floor`) |
+| Canvas API paranoia | `typeof ctx.save === "function"` and similar internal canvas guards | Trust the validated canvas context inside draw code | `check-patterns.mjs` (`canvas-api-typeof-guard`) |
+| Try/finally canvas drawing | Internal `ctx.save()` / `ctx.restore()` wrapped in `try/finally` | Use direct save/draw/restore pairing | `check-patterns.mjs` (`try-finally-canvas-drawing`) |
+| JS framework method guard | `typeof Polarrecorder.* === "function"` for guaranteed namespace methods | Trust loaded internal namespace contracts | `check-patterns.mjs` (`framework-method-typeof-guard`) |
+| JS dead code | Constant `if (true)`/`if (false)` or unreferenced top-level functions | Delete unreachable or stale code | `check-patterns.mjs` (`dead-code`) |
+| JS unused fallback | Unused binding with `fallback` in its name | Remove it or wire it into a real path | `check-patterns.mjs` (`unused-fallback`) |
+| JS premature legacy support | Speculative `*legacy*`, `*compat*`, or `*deprecated*` declarations | Remove speculative compatibility paths | `check-patterns.mjs` (`premature-legacy-support`) |
+| Duplicate viewer helper | Duplicate viewer function bodies or long copied function blocks | Extract one canonical `window.Polarrecorder` helper | `check-js-duplication.mjs` |
+| Viewer file size | `viewer/*.js` or `plugin.mjs` over 400 non-empty lines | Split modules before the limit is exceeded | `check-file-size.mjs` |
+| JS one-line compression | Dense statements, single-line blocks/bodies, collapsed literals, packed arrow bodies, chained ternaries, long packed lines, operator-dense lines, nested packed expressions, packed destructuring, or packed `for` headers | Keep viewer code readable and split statements | `check-file-size.mjs` |
+| Viewer coverage target | A viewer file missing from `COVERAGE_TARGETS` or never executed by coverage tests | Add a target and exercise it | `check-js-coverage.mjs`, `check-smell-contracts.mjs` (`viewer-coverage-target-contract`) |
+| Untested viewer logic | Viewer line coverage below the file floor | Add vm-based viewer tests | `check-js-coverage.mjs` |
+| Viewer rendered sentinel | Healthy payload renders `NaN`, `undefined`, or `null` | Route absent values to placeholders | `check-viewer-contracts.mjs` |
+| Viewer absent placeholder | Missing `current_values` does not render the approved placeholder | Render `No Data`, not sentinel text | `check-viewer-contracts.mjs` |
+| Viewer falsy preservation | Present zero readings fall back to placeholders | Preserve explicit `0` readings | `check-viewer-contracts.mjs` |
+| `plugin.mjs` entry contract | Default export missing or fake AvNav API call contract broken | Keep the entry stub-thin and executable | `test-plugin-mjs.mjs` |
+| Viewer behavior regressions | Theme bridge, polar chart, or smoke flow breaks | Keep viewer behavior covered by stdlib Node tests | `test-viewer-*.mjs` |
+
+Documentation, repository, and release rules:
+
+| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |
+|---|---|---|---|
+| Documentation TOC coverage | Documentation files missing from `TABLEOFCONTENTS.md` or TOC links to missing docs | Link every documentation file from the TOC | `check-docs.mjs` |
+| Documentation format | Missing title, `Status`, `Overview`, `Key Details`, or `Related` | Keep every documentation file structurally complete | `check-doc-format.mjs` |
+| Documentation reachability | Broken links or docs unreachable from `AGENTS.md` / `CLAUDE.md` | Keep docs navigable through the instruction map | `check-doc-reachability.mjs` |
+| AI instruction drift | Shared instruction block differs between `AGENTS.md` and `CLAUDE.md` | Sync the shared block byte-for-byte | `check-ai-instructions.mjs` |
+| Markdown file size | Root or documentation Markdown over 400 non-empty lines | Split docs and keep routing details focused | `check-file-size.mjs` |
+| Machine-specific host citation | Committed `/home/<user>/...` or `/Users/<user>/...` paths, or AvNav docs depending on local checkout paths | Use project-relative or redacted paths and portable host contracts | `check-patterns.mjs` (`absolute-home-path`), review |
+| Unowned TODO | `TODO` or `FIXME` without `owner, YYYY-MM-DD` | Use `TODO(owner, YYYY-MM-DD): ...` | `check-patterns.mjs` (`unowned-todo`) |
+| Release artifact drift | Release zip contains unexpected files, misses runtime files, has invalid metadata, or notes/artifact pairing is wrong | Keep runtime allowlist and release notes exact | `check-release.py`, release tooling |
+| Hook installation drift | Missing `.githooks/pre-push`, wrong `core.hooksPath`, or non-executable hook | Run `npm run hooks:install` | `check-hooks.mjs` |
+| Custom checker without tests | New or changed custom checker behavior lacks clean and failing cases | Add checker self-tests in the same change | `test:tools`, `pytest` |
+| Smell catalog completeness | A checker rule exists without a matching row here, or this catalog contains a row unknown to the catalog linter | Add or update the catalog row and the linter-owned required-rule list together | `check-smell-catalog.mjs` |
+
+Test and coverage rules:
+
+| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |
+|---|---|---|---|
+| Pytest regressions | Failing Python tests or zero useful smoke coverage | Keep unit, integration, and smoke tests green | `pytest` |
+| Overall Python coverage | `server/polarrecorder/` below 90 percent branch-enabled coverage | Add meaningful tests | `pytest --cov`, coverage config |
+| Validation coverage floor | Validation package below 95 percent line or branch coverage | Add validation-focused tests | `check-coverage.py` |
+| Histogram coverage floor | `histogram.py` below 95 percent line or 90 percent branch coverage | Add histogram tests | `check-coverage.py` |
+| Fixture drift | Mock data no longer matches API, export, persistence, validation, or viewer behavior | Update fixtures with behavior changes | Tests and review |
 
 ## Related
 
+- [Quality gates](quality-gates.md)
 - [Coding standards](coding-standards.md)
 - [Smell-fix playbooks](smell-fix-playbooks.md)
-- [Quality](../QUALITY.md)
+- [Testing infrastructure](testing-infrastructure.md)
 - [AvNav plugin lifecycle](../avnav/plugin-lifecycle.md)

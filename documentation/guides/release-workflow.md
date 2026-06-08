@@ -116,5 +116,6 @@ Troubleshooting:
 
 - [Documentation index](../TABLEOFCONTENTS.md)
 - [Documentation maintenance](documentation-maintenance.md)
-- [Quality](../QUALITY.md)
+- [Quality gates](../conventions/quality-gates.md)
+- [Testing infrastructure](../conventions/testing-infrastructure.md)
 - [Contributing](../../CONTRIBUTING.md)

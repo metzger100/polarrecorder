@@ -2,7 +2,7 @@
 
 /**
  * Module: check-js-coverage — Viewer JS line-coverage gate.
- * Documentation: documentation/QUALITY.md
+ * Documentation: documentation/conventions/testing-infrastructure.md
  * Depends: tools/test-viewer-polar.mjs, tools/test-viewer-theme.mjs
  *
  * Runs the dependency-free vm-based viewer tests under NODE_V8_COVERAGE,

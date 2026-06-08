@@ -4,6 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+export const SMELL_CONTRACT_RULE_IDS = [
+  "viewer-script-contract",
+  "viewer-coverage-target-contract",
+  "viewer-dependency-header-contract"
+];
+
 export function runSmellContracts({ root = process.cwd(), print = true } = {}) {
   const ctx = { root, viewerRoot: path.join(root, "viewer"), failures: [] };
   checkViewerScriptContract(ctx);

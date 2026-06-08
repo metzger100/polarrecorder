@@ -60,7 +60,7 @@ function testPluginMjsIsScannedButAllowsEsModules() {
   });
 
   assert.equal(bad.status, 1);
-  assert.equal(bad.summary.byRule.pattern, 1);
+  assert.equal(bad.summary.byRule["console-log"], 1);
 }
 
 function testDefaultTruthyFallbackFails() {
@@ -326,7 +326,7 @@ function testAbsolutePathInWorkflowFails() {
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule.pattern, 1);
+  assert.equal(result.summary.byRule["absolute-home-path"], 1);
 }
 
 function testMarkdownTodoWithoutOwnerFails() {
@@ -335,7 +335,7 @@ function testMarkdownTodoWithoutOwnerFails() {
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule.pattern, 1);
+  assert.equal(result.summary.byRule["unowned-todo"], 1);
 }
 
 function runChecker(files) {

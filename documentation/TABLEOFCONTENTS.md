@@ -11,8 +11,7 @@ Start here for project documentation. Use the questions below to open the smalle
 ## Repository Orientation
 
 - **Where are the non-negotiable project rules?** -> [core-principles.md](core-principles.md)
-- **Where is the quality policy and required gate?** -> [QUALITY.md](QUALITY.md)
-- **Where are known issues and accepted debt tracked?** -> [TECH-DEBT.md](TECH-DEBT.md)
+- **What does the full quality gate run?** -> [conventions/quality-gates.md](conventions/quality-gates.md)
 - **Where is the root architecture summary?** -> [../ARCHITECTURE.md](../ARCHITECTURE.md)
 - **Where is contributor workflow guidance?** -> [../CONTRIBUTING.md](../CONTRIBUTING.md)
 
@@ -49,6 +48,7 @@ Start here for project documentation. Use the questions below to open the smalle
 
 - **What Python and viewer JavaScript standards are binding?** -> [conventions/coding-standards.md](conventions/coding-standards.md)
 - **Which smells are blocking, and what replaces them?** -> [conventions/smell-prevention.md](conventions/smell-prevention.md)
+- **Which command enforces each linter or checker rule?** -> [conventions/quality-gates.md](conventions/quality-gates.md), [conventions/smell-prevention.md](conventions/smell-prevention.md)
 - **How do I fix a specific blocking smell at its root?** -> [conventions/smell-fix-playbooks.md](conventions/smell-fix-playbooks.md)
 - **How are fakes, clocks, integration tests, and mock data organized?** -> [conventions/testing-infrastructure.md](conventions/testing-infrastructure.md)
 
@@ -56,7 +56,6 @@ Start here for project documentation. Use the questions below to open the smalle
 
 - **How do docs stay synchronized with behavior?** -> [guides/documentation-maintenance.md](guides/documentation-maintenance.md)
 - **How do I write a multi-session execution plan?** -> [guides/exec-plan-authoring.md](guides/exec-plan-authoring.md)
-- **How do I remove dead code or stale docs safely?** -> [guides/garbage-collection.md](guides/garbage-collection.md)
 - **How are local release artifacts prepared and checked?** -> [guides/release-workflow.md](guides/release-workflow.md)
 
 ## Feature-Specific Lookups
