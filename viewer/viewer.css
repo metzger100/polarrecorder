@@ -745,6 +745,30 @@ textarea {
   line-height: 1.6;
 }
 
+.settings-group {
+  display: grid;
+  gap: 0.5714rem;
+}
+
+.settings-group + .settings-group {
+  padding-top: 1rem;
+  border-top: 0.0714rem solid color-mix(in srgb, var(--polarrecorder-border-color) 55%, transparent);
+}
+
+.settings-group + .settings-group-danger {
+  border-top-color: color-mix(in srgb, var(--polarrecorder-attention-color) 45%, transparent);
+}
+
+.settings-group-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-group-danger .settings-group-title {
+  color: var(--polarrecorder-attention-color);
+}
+
 @media (min-width: 37.5em) {
   .polarrecorder-app {
     padding-top: 5.2857rem;

@@ -55,9 +55,9 @@ Endpoints:
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
 | GET | `export/presets` | none | User export presets in the `presets.json` backup shape `{schema_version, presets:{name:{twa,tws}}}`. Built-ins are excluded so the download re-imports cleanly. |
-| GET | `import/begin` | `kind=polar\|presets` | Starts a chunked upload: discards any prior staging and returns `{token, kind, max_bytes, max_chunks}`. |
+| GET | `import/begin` | `kind=learned-data\|presets` | Starts a chunked upload: discards any prior staging and returns `{token, kind, max_bytes, max_chunks}`. |
 | GET | `import/chunk` | `token`, `seq` (contiguous from 0), `data` (URL-encoded slice) | Appends one slice under the lock. Returns `{received, bytes}`. Any rejection clears staging. |
-| GET | `import/commit` | `token`, `confirm=yes` | Assembles, validates, and applies the staged backup by `kind`. Polar returns `{kind, bins_restored, total_accepted, migrated_from_version}`; presets returns `{kind, presets_restored}`. An unconfirmed commit errors but keeps staging. |
+| GET | `import/commit` | `token`, `confirm=yes` | Assembles, validates, and applies the staged backup by `kind`. Learned-data returns `{kind, bins_restored, total_accepted, migrated_from_version}`; presets returns `{kind, presets_restored}`. An unconfirmed commit errors but keeps staging. |
 | GET | `import/abort` | none | Clears staging idempotently. |
 
 Restore is implemented as a strict, fail-closed, replace-only flow for both the

@@ -62,7 +62,7 @@ export function defaultResponseBody(endpoint) {
     return ok({ schema_version: 1, presets: {} });
   }
   if (endpoint.startsWith("import/begin")) {
-    return ok({ token: "test-token", kind: "polar", max_bytes: 4194304, max_chunks: 4096 });
+    return ok({ token: "test-token", kind: "learned-data", max_bytes: 4194304, max_chunks: 4096 });
   }
   if (endpoint.startsWith("import/chunk")) {
     return ok({ received: 1, bytes: 12 });

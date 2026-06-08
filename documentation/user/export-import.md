@@ -72,8 +72,8 @@ inspection, and restore.
 The Settings tab can restore both backups. Each restore is **replace-only** and
 requires typing `RESTORE` to confirm, mirroring the Reset confirmation:
 
-- **Polar restore** fully replaces the learned model and counters with a valid
-  `export/json` backup. The backup's bin grid must match this build's grid, and
+- **Learned-data restore** fully replaces the learned model and counters with a
+  valid `export/json` backup. The backup's bin grid must match this build's grid, and
   its schema must not be newer than this plugin supports; an older schema is
   migrated. The backup's `percentile`/`max_tws` metadata never changes your live
   AvNav settings. Restoring also recovers a plugin that booted from a corrupt or
@@ -85,7 +85,7 @@ requires typing `RESTORE` to confirm, mirroring the Reset confirmation:
   `max_tws`. On success you see how many user presets were restored.
 
 Both imports are fail-closed and all-or-nothing: a wrong file, corrupted JSON, a
-foreign bin grid (polar), a too-new schema, a reserved/built-in preset name, or
+foreign bin grid (learned data), a too-new schema, a reserved/built-in preset name, or
 any out-of-range value is rejected with a precise reason and your current state is
 left completely untouched. Backups are uploaded in chunks over several GET
 requests (AvNav plugins cannot receive POST). The import size cap is 4 MiB. See

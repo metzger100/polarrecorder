@@ -57,9 +57,10 @@ async function testViewerModulesWorkTogether() {
   env.clickTab("settings");
   await flushViewer();
   assert.equal(env.elements["settings-panel"].classList.contains("has-data"), true);
-  assert.ok(textTree(env.elements["settings-panel"]).includes("JSON Backup"));
-  assert.ok(textTree(env.elements["settings-panel"]).includes("Restore Polar Backup"));
-  assert.ok(textTree(env.elements["settings-panel"]).includes("Presets Backup"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Learned Data"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Restore Learned Data"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Reset Learned Data"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Presets"));
 
   await testSettingsActions(env);
   await testImportUpload(env);
@@ -84,7 +85,7 @@ async function testSettingsActions(env) {
 async function testImportUpload(env) {
   const recorder = env.window.Polarrecorder;
   const summaries = [];
-  recorder.ImportUpload.UploadBackup("polar", "{\"schema_version\":1}", function (text) {
+  recorder.ImportUpload.UploadBackup("learned-data", "{\"schema_version\":1}", function (text) {
     summaries.push(text);
   }, function (error) {
     summaries.push("error:" + error);

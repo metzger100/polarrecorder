@@ -78,10 +78,10 @@ def polar_backup() -> str:
 def test_polar_restore_replaces_model_and_flushes(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
 
-    commit = response_data(upload(plugin, "polar", polar_backup()))
+    commit = response_data(upload(plugin, "learned-data", polar_backup()))
 
     assert commit == {
-        "kind": "polar",
+        "kind": "learned-data",
         "bins_restored": 1,
         "total_accepted": 3,
         "migrated_from_version": persistence.CURRENT_SCHEMA_VERSION,
@@ -134,7 +134,7 @@ def test_chunk_without_active_import_is_rejected(tmp_path: Path) -> None:
 
 def test_token_mismatch_clears_staging(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
-    response_data(request(plugin, "import/begin", kind="polar"))
+    response_data(request(plugin, "import/begin", kind="learned-data"))
 
     mismatch = request(plugin, "import/chunk", token="wrong", seq="0", data="{}")  # noqa: S106  # synthetic test token
 
@@ -144,7 +144,7 @@ def test_token_mismatch_clears_staging(tmp_path: Path) -> None:
 
 def test_post_abort_use_is_rejected(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
     assert request(plugin, "import/abort")["status"] == "OK"
 
@@ -155,7 +155,7 @@ def test_post_abort_use_is_rejected(tmp_path: Path) -> None:
 
 def test_seq_gap_is_rejected(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
 
     response = request(plugin, "import/chunk", token=token, seq="1", data="{}")
@@ -167,7 +167,7 @@ def test_seq_gap_is_rejected(tmp_path: Path) -> None:
 def test_byte_cap_overflow_is_rejected(tmp_path: Path, monkeypatch: Any) -> None:
     monkeypatch.setattr(import_common, "MAX_IMPORT_BYTES", 8)
     plugin, _api = make_plugin(tmp_path)
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
 
     response = request(plugin, "import/chunk", token=token, seq="0", data="0123456789")
@@ -180,7 +180,7 @@ def test_byte_cap_overflow_is_rejected(tmp_path: Path, monkeypatch: Any) -> None
 def test_chunk_cap_overflow_is_rejected(tmp_path: Path, monkeypatch: Any) -> None:
     monkeypatch.setattr(plugin_module.Plugin, "MAX_IMPORT_CHUNKS", 1)
     plugin, _api = make_plugin(tmp_path)
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
 
     assert request(plugin, "import/chunk", token=token, seq="0", data="a")["status"] == "OK"
@@ -193,7 +193,7 @@ def test_chunk_cap_overflow_is_rejected(tmp_path: Path, monkeypatch: Any) -> Non
 def test_idle_expiry_is_rejected(tmp_path: Path) -> None:
     monotonic = FakeClock(100.0)
     plugin, _api = make_plugin(tmp_path, monotonic=monotonic)
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
     monotonic.advance(plugin_module.Plugin.IMPORT_IDLE_TIMEOUT_SECONDS + 1.0)
 
@@ -206,7 +206,7 @@ def test_idle_expiry_is_rejected(tmp_path: Path) -> None:
 def test_commit_without_confirm_keeps_staging(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
     raw = polar_backup()
-    begin = response_data(request(plugin, "import/begin", kind="polar"))
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
     assert request(plugin, "import/chunk", token=token, seq="0", data=raw)["status"] == "OK"
 
@@ -222,7 +222,7 @@ def test_malformed_polar_leaves_model_intact(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
     plugin._model.bins[(45, 8)] = Bin(twa_deg=45, tws_kt=8, total_accepted=7)
 
-    response = upload(plugin, "polar", "not a backup")
+    response = upload(plugin, "learned-data", "not a backup")
 
     assert response["status"] == "ERROR"
     assert plugin._model.bins[(45, 8)].total_accepted == 7
@@ -248,7 +248,7 @@ def test_boot_error_recovers_on_valid_polar_restore(tmp_path: Path) -> None:
     plugin, api = make_plugin(tmp_path)
     assert plugin._startup_error_active is True
 
-    commit = upload(plugin, "polar", polar_backup())
+    commit = upload(plugin, "learned-data", polar_backup())
 
     assert commit["status"] == "OK"
     assert plugin._startup_error_active is False
