@@ -67,13 +67,32 @@ class _ReadResult:
     message: str
 
 
-class _SchemaTooNewError(Exception):
+class SchemaTooNewError(Exception):
+    """Raised when a payload's schema version exceeds the supported version."""
+
     def __init__(self, found: int) -> None:
+        """Record the unsupported schema version found in the payload."""
         super().__init__(
             f"polar.json has schema version {found}, "
             f"this plugin supports up to {CURRENT_SCHEMA_VERSION}"
         )
         self.found = found
+
+
+def migrate_payload(data: SerializedDict) -> SerializedDict:
+    """Migrate a parsed polar payload to the current schema version.
+
+    Args:
+        data: A parsed persistence payload at any supported schema version.
+
+    Returns:
+        The payload migrated to ``CURRENT_SCHEMA_VERSION``.
+
+    Raises:
+        SchemaTooNewError: If the payload's schema version is newer than
+            ``CURRENT_SCHEMA_VERSION``.
+    """
+    return _migrate(data)
 
 
 def serialize_to_dict(
@@ -234,7 +253,7 @@ def _read_payload(path: Path) -> _ReadResult:
         decoded = json.loads(raw_text)
         migrated = _migrate(_require_serialized_dict(decoded, path))
         _validate_payload(migrated)
-    except _SchemaTooNewError as exc:
+    except SchemaTooNewError as exc:
         return _ReadResult(None, 0, "schema_too_new", str(exc))
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         return _ReadResult(None, 0, "corrupt", f"{path.name} is corrupt: {exc}")
@@ -251,7 +270,7 @@ def _require_serialized_dict(decoded: object, path: Path) -> SerializedDict:
 def _migrate(data: SerializedDict) -> SerializedDict:
     version = to_int(data.get("schema_version", 0))
     if version > CURRENT_SCHEMA_VERSION:
-        raise _SchemaTooNewError(version)
+        raise SchemaTooNewError(version)
     migrated = dict(data)
     while version < CURRENT_SCHEMA_VERSION:
         migration = _MIGRATIONS[version]

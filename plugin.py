@@ -20,7 +20,7 @@ _server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
-from polarrecorder import api_dispatch, commit, persistence, reader
+from polarrecorder import api_dispatch, commit, export, persistence, preset_backup, reader, restore
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
 from polarrecorder.logger import AvNavLogger
@@ -60,6 +60,8 @@ class Plugin:
     """AvNav plugin entry point."""
 
     _description: ClassVar[str] = DESCRIPTION
+    MAX_IMPORT_CHUNKS: ClassVar[int] = 4096
+    IMPORT_IDLE_TIMEOUT_SECONDS: ClassVar[float] = 120.0
 
     @classmethod
     def pluginInfo(cls) -> dict[str, object]:
@@ -97,6 +99,11 @@ class Plugin:
         self._pending_created_wall = 0.0
         self._model = PolarModel()
         self._counters = Counters()
+        self._import_token: str | None = None
+        self._import_kind: str | None = None
+        self._import_parts: list[str] = []
+        self._import_bytes = 0
+        self._import_last_activity = 0.0
         api.registerRequestHandler(self._handle_request)
         api.registerRestart(self._restart)
         self._load_persistence()
@@ -262,6 +269,38 @@ class Plugin:
             self._set_status("ERROR", result.status_message)
         else:
             self._startup_error_active = False
+
+    def _reset_import_staging(self) -> None:
+        self._import_token = None
+        self._import_kind = None
+        self._import_parts = []
+        self._import_bytes = 0
+        self._import_last_activity = 0.0
+
+    def _apply_polar_restore(self, assembled: str) -> dict[str, object]:
+        result = restore.validate_and_build(assembled)
+        with self._lock:
+            result.model.generation = self._model.generation + 1
+            self._model = result.model
+            self._counters = result.counters
+            self._created_wall = result.created_wall
+            self._flush_requested = True
+            recovered = self._startup_error_active
+            self._startup_error_active = False
+        if recovered:
+            self._set_status("STARTED", "Polar Recorder started")
+        return {
+            "kind": "polar",
+            "bins_restored": result.bins_restored,
+            "total_accepted": result.total_accepted,
+            "migrated_from_version": result.migrated_from_version,
+        }
+
+    def _apply_presets_restore(self, assembled: str) -> dict[str, object]:
+        presets = preset_backup.validate_presets(assembled, self.config.max_tws)
+        with self._lock:
+            export.replace_user_presets(self._data_dir, presets, self._logger)
+        return {"kind": "presets", "presets_restored": len(presets)}
 
     def _on_config_change(self, changed: Mapping[str, str]) -> None:
         with self._lock:

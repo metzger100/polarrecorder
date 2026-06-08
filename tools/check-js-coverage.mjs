@@ -33,6 +33,7 @@ const COVERAGE_TARGETS = {
   "viewer/dom.js": 80,
   "viewer/export-ui.js": 60,
   "viewer/grid-editor.js": 75,
+  "viewer/import-upload.js": 80,
   "viewer/placeholders.js": 100,
   "viewer/polar-chart.js": 85,
   "viewer/presets.js": 90,

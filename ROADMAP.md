@@ -14,13 +14,19 @@ here is committed or scheduled; ordering does not imply priority.
 
 ### 1. Restore / import flows
 
+**Status:** Done — implemented per `exec-plans/` PLAN3. Both `GET
+/api/export/json` (polar) and `GET /api/export/presets` (presets) now round-trip:
+strict, fail-closed, replace-only restore from the Settings tab, uploaded over a
+chunked-GET protocol and validated by the pure `restore.py` / `preset_backup.py`
+modules. See [import and restore](documentation/architecture/import-restore.md).
+
 **Goal:** Make the JSON backup round-trip, so a learned model can be recovered
 or moved between installs.
 
-Today `GET /api/export/json` produces a full backup of the persistence schema,
-but there is no way to load it back — import/restore is not implemented. This
-idea adds an import path that validates a backup and restores the learned model,
-covering reinstall, device migration, and recovery after data loss.
+`GET /api/export/json` produces a full backup of the persistence schema, and
+`GET /api/export/presets` backs up user presets. The import path validates a
+backup and restores the learned model or presets, covering reinstall, device
+migration, and recovery after data loss.
 
 ### 2. Optional signal hooks (enhanced rejection rules)
 

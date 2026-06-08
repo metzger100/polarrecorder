@@ -175,6 +175,23 @@ def delete_preset(
     _write_user_presets(data_dir, presets, logger)
 
 
+def replace_user_presets(
+    data_dir: str | os.PathLike[str],
+    presets: Sequence[Preset],
+    logger: Logger | None = None,
+) -> None:
+    """Replace the entire user-preset set atomically with the given presets.
+
+    Args:
+        data_dir: Directory containing the presets persistence file.
+        presets: The validated user presets to persist (built-ins excluded by
+            the caller's validation, so they are never written).
+        logger: Optional logger for write failures.
+    """
+    by_name = {preset.name: preset for preset in presets}
+    _write_user_presets(data_dir, by_name, logger)
+
+
 def resolve_polar_preset(
     data_dir: str | os.PathLike[str],
     args: Mapping[str, str],
@@ -276,6 +293,58 @@ def _resolve_min_samples(args: Mapping[str, str], min_samples_for_export: int) -
     return MIN_SAMPLES_DISPLAY
 
 
+def validate_preset_name(name: str) -> str:
+    """Validate and normalize a user preset name, rejecting reserved names.
+
+    Args:
+        name: The raw preset name from a query parameter or a backup key.
+
+    Returns:
+        The trimmed, validated name.
+
+    Raises:
+        ExportError: If the name is reserved/built-in, empty, too long, or uses
+            characters outside the allowed pattern.
+    """
+    return _validate_name(name)
+
+
+def validate_grid_values(
+    name: str,
+    values: Sequence[object],
+    lower: int,
+    upper: int,
+) -> list[int]:
+    """Validate an already-parsed grid list against an inclusive integer range.
+
+    Args:
+        name: Parameter name used in rejection messages ("twa" or "tws").
+        values: Candidate grid values from a query split or a JSON array.
+        lower: Inclusive lower bound.
+        upper: Inclusive upper bound.
+
+    Returns:
+        The validated values, de-duplicated and sorted ascending.
+
+    Raises:
+        ExportError: If any value is not an ``int`` (``bool`` is rejected), is
+            out of range, or the resulting set is empty.
+    """
+    validated: list[int] = []
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, int):
+            msg = f"Invalid parameter '{name}': expected integers"
+            raise ExportError(msg)
+        if not lower <= value <= upper:
+            msg = f"Invalid parameter '{name}': expected values {lower}-{upper}"
+            raise ExportError(msg)
+        validated.append(value)
+    if not validated:
+        msg = f"Invalid parameter '{name}': expected at least one value"
+        raise ExportError(msg)
+    return sorted(set(validated))
+
+
 def _validate_name(name: str) -> str:
     trimmed = name.strip()
     if _is_builtin_name(trimmed):
@@ -294,18 +363,11 @@ def _parse_grid(name: str, raw: str, lower: int, upper: int) -> list[int]:
         if not text:
             continue
         try:
-            value = int(text)
+            values.append(int(text))
         except ValueError as exc:
             msg = f"Invalid parameter '{name}': expected comma-separated integers"
             raise ExportError(msg) from exc
-        if not lower <= value <= upper:
-            msg = f"Invalid parameter '{name}': expected values {lower}-{upper}"
-            raise ExportError(msg)
-        values.append(value)
-    if not values:
-        msg = f"Invalid parameter '{name}': expected at least one value"
-        raise ExportError(msg)
-    return sorted(set(values))
+    return validate_grid_values(name, values, lower, upper)
 
 
 def _load_user_presets(

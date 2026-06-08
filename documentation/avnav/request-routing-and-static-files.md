@@ -27,6 +27,20 @@ Request-handler contract:
 - Application errors return `{"status": "ERROR", "error": "..."}`.
 - Unexpected request exceptions are caught at the `plugin.py` boundary and returned as an internal error envelope.
 
+Transport contract (portable AvNav behavior):
+
+- Plugin URLs (`/plugins/<name>/...`) receive **GET and HEAD only**. AvNav's
+  navigation-URL handling, which parses POST bodies, applies only to the core
+  `/api` branch; a POST to a plugin URL is rejected upstream with
+  `404 "unsupported post url"` before the plugin handler runs. Plugins therefore
+  cannot accept POST.
+- A single GET is request-line-length bounded (Python's default ~64 KB request
+  line), so after URL-encoding only ~15-20 KB of payload fits in one GET query.
+- Large uploads (the JSON backup restore flow) are therefore split into multiple
+  GET requests and reassembled server-side under the `plugin.py` lock. Each chunk
+  arrives as an already URL-decoded `data` query value. See
+  [import and restore](../architecture/import-restore.md).
+
 Static user app contract:
 
 - `plugin.json` declares the user app title, icon, and `viewer/viewer.html` URL.

@@ -1,7 +1,8 @@
 # PLAN3 - JSON backup restore / import (validated, fail-closed)
 
-**Status:** Active. Authoritative implementation source for ROADMAP item 1
-("Restore / import flows") until moved to `exec-plans/completed/`. Prescriptive
+**Status:** Completed. Implemented and verified against the codebase (all phases,
+constraints, acceptance criteria, and static gates). Retained as the historical
+implementation source for ROADMAP item 1 ("Restore / import flows"). Prescriptive
 parts: the verified baseline, hard constraints, phase deliverables, exit
 conditions, and acceptance criteria. Flexible parts: helper names, internal
 function decomposition, constant tuning within the stated bounds, and test-case
@@ -175,11 +176,15 @@ Facts checked against current repository files, AvNav host source, and tooling.
     ([settings-ui.js:39-49,133-140](../../viewer/settings-ui.js#L39-L49)). The Reset
     card shows the confirm-text pattern to mirror
     ([settings-ui.js:51-71](../../viewer/settings-ui.js#L51-L71)). `settings-ui.js`
-    is 173 lines; adding polar restore + presets download/restore makes a shared,
-    extracted upload helper the right way to stay under the 400-line viewer limit.
-15. File-size headroom: `persistence.py` is at the ceiling (404 total / ~400
-    non-empty lines), so the polar validator must be a **new** module.
-    `export.py` is 336 non-empty lines (~64 of headroom), enough for a few small
+    is 131 non-empty lines (146 total); adding polar restore + presets
+    download/restore makes a shared, extracted upload helper the right way to keep it
+    comfortably under the 400-line viewer limit.
+15. File-size headroom: `persistence.py` is 318 non-empty lines (392 total, ~82 of
+    headroom), enough for the small public `migrate_payload` / `SchemaTooNewError`
+    exposure Phase 1 adds. The polar validator is nonetheless a **new** module
+    because it must stay I/O-free and corruption-*intolerant* (Baseline 4,
+    Constraint 1), unlike `persistence.py`'s disk I/O and deliberately tolerant load
+    path. `export.py` is 336 non-empty lines (~64 of headroom), enough for a few small
     public validator wrappers but not for the full backup orchestration, which must
     live in a **new** module too.
 16. Test harness exists for both layers: `tests/test_persistence.py` and
@@ -235,11 +240,14 @@ Facts checked against current repository files, AvNav host source, and tooling.
    (`RestoreError` / a presets equivalent, reusing `export.ExportError` where it
    fits).
 9. Reuse, do not duplicate, the preset validation primitives. Expose small public
-   wrappers from `export.py` (e.g. `validate_preset_name`, `parse_preset_grid`) -
-   or factor them into a tiny shared module - so `preset_backup.py` reuses the exact
-   name pattern, length limit, reserved-name set, and grid ranges. Keep `export.py`
-   under the 400 non-empty-line limit; if wrappers would breach it, factor the
-   primitives into a new module instead.
+   wrappers from `export.py` (e.g. `validate_preset_name`, and `validate_grid_values`
+   factored out of `_parse_grid` per Phase 2) - or factor them into a tiny shared
+   module - so `preset_backup.py` reuses the exact name pattern, length limit,
+   reserved-name set, and grid ranges. Because a presets backup stores `twa`/`tws` as
+   JSON arrays (not comma strings), the reused grid primitive must validate an
+   already-parsed `list`, not re-split a string. Keep `export.py` under the 400
+   non-empty-line limit; if wrappers would breach it, factor the primitives into a new
+   module instead.
 10. Viewer code stays under the single `window.Polarrecorder` namespace and the
     plain-script rules: no `innerHTML` assignment, no `eval`, no `var`, no loose
     equality, no `console.log`, no commented-out code. The `data` query value is
@@ -292,7 +300,10 @@ Deliverables:
      `0 <= tws <= TWS_BIN_MAX`; histogram keys int deciknots `>= 0` with counts
      `>= 0`; `total_*` ints `>= 0`; `last_update_wall` finite; `rejection_histogram`
      string keys with int counts `>= 0`. Reject (never coerce) on mismatch.
-  8. **Strict counters parse** - build `Counters`, rejecting wrong types / negatives.
+  8. **Strict counters parse** - validate the counter fields strictly (correct types,
+     no negatives) and construct `Counters` directly. Do **not** delegate to
+     `Counters.from_dict`, which is corruption-tolerant (it coerces via `to_int` and
+     never rejects negatives, Baseline 4) and would silently defeat the strictness.
   9. Build a fresh `PolarModel` and return `RestoreResult`. No clock, no I/O.
   - Cross-consistency between global counters and per-bin totals is intentionally
     **not** checked (legitimate backups can diverge).
@@ -322,11 +333,19 @@ Dependencies: none (parallel to Phase 1).
 Deliverables:
 
 - In `export.py`, expose small public wrappers reusing the existing primitives
-  (Constraint 9): e.g. `validate_preset_name(name) -> str`,
-  `parse_preset_grid(name, raw, lower, upper) -> list[int]`, and a public accessor
-  for the reserved/built-in-name check and `PRESET_SCHEMA_VERSION`. Keep `export.py`
-  under the line limit; if needed, factor the primitives into a small module that
-  both `export.py` and `preset_backup.py` import.
+  (Constraint 9): e.g. `validate_preset_name(name) -> str`, a public accessor for the
+  reserved/built-in-name check, and `PRESET_SCHEMA_VERSION`. For grid validation,
+  **factor** `_parse_grid` into two pieces so the backup path reuses the canonical
+  range/dedupe logic instead of duplicating or re-stringifying it: a string-splitter
+  (`"0,15,30"` -> `[0, 15, 30]`, used by the existing query-param path) and a shared
+  `validate_grid_values(name, values, lower, upper) -> list[int]` that strictly
+  checks each element is an `int` (rejecting `float`/`str` and, explicitly, `bool`
+  since `bool` is an `int` subclass), enforces `lower <= value <= upper`, then dedupes,
+  sorts, and requires at least one value. The existing `_parse_grid` becomes
+  splitter + `validate_grid_values`; `preset_backup.py` calls `validate_grid_values`
+  directly on the JSON arrays (which are already parsed lists, not comma strings).
+  Keep `export.py` under the line limit; if needed, factor the primitives into a small
+  module that both `export.py` and `preset_backup.py` import.
 - New module `server/polarrecorder/preset_backup.py` (`Depends: polarrecorder.export`)
   defining:
   - `serialize_presets(presets) -> dict` producing the exact backup shape
@@ -341,12 +360,13 @@ Deliverables:
        reject as "not a presets backup".
     4. **Schema gate** - reject `schema_version > PRESET_SCHEMA_VERSION`.
     5. **Unknown-key gate** - reject unexpected top-level keys.
-    6. **Strict per-preset parse** - for every entry: name passes
-       `validate_preset_name` (trimmed, 1-30, pattern, **reject** reserved/built-in
-       names rather than skipping them), `twa` via `parse_preset_grid(0, 359)`,
-       `tws` via `parse_preset_grid(1, max_tws)`; reject duplicates and malformed
-       entries (no silent skip, unlike the tolerant loader). Return the validated
-       `list[Preset]`.
+    6. **Strict per-preset parse** - for every entry: the value is a `dict` with a
+       `twa` array and a `tws` array; name passes `validate_preset_name` (trimmed,
+       1-30, pattern, **reject** reserved/built-in names rather than skipping them);
+       `twa` via `validate_grid_values("twa", twa_list, 0, 359)`, `tws` via
+       `validate_grid_values("tws", tws_list, 1, max_tws)` (strict int-type and range
+       checks on the JSON arrays); reject duplicates and malformed entries (no silent
+       skip, unlike the tolerant loader). Return the validated `list[Preset]`.
 
 Tests (`tests/test_preset_backup.py`):
 
@@ -400,10 +420,19 @@ Deliverables:
     lock: verify token, check not idle-expired, assemble `"".join(_import_parts)`,
     capture `kind`, clear staging. Release the lock, then validate (pure) by kind:
     - `kind == "polar"`: `restore.validate_and_build(assembled)`; on success
-      re-acquire the lock and swap `_model` (set generation to
-      `previous_generation + 1`), `_counters`, `_created_wall`, optionally
-      `_last_flush_wall`, and set `_flush_requested = True` (plugin thread persists).
-      Return `{kind, bins_restored, total_accepted, migrated_from_version}`.
+      re-acquire the lock and swap `_model` (read `previous_generation` under the lock
+      and set the new model's `generation` to `previous_generation + 1`, so viewers
+      polling `generation` never see it go backwards), `_counters`, and `_created_wall`
+      (from the backup), then set `_flush_requested = True` (plugin thread persists).
+      `_last_flush_wall` is intentionally **not** restored: the triggered `_flush()`
+      stamps it to the flush wall time via `_flush_payload`, so a backup value would be
+      immediately overwritten. If `_startup_error_active` is set (the plugin booted
+      from a corrupt or too-new `polar.json`, [plugin.py:253-264](../../plugin.py#L253-L264)),
+      clear it under the same lock so restore doubles as the recovery it implicitly is;
+      after releasing the lock, set the status to `STARTED` ("Polar Recorder started")
+      via `_set_status` (matching how the run loop calls it), and the normal run-loop
+      transitions take over (RUNNING once data flows). Return
+      `{kind, bins_restored, total_accepted, migrated_from_version}`.
     - `kind == "presets"`: `preset_backup.validate_presets(assembled,
       plugin.config.max_tws)`; on success re-acquire the lock and perform the atomic
       `presets.json` replacement via an `export` write helper (HTTP-thread write
@@ -411,6 +440,17 @@ Deliverables:
     On any validation error, return `{status:"ERROR", error: reason}` with all live
     state untouched.
   - `import/abort`: under the lock, clear staging (idempotent), return `{}`.
+- Extend `api_dispatch.handle_request` so the precise validation reason reaches the
+  user instead of being masked. Today it catches only `export.ExportError`; uncaught
+  exceptions fall through to `plugin._handle_request`, which returns the generic
+  `{"status":"ERROR","error":"Internal error"}` and discards the message
+  ([api_dispatch.py:21-27](../../server/polarrecorder/api_dispatch.py#L21-L27),
+  [plugin.py:280-282](../../plugin.py#L280-L282)). Since `RestoreError` is a plain
+  `Exception` (not an `ExportError`), add it (and `preset_backup`'s error, if a
+  dedicated class rather than a reused `export.ExportError`) to the central catch in
+  `handle_request`, converting it via `api_handlers.error(str(exc))`. This keeps the
+  route handlers clean and the restore/export error taxonomy distinct, while
+  satisfying the "precise, user-readable reason" contract (Goal 4).
 - Add the `export` write helper used by the presets apply path (replace the entire
   user-preset set atomically, reusing `_write_user_presets`); built-in names are
   excluded by validation so they are never written.
@@ -428,6 +468,9 @@ Tests (extend `tests/test_plugin_integration.py` / support):
   `confirm=yes` (errors and keeps staging), unknown/absent `kind` rejected.
 - Failure isolation: a malformed polar payload leaves the model intact; a malformed
   presets payload leaves existing presets intact.
+- Boot-error recovery: a plugin started into `_startup_error_active` (e.g. a too-new
+  on-disk `polar.json`) that then receives a valid polar restore clears the startup
+  error and reports `STARTED` rather than staying stuck at `ERROR`.
 
 Exit conditions:
 

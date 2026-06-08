@@ -58,6 +58,26 @@ export function defaultResponseBody(endpoint) {
   if (endpoint.startsWith("export/json")) {
     return ok({ schema_version: 1, bins: {} });
   }
+  if (endpoint.startsWith("export/presets")) {
+    return ok({ schema_version: 1, presets: {} });
+  }
+  if (endpoint.startsWith("import/begin")) {
+    return ok({ token: "test-token", kind: "polar", max_bytes: 4194304, max_chunks: 4096 });
+  }
+  if (endpoint.startsWith("import/chunk")) {
+    return ok({ received: 1, bytes: 12 });
+  }
+  if (endpoint.startsWith("import/commit")) {
+    return ok({
+      bins_restored: 4,
+      total_accepted: 40,
+      migrated_from_version: 1,
+      presets_restored: 2
+    });
+  }
+  if (endpoint.startsWith("import/abort")) {
+    return ok({});
+  }
   if (endpoint.startsWith("export?")) {
     return ok({ csv: "twa/tws,4,6\n0,0.0,0.0\n90,5.0,6.0\n" });
   }

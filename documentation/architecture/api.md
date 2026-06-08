@@ -54,8 +54,20 @@ Endpoints:
 | GET | `pause` | none | Idempotently pauses recording. |
 | GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
+| GET | `export/presets` | none | User export presets in the `presets.json` backup shape `{schema_version, presets:{name:{twa,tws}}}`. Built-ins are excluded so the download re-imports cleanly. |
+| GET | `import/begin` | `kind=polar\|presets` | Starts a chunked upload: discards any prior staging and returns `{token, kind, max_bytes, max_chunks}`. |
+| GET | `import/chunk` | `token`, `seq` (contiguous from 0), `data` (URL-encoded slice) | Appends one slice under the lock. Returns `{received, bytes}`. Any rejection clears staging. |
+| GET | `import/commit` | `token`, `confirm=yes` | Assembles, validates, and applies the staged backup by `kind`. Polar returns `{kind, bins_restored, total_accepted, migrated_from_version}`; presets returns `{kind, presets_restored}`. An unconfirmed commit errors but keeps staging. |
+| GET | `import/abort` | none | Clears staging idempotently. |
 
-There is no import/restore endpoint. Restore from a JSON backup is not implemented.
+Restore is implemented as a strict, fail-closed, replace-only flow for both the
+polar model and user presets. Because AvNav plugin URLs receive GET/HEAD only
+(POST is rejected upstream) and a single GET request line is length-bounded, a
+backup is uploaded in slices over several GETs, staged under the `plugin.py` lock
+with a `kind` discriminator, and validated by pure domain modules before being
+applied. Validation failures (`RestoreError`, `BackupError`, `ExportError`) are
+surfaced verbatim in the error envelope. See
+[import-restore.md](import-restore.md) for the full protocol and rules.
 
 `GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
 grids are not accepted by the polar endpoint. Projection uses the resolved
@@ -111,4 +123,5 @@ wraps the finished dict.
 - [Plugin lifecycle](plugin-lifecycle.md)
 - [Request routing and static files](../avnav/request-routing-and-static-files.md)
 - [Persistence](persistence.md)
+- [Import and restore](import-restore.md)
 - [Export and import](../user/export-import.md)
