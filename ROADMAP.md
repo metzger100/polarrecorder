@@ -33,7 +33,7 @@ signals leave the sample untouched):
 - **Engine state** → `reject_engine_on`. Signal: custom engine on/off key (selectable from the available store keys list in the settings tab). Reject
   any sample taken while the engine is running, for boats that expose a boolean
   state rather than RPM.
-- **Depth** → `reject_shallow`. Signal: `gps.depthBelowTransducer`. Reject samples
+- **Depth** → `reject_shallow`. Signal: `gps.depthBelowKeel` or a other depth key (selectable from the available store keys list in the settings tab). Reject samples
   below a configured depth floor, where shallow-water squat distorts STW.
 - **SOG/STW mismatch** → `reject_sog_stw_mismatch`. Signal: SOG (`gps.speed`).
   Reject when `abs(sog_kt - stw_kt)` exceeds a configured slip threshold, catching
@@ -57,6 +57,8 @@ signals leave the sample untouched):
 Any enhanced rule must keep the same no-AvNav, no-I/O, no-threading purity as the
 core rules, accept only the arguments it uses, read its inputs only from
 `Sample.enhanced`, and return the shared `RuleResult` type.
+
+The Rules must be configurable in the settings tab in a third section. All must be switchable (Default: On) and show their status (active, inactive_value_of_key_missing, inactive_key_missing, inactive_key_not_configured, etc.). Some need a drop down menu to select the store key.
 
 ### 2. AvNav dashboard widgets
 
