@@ -26,6 +26,9 @@ AvNav without a build step, network access, or runtime dependencies.
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
   `viewer/presets.js` adds `Presets`, owning the built-in fallback list and
   display labels so `viewer.js` stays within its line budget.
+  `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload helper
+  (`UploadBackup(kind, text, onSummary, onError)`) used by both Settings restore
+  cards, keeping the transport in one place and `settings-ui.js` under its budget.
 - The viewer defaults to the `DefaultStarboard180` preset (label "Default
   (Starboard 180°)"). The preset selector also offers `DefaultPort180` ("Default
   (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"),
@@ -33,8 +36,14 @@ AvNav without a build step, network access, or runtime dependencies.
   all four when the `presets` fetch fails. The pre-rename `Default180` selection
   still resolves to the starboard half server-side.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
-  to CSV and preset workflows. Settings owns JSON backup, a disabled future
-  restore affordance, and destructive reset confirmation.
+  to CSV and preset workflows. Settings owns five cards: download the polar JSON
+  backup, restore a polar backup, download the presets backup, restore a presets
+  backup, and the destructive reset. Each restore card has a hidden file input
+  behind a "Choose Backup File" button, a chosen-filename label, a "Type RESTORE
+  to confirm" field, and a danger button; on confirmation it reads the file and
+  drives `ImportUpload.UploadBackup(kind, ...)`, which uploads the JSON in chunks
+  and shows the server's summary or its precise rejection. Reset still requires
+  the `RESET` confirmation.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It
   always fetches `status`, which carries the monotonic `generation` token, and
   keeps the recent-decision strip filled without any extra fetch. The active tab
@@ -88,4 +97,5 @@ AvNav without a build step, network access, or runtime dependencies.
 ## Related
 
 - [API shape](api.md)
+- [Import and restore](import-restore.md)
 - [Coding standards](../conventions/coding-standards.md)

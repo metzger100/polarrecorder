@@ -4,9 +4,11 @@
 
 ## Overview
 
-Polar Recorder can export the learned polar as CSV or as a full JSON backup. CSV
-export is for planners and spreadsheets. JSON export is a backup of the internal
-persistence schema. Import/restore is not implemented.
+Polar Recorder can export the learned polar as CSV or as a full JSON backup, and
+export the user presets as a JSON backup. CSV export is for planners and
+spreadsheets. The two JSON backups round-trip: each can be downloaded from the
+Settings tab and restored there. Both restores replace their target and are
+strict and fail-closed.
 
 ## Key Details
 
@@ -61,11 +63,37 @@ to 0 STW at TWA 0 (head to wind), matching the polar diagram through the shared
 row, leave that cell blank.
 
 `GET /api/export/json` returns the full persistence JSON shape used by
-`polar.json`. It is intended for backup and inspection. Restore/import from this
-backup is not implemented.
+`polar.json`. `GET /api/export/presets` returns the user presets in the
+`presets.json` backup shape (built-ins excluded). Both are intended for backup,
+inspection, and restore.
+
+## Restore
+
+The Settings tab can restore both backups. Each restore is **replace-only** and
+requires typing `RESTORE` to confirm, mirroring the Reset confirmation:
+
+- **Polar restore** fully replaces the learned model and counters with a valid
+  `export/json` backup. The backup's bin grid must match this build's grid, and
+  its schema must not be newer than this plugin supports; an older schema is
+  migrated. The backup's `percentile`/`max_tws` metadata never changes your live
+  AvNav settings. Restoring also recovers a plugin that booted from a corrupt or
+  too-new `polar.json`. On success you see how many bins and accepted samples were
+  restored.
+- **Presets restore** fully replaces your user presets with a valid
+  `export/presets` backup. Built-in presets are never affected. Preset names must
+  be valid and non-reserved, and each preset's TWS values must fit the current
+  `max_tws`. On success you see how many user presets were restored.
+
+Both imports are fail-closed and all-or-nothing: a wrong file, corrupted JSON, a
+foreign bin grid (polar), a too-new schema, a reserved/built-in preset name, or
+any out-of-range value is rejected with a precise reason and your current state is
+left completely untouched. Backups are uploaded in chunks over several GET
+requests (AvNav plugins cannot receive POST). The import size cap is 4 MiB. See
+[import and restore](../architecture/import-restore.md) for the full rules.
 
 ## Related
 
 - [API shape](../architecture/api.md)
+- [Import and restore](../architecture/import-restore.md)
 - [Persistence](../architecture/persistence.md)
 - [Configuration](configuration.md)

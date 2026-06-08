@@ -1,7 +1,7 @@
 /**
  * Module: Settings UI
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, dom.js
+ * Depends: viewer.js, dom.js, import-upload.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -22,7 +22,19 @@ window.Polarrecorder = window.Polarrecorder || {};
   function render() {
     state.host.replaceChildren();
     state.host.appendChild(backupCard());
-    state.host.appendChild(restoreCard());
+    state.host.appendChild(restoreCard(
+      "Restore Polar Backup",
+      "Replace the learned polar with a previously downloaded JSON backup. This overwrites all learned bins and counters.",
+      "polar",
+      "Restore Polar"
+    ));
+    state.host.appendChild(presetsBackupCard());
+    state.host.appendChild(restoreCard(
+      "Restore Presets Backup",
+      "Replace your saved export presets with a previously downloaded presets backup. Built-in presets are never affected.",
+      "presets",
+      "Restore Presets"
+    ));
     state.host.appendChild(resetCard());
     state.host.appendChild(messageNode());
   }
@@ -39,16 +51,65 @@ window.Polarrecorder = window.Polarrecorder || {};
     return card;
   }
 
-  function restoreCard() {
-    const card = section("Restore JSON (Post-MVP)");
-    card.appendChild(paragraph("Import is not implemented in Phase 9. No file is selected and no recorder state can change."));
-    const placeholder = document.createElement("button");
-    placeholder.type = "button";
-    placeholder.className = "secondary-action";
-    placeholder.disabled = true;
-    placeholder.textContent = "Choose Backup File (Post-MVP)";
-    card.appendChild(actionRow([placeholder]));
+  function presetsBackupCard() {
+    const card = section("Presets Backup");
+    card.appendChild(paragraph("Download your saved export presets as a JSON backup you can restore later."));
+    card.appendChild(actionRow([button("Download Presets", downloadPresets, "primary-action")]));
     return card;
+  }
+
+  function restoreCard(title, helperText, kind, buttonLabel) {
+    const card = section(title);
+    card.classList.add("reset-card");
+    card.appendChild(paragraph(helperText));
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "application/json,.json";
+    fileInput.hidden = true;
+    const chosen = paragraph("No file chosen.");
+    fileInput.addEventListener("change", function () {
+      const file = fileInput.files && fileInput.files[0];
+      chosen.textContent = file ? file.name : "No file chosen.";
+    });
+    const choose = button("Choose Backup File", function () {
+      fileInput.click();
+    }, "secondary-action");
+    const field = inputField("Type RESTORE to confirm");
+    const confirmButton = button(buttonLabel, function () {
+      startRestore(kind, field, fileInput);
+    }, "danger-action");
+    card.appendChild(fileInput);
+    card.appendChild(actionRow([choose]));
+    card.appendChild(chosen);
+    card.appendChild(field.wrap);
+    card.appendChild(actionRow([confirmButton]));
+    return card;
+  }
+
+  function startRestore(kind, field, fileInput) {
+    if (field.control.value.toLowerCase() !== "restore") {
+      setMessage("Type RESTORE before confirming.", "error");
+      return;
+    }
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      setMessage("Choose a backup file first.", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function () {
+      runUpload(kind, String(reader.result), field);
+    };
+    reader.readAsText(file);
+  }
+
+  function runUpload(kind, text, field) {
+    Polarrecorder.ImportUpload.UploadBackup(kind, text, function (summary) {
+      field.control.value = "";
+      setMessage(summary, "info");
+    }, function (error) {
+      setMessage(error, "error");
+    });
   }
 
   function resetCard() {
@@ -119,6 +180,15 @@ window.Polarrecorder = window.Polarrecorder || {};
     fetchJson("export/json").then(function (data) {
       download("polarrecorder-backup.json", JSON.stringify(data, null, 2), "application/json");
       setMessage("Backup downloaded.", "info");
+    }).catch(function (error) {
+      setMessage(error.message, "error");
+    });
+  }
+
+  function downloadPresets() {
+    fetchJson("export/presets").then(function (data) {
+      download("polarrecorder-presets.json", JSON.stringify(data, null, 2), "application/json");
+      setMessage("Presets downloaded.", "info");
     }).catch(function (error) {
       setMessage(error.message, "error");
     });

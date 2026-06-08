@@ -30,6 +30,7 @@ Start here for project documentation. Use the questions below to open the smalle
 - **How does raw AvNav data become accepted, rejected, or quarantined samples?** -> [architecture/data-pipeline.md](architecture/data-pipeline.md)
 - **How are learned speeds stored and queried?** -> [architecture/polar-model.md](architecture/polar-model.md)
 - **How is `polar.json` written, recovered, and migrated?** -> [architecture/persistence.md](architecture/persistence.md)
+- **How are JSON backups restored (polar + presets), and why chunked GET?** -> [architecture/import-restore.md](architecture/import-restore.md)
 - **How is the static browser viewer organized?** -> [architecture/ui.md](architecture/ui.md)
 
 ## Validation and Poisoning Resistance

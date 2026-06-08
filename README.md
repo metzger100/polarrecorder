@@ -155,10 +155,34 @@ A `360°` preset (or any custom grid with angles above `180°`) exports true por
 The Settings tab contains maintenance actions:
 
 - JSON Backup downloads the full learned data file.
-- Restore JSON is shown as a future feature, but restore/import is not implemented yet.
+- Restore Polar Backup replaces the learned model and counters from a polar JSON backup.
+- Presets Backup downloads your saved export presets as a JSON file.
+- Restore Presets Backup replaces your saved export presets from a presets JSON backup.
 - Reset Learned Polar clears the learned model and counters.
 
 Reset is destructive. Use JSON Backup first if you may want to inspect the old data later.
+
+#### Restoring a backup
+
+You can restore either backup from the Settings tab:
+
+1. Click **Choose Backup File** in the matching restore card and pick a file you
+   downloaded earlier.
+2. Type `RESTORE` in the confirmation field.
+3. Click **Restore Polar** or **Restore Presets**.
+
+Both restores **replace** their target: a polar restore overwrites all learned
+data and counters; a presets restore replaces all of your saved presets (built-in
+presets are never touched). They are fail-closed — a wrong file, corrupted JSON, a
+backup from a different bin grid (polar), a too-new backup, a reserved preset name,
+or an out-of-range value is rejected with a clear message and nothing changes.
+
+Limitations:
+
+- Restore is replace-only; there is no merge.
+- Backups are capped at 4 MiB.
+- A polar backup must match this build's bin grid to import.
+- A presets backup's TWS values must fit the current `max_tws` setting.
 
 ## What are presets?
 

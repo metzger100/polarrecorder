@@ -57,6 +57,7 @@ _LAYER_RANK = {
     "params": 0,
     "bins": 0,
     "histogram": 0,
+    "import_common": 0,
     "validation.angle_math": 0,
     "validation.rules_enhanced": 0,
     # 1 - core: typed samples, config, and single-purpose accumulators.
@@ -68,12 +69,14 @@ _LAYER_RANK = {
     # 2 - domain: the learned model, export, intake, and validation rules.
     "polar_model": 2,
     "export": 2,
+    "preset_backup": 2,
     "reader": 2,
     "timeline": 2,
     "validation.rules_core": 2,
     "validation.rules_heuristic": 2,
     "validation.rules_stability": 2,
     # 3 - orchestration: composition roots wired by plugin.py.
+    "restore": 3,
     "persistence": 3,
     "validation.pipeline": 3,
     "commit": 3,

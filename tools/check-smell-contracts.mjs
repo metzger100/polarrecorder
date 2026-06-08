@@ -41,6 +41,7 @@ function checkViewerScriptContract(ctx) {
     "timeline-chart.js",
     "grid-editor.js",
     "export-ui.js",
+    "import-upload.js",
     "settings-ui.js"
   ];
   const html = read(ctx, "viewer/viewer.html");

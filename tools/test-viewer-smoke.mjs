@@ -17,6 +17,7 @@ async function testViewerModulesWorkTogether() {
   loadViewerFile(env, "polar-chart.js");
   loadViewerFile(env, "timeline-chart.js");
   loadViewerFile(env, "export-ui.js");
+  loadViewerFile(env, "import-upload.js");
   loadViewerFile(env, "settings-ui.js");
   loadViewerFile(env, "viewer.js");
 
@@ -57,14 +58,47 @@ async function testViewerModulesWorkTogether() {
   await flushViewer();
   assert.equal(env.elements["settings-panel"].classList.contains("has-data"), true);
   assert.ok(textTree(env.elements["settings-panel"]).includes("JSON Backup"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Restore Polar Backup"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Presets Backup"));
 
-  const reset = env.elements["settings-panel"].querySelector(".danger-action");
-  reset.click();
-  await flushViewer();
-  assert.ok(textTree(env.elements["settings-panel"]).includes("Type RESET"));
+  await testSettingsActions(env);
+  await testImportUpload(env);
 
   env.window.Polarrecorder.ShowTooltip("hello", 500, 20);
   assert.ok(env.document.querySelector(".tooltip"));
+}
+
+async function testSettingsActions(env) {
+  const panel = env.elements["settings-panel"];
+  panel.querySelectorAll(".secondary-action")[0].click();
+  panel.querySelectorAll(".primary-action")[1].click();
+  await flushViewer();
+  assert.ok(textTree(panel).includes("Presets downloaded."));
+
+  // A restore button with neither confirmation text nor a file falls back to a guard.
+  panel.querySelectorAll(".danger-action")[0].click();
+  await flushViewer();
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Type RESTORE before confirming."));
+}
+
+async function testImportUpload(env) {
+  const recorder = env.window.Polarrecorder;
+  const summaries = [];
+  recorder.ImportUpload.UploadBackup("polar", "{\"schema_version\":1}", function (text) {
+    summaries.push(text);
+  }, function (error) {
+    summaries.push("error:" + error);
+  });
+  recorder.ImportUpload.UploadBackup("presets", "{\"schema_version\":1}", function (text) {
+    summaries.push(text);
+  }, function (error) {
+    summaries.push("error:" + error);
+  });
+  await flushViewer();
+  await flushViewer();
+  await flushViewer();
+  assert.ok(summaries.some((text) => text.includes("Restored 4 bins")), summaries.join(" | "));
+  assert.ok(summaries.some((text) => text.includes("user presets")), summaries.join(" | "));
 }
 
 function testSharedHelpers(env) {

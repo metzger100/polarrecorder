@@ -2,18 +2,22 @@
 
 Documentation: documentation/architecture/api.md
 Depends: polarrecorder.api_handlers, polarrecorder.bins, polarrecorder.export,
-polarrecorder.persistence
+polarrecorder.import_common, polarrecorder.persistence, polarrecorder.preset_backup
 """
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Callable
 from typing import Any
 
-from polarrecorder import api_handlers, export, persistence
+from polarrecorder import api_handlers, export, import_common, persistence, preset_backup
 from polarrecorder.bins import TWS_BIN_MAX
+from polarrecorder.import_common import BackupError
 
 Route = Callable[[Any, dict[str, str]], dict[str, object]]
+
+IMPORT_KINDS = frozenset({"polar", "presets"})
 
 
 def handle_request(plugin: Any, url: str, args: dict[str, str]) -> dict[str, object]:
@@ -23,7 +27,7 @@ def handle_request(plugin: Any, url: str, args: dict[str, str]) -> dict[str, obj
         if route is None:
             return api_handlers.error(f"Unknown endpoint '{url}'")
         return route(plugin, args)
-    except export.ExportError as exc:
+    except (export.ExportError, BackupError) as exc:
         return api_handlers.error(str(exc))
 
 
@@ -155,6 +159,96 @@ def _preset_delete(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     return api_handlers.ok({})
 
 
+def _export_presets(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
+    with plugin._lock:
+        presets = export.list_presets(plugin._data_dir, plugin._logger)
+    user_presets = [preset for preset in presets if not preset.builtin]
+    return api_handlers.ok(preset_backup.serialize_presets(user_presets))
+
+
+def _import_begin(plugin: Any, args: dict[str, str]) -> dict[str, object]:
+    kind = args.get("kind", "")
+    if kind not in IMPORT_KINDS:
+        msg = "Invalid parameter 'kind': expected 'polar' or 'presets'"
+        raise export.ExportError(msg)
+    token = secrets.token_hex(16)
+    with plugin._lock:
+        plugin._reset_import_staging()
+        plugin._import_token = token
+        plugin._import_kind = kind
+        plugin._import_last_activity = plugin._clock()
+    return api_handlers.ok(
+        {
+            "token": token,
+            "kind": kind,
+            "max_bytes": import_common.MAX_IMPORT_BYTES,
+            "max_chunks": plugin.MAX_IMPORT_CHUNKS,
+        }
+    )
+
+
+def _import_chunk(plugin: Any, args: dict[str, str]) -> dict[str, object]:
+    if "seq" not in args:
+        msg = "Invalid parameter 'seq': required"
+        raise export.ExportError(msg)
+    seq = _parse_int_arg(args, "seq", 0, 0, plugin.MAX_IMPORT_CHUNKS)
+    data = args.get("data", "")
+    chunk_bytes = len(data.encode("utf-8"))
+    with plugin._lock:
+        _require_active_import(plugin, args.get("token", ""))
+        if seq != len(plugin._import_parts):
+            plugin._reset_import_staging()
+            msg = "Import chunk out of order"
+            raise export.ExportError(msg)
+        if plugin._import_bytes + chunk_bytes > import_common.MAX_IMPORT_BYTES:
+            plugin._reset_import_staging()
+            msg = "Import exceeds the size limit"
+            raise export.ExportError(msg)
+        if len(plugin._import_parts) >= plugin.MAX_IMPORT_CHUNKS:
+            plugin._reset_import_staging()
+            msg = "Import has too many chunks"
+            raise export.ExportError(msg)
+        plugin._import_parts.append(data)
+        plugin._import_bytes += chunk_bytes
+        plugin._import_last_activity = plugin._clock()
+        received, total_bytes = len(plugin._import_parts), plugin._import_bytes
+    return api_handlers.ok({"received": received, "bytes": total_bytes})
+
+
+def _import_commit(plugin: Any, args: dict[str, str]) -> dict[str, object]:
+    with plugin._lock:
+        _require_active_import(plugin, args.get("token", ""))
+        if args.get("confirm") != "yes":
+            msg = "Invalid parameter 'confirm': expected 'yes'"
+            raise export.ExportError(msg)
+        assembled = "".join(plugin._import_parts)
+        kind = plugin._import_kind
+        plugin._reset_import_staging()
+    if kind == "polar":
+        return api_handlers.ok(plugin._apply_polar_restore(assembled))
+    return api_handlers.ok(plugin._apply_presets_restore(assembled))
+
+
+def _import_abort(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
+    with plugin._lock:
+        plugin._reset_import_staging()
+    return api_handlers.ok({})
+
+
+def _require_active_import(plugin: Any, token: str) -> None:
+    if plugin._import_token is None:
+        msg = "No import is in progress"
+        raise export.ExportError(msg)
+    if token != plugin._import_token:
+        plugin._reset_import_staging()
+        msg = "Import token mismatch"
+        raise export.ExportError(msg)
+    if plugin._clock() - plugin._import_last_activity > plugin.IMPORT_IDLE_TIMEOUT_SECONDS:
+        plugin._reset_import_staging()
+        msg = "Import session expired; please retry"
+        raise export.ExportError(msg)
+
+
 def _status_snapshot(plugin: Any) -> api_handlers.StatusSnapshot:
     now = plugin._clock()
     counters = plugin._counters.to_dict()
@@ -273,6 +367,11 @@ ROUTES: dict[str, Route] = {
     "config": _config,
     "presets": _presets,
     "export/json": _export_json,
+    "export/presets": _export_presets,
+    "import/begin": _import_begin,
+    "import/chunk": _import_chunk,
+    "import/commit": _import_commit,
+    "import/abort": _import_abort,
     "reset": _reset,
     "pause": _pause,
     "resume": _resume,

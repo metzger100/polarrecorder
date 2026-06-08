@@ -47,6 +47,12 @@ with an empty model and counters. A schema version newer than this code supports
 Older schemas migrate through ordered version steps. The current migration path supports a
 test-only schema version 0 and fills the version 1 metadata defaults before deserializing.
 
+`CURRENT_SCHEMA_VERSION` is the single version authority. The public
+`migrate_payload(data)` wraps the migration ladder and raises the public
+`SchemaTooNewError` for a too-new version, so the strict polar importer reuses the
+exact version authority and migration ladder instead of inventing a parallel
+schema. See [import and restore](import-restore.md).
+
 Only the plugin thread writes the polar files. It serializes the live model under
 `plugin.py`'s lock via `serialize_to_dict()`, releases the lock, then performs disk I/O.
 The serializer is pure and also supplies the `export/json` response shape.
