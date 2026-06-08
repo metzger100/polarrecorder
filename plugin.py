@@ -277,7 +277,7 @@ class Plugin:
         self._import_bytes = 0
         self._import_last_activity = 0.0
 
-    def _apply_polar_restore(self, assembled: str) -> dict[str, object]:
+    def _apply_learned_data_restore(self, assembled: str) -> dict[str, object]:
         result = restore.validate_and_build(assembled)
         with self._lock:
             result.model.generation = self._model.generation + 1
@@ -290,7 +290,7 @@ class Plugin:
         if recovered:
             self._set_status("STARTED", "Polar Recorder started")
         return {
-            "kind": "polar",
+            "kind": "learned-data",
             "bins_restored": result.bins_restored,
             "total_accepted": result.total_accepted,
             "migrated_from_version": result.migrated_from_version,

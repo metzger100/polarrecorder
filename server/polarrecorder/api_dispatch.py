@@ -17,7 +17,7 @@ from polarrecorder.import_common import BackupError
 
 Route = Callable[[Any, dict[str, str]], dict[str, object]]
 
-IMPORT_KINDS = frozenset({"polar", "presets"})
+IMPORT_KINDS = frozenset({"learned-data", "presets"})
 
 
 def handle_request(plugin: Any, url: str, args: dict[str, str]) -> dict[str, object]:
@@ -169,7 +169,7 @@ def _export_presets(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
 def _import_begin(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     kind = args.get("kind", "")
     if kind not in IMPORT_KINDS:
-        msg = "Invalid parameter 'kind': expected 'polar' or 'presets'"
+        msg = "Invalid parameter 'kind': expected 'learned-data' or 'presets'"
         raise export.ExportError(msg)
     token = secrets.token_hex(16)
     with plugin._lock:
@@ -224,8 +224,8 @@ def _import_commit(plugin: Any, args: dict[str, str]) -> dict[str, object]:
         assembled = "".join(plugin._import_parts)
         kind = plugin._import_kind
         plugin._reset_import_staging()
-    if kind == "polar":
-        return api_handlers.ok(plugin._apply_polar_restore(assembled))
+    if kind == "learned-data":
+        return api_handlers.ok(plugin._apply_learned_data_restore(assembled))
     return api_handlers.ok(plugin._apply_presets_restore(assembled))
 
 

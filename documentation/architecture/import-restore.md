@@ -23,7 +23,7 @@ opposite. `restore.validate_and_build` (polar) and `preset_backup.validate_prese
 bad value; the first failure raises with a stable, user-readable reason and no
 external state is touched.
 
-Polar validation order (`server/polarrecorder/restore.py`):
+Learned-data validation order (`server/polarrecorder/restore.py`):
 
 1. Size gate — decoded bytes `<= MAX_IMPORT_BYTES` (4 MiB).
 2. JSON-object gate — parses as JSON and is an object.
@@ -62,7 +62,7 @@ GET request line is length-bounded, so a backup is uploaded in slices over sever
 GETs and reassembled server-side. `plugin.py` owns one lock-guarded staging buffer
 with a `kind` discriminator and an upload token:
 
-- `import/begin?kind=polar|presets` — discards any existing staging (last-writer
+- `import/begin?kind=learned-data|presets` — discards any existing staging (last-writer
   wins), records the kind, returns a fresh `token`, `max_bytes`, and `max_chunks`.
 - `import/chunk?token=&seq=&data=` — under the lock, rejects a missing/mismatched
   token, an idle-expired session (`IMPORT_IDLE_TIMEOUT_SECONDS`), a non-contiguous
@@ -76,7 +76,7 @@ with a `kind` discriminator and an upload token:
 
 ### Apply paths (replace semantics)
 
-- **Polar** (`Plugin._apply_polar_restore`): on success, re-acquire the lock and
+- **Learned data** (`Plugin._apply_learned_data_restore`): on success, re-acquire the lock and
   swap `_model`, `_counters`, and `_created_wall`; set the new model's
   `generation` to the previous generation + 1 so polling viewers never see it go
   backwards; set `_flush_requested` so the plugin thread persists `polar.json`.

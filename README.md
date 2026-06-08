@@ -152,15 +152,20 @@ A `360°` preset (or any custom grid with angles above `180°`) exports true por
 
 ### Settings
 
-The Settings tab contains maintenance actions:
+The Settings tab groups maintenance actions into two cards:
 
-- JSON Backup downloads the full learned data file.
-- Restore Polar Backup replaces the learned model and counters from a polar JSON backup.
-- Presets Backup downloads your saved export presets as a JSON file.
-- Restore Presets Backup replaces your saved export presets from a presets JSON backup.
-- Reset Learned Polar clears the learned model and counters.
+**Learned Data**
 
-Reset is destructive. Use JSON Backup first if you may want to inspect the old data later.
+- Download saves all learned data (bins, counters, and metadata) as a JSON file.
+- Restore replaces the learned model and counters from a learned-data backup.
+- Reset clears the learned model and counters.
+
+**Presets**
+
+- Download saves your export presets as a JSON file.
+- Restore replaces your export presets from a presets backup.
+
+Reset is destructive. Download the learned data first if you may want to inspect the old data later.
 
 #### Restoring a backup
 
@@ -169,19 +174,20 @@ You can restore either backup from the Settings tab:
 1. Click **Choose Backup File** in the matching restore card and pick a file you
    downloaded earlier.
 2. Type `RESTORE` in the confirmation field.
-3. Click **Restore Polar** or **Restore Presets**.
+3. Click **Restore Learned Data** or **Restore Presets**.
 
-Both restores **replace** their target: a polar restore overwrites all learned
-data and counters; a presets restore replaces all of your saved presets (built-in
-presets are never touched). They are fail-closed — a wrong file, corrupted JSON, a
-backup from a different bin grid (polar), a too-new backup, a reserved preset name,
-or an out-of-range value is rejected with a clear message and nothing changes.
+Both restores **replace** their target: a learned-data restore overwrites all
+learned data and counters; a presets restore replaces all of your saved presets
+(built-in presets are never touched). They are fail-closed — a wrong file, corrupted
+JSON, a backup from a different bin grid (learned data), a too-new backup, a reserved
+preset name, or an out-of-range value is rejected with a clear message and nothing
+changes.
 
 Limitations:
 
 - Restore is replace-only; there is no merge.
 - Backups are capped at 4 MiB.
-- A polar backup must match this build's bin grid to import.
+- A learned-data backup must match this build's bin grid to import.
 - A presets backup's TWS values must fit the current `max_tws` setting.
 
 ## What are presets?

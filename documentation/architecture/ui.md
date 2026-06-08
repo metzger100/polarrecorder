@@ -36,14 +36,15 @@ AvNav without a build step, network access, or runtime dependencies.
   all four when the `presets` fetch fails. The pre-rename `Default180` selection
   still resolves to the starboard half server-side.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
-  to CSV and preset workflows. Settings owns five cards: download the polar JSON
-  backup, restore a polar backup, download the presets backup, restore a presets
-  backup, and the destructive reset. Each restore card has a hidden file input
-  behind a "Choose Backup File" button, a chosen-filename label, a "Type RESTORE
-  to confirm" field, and a danger button; on confirmation it reads the file and
-  drives `ImportUpload.UploadBackup(kind, ...)`, which uploads the JSON in chunks
-  and shows the server's summary or its precise rejection. Reset still requires
-  the `RESET` confirmation.
+  to CSV and preset workflows. Settings owns two cards grouped by topic: a
+  **Learned Data** card with Download, Restore, and Reset subsections, and a
+  **Presets** card with Download and Restore subsections. Each subsection is a
+  `.settings-group` (the Reset one carries `.settings-group-danger`). Each restore
+  subsection has a hidden file input behind a "Choose Backup File" button, a
+  chosen-filename label, a "Type RESTORE to confirm" field, and a danger button; on
+  confirmation it reads the file and drives `ImportUpload.UploadBackup(kind, ...)`,
+  which uploads the JSON in chunks and shows the server's summary or its precise
+  rejection. Reset still requires the `RESET` confirmation.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It
   always fetches `status`, which carries the monotonic `generation` token, and
   keeps the recent-decision strip filled without any extra fetch. The active tab

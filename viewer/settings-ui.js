@@ -21,47 +21,61 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function render() {
     state.host.replaceChildren();
-    state.host.appendChild(backupCard());
-    state.host.appendChild(restoreCard(
-      "Restore Polar Backup",
-      "Replace the learned polar with a previously downloaded JSON backup. This overwrites all learned bins and counters.",
-      "polar",
-      "Restore Polar"
+    state.host.appendChild(learnedDataCard());
+    state.host.appendChild(presetsCard());
+    state.host.appendChild(messageNode());
+  }
+
+  function learnedDataCard() {
+    const card = section("Learned Data");
+    card.appendChild(downloadGroup(
+      "Download all learned data as a JSON file for backup and inspection.",
+      [
+        "learned bins and histograms",
+        "counters and rejection summaries",
+        "metadata and configuration snapshot"
+      ],
+      "Download Learned Data",
+      downloadJson
     ));
-    state.host.appendChild(presetsBackupCard());
-    state.host.appendChild(restoreCard(
-      "Restore Presets Backup",
+    card.appendChild(restoreGroup(
+      "Replace all learned data with a previously downloaded backup. This overwrites all learned bins and counters.",
+      "learned-data",
+      "Restore Learned Data"
+    ));
+    card.appendChild(resetGroup());
+    return card;
+  }
+
+  function presetsCard() {
+    const card = section("Presets");
+    card.appendChild(downloadGroup(
+      "Download your saved export presets as a JSON backup you can restore later.",
+      null,
+      "Download Presets",
+      downloadPresets
+    ));
+    card.appendChild(restoreGroup(
       "Replace your saved export presets with a previously downloaded presets backup. Built-in presets are never affected.",
       "presets",
       "Restore Presets"
     ));
-    state.host.appendChild(resetCard());
-    state.host.appendChild(messageNode());
-  }
-
-  function backupCard() {
-    const card = section("JSON Backup");
-    card.appendChild(paragraph("Download the full persistence-schema JSON for backup and inspection."));
-    card.appendChild(bulletList([
-      "learned polar bins and histograms",
-      "counters and rejection summaries",
-      "metadata and configuration snapshot"
-    ]));
-    card.appendChild(actionRow([button("Download JSON Backup", downloadJson, "primary-action")]));
     return card;
   }
 
-  function presetsBackupCard() {
-    const card = section("Presets Backup");
-    card.appendChild(paragraph("Download your saved export presets as a JSON backup you can restore later."));
-    card.appendChild(actionRow([button("Download Presets", downloadPresets, "primary-action")]));
-    return card;
+  function downloadGroup(helperText, bullets, buttonLabel, handler) {
+    const group = subsection("Download");
+    group.appendChild(paragraph(helperText));
+    if (bullets) {
+      group.appendChild(bulletList(bullets));
+    }
+    group.appendChild(actionRow([button(buttonLabel, handler, "primary-action")]));
+    return group;
   }
 
-  function restoreCard(title, helperText, kind, buttonLabel) {
-    const card = section(title);
-    card.classList.add("reset-card");
-    card.appendChild(paragraph(helperText));
+  function restoreGroup(helperText, kind, buttonLabel) {
+    const group = subsection("Restore");
+    group.appendChild(paragraph(helperText));
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "application/json,.json";
@@ -78,12 +92,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     const confirmButton = button(buttonLabel, function () {
       startRestore(kind, field, fileInput);
     }, "danger-action");
-    card.appendChild(fileInput);
-    card.appendChild(actionRow([choose]));
-    card.appendChild(chosen);
-    card.appendChild(field.wrap);
-    card.appendChild(actionRow([confirmButton]));
-    return card;
+    group.appendChild(fileInput);
+    group.appendChild(actionRow([choose]));
+    group.appendChild(chosen);
+    group.appendChild(field.wrap);
+    group.appendChild(actionRow([confirmButton]));
+    return group;
   }
 
   function startRestore(kind, field, fileInput) {
@@ -112,12 +126,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
-  function resetCard() {
-    const card = section("Reset Learned Polar");
-    card.classList.add("reset-card");
-    card.appendChild(paragraph("This permanently clears learned polar data and counters. Timeline diagnostics remain on the plugin side."));
+  function resetGroup() {
+    const group = subsection("Reset");
+    group.classList.add("settings-group-danger");
+    group.appendChild(paragraph("This permanently clears all learned data and counters. Timeline diagnostics remain on the plugin side."));
     const field = inputField("Type RESET to confirm");
-    const reset = button("Reset Learned Polar", function () {
+    const reset = button("Reset Learned Data", function () {
       if (field.control.value.toLowerCase() !== "reset") {
         setMessage("Type RESET before confirming.", "error");
         return;
@@ -129,9 +143,9 @@ window.Polarrecorder = window.Polarrecorder || {};
         setMessage(error.message, "error");
       });
     }, "danger-action");
-    card.appendChild(field.wrap);
-    card.appendChild(actionRow([reset]));
-    return card;
+    group.appendChild(field.wrap);
+    group.appendChild(actionRow([reset]));
+    return group;
   }
 
   function section(title) {
@@ -144,6 +158,16 @@ window.Polarrecorder = window.Polarrecorder || {};
     head.appendChild(h2);
     card.appendChild(head);
     return card;
+  }
+
+  function subsection(title) {
+    const group = document.createElement("div");
+    group.className = "settings-group";
+    const heading = document.createElement("h3");
+    heading.className = "settings-group-title";
+    heading.textContent = title;
+    group.appendChild(heading);
+    return group;
   }
 
   function paragraph(text) {
