@@ -120,6 +120,7 @@ Test and coverage rules:
 
 - [Quality gates](quality-gates.md)
 - [Coding standards](coding-standards.md)
+- [Documentation format](documentation-format.md)
 - [Smell-fix playbooks](smell-fix-playbooks.md)
 - [Testing infrastructure](testing-infrastructure.md)
 - [AvNav plugin lifecycle](../avnav/plugin-lifecycle.md)

@@ -89,6 +89,7 @@ Repo rules and core principles always outrank execution-plan instructions. A pla
 ## Related
 
 - [Core principles](../core-principles.md)
+- [Documentation format](documentation-format.md)
 - [Quality gates](quality-gates.md)
 - [Smell prevention](smell-prevention.md)
 - [Smell-fix playbooks](smell-fix-playbooks.md)

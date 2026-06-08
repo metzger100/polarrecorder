@@ -14,7 +14,7 @@ Default workflow:
 2. Update the mapped documentation in `documentation/`.
 3. Update root docs (`README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, or `ROADMAP.md`) when user-facing behavior or development workflow changes.
 4. Add every new documentation file to `documentation/TABLEOFCONTENTS.md`.
-5. Keep every documentation file structurally complete: `Status`, `Overview`, `Key Details`, and `Related`.
+5. Follow [documentation format](../conventions/documentation-format.md): keep every documentation file structurally complete with `Status`, `Overview`, `Key Details`, and `Related`.
 6. Run targeted checks while iterating when useful, then run the full gate before handoff.
 
 Default validation gate:
@@ -67,6 +67,7 @@ AvNav documentation rule:
 ## Related
 
 - [Documentation index](../TABLEOFCONTENTS.md)
+- [Documentation format](../conventions/documentation-format.md)
 - [Core principles](../core-principles.md)
 - [Quality gates](../conventions/quality-gates.md)
 - [Coding standards](../conventions/coding-standards.md)

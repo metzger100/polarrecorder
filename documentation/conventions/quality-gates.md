@@ -74,6 +74,7 @@ Rule ownership:
 
 - [Smell prevention](smell-prevention.md) lists every blocking rule enforced by these commands.
 - [Coding standards](coding-standards.md) explains the implementation conventions behind the rules.
+- [Documentation format](documentation-format.md) defines the required documentation shape behind `npm run check:docs`.
 - [Testing infrastructure](testing-infrastructure.md) explains the fake AvNav, coverage, and viewer-test setup.
 - [Release workflow](../guides/release-workflow.md) explains release artifact creation and publishing.
 
@@ -81,6 +82,7 @@ Rule ownership:
 
 - [Documentation index](../TABLEOFCONTENTS.md)
 - [Coding standards](coding-standards.md)
+- [Documentation format](documentation-format.md)
 - [Smell prevention](smell-prevention.md)
 - [Testing infrastructure](testing-infrastructure.md)
 - [Release workflow](../guides/release-workflow.md)
