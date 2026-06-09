@@ -55,10 +55,14 @@ AvNav without a build step, network access, or runtime dependencies.
   (SignalK keys appear as `gps.signalk.*`; an already-configured key stays selected
   even when it is not publishing), the rule's threshold inputs, and a live status
   badge (`active`, `disabled`, `no key set`, `key not in store`, or `value stale`).
-  A single "Save Enhanced Settings" button collects every control into one
-  `GET enhanced/save` call and then re-fetches status to refresh the badges. The
-  badge classes are `.enhanced-badge-<status>` styled with `--polarrecorder-*`
-  custom properties.
+  A single "Save Enhanced Settings" button validates that every threshold is a
+  finite number (`Number.isFinite`) before collecting every control into one
+  `GET enhanced/save` call and then re-fetching status to refresh the badges; a
+  non-numeric threshold blocks the save with a visible error. The badge classes are
+  `.enhanced-badge-<status>`, each with its own `--polarrecorder-*` treatment:
+  `active` reads accepted-green, `value stale` quarantined-amber, `key not in store`
+  rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted
+  second-color.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It
   always fetches `status`, which carries the monotonic `generation` token, and
   keeps the recent-decision strip filled without any extra fetch. The active tab

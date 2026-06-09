@@ -190,7 +190,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     control.type = "number";
     control.value = String(value);
     wrap.appendChild(control);
-    state.controls.push({ field: field, kind: "text", control: control });
+    state.controls.push({ field: field, kind: "number", control: control });
     return wrap;
   }
 
@@ -209,7 +209,19 @@ window.Polarrecorder = window.Polarrecorder || {};
     return String(item.control.value);
   }
 
+  function isInvalidNumber(item) {
+    if (item.kind !== "number") {
+      return false;
+    }
+    const raw = String(item.control.value).trim();
+    return raw === "" || !Number.isFinite(Number(raw));
+  }
+
   function save() {
+    if (state.controls.some(isInvalidNumber)) {
+      setMessage("Enter a valid number for every threshold before saving.", "error");
+      return;
+    }
     const params = state.controls.map(function (item) {
       return encodeURIComponent(item.field) + "=" + encodeURIComponent(controlValue(item));
     });
