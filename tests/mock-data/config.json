@@ -1,7 +1,6 @@
 {
   "status": "OK",
   "data": {
-    "record_enabled": true,
     "sample_interval": 1.0,
     "percentile": 65,
     "flush_interval": 300,

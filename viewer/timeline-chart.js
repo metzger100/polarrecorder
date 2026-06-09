@@ -57,7 +57,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     bg.setAttribute("y", String(PAD));
     bg.setAttribute("width", String(WIDTH));
     bg.setAttribute("height", String(HEIGHT));
-    bg.setAttribute("rx", "12");
     bg.setAttribute("fill", "var(--polarrecorder-surface-variant)");
     svg.appendChild(bg);
   }

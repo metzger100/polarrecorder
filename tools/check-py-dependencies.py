@@ -83,6 +83,7 @@ _LAYER_RANK = {
     "commit": 3,
     "api_handlers": 3,
     "api_dispatch": 3,
+    "api_config": 3,
     "api_enhanced": 3,
 }
 # Package markers carry no logic and are exempt from a layer assignment.

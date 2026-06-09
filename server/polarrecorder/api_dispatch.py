@@ -1,8 +1,8 @@
 """Module: API Dispatch - Request dispatch for the AvNav plugin shell.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_enhanced, polarrecorder.api_handlers, polarrecorder.bins,
-polarrecorder.export, polarrecorder.import_common, polarrecorder.persistence,
+Depends: polarrecorder.api_config, polarrecorder.api_enhanced, polarrecorder.api_handlers,
+polarrecorder.bins, polarrecorder.export, polarrecorder.import_common, polarrecorder.persistence,
 polarrecorder.preset_backup
 """
 
@@ -13,6 +13,7 @@ from collections.abc import Callable
 from typing import Any
 
 from polarrecorder import (
+    api_config,
     api_enhanced,
     api_handlers,
     export,
@@ -139,8 +140,7 @@ def _pause(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
 def _resume(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
         plugin._paused = False
-        recording = plugin.config.record_enabled
-    return api_handlers.ok({"recording": recording})
+    return api_handlers.ok({"recording": True})
 
 
 def _preset_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
@@ -262,8 +262,7 @@ def _status_snapshot(plugin: Any) -> api_handlers.StatusSnapshot:
     counters = plugin._counters.to_dict()
     rejection_histogram = dict(counters["rejection_histogram"])
     return api_handlers.StatusSnapshot(
-        record_enabled=plugin.config.record_enabled,
-        recording=plugin.config.record_enabled and not plugin._paused,
+        recording=not plugin._paused,
         data_status=plugin._last_data_status,
         warming_up=plugin._warming_up,
         uptime_seconds=now - plugin._run_start_monotonic,
@@ -385,6 +384,8 @@ ROUTES: dict[str, Route] = {
     "resume": _resume,
     "presets/save": _preset_save,
     "presets/delete": _preset_delete,
+    "advanced/settings": api_config.advanced_settings,
+    "advanced/save": api_config.advanced_save,
     "enhanced/keys": api_enhanced.enhanced_keys,
     "enhanced/status": api_enhanced.enhanced_status_view,
     "enhanced/save": api_enhanced.enhanced_save,

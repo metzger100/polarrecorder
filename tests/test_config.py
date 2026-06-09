@@ -6,7 +6,7 @@ from typing import cast
 import polarrecorder.logger as logger_module
 from conftest import FakeLogger
 from polarrecorder.config import Config, default_config, parse_config_values
-from polarrecorder.params import EDITABLE_PARAMETERS
+from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
 
 
 def test_logger_module_smoke_import_for_coverage() -> None:
@@ -16,7 +16,6 @@ def test_logger_module_smoke_import_for_coverage() -> None:
 def test_default_config_matches_phase_3_defaults() -> None:
     config = default_config()
 
-    assert config.record_enabled is True
     assert config.sample_interval == 1.0
     assert config.percentile == 65
     assert config.flush_interval == 300
@@ -27,14 +26,12 @@ def test_default_config_matches_phase_3_defaults() -> None:
 def test_parse_config_values_uses_avnav_string_conventions() -> None:
     config = parse_config_values(
         {
-            "record_enabled": "FALSE",
             "debug_logging": "true",
             "percentile": "75",
             "sample_interval": "2.5",
         }
     )
 
-    assert config.record_enabled is False
     assert config.debug_logging is True
     assert config.percentile == 75
     assert config.sample_interval == 2.5
@@ -44,7 +41,7 @@ def test_parse_config_values_clamps_numeric_ranges_from_params() -> None:
     logger = FakeLogger()
     below: dict[str, str] = {}
     above: dict[str, str] = {}
-    numeric_specs = [spec for spec in EDITABLE_PARAMETERS if spec["type"] in {"NUMBER", "FLOAT"}]
+    numeric_specs = [spec for spec in CONFIG_PARAMETERS if spec["type"] in {"NUMBER", "FLOAT"}]
 
     for spec in numeric_specs:
         name = str(spec["name"])
@@ -96,7 +93,7 @@ def test_partial_values_with_previous_update_only_supplied_fields() -> None:
         {
             "percentile": "72",
             "sample_interval": "2.5",
-            "record_enabled": "false",
+            "debug_logging": "true",
         }
     )
 
@@ -104,7 +101,7 @@ def test_partial_values_with_previous_update_only_supplied_fields() -> None:
 
     assert config.percentile == 55
     assert config.sample_interval == 2.5
-    assert config.record_enabled is False
+    assert config.debug_logging is True
 
 
 def test_invalid_values_without_previous_fall_back_to_defaults_and_warn() -> None:
@@ -126,10 +123,10 @@ def test_invalid_values_without_previous_fall_back_to_defaults_and_warn() -> Non
     ]
 
 
-def test_editable_parameters_are_consistent_with_config_fields() -> None:
+def test_config_parameters_are_consistent_with_config_fields() -> None:
     config_field_names = {field.name for field in fields(Config)}
 
-    for spec in EDITABLE_PARAMETERS:
+    for spec in CONFIG_PARAMETERS:
         name = str(spec["name"])
         value_type = spec["type"]
         parsed_value = getattr(parse_config_values({name: str(spec["default"])}), name)
@@ -148,6 +145,10 @@ def test_editable_parameters_are_consistent_with_config_fields() -> None:
         elif value_type == "STRING":
             assert isinstance(parsed_value, str)
             assert "rangeOrList" not in spec
+
+
+def test_no_runtime_settings_are_registered_as_avnav_editable_parameters() -> None:
+    assert EDITABLE_PARAMETERS == []
 
 
 def test_enhanced_defaults_match_documented_values() -> None:

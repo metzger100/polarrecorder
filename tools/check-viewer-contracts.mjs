@@ -37,6 +37,7 @@ const VIEWER_MODULES = [
   "timeline-chart.js",
   "export-ui.js",
   "enhanced-settings.js",
+  "advanced-settings.js",
   "settings-ui.js",
   "viewer.js"
 ];

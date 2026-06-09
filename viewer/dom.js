@@ -27,6 +27,15 @@ window.Polarrecorder = window.Polarrecorder || {};
     return row;
   }
 
+  function node(tag, className, text) {
+    const created = document.createElement(tag);
+    created.className = className || "";
+    if (text !== undefined && text !== null) {
+      created.textContent = String(text);
+    }
+    return created;
+  }
+
   function download(filename, text, type) {
     const blob = new Blob([text], { type: type });
     const url = URL.createObjectURL(blob);
@@ -39,5 +48,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     URL.revokeObjectURL(url);
   }
 
-  Polarrecorder.Dom = { Button: button, ActionRow: actionRow, Download: download };
+  Polarrecorder.Dom = {
+    ActionRow: actionRow,
+    Button: button,
+    Download: download,
+    Node: node
+  };
 })();

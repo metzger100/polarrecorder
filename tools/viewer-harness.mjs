@@ -55,6 +55,31 @@ export function defaultResponseBody(endpoint) {
   if (endpoint.startsWith("config")) {
     return ok({ min_samples_for_export: 8, percentile: 65 });
   }
+  if (endpoint.startsWith("advanced/settings")) {
+    return ok({
+      groups: [
+        {
+          label: "Sensor Freshness",
+          description: "Timing checks for core readings.",
+          fields: [
+            {
+              description: "Rejects old core values.",
+              field: "stale_threshold",
+              label: "Maximum value age",
+              max: 30,
+              min: 1,
+              step: "0.1",
+              type: "FLOAT",
+              value: 3
+            }
+          ]
+        }
+      ]
+    });
+  }
+  if (endpoint.startsWith("advanced/save")) {
+    return ok({ config: { stale_threshold: 3 } });
+  }
   if (endpoint.startsWith("export/json")) {
     return ok({ schema_version: 1, bins: {} });
   }
@@ -116,7 +141,6 @@ export function statusPayload(overrides = {}) {
       file_size_bytes: 1234,
       last_flush_wall: Math.round(Date.now() / 1000) - 120
     },
-    record_enabled: true,
     recording: true,
     top_rejections: [{ count: 3, reason: "r12" }],
     uptime_seconds: 3600,

@@ -75,6 +75,7 @@ async function testEnhancedSettingsRenderAndSave() {
   loadViewerFile(env, "export-ui.js");
   loadViewerFile(env, "import-upload.js");
   loadViewerFile(env, "enhanced-settings.js");
+  loadViewerFile(env, "advanced-settings.js");
   loadViewerFile(env, "settings-ui.js");
   loadViewerFile(env, "viewer.js");
 
@@ -105,8 +106,7 @@ async function testEnhancedSettingsRenderAndSave() {
   const optionLabels = select.children.map((option) => option.textContent);
   assert.ok(optionLabels.includes("gps.signalk.propulsion.0.revolutions"), optionLabels.join(","));
 
-  const primaries = panel.querySelectorAll(".primary-action");
-  primaries[primaries.length - 1].click();
+  enhancedSaveButton(panel).click();
   await flushViewer();
 
   assert.equal(saveRequests.length, 1, saveRequests.join(" | "));
@@ -127,6 +127,7 @@ async function testEnhancedSettingsValidatesThresholds() {
   loadViewerFile(env, "export-ui.js");
   loadViewerFile(env, "import-upload.js");
   loadViewerFile(env, "enhanced-settings.js");
+  loadViewerFile(env, "advanced-settings.js");
   loadViewerFile(env, "settings-ui.js");
   loadViewerFile(env, "viewer.js");
 
@@ -141,8 +142,7 @@ async function testEnhancedSettingsValidatesThresholds() {
   input.value = "not-a-number";
 
   const before = saveRequests.length;
-  const primaries = panel.querySelectorAll(".primary-action");
-  primaries[primaries.length - 1].click();
+  enhancedSaveButton(panel).click();
   await flushViewer();
 
   assert.equal(saveRequests.length, before, "invalid threshold blocks the save request");
@@ -150,4 +150,10 @@ async function testEnhancedSettingsValidatesThresholds() {
     textTree(panel).includes("Enter a valid number for every threshold before saving."),
     textTree(panel)
   );
+}
+
+function enhancedSaveButton(panel) {
+  return panel.querySelectorAll(".primary-action").find(function (item) {
+    return item.textContent === "Save Enhanced Settings";
+  });
 }

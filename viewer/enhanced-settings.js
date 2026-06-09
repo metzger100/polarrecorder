@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const button = Polarrecorder.Dom.Button;
   const actionRow = Polarrecorder.Dom.ActionRow;
+  const node = Polarrecorder.Dom.Node;
 
   const RULE_LABELS = {
     reject_engine_rpm: "Engine RPM",
@@ -244,15 +245,6 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function action(endpoint) {
     return Polarrecorder["FetchJson"](endpoint, { action: true });
-  }
-
-  function node(tag, className, text) {
-    const created = document.createElement(tag);
-    created.className = className || "";
-    if (text !== undefined && text !== null) {
-      created.textContent = String(text);
-    }
-    return created;
   }
 
   Polarrecorder.EnhancedSettings = { Render: render };

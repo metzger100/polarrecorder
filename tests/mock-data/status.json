@@ -1,7 +1,6 @@
 {
   "status": "OK",
   "data": {
-    "record_enabled": true,
     "recording": true,
     "data_status": "receiving",
     "warming_up": true,

@@ -6,13 +6,7 @@ Depends: none
 
 from __future__ import annotations
 
-EDITABLE_PARAMETERS: list[dict[str, object]] = [
-    {
-        "name": "record_enabled",
-        "type": "BOOLEAN",
-        "default": "true",
-        "description": "Master recording enable/disable",
-    },
+CONFIG_PARAMETERS: list[dict[str, object]] = [
     {
         "name": "sample_interval",
         "type": "FLOAT",
@@ -339,3 +333,5 @@ EDITABLE_PARAMETERS: list[dict[str, object]] = [
         "description": "Heading/COG deg/s at/above which a TWA spike is a real turn",
     },
 ]
+
+EDITABLE_PARAMETERS: list[dict[str, object]] = []

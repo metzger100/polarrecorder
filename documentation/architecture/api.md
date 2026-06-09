@@ -52,7 +52,7 @@ Endpoints:
 | GET | `presets/delete` | `name`, `confirm=yes` | Deletes a user preset. Built-in presets cannot be deleted. |
 | GET | `reset` | `confirm=yes` required | Clears learned model and counters, keeps timeline and validation state, and sets `_flush_requested` for the plugin thread. |
 | GET | `pause` | none | Idempotently pauses recording. |
-| GET | `resume` | none | Idempotently resumes recording when `record_enabled` allows it. |
+| GET | `resume` | none | Idempotently resumes recording by clearing the paused flag. |
 | GET | `export/json` | none | Full persistence-schema JSON backup, produced under the lock by `persistence.serialize_to_dict`. |
 | GET | `export/presets` | none | User export presets in the `presets.json` backup shape `{schema_version, presets:{name:{twa,tws}}}`. Built-ins are excluded so the download re-imports cleanly. |
 | GET | `import/begin` | `kind=learned-data\|presets` | Starts a chunked upload: discards any prior staging and returns `{token, kind, max_bytes, max_chunks}`. |
@@ -62,6 +62,8 @@ Endpoints:
 | GET | `enhanced/keys` | none | `{keys}` sorted list of currently-present store keys, enumerated via `api.getDataByPrefix` for `gps` plus any configured enhanced-key prefixes, flattened to dotted keys. |
 | GET | `enhanced/status` | none | `{rules}` one row per enhanced rule with `rule`, `enable_field` (the rule's enable parameter name), `enabled`, `combinator`, `keys` (each `{field, key}`), `thresholds`, and `status`. |
 | GET | `enhanced/save` | enhanced parameter name/value pairs | Validates names against the enhanced allowlist (fail-closed on unknown names), self-applies the parsed config under the lock, then persists via `api.saveConfigValues`. Returns `{config}` with the saved enhanced values. |
+| GET | `advanced/settings` | none | Grouped safe advanced settings for the Settings tab, each with readable label, description, type, and current value; numeric fields also carry min, max, and step. |
+| GET | `advanced/save` | safe advanced parameter name/value pairs | Validates names against the advanced allowlist, self-applies parsed config under the lock, updates validation state when the stability window changes, then persists through `api.saveConfigValues`. Returns `{config}` with saved values. |
 
 Restore is implemented as a strict, fail-closed, replace-only flow for both the
 polar model and user presets. Because AvNav plugin URLs receive GET/HEAD only
@@ -120,6 +122,8 @@ lock, probing via `getSingleValue`) and resolves the per-rule live status in the
 `self.config` under the lock) and then calls `api.saveConfigValues` after releasing the lock;
 `saveConfigValues` only persists to disk and does not invoke the change callback, so there is no
 lock re-entrancy and the disk write never runs while the lock is held.
+The advanced settings endpoints use the same self-apply-then-save pattern, but
+only for safe runtime-tuning settings shown in the Settings tab.
 
 State mutations use GET for AvNav/viewer simplicity. Destructive reset requires
 `confirm=yes`; preset deletion also requires confirmation. Polar persistence

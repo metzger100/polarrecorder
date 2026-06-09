@@ -104,7 +104,7 @@ The Status tab is the "what is happening right now?" page.
 
 It shows:
 
-- Recording, Paused, Disabled, or No Data
+- Recording, Paused, or No Data
 - the current TWA, TWS, and STW values
 - whether those values are fresh or stale
 - the latest decision, such as `accepted` or `rejected: reject_low_wind`
@@ -152,7 +152,7 @@ A `360°` preset (or any custom grid with angles above `180°`) exports true por
 
 ### Settings
 
-The Settings tab groups maintenance actions into three cards:
+The Settings tab groups maintenance and configuration actions into four cards:
 
 **Learned Data**
 
@@ -192,7 +192,7 @@ Limitations:
 
 ### Enhanced Rules (optional signals)
 
-The third Settings card, **Enhanced Rules**, lets you use optional boat signals beyond the three
+The **Enhanced Rules** card lets you use optional boat signals beyond the three
 core signals (true wind angle/speed and speed through water) to reject samples those signals prove
 are unrepresentative. Each rule fires only when its switch is on, its store key(s) are set, and a
 fresh value is present; otherwise it does nothing.
@@ -226,7 +226,22 @@ is a dropdown of the store keys currently available; SignalK keys appear here as
 for heel), and a key that is already configured stays selected even when it is not publishing right
 now. Each rule's switch matches the toggle used on the Export tab. A live status badge shows whether
 each rule is `active`, `disabled`, or inactive (no key set, key not in the store, or value stale).
-Settings are saved from the card and persist as AvNav editable parameters.
+Settings are saved from the card and persist in AvNav plugin configuration.
+
+### Advanced Settings
+
+The **Advanced Settings** card sits below Enhanced Rules and exposes safe runtime and
+recording-filter settings that most often need boat-specific tuning. They are grouped as:
+
+- **Sampling and Persistence** — sample cadence, flush cadence, and debug logging.
+- **Sensor Freshness** — stale-value and timestamp-skew limits.
+- **Core Filters** — low wind, head-to-wind, anchored-speed, and maximum wind/boat-speed limits.
+- **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
+- **Engine Heuristic** — low-wind movement checks used when no engine signal is configured.
+
+Each field uses a readable label and a short description. Values are checked against their allowed
+range before saving and persist in AvNav plugin configuration. Export percentile and high-confidence
+sample floors remain in the Export tab instead of being duplicated here.
 
 ## What are presets?
 
@@ -286,7 +301,6 @@ of them can be changed in AvNav plugin settings.
 | `reject_warming_up` | The plugin is filling its stability window after startup or resume. | It needs 15 seconds of previous data before stability can be judged. |
 | `reject_unstable` | Recent wind or boat-speed values were too unstable. | Over the 15-second window, changes must stay below TWA 20 deg, TWS 10 kt, and STW 4 kt. |
 | `reject_user_paused` | Recording was paused in the Polar Recorder viewer. | Pause/Resume button is set to paused. |
-| `reject_disabled` | Recording was disabled in AvNav plugin settings. | `record_enabled` is off in AvNav settings. |
 | `quarantine_engine_suspected` | Low wind plus high boat speed looked like possible engine use. | TWS below 5.0 kt and STW above 3.0 kt is quarantined. |
 
 If you see many rejected samples, it does not automatically mean something is wrong. Sailing data is messy. The important question is whether accepted samples appear while you are sailing steadily with good instruments.
@@ -373,17 +387,16 @@ AvNav plugin settings are stored by AvNav, not inside `polar.json`.
 
 ## Configuration
 
-Most users only need the recording switch and the Pause/Resume button.
+Most users only need AvNav's plugin enable switch and the Pause/Resume button.
 
-Advanced settings are managed through AvNav editable plugin parameters. They control things such as:
+Advanced settings are managed through the Settings tab and AvNav plugin configuration. They
+control things such as:
 
 - sampling interval
 - minimum wind speed
 - stale-data timeout
 - maneuver cooldown
 - stability window
-- export percentile
-- high-confidence export sample floor
 - debug logging
 - the optional **Enhanced Rules** signals and their store keys/thresholds (also editable from the
   Settings tab; several activate automatically on upgrade — see [Enhanced Rules](#enhanced-rules-optional-signals))
@@ -401,7 +414,7 @@ Common causes:
 
 - not enough sailing time yet
 - TWA, TWS, or STW is missing in AvNav
-- recording is paused or disabled
+- recording is paused, or the plugin is disabled in AvNav
 - the boat has mostly been motoring, maneuvering, drifting, or sailing in very low wind
 - the plugin is still warming up its stability checks
 

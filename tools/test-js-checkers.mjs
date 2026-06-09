@@ -265,7 +265,7 @@ function smellContractsWorkspace() {
   const scripts = [
     "theme.js", "placeholders.js", "viewer.js", "dom.js", "presets.js", "polar-chart.js",
     "timeline-chart.js", "grid-editor.js", "export-ui.js", "import-upload.js",
-    "enhanced-settings.js", "settings-ui.js"
+    "enhanced-settings.js", "advanced-settings.js", "settings-ui.js"
   ];
   const files = {};
   for (const name of scripts) {

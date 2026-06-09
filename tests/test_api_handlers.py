@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
 def test_format_status_includes_counters_top_rejections_and_stale_flags() -> None:
     snapshot = api_handlers.StatusSnapshot(
-        record_enabled=True,
         recording=True,
         data_status="receiving",
         warming_up=False,
@@ -53,7 +52,6 @@ def test_format_status_includes_counters_top_rejections_and_stale_flags() -> Non
 
 def test_format_status_nulls_before_first_values_and_decision() -> None:
     snapshot = api_handlers.StatusSnapshot(
-        record_enabled=True,
         recording=False,
         data_status="no_data",
         warming_up=True,
