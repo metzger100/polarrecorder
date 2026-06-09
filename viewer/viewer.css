@@ -795,6 +795,22 @@ textarea {
   color: var(--polarrecorder-fore-color);
 }
 
+.enhanced-badge-inactive_value_missing {
+  background: var(--polarrecorder-quarantined-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-inactive_key_missing {
+  background: var(--polarrecorder-rejected-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-inactive_key_not_configured {
+  background: var(--polarrecorder-surface-variant);
+  color: var(--polarrecorder-main-color);
+  border: 0.0714rem dashed var(--polarrecorder-border-color);
+}
+
 .enhanced-badge-disabled {
   background: var(--polarrecorder-second-color);
 }

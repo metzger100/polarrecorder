@@ -15,6 +15,7 @@ const saveRequests = [];
 let keysRequests = 0;
 
 await testEnhancedSettingsRenderAndSave();
+await testEnhancedSettingsValidatesThresholds();
 
 console.log("Viewer enhanced settings tests passed.");
 
@@ -113,4 +114,40 @@ async function testEnhancedSettingsRenderAndSave() {
   assert.ok(saveRequests[0].includes("enh_sog_key=gps.speed"), saveRequests[0]);
   assert.ok(saveRequests[0].includes("enh_slip_ratio=0.5"), saveRequests[0]);
   assert.ok(textTree(panel).includes("Enhanced settings saved."), textTree(panel));
+}
+
+async function testEnhancedSettingsValidatesThresholds() {
+  const env = createEnvironment({ responder });
+  loadViewerFile(env, "placeholders.js");
+  loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "presets.js");
+  loadViewerFile(env, "grid-editor.js");
+  loadViewerFile(env, "polar-chart.js");
+  loadViewerFile(env, "timeline-chart.js");
+  loadViewerFile(env, "export-ui.js");
+  loadViewerFile(env, "import-upload.js");
+  loadViewerFile(env, "enhanced-settings.js");
+  loadViewerFile(env, "settings-ui.js");
+  loadViewerFile(env, "viewer.js");
+
+  env.fireDOMContentLoaded();
+  await flushViewer();
+  env.clickTab("settings");
+  await flushViewer();
+
+  const panel = env.elements["settings-panel"];
+  const thresholdWrap = panel.querySelectorAll(".enhanced-threshold")[0];
+  const input = thresholdWrap.children.find((child) => child.tagName === "input");
+  input.value = "not-a-number";
+
+  const before = saveRequests.length;
+  const primaries = panel.querySelectorAll(".primary-action");
+  primaries[primaries.length - 1].click();
+  await flushViewer();
+
+  assert.equal(saveRequests.length, before, "invalid threshold blocks the save request");
+  assert.ok(
+    textTree(panel).includes("Enter a valid number for every threshold before saving."),
+    textTree(panel)
+  );
 }
