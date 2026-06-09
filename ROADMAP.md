@@ -12,53 +12,9 @@ here is committed or scheduled; ordering does not imply priority.
 
 ## Key Details
 
-### 1. Optional signal hooks (enhanced rejection rules)
+### 1. Refactor css
 
-**Goal:** Improve recorded-data quality by rejecting samples that extra boat
-sensors prove are unrepresentative.
-
-The pipeline already reserves a hook for optional signals through
-`Sample.enhanced` and `rules_enhanced.py`, but the current reader does not
-populate it. With only TWA/TWS/STW the MVP can only *guess* at engine use, current,
-and shallow water (R16 quarantines low-wind/high-STW as suspected motoring). This
-idea wires real optional signals into the hook and turns those guesses into direct,
-fail-closed rejects when the signal exists.
-
-Rules to implement (each fires only when its optional signal is present; absent
-signals leave the sample untouched):
-
-- **Engine RPM** → `reject_engine_rpm`. Signal: custom `rpm` key (selectable from the available store keys list in the settings tab). Reject when RPM
-  exceeds a configured idle threshold — the definitive engine-use reject that R16
-  only approximates.
-- **Engine state** → `reject_engine_on`. Signal: custom engine on/off key (selectable from the available store keys list in the settings tab). Reject
-  any sample taken while the engine is running, for boats that expose a boolean
-  state rather than RPM.
-- **Depth** → `reject_shallow`. Signal: `gps.depthBelowKeel` or a other depth key (selectable from the available store keys list in the settings tab). Reject samples
-  below a configured depth floor, where shallow-water squat distorts STW.
-- **SOG/STW mismatch** → `reject_sog_stw_mismatch`. Signal: SOG (`gps.speed`).
-  Reject when `abs(sog_kt - stw_kt)` exceeds a configured slip threshold, catching
-  strong current and faulty paddle-wheel logs.
-- **AWA/AWS true-wind cross-check** → `reject_true_wind_crosscheck`. Signals: AWA
-  (`gps.windAngle`) + AWS (`gps.windSpeed`). Recompute expected TWA/TWS from
-  apparent wind and STW; reject when the reported true wind disagrees beyond
-  configured tolerances, catching wind-sensor and calibration errors.
-- **Heading / COG turn confirmation** → reuses `reject_twa_roc` / `reject_unstable`.
-  Signals: heading (`gps.headingTrue`) and/or COG (`gps.track`). Use heading/COG
-  rate-of-change to confirm a real turn, hardening the existing maneuver reject so
-  a pure wind shift is no longer mistaken for a turn.
-- **Heel / roll** — infer overpowered/underpowered sailing state; could reject or
-  tag samples once the rule is defined. Heel is the vessel roll angle, so the
-  signal can come from a roll/attitude source (NMEA 2000 attitude PGN, SignalK
-  `navigation.attitude`, or a custom plugin) (selectable from the available store keys list in the settings tab); AvNav core exposes no built-in
-  heel/pitch/roll store key today, so it remains a custom optional signal.
-- **Current set/drift** (`gps.currentSet`, `gps.currentDrift`) — detect and
-  potentially compensate for current; this is more than a reject and needs design.
-
-Any enhanced rule must keep the same no-AvNav, no-I/O, no-threading purity as the
-core rules, accept only the arguments it uses, read its inputs only from
-`Sample.enhanced`, and return the shared `RuleResult` type.
-
-The Rules must be configurable in the settings tab in a third section. All must be switchable (Default: On) and show their status (active, inactive_value_of_key_missing, inactive_key_missing, inactive_key_not_configured, etc.). Some need a drop down menu to select the store key.
+Goal: Refactor the css of the project to match the 400 lines limit and enforce the rule for css
 
 ### 2. AvNav dashboard widgets
 
