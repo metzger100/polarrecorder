@@ -130,6 +130,75 @@ def test_maneuver_rich_sequence_learns_only_stable_between_tack_segments() -> No
     assert model.bins[MANEUVER_STARBOARD_BIN].total_accepted == 30
 
 
+def _warmup_at(stw_kt: float) -> list[ReadResult]:
+    return [_read_result(float(index), stw_kt=stw_kt) for index in range(WARMUP_SECONDS)]
+
+
+def _steady_reads(
+    count: int,
+    stw_kt: float,
+    enhanced: dict[str, tuple[float, float]],
+) -> list[ReadResult]:
+    return [
+        _read_result(float(WARMUP_SECONDS + index), stw_kt=stw_kt, enhanced_raw=enhanced)
+        for index in range(count)
+    ]
+
+
+def test_motoring_with_rpm_is_rejected() -> None:
+    reads = _warmup_reads() + _steady_reads(20, 6.0, {"rpm": (1500.0, 0.0)})
+
+    results, _ = _drive(reads)
+
+    assert _reason_count(results, "reject_engine_rpm") == 20
+    assert _decision_count(results, "accepted") == 0
+
+
+def test_shallow_water_samples_are_rejected() -> None:
+    reads = _warmup_reads() + _steady_reads(20, 6.0, {"depth_m": (0.4, 0.0)})
+
+    results, _ = _drive(reads)
+
+    assert _reason_count(results, "reject_shallow") == 20
+    assert _decision_count(results, "accepted") == 0
+
+
+def test_failing_paddlewheel_sog_stw_mismatch_is_rejected() -> None:
+    enhanced = {
+        "sog_kt": (knots_to_meters_per_second(5.0), 0.0),
+        "current_drift_kt": (knots_to_meters_per_second(0.5), 0.0),
+    }
+    reads = _warmup_at(1.0) + _steady_reads(20, 1.0, enhanced)
+
+    results, _ = _drive(reads)
+
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 20
+    assert _decision_count(results, "accepted") == 0
+
+
+def test_miscalibrated_wind_crosscheck_is_rejected() -> None:
+    enhanced = {"awa_deg": (90.0, 0.0), "aws_kt": (knots_to_meters_per_second(30.0), 0.0)}
+    reads = _warmup_reads() + _steady_reads(20, 6.0, enhanced)
+
+    results, _ = _drive(reads)
+
+    assert _reason_count(results, "reject_true_wind_crosscheck") == 20
+    assert _decision_count(results, "accepted") == 0
+
+
+def test_strong_following_current_is_accepted() -> None:
+    enhanced = {
+        "sog_kt": (knots_to_meters_per_second(2.0), 0.0),
+        "current_drift_kt": (knots_to_meters_per_second(1.3), 0.0),
+    }
+    reads = _warmup_at(0.8) + _steady_reads(20, 0.8, enhanced)
+
+    results, _ = _drive(reads)
+
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 0
+    assert _decision_count(results, "accepted") == 20
+
+
 def _drive(
     reads: list[ReadResult],
 ) -> tuple[list[tuple[PipelineResult, Sample | None]], PolarModel]:
@@ -161,6 +230,7 @@ def _read_result(
     tws_kt: float = 12.0,
     stw_kt: float = 6.0,
     age_s: float = 0.1,
+    enhanced_raw: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     return ReadResult(
         timestamp_monotonic=timestamp,
@@ -171,6 +241,7 @@ def _read_result(
         twa_timestamp=timestamp - age_s,
         tws_timestamp=timestamp - age_s,
         stw_timestamp=timestamp - age_s,
+        enhanced_raw=enhanced_raw,
     )
 
 

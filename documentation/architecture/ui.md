@@ -24,6 +24,9 @@ AvNav without a build step, network access, or runtime dependencies.
   shared absent-value display text so chart and status rendering reuse one
   vocabulary. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
+  `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's third
+  card, mounted by `settings-ui.js` so the transport-heavy markup stays out of the
+  Settings budget.
   `viewer/presets.js` adds `Presets`, owning the built-in fallback list and
   display labels so `viewer.js` stays within its line budget.
   `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload helper
@@ -45,6 +48,17 @@ AvNav without a build step, network access, or runtime dependencies.
   confirmation it reads the file and drives `ImportUpload.UploadBackup(kind, ...)`,
   which uploads the JSON in chunks and shows the server's summary or its precise
   rejection. Reset still requires the `RESET` confirmation.
+- Settings also owns a third **Enhanced Rules** card (`EnhancedSettings.Render()`),
+  rendered from `GET enhanced/keys` and `GET enhanced/status`. Each rule shows an
+  Enabled switch (the shared `.switch-field` control also used by the Export tab),
+  one `<select>` per configured key field listing the currently-present store keys
+  (SignalK keys appear as `gps.signalk.*`; an already-configured key stays selected
+  even when it is not publishing), the rule's threshold inputs, and a live status
+  badge (`active`, `disabled`, `no key set`, `key not in store`, or `value stale`).
+  A single "Save Enhanced Settings" button collects every control into one
+  `GET enhanced/save` call and then re-fetches status to refresh the badges. The
+  badge classes are `.enhanced-badge-<status>` styled with `--polarrecorder-*`
+  custom properties.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It
   always fetches `status`, which carries the monotonic `generation` token, and
   keeps the recent-decision strip filled without any extra fetch. The active tab

@@ -59,6 +59,9 @@ Endpoints:
 | GET | `import/chunk` | `token`, `seq` (contiguous from 0), `data` (URL-encoded slice) | Appends one slice under the lock. Returns `{received, bytes}`. Any rejection clears staging. |
 | GET | `import/commit` | `token`, `confirm=yes` | Assembles, validates, and applies the staged backup by `kind`. Learned-data returns `{kind, bins_restored, total_accepted, migrated_from_version}`; presets returns `{kind, presets_restored}`. An unconfirmed commit errors but keeps staging. |
 | GET | `import/abort` | none | Clears staging idempotently. |
+| GET | `enhanced/keys` | none | `{keys}` sorted list of currently-present store keys, enumerated via `api.getDataByPrefix` for `gps` plus any configured enhanced-key prefixes, flattened to dotted keys. |
+| GET | `enhanced/status` | none | `{rules}` one row per enhanced rule with `rule`, `enable_field` (the rule's enable parameter name), `enabled`, `combinator`, `keys` (each `{field, key}`), `thresholds`, and `status`. |
+| GET | `enhanced/save` | enhanced parameter name/value pairs | Validates names against the enhanced allowlist (fail-closed on unknown names), self-applies the parsed config under the lock, then persists via `api.saveConfigValues`. Returns `{config}` with the saved enhanced values. |
 
 Restore is implemented as a strict, fail-closed, replace-only flow for both the
 polar model and user presets. Because AvNav plugin URLs receive GET/HEAD only
@@ -106,6 +109,17 @@ No response may contain non-finite floats. Current values are updated only from
 a built finite `Sample`; later missing or non-finite reads leave the previous
 finite values frozen. Histogram speeds originate from accepted finite samples,
 and timeline/counter values are integers.
+
+The enhanced endpoints back the Settings-tab "Enhanced Rules" section. `enhanced/keys`
+enumerates only currently-present store keys (AvNav exposes no list-all-registered-keys
+endpoint), so the viewer offers them as dropdown options and also allows free-text entry for
+custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
+computes each key's presence/freshness at the boundary (snapshotting `self.config` under the
+lock, probing via `getSingleValue`) and resolves the per-rule live status in the pure
+`enhanced_status` module outside the lock. `enhanced/save` self-applies first (sets
+`self.config` under the lock) and then calls `api.saveConfigValues` after releasing the lock;
+`saveConfigValues` only persists to disk and does not invoke the change callback, so there is no
+lock re-entrancy and the disk write never runs while the lock is held.
 
 State mutations use GET for AvNav/viewer simplicity. Destructive reset requires
 `confirm=yes`; preset deletion also requires confirmation. Polar persistence

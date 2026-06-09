@@ -11,6 +11,7 @@ def make_read_result(
     stw_kt: float | None = 6.0,
     now: float = 100.0,
     ages: tuple[float, float, float] = (0.5, 0.5, 0.5),
+    enhanced_raw: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     tws_raw = None if tws_kt is None else knots_to_meters_per_second(tws_kt)
     stw_raw = None if stw_kt is None else knots_to_meters_per_second(stw_kt)
@@ -23,6 +24,7 @@ def make_read_result(
         twa_timestamp=None if twa_raw is None else now - ages[0],
         tws_timestamp=None if tws_raw is None else now - ages[1],
         stw_timestamp=None if stw_raw is None else now - ages[2],
+        enhanced_raw=enhanced_raw,
     )
 
 

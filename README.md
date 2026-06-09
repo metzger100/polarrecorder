@@ -35,7 +35,7 @@ Polar Recorder uses three AvNav values:
 
 TWS and STW are shown and stored in knots. TWA is shown in degrees.
 
-The plugin does not currently use speed over ground, apparent wind, engine RPM, depth, waves, or sail configuration.
+For core learning the plugin uses only true wind angle/speed and speed through water. Speed over ground, apparent wind, engine RPM, and depth are read only by the optional Enhanced Rules (see [Enhanced Rules (optional signals)](#enhanced-rules-optional-signals)); waves and sail configuration are not used.
 
 ## Quick Start
 
@@ -152,7 +152,7 @@ A `360°` preset (or any custom grid with angles above `180°`) exports true por
 
 ### Settings
 
-The Settings tab groups maintenance actions into two cards:
+The Settings tab groups maintenance actions into three cards:
 
 **Learned Data**
 
@@ -189,6 +189,44 @@ Limitations:
 - Backups are capped at 4 MiB.
 - A learned-data backup must match this build's bin grid to import.
 - A presets backup's TWS values must fit the current `max_tws` setting.
+
+### Enhanced Rules (optional signals)
+
+The third Settings card, **Enhanced Rules**, lets you use optional boat signals beyond the three
+core signals (true wind angle/speed and speed through water) to reject samples those signals prove
+are unrepresentative. Each rule fires only when its switch is on, its store key(s) are set, and a
+fresh value is present; otherwise it does nothing.
+
+The six rules are:
+
+- **Engine RPM** — rejects when RPM is above an idle ceiling (you are motoring).
+- **Engine state** — rejects when an engine-state signal reads "on". The source can be a boolean,
+  an RPM, or an alternator voltage; one threshold interprets all three.
+- **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
+- **SOG / STW paddlewheel** — rejects when speed through water reads implausibly low versus speed
+  over ground *and* the reported current drift is too small to explain the gap (a failing
+  paddlewheel). Honest strong following current is never rejected.
+- **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects
+  when it disagrees with the reported true wind (a miscalibrated wind sensor).
+- **Heel band** — rejects when heel is outside a configured range (over/underpowered). The lower
+  bound defaults to 0, so multihulls are unaffected by default.
+
+There is **no** current-strength reject: a uniform current shifts true wind speed and boat speed
+together in the water frame and does not distort a polar point, so current drift is only used to
+corroborate the paddlewheel check. Heading and COG are also read to harden maneuver detection — a
+true-wind shift with a steady heading/COG is no longer mistaken for a turn.
+
+All switches default **on**. The depth, SOG, current-drift, apparent-wind, heading, and COG keys
+are prefilled with standard AvNav store keys, so those rules **activate automatically on upgrade**
+for any boat that already publishes them — no setup needed. To opt out, switch a rule off or clear
+its key in the Enhanced Rules card. The genuinely custom signals (engine RPM, engine state, heel)
+stay inactive until you map a key, because AvNav core has no standard key for them. Each key field
+is a dropdown of the store keys currently available; SignalK keys appear here as `gps.signalk.*`
+(for example `gps.signalk.propulsion.0.revolutions` for RPM or `gps.signalk.navigation.attitude.roll`
+for heel), and a key that is already configured stays selected even when it is not publishing right
+now. Each rule's switch matches the toggle used on the Export tab. A live status badge shows whether
+each rule is `active`, `disabled`, or inactive (no key set, key not in the store, or value stale).
+Settings are saved from the card and persist as AvNav editable parameters.
 
 ## What are presets?
 
@@ -347,6 +385,11 @@ Advanced settings are managed through AvNav editable plugin parameters. They con
 - export percentile
 - high-confidence export sample floor
 - debug logging
+- the optional **Enhanced Rules** signals and their store keys/thresholds (also editable from the
+  Settings tab; several activate automatically on upgrade — see [Enhanced Rules](#enhanced-rules-optional-signals))
+
+These remain Python 3.9 standard-library only with no target-device `pip install`: the enhanced
+rules add no new runtime dependency.
 
 See [Configuration](documentation/user/configuration.md) for the full parameter list.
 

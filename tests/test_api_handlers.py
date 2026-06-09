@@ -151,6 +151,18 @@ def test_other_read_formatters_wrap_detached_data() -> None:
     assert backup == {"schema_version": 1}
 
 
+def test_enhanced_formatters_wrap_detached_payloads() -> None:
+    keys = _data(api_handlers.format_enhanced_keys(["gps.speed", "gps.windAngle"]))
+    status = _data(
+        api_handlers.format_enhanced_status([{"rule": "reject_shallow", "status": "active"}])
+    )
+    config = _data(api_handlers.format_enhanced_config({"enh_rpm_enabled": True}))
+
+    assert keys == {"keys": ["gps.speed", "gps.windAngle"]}
+    assert status == {"rules": [{"rule": "reject_shallow", "status": "active"}]}
+    assert config == {"config": {"enh_rpm_enabled": True}}
+
+
 def test_invalid_percentile_returns_error_envelope_through_dispatch(tmp_path: Path) -> None:
     plugin = plugin_module.Plugin(FakeAvNavAPI())
     plugin._data_dir = str(tmp_path)

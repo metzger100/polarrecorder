@@ -59,7 +59,6 @@ _LAYER_RANK = {
     "histogram": 0,
     "import_common": 0,
     "validation.angle_math": 0,
-    "validation.rules_enhanced": 0,
     # 1 - core: typed samples, config, and single-purpose accumulators.
     "sample": 1,
     "config": 1,
@@ -72,7 +71,9 @@ _LAYER_RANK = {
     "preset_backup": 2,
     "reader": 2,
     "timeline": 2,
+    "enhanced_status": 2,
     "validation.rules_core": 2,
+    "validation.rules_enhanced": 2,
     "validation.rules_heuristic": 2,
     "validation.rules_stability": 2,
     # 3 - orchestration: composition roots wired by plugin.py.
@@ -82,6 +83,7 @@ _LAYER_RANK = {
     "commit": 3,
     "api_handlers": 3,
     "api_dispatch": 3,
+    "api_enhanced": 3,
 }
 # Package markers carry no logic and are exempt from a layer assignment.
 _LAYER_EXEMPT = {"", "validation"}

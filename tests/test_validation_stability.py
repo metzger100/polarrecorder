@@ -1,11 +1,35 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 from polarrecorder.config import default_config
 from polarrecorder.validation import rules_stability
-from polarrecorder.validation.state import ValidationState
+from polarrecorder.validation.state import ValidationState, WindowEntry
 from validation_helpers import make_sample, make_warmed_state
+
+if TYPE_CHECKING:
+    from polarrecorder.sample import Sample
+
+
+def _turn_state(
+    prev_heading: float | None = None,
+    prev_cog: float | None = None,
+) -> ValidationState:
+    state = make_warmed_state(now=100.0)
+    state.previous_sample = WindowEntry(
+        timestamp_monotonic=99.0,
+        twa_deg_raw=90.0,
+        tws_kt=12.0,
+        stw_kt=6.0,
+        heading_deg=prev_heading,
+        cog_deg=prev_cog,
+    )
+    return state
+
+
+def _spike_sample(enhanced: dict[str, float] | None) -> Sample:
+    return replace(make_sample(twa_raw=200.0, now=100.0), enhanced=enhanced)
 
 
 def test_r11_sets_cooldown_on_twa_rate_of_change() -> None:
@@ -16,6 +40,81 @@ def test_r11_sets_cooldown_on_twa_rate_of_change() -> None:
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_twa_roc"]
     assert state.cooldown_expires == 130.0
+
+
+def test_turn_confirm_steady_heading_suppresses_reject_and_cooldown() -> None:
+    state = _turn_state(prev_heading=90.0)
+    result = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 90.5}), state, default_config()
+    )
+
+    assert result.decision == "pass"
+    assert state.cooldown_expires == 0.0
+
+
+def test_turn_confirm_turning_heading_still_rejects_and_cools_down() -> None:
+    state = _turn_state(prev_heading=90.0)
+    result = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 120.0}), state, default_config()
+    )
+
+    assert result.decision == "reject"
+    assert result.reason_codes == ["reject_twa_roc"]
+    assert state.cooldown_expires == 130.0
+
+
+def test_turn_confirm_both_heading_and_cog_steady_passes() -> None:
+    state = _turn_state(prev_heading=90.0, prev_cog=88.0)
+    result = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 90.5, "cog_deg": 88.5}), state, default_config()
+    )
+
+    assert result.decision == "pass"
+    assert state.cooldown_expires == 0.0
+
+
+def test_turn_confirm_disagreeing_signals_reject_via_max_of_rates() -> None:
+    state = _turn_state(prev_heading=90.0, prev_cog=88.0)
+    result = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 90.5, "cog_deg": 140.0}), state, default_config()
+    )
+
+    assert result.decision == "reject"
+    assert state.cooldown_expires == 130.0
+
+
+def test_turn_confirm_heading_only_and_cog_only_variants() -> None:
+    heading_only = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 90.5}), _turn_state(prev_heading=90.0), default_config()
+    )
+    cog_only = rules_stability.twa_rate_of_change(
+        _spike_sample({"cog_deg": 88.5}), _turn_state(prev_cog=88.0), default_config()
+    )
+
+    assert heading_only.decision == "pass"
+    assert cog_only.decision == "pass"
+
+
+def test_turn_confirm_disabled_keeps_original_r11() -> None:
+    config = replace(default_config(), enh_turnconfirm_enabled=False)
+    state = _turn_state(prev_heading=90.0)
+
+    result = rules_stability.twa_rate_of_change(_spike_sample({"heading_deg": 90.5}), state, config)
+
+    assert result.decision == "reject"
+    assert state.cooldown_expires == 130.0
+
+
+def test_turn_confirm_absent_heading_cog_keeps_original_r11() -> None:
+    no_enhanced = rules_stability.twa_rate_of_change(
+        _spike_sample(None), _turn_state(prev_heading=90.0), default_config()
+    )
+    no_previous = rules_stability.twa_rate_of_change(
+        _spike_sample({"heading_deg": 90.5}), _turn_state(), default_config()
+    )
+
+    assert no_enhanced.decision == "reject"
+    assert no_previous.decision == "reject"
 
 
 def test_r11_through_r13_pass_when_no_rate_is_computable() -> None:

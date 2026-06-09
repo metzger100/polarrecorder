@@ -110,8 +110,9 @@ show_missing = true
 # Lines that never execute at runtime by design — excluded so they don't count as "missing".
 # Covers the TYPE_CHECKING import blocks (export.py) and the Protocol method stub bodies
 # (reader.py StoreAPI, logger.py Logger). NOTE: rules_enhanced.py is NOT covered by these
-# excludes — per Phase 4 it ships with no `...`/NotImplementedError bodies at all and reaches
-# full line coverage via the smoke `import` in test_validation_heuristic.py.
+# excludes — it ships real optional-signal rules (R17-R22) exercised by
+# tests/test_validation_enhanced.py and held to the validation-package 95%/95% floor
+# (tools/check-coverage.py), not a smoke import.
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

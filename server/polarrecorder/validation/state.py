@@ -10,6 +10,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from polarrecorder.sample import enhanced_value
+
 if TYPE_CHECKING:
     from polarrecorder.sample import Sample
 
@@ -24,6 +26,8 @@ class WindowEntry:
     twa_deg_raw: float
     tws_kt: float
     stw_kt: float
+    heading_deg: float | None = None
+    cog_deg: float | None = None
 
 
 def _new_window() -> deque[WindowEntry]:
@@ -103,4 +107,6 @@ def entry_from_sample(sample: Sample) -> WindowEntry:
         twa_deg_raw=sample.twa_deg_raw,
         tws_kt=sample.tws_kt,
         stw_kt=sample.stw_kt,
+        heading_deg=enhanced_value(sample, "heading_deg"),
+        cog_deg=enhanced_value(sample, "cog_deg"),
     )

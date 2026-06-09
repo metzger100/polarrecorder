@@ -2,8 +2,9 @@
 
 Documentation: documentation/architecture/data-pipeline.md
 Depends: polarrecorder.config, polarrecorder.logger, polarrecorder.sample,
-polarrecorder.validation.rules_core, polarrecorder.validation.rules_heuristic,
-polarrecorder.validation.rules_stability, polarrecorder.validation.state
+polarrecorder.validation.rules_core, polarrecorder.validation.rules_enhanced,
+polarrecorder.validation.rules_heuristic, polarrecorder.validation.rules_stability,
+polarrecorder.validation.state
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from polarrecorder.sample import ReadResult, RuleResult, Sample, build_sample
-from polarrecorder.validation import rules_core, rules_heuristic, rules_stability
+from polarrecorder.validation import rules_core, rules_enhanced, rules_heuristic, rules_stability
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -99,6 +100,9 @@ def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
         rules_core.head_to_wind(sample, config),
         rules_core.low_wind(sample, config),
         rules_core.anchored_heuristic(sample, config),
+        rules_enhanced.reject_engine_rpm(sample, config),
+        rules_enhanced.reject_engine_on(sample, config),
+        rules_enhanced.reject_shallow(sample, config),
     ):
         if result.decision == "reject":
             return result
@@ -112,6 +116,9 @@ def _run_candidate_rules(sample: Sample, state: ValidationState, config: Config)
         rules_stability.stw_acceleration(sample, state, config),
         rules_stability.maneuver_cooldown(sample, state, config),
         rules_stability.stability_window(sample, state, config),
+        rules_enhanced.reject_sog_stw_mismatch(sample, config),
+        rules_enhanced.reject_true_wind_crosscheck(sample, config),
+        rules_enhanced.reject_heel_out_of_band(sample, config),
         rules_heuristic.engine_heuristic(sample, config),
     ):
         if result.decision != "pass":

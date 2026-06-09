@@ -20,6 +20,34 @@ TWA_HALF_CIRCLE_DEG = 180.0
 
 
 @dataclass(frozen=True)
+class EnhancedSignalSpec:
+    """Mapping from an optional-signal role to its config key/enable fields."""
+
+    role: str
+    key_field: str
+    enable_field: str
+    to_knots: bool
+
+
+ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
+    EnhancedSignalSpec("rpm", "enh_rpm_key", "enh_rpm_enabled", to_knots=False),
+    EnhancedSignalSpec(
+        "engine_signal", "enh_engine_state_key", "enh_engine_state_enabled", to_knots=False
+    ),
+    EnhancedSignalSpec("depth_m", "enh_depth_key", "enh_depth_enabled", to_knots=False),
+    EnhancedSignalSpec("sog_kt", "enh_sog_key", "enh_slip_enabled", to_knots=True),
+    EnhancedSignalSpec(
+        "current_drift_kt", "enh_current_drift_key", "enh_slip_enabled", to_knots=True
+    ),
+    EnhancedSignalSpec("awa_deg", "enh_awa_key", "enh_tw_crosscheck_enabled", to_knots=False),
+    EnhancedSignalSpec("aws_kt", "enh_aws_key", "enh_tw_crosscheck_enabled", to_knots=True),
+    EnhancedSignalSpec("heel_deg", "enh_heel_key", "enh_heel_enabled", to_knots=False),
+    EnhancedSignalSpec("heading_deg", "enh_heading_key", "enh_turnconfirm_enabled", to_knots=False),
+    EnhancedSignalSpec("cog_deg", "enh_cog_key", "enh_turnconfirm_enabled", to_knots=False),
+)
+
+
+@dataclass(frozen=True)
 class ReadResult:
     """Raw output from the store reader before validation."""
 
@@ -31,6 +59,7 @@ class ReadResult:
     twa_timestamp: float | None
     tws_timestamp: float | None
     stw_timestamp: float | None
+    enhanced_raw: dict[str, tuple[float, float]] | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +98,14 @@ class RuleResult:
     reason_codes: list[str]
 
 
+def enhanced_value(sample: Sample, role: str) -> float | None:
+    """Return one optional-signal value from a sample, or ``None`` when absent."""
+    enhanced = sample.enhanced
+    if enhanced is None:
+        return None
+    return enhanced.get(role)
+
+
 def build_sample(read_result: ReadResult) -> Sample | None:
     """Build a normalized sample from a raw read.
 
@@ -102,8 +139,21 @@ def build_sample(read_result: ReadResult) -> Sample | None:
         stw_ms=read_result.stw_raw,
         stw_kt=meters_per_second_to_knots(read_result.stw_raw),
         freshness=freshness,
-        enhanced=None,
+        enhanced=_build_enhanced(read_result.enhanced_raw),
     )
+
+
+def _build_enhanced(
+    enhanced_raw: dict[str, tuple[float, float]] | None,
+) -> dict[str, float] | None:
+    if not enhanced_raw:
+        return None
+    to_knots = {spec.role: spec.to_knots for spec in ENHANCED_SIGNAL_SPECS}
+    enhanced: dict[str, float] = {}
+    for role, raw in enhanced_raw.items():
+        value = raw[0]
+        enhanced[role] = meters_per_second_to_knots(value) if to_knots[role] else value
+    return enhanced
 
 
 def _required_values_are_finite(read_result: ReadResult) -> bool:

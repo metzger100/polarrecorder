@@ -6,7 +6,13 @@
       "reject_low_wind": 940,
       "reject_unstable": 710,
       "reject_warming_up": 530,
-      "quarantine_engine_suspected": 260
+      "quarantine_engine_suspected": 260,
+      "reject_engine_rpm": 180,
+      "reject_engine_on": 95,
+      "reject_shallow": 60,
+      "reject_sog_stw_mismatch": 40,
+      "reject_true_wind_crosscheck": 25,
+      "reject_heel_out_of_band": 15
     },
     "per_bin": {
       "90_12": {

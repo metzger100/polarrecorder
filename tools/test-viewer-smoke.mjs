@@ -18,6 +18,7 @@ async function testViewerModulesWorkTogether() {
   loadViewerFile(env, "timeline-chart.js");
   loadViewerFile(env, "export-ui.js");
   loadViewerFile(env, "import-upload.js");
+  loadViewerFile(env, "enhanced-settings.js");
   loadViewerFile(env, "settings-ui.js");
   loadViewerFile(env, "viewer.js");
 

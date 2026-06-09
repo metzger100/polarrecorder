@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
 from plugin_integration_support import assert_all_mvp_routes, response_data, sample_at
@@ -118,6 +118,51 @@ def test_handle_request_normalizes_args_and_routes_real_endpoints(tmp_path: Path
     assert isinstance(status["data"], dict)
     assert polar["status"] == "OK"
     assert unknown["status"] == "ERROR"
+
+
+def test_enhanced_endpoints_keys_status_and_save(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.set_value("gps.speed", 5.0, 99.5)
+    api.set_value("gps.windAngle", 30.0, 99.5)
+    api.set_value("gps.windSpeed", 4.0, 99.5)
+    api.set_value("gps.currentDrift", 0.5, 99.5)
+    api.set_value("gps.depthBelowKeel", 3.0, 90.0)
+    api.set_value("gps.headingTrue", 100.0, 99.5)
+    api.set_value("gps.track", 105.0, 99.5)
+    plugin = make_plugin(tmp_path, api)
+
+    keys = response_data(plugin._handle_request("enhanced/keys", object(), {}))
+    status = response_data(plugin._handle_request("enhanced/status", object(), {}))
+    status_rows = cast("list[dict[str, object]]", status["rules"])
+    rules = {cast("str", row["rule"]): cast("str", row["status"]) for row in status_rows}
+    enable_fields = {
+        cast("str", row["rule"]): cast("str", row["enable_field"]) for row in status_rows
+    }
+
+    assert "gps.speed" in cast("list[str]", keys["keys"])
+    assert "gps.currentDrift" in cast("list[str]", keys["keys"])
+    assert enable_fields["reject_engine_rpm"] == "enh_rpm_enabled"
+    assert enable_fields["turn_confirm"] == "enh_turnconfirm_enabled"
+    assert rules["reject_engine_rpm"] == "inactive_key_not_configured"
+    assert rules["reject_shallow"] == "inactive_value_missing"
+    assert rules["reject_sog_stw_mismatch"] == "active"
+    assert rules["reject_true_wind_crosscheck"] == "active"
+    assert rules["turn_confirm"] == "active"
+
+    unknown = plugin._handle_request("enhanced/save", object(), {"nope": ["1"]})
+    saved = response_data(
+        plugin._handle_request(
+            "enhanced/save",
+            object(),
+            {"enh_rpm_enabled": ["false"], "enh_rpm_idle_max": ["1200"]},
+        )
+    )
+
+    assert unknown["status"] == "ERROR"
+    assert plugin.config.enh_rpm_enabled is False
+    assert plugin.config.enh_rpm_idle_max == 1200
+    assert {"enh_rpm_enabled": "false", "enh_rpm_idle_max": "1200"} in api.saved_configs
+    assert cast("dict[str, object]", saved["config"])["enh_rpm_idle_max"] == 1200
 
 
 def test_concurrent_model_update_and_snapshot_read_are_detached(tmp_path: Path) -> None:

@@ -145,3 +145,53 @@ def test_editable_parameters_are_consistent_with_config_fields() -> None:
         elif value_type == "FLOAT":
             assert isinstance(parsed_value, float)
             assert "rangeOrList" in spec
+        elif value_type == "STRING":
+            assert isinstance(parsed_value, str)
+            assert "rangeOrList" not in spec
+
+
+def test_enhanced_defaults_match_documented_values() -> None:
+    config = default_config()
+
+    assert config.enh_rpm_enabled is True
+    assert config.enh_rpm_key == ""
+    assert config.enh_rpm_idle_max == 900
+    assert config.enh_engine_state_on_threshold == 0.5
+    assert config.enh_depth_key == "gps.depthBelowKeel"
+    assert config.enh_depth_floor_m == 1.0
+    assert config.enh_sog_key == "gps.speed"
+    assert config.enh_current_drift_key == "gps.currentDrift"
+    assert config.enh_slip_ratio == 0.5
+    assert config.enh_awa_key == "gps.windAngle"
+    assert config.enh_aws_key == "gps.windSpeed"
+    assert config.enh_heel_min_deg == 0.0
+    assert config.enh_heel_max_deg == 35.0
+    assert config.enh_heading_key == "gps.headingTrue"
+    assert config.enh_cog_key == "gps.track"
+    assert config.enh_turn_min_roc == 3.0
+
+
+def test_enhanced_string_keys_pass_through_unchanged() -> None:
+    config = parse_config_values(
+        {
+            "enh_rpm_key": "n2k.engine.0.rpm",
+            "enh_heel_key": "signalk.navigation.attitude.roll",
+            "enh_depth_key": "",
+        }
+    )
+
+    assert config.enh_rpm_key == "n2k.engine.0.rpm"
+    assert config.enh_heel_key == "signalk.navigation.attitude.roll"
+    assert config.enh_depth_key == ""
+
+
+def test_enhanced_numeric_invalid_keeps_previous_or_default() -> None:
+    previous = parse_config_values({"enh_rpm_idle_max": "1200"})
+    logger = FakeLogger()
+
+    config = parse_config_values({"enh_rpm_idle_max": "bad"}, logger, previous)
+
+    assert config.enh_rpm_idle_max == 1200
+    assert logger.messages == [
+        ("warn", "Invalid config enh_rpm_idle_max='bad'; keeping previous/default value")
+    ]

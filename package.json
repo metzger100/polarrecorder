@@ -12,7 +12,7 @@
     "test:tools": "node tools/test-check-patterns.mjs && node tools/test-js-checkers.mjs",
     "check:smells": "npm run check:patterns && node tools/check-smell-contracts.mjs",
     "test:plugin": "node tools/test-plugin-mjs.mjs",
-    "test:viewer": "node tools/test-viewer-theme.mjs && node tools/test-viewer-polar.mjs && node tools/test-viewer-smoke.mjs",
+    "test:viewer": "node tools/test-viewer-theme.mjs && node tools/test-viewer-polar.mjs && node tools/test-viewer-smoke.mjs && node tools/test-viewer-enhanced.mjs",
     "check:viewer-contracts": "node tools/check-viewer-contracts.mjs",
     "check:js-coverage": "node tools/check-js-coverage.mjs",
     "check:js-duplication": "node tools/check-js-duplication.mjs",
