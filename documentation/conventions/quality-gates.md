@@ -42,11 +42,11 @@ JavaScript, documentation, and viewer gate commands:
 | `npm run test:tools` | Custom JS checker self-tests |
 | `npm run check:smells` | JS/Python pattern checks plus viewer contract metadata checks |
 | `npm run check:docs` | Documentation TOC, format, reachability, smell-catalog completeness, and AI instruction sync |
-| `npm run check:filesize` | Viewer, `plugin.mjs`, Markdown file-size and JS one-line compression checks |
+| `npm run check:filesize` | Viewer, plugin entrypoint, Markdown file-size and JS one-line compression checks |
 | `npm run check:headers` | Viewer module headers and documentation targets |
 | `npm run check:namespace` | `window.Polarrecorder` namespace discipline |
 | `npm run check:naming` | Viewer filename, namespace member, and function naming |
-| `npm run test:plugin` | `plugin.mjs` entry-contract smoke test |
+| `npm run test:plugin` | `plugin.js` and `plugin.mjs` entry-contract smoke test |
 | `npm run test:viewer` | Theme, polar chart, and viewer smoke tests |
 | `npm run check:viewer-contracts` | Rendered sentinel, absent-placeholder, and zero-preservation contracts |
 | `npm run check:js-coverage` | Per-viewer-file V8 line coverage floors |

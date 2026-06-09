@@ -10,7 +10,7 @@ Use this workflow whenever changes touch architecture, module wiring, validation
 
 Default workflow:
 
-1. Identify touched areas: `plugin.py`, `server/polarrecorder/`, `viewer/`, `plugin.json`, `plugin.mjs`, `tools/`, `documentation/avnav/`, and root project docs.
+1. Identify touched areas: `plugin.py`, `server/polarrecorder/`, `viewer/`, `plugin.json`, plugin entrypoints, `tools/`, `documentation/avnav/`, and root project docs.
 2. Update the mapped documentation in `documentation/`.
 3. Update root docs (`README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `ARCHITECTURE.md`, or `ROADMAP.md`) when user-facing behavior or development workflow changes.
 4. Add every new documentation file to `documentation/TABLEOFCONTENTS.md`.

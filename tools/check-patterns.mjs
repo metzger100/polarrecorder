@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 let ROOT = process.cwd();
 let VIEWER_ROOT = path.join(ROOT, "viewer");
 let SERVER_PACKAGE_ROOT = path.join(ROOT, "server", "polarrecorder");
-const ROOT_JS_PATTERN_FILES = new Set(["plugin.mjs"]);
+const ROOT_JS_PATTERN_FILES = new Set(["plugin.js", "plugin.mjs"]);
 // Machine-local home paths must never be committed in source or docs; they
 // break on every other machine and leak the author's username.
 const HOME_PATH = /(?:\/home\/[A-Za-z0-9_.-]+\/|\/Users\/[A-Za-z0-9_.-]+\/)/;
@@ -584,7 +584,9 @@ function collectJavaScriptPatternFiles() {
   const out = collectViewerJsFiles();
   for (const name of ROOT_JS_PATTERN_FILES) {
     const abs = path.join(ROOT, name);
-    if (fs.existsSync(abs)) out.push({ abs, rel: name, allowEsModuleSyntax: true });
+    if (fs.existsSync(abs)) {
+      out.push({ abs, rel: name, allowEsModuleSyntax: name.endsWith(".mjs") });
+    }
   }
   return out.sort((a, b) => a.rel.localeCompare(b.rel));
 }

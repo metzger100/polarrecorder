@@ -14,7 +14,7 @@ AvNav discovers plugin runtime files in a plugin directory. For Polar Recorder, 
 |---|---|
 | `plugin.py` | Python plugin entry point. |
 | `plugin.json` | Static user-app declaration for the viewer. |
-| `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. |
+| `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. The JavaScript entrypoints are stub-thin because `plugin.json` owns user-app registration. |
 | `viewer/*` | Static browser user app served from the plugin directory. |
 | `server/polarrecorder/**/*.py` | Python package imported by `plugin.py` after it adds `server/` to `sys.path`. |
 
