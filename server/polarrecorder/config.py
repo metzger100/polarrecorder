@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
-from polarrecorder.params import EDITABLE_PARAMETERS
+from polarrecorder.params import CONFIG_PARAMETERS
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 class Config:
     """Parsed runtime configuration."""
 
-    record_enabled: bool = True
     sample_interval: float = 1.0
     percentile: int = 65
     flush_interval: int = 300
@@ -89,7 +88,7 @@ def parse_config_values(
         Parsed and range-clamped configuration.
     """
     parsed: dict[str, Any] = {}
-    for spec in EDITABLE_PARAMETERS:
+    for spec in CONFIG_PARAMETERS:
         name = _spec_string(spec, "name")
         if name in values:
             parsed[name] = _parse_supplied_value(spec, values[name], logger, previous)

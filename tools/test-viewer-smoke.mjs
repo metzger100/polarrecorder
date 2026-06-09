@@ -19,6 +19,7 @@ async function testViewerModulesWorkTogether() {
   loadViewerFile(env, "export-ui.js");
   loadViewerFile(env, "import-upload.js");
   loadViewerFile(env, "enhanced-settings.js");
+  loadViewerFile(env, "advanced-settings.js");
   loadViewerFile(env, "settings-ui.js");
   loadViewerFile(env, "viewer.js");
 
@@ -62,6 +63,8 @@ async function testViewerModulesWorkTogether() {
   assert.ok(textTree(env.elements["settings-panel"]).includes("Restore Learned Data"));
   assert.ok(textTree(env.elements["settings-panel"]).includes("Reset Learned Data"));
   assert.ok(textTree(env.elements["settings-panel"]).includes("Presets"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Advanced Settings"));
+  assert.ok(textTree(env.elements["settings-panel"]).includes("Maximum value age"));
 
   await testSettingsActions(env);
   await testImportUpload(env);
@@ -113,6 +116,7 @@ function testSharedHelpers(env) {
   assert.equal(button.dataset.clicked, "yes");
   assert.equal(recorder.Dom.ActionRow([button]).children.length, 1);
   recorder.Dom.Download("sample.txt", "payload", "text/plain");
+  assert.equal(recorder.Dom.Node("span", "sample", "Text").textContent, "Text");
 
   const fallback = recorder.Presets.Fallback();
   assert.equal(fallback.length, 4);

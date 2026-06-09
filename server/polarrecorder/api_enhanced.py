@@ -12,10 +12,10 @@ from typing import Any
 from polarrecorder import api_handlers, enhanced_status
 from polarrecorder.config import parse_config_values
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS, KeyProbe
-from polarrecorder.params import EDITABLE_PARAMETERS
+from polarrecorder.params import CONFIG_PARAMETERS
 
 ENHANCED_PARAM_NAMES = frozenset(
-    str(spec["name"]) for spec in EDITABLE_PARAMETERS if str(spec["name"]).startswith("enh_")
+    str(spec["name"]) for spec in CONFIG_PARAMETERS if str(spec["name"]).startswith("enh_")
 )
 
 

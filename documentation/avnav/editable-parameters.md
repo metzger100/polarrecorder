@@ -4,7 +4,10 @@
 
 ## Overview
 
-AvNav editable parameters are the persistent runtime settings exposed for a plugin. Polar Recorder registers 50 parameters and parses AvNav's string values into a typed `Config`.
+AvNav editable parameters are settings exposed in AvNav's plugin configuration dialog. Polar
+Recorder registers none of its own; AvNav still shows its built-in `enabled` start/stop switch
+because the plugin registers a restart handler. The 49 runtime tuning values are stored as AvNav
+plugin configuration values and edited from the viewer Settings tab.
 
 ## Key Details
 
@@ -23,10 +26,12 @@ Polar Recorder registration and parsing:
 
 | Concern | Owner |
 |---|---|
-| Editable parameter specs | `server/polarrecorder/params.py` |
+| AvNav editable parameter specs | `server/polarrecorder/params.py` (`EDITABLE_PARAMETERS`) |
+| Runtime configuration specs | `server/polarrecorder/params.py` (`CONFIG_PARAMETERS`) |
 | Runtime typed config | `server/polarrecorder/config.py` |
-| Initial value read | `plugin.py` via `api.getConfigValue(name, default)` |
-| Hot-change callback | `plugin.py` parses changed strings while holding its lock |
+| Initial runtime value read | `plugin.py` via `api.getConfigValue(name, default)` |
+| Viewer save path | Settings-tab API handlers self-apply values and then call `api.saveConfigValues` |
+| Hot-change callback | `plugin.py` registers `_on_config_change` for the AvNav contract; runtime edits now arrive through the viewer save path |
 | User-facing setting reference | [Configuration](../user/configuration.md) |
 
 Parsing rules:
@@ -36,14 +41,23 @@ Parsing rules:
 - `FLOAT` values parse as floats and are clamped to `rangeOrList`.
 - `STRING` values pass through unchanged; they hold optional store keys for the enhanced rules.
 - Invalid changed values keep the previous runtime value; invalid initial values fall back to defaults.
-- `record_enabled` is plugin-owned and distinct from AvNav's built-in enable/disable switch.
-- `polar.json` stores learned-model metadata, not active AvNav editable settings.
+- Polar Recorder registers no editable parameters of its own (`EDITABLE_PARAMETERS` is empty).
+- AvNav still surfaces its built-in `enabled` start/stop switch because the plugin registers a
+  restart handler; that switch is owned by AvNav, not by Polar Recorder.
+- `polar.json` stores learned-model metadata, not active AvNav plugin configuration settings.
 
-Polar Recorder registers exactly these 50 parameter names:
+The only switch in the AvNav plugin configuration dialog is the AvNav-provided plugin enable
+control (Polar Recorder registers no editable parameters):
+
+| Group | Parameter | Owner |
+|---|---|---|
+| Plugin activation | `enabled` | AvNav built-in (auto-shown when a restart handler is registered) |
+
+Polar Recorder's internal runtime configuration schema contains these 49 names:
 
 | Group | Parameters |
 |---|---|
-| Recording and persistence | `record_enabled`, `sample_interval`, `flush_interval`, `debug_logging` |
+| Recording and persistence | `sample_interval`, `flush_interval`, `debug_logging` |
 | Model/export | `percentile`, `max_tws`, `max_stw`, `min_samples_for_export` |
 | Freshness and candidacy gate | `stale_threshold`, `age_skew_threshold`, `low_wind_threshold`, `head_to_wind_threshold`, `anchored_stw_threshold` |
 | Rate/cooldown stability gate | `twa_roc_threshold`, `tws_roc_threshold`, `stw_roc_threshold`, `cooldown_seconds`, `stability_window_seconds`, `stability_twa_range`, `stability_tws_range`, `stability_stw_range` |

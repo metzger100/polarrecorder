@@ -79,8 +79,8 @@ sample is present. This lets normal sampling jitter, such as a one-second loop r
 late, prove that the prior data spans the configured window while still resetting warm-up after a
 gap longer than the window.
 
-Two pre-pipeline reason codes are emitted by plugin integration: `reject_user_paused`
-and `reject_disabled`. They are not emitted by the pure validation runner.
+One pre-pipeline reason code is emitted by plugin integration: `reject_user_paused`. It is not
+emitted by the pure validation runner.
 
 ## Related
 

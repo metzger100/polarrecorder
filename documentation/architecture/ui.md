@@ -39,7 +39,7 @@ AvNav without a build step, network access, or runtime dependencies.
   all four when the `presets` fetch fails. The pre-rename `Default180` selection
   still resolves to the starboard half server-side.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited
-  to CSV and preset workflows. Settings owns two cards grouped by topic: a
+  to CSV and preset workflows. Settings starts with two maintenance cards: a
   **Learned Data** card with Download, Restore, and Reset subsections, and a
   **Presets** card with Download and Restore subsections. Each subsection is a
   `.settings-group` (the Reset one carries `.settings-group-danger`). Each restore
@@ -63,6 +63,15 @@ AvNav without a build step, network access, or runtime dependencies.
   `active` reads accepted-green, `value stale` quarantined-amber, `key not in store`
   rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted
   second-color.
+- A fourth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below
+  Enhanced Rules and is rendered from `GET advanced/settings`. It exposes the
+  safe runtime-tuning settings from the server allowlist, grouped as Sampling and
+  Persistence, Sensor Freshness, Core Filters, Stability and Maneuvers, and
+  Engine Heuristic. Numeric fields use readable labels, short descriptions, and
+  the server's min/max bounds; `debug_logging` renders as a switch. Internal
+  config keys are only used as hidden save wiring. The save button validates
+  finite in-range numbers before sending one `GET advanced/save` request and
+  then re-fetching the groups.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It
   always fetches `status`, which carries the monotonic `generation` token, and
   keeps the recent-decision strip filled without any extra fetch. The active tab

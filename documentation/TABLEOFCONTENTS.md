@@ -20,7 +20,7 @@ Start here for project documentation. Use the questions below to open the smalle
 - **How does AvNav load, start, stop, and status-report the Python plugin?** -> [avnav/plugin-lifecycle.md](avnav/plugin-lifecycle.md)
 - **How does Polar Recorder map that lifecycle into `plugin.py`?** -> [architecture/plugin-lifecycle.md](architecture/plugin-lifecycle.md)
 - **How are plugin API requests routed and static viewer files served?** -> [avnav/request-routing-and-static-files.md](avnav/request-routing-and-static-files.md), [architecture/api.md](architecture/api.md)
-- **How do AvNav editable parameters work, and where are Polar Recorder's 50 settings defined?** -> [avnav/editable-parameters.md](avnav/editable-parameters.md), [user/configuration.md](user/configuration.md)
+- **How do AvNav editable parameters work, and where are Polar Recorder's runtime settings defined?** -> [avnav/editable-parameters.md](avnav/editable-parameters.md), [user/configuration.md](user/configuration.md)
 - **Which AvNav store keys and units feed learning?** -> [avnav/keys-and-units.md](avnav/keys-and-units.md)
 
 ## Architecture

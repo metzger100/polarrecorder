@@ -38,7 +38,7 @@ Repo rules and core principles always override execution-plan instructions. An e
 - `avnav_api` may be referenced only in `plugin.py`, and only as a `TYPE_CHECKING`-guarded type import. It must never be imported at runtime.
 - `server/polarrecorder/` modules must not import AvNav modules or `plugin.py`; AvNav API access is injected through protocols and fakes.
 - Locks are owned by `plugin.py`. Domain modules are lock-unaware and thread-unaware.
-- Runtime configuration is AvNav editable-parameter state; `polar.json` stores learned-model data and metadata, not active settings.
+- Runtime configuration is AvNav plugin configuration state; only the host-facing `enabled` switch is registered as an AvNav editable parameter. `polar.json` stores learned-model data and metadata, not active settings.
 
 ---
 
@@ -168,7 +168,7 @@ These rules exist because AI agents reliably regress in specific ways: duplicati
 
 - Raw AvNav store values enter only through `reader.py` and the validation pipeline. Validate and convert once at that boundary, not repeatedly downstream.
 - `plugin.py` snapshots live shared state under the single lock; API, export, and persistence responses are formatted by pure helpers off that snapshot. Domain and formatting code must not re-snapshot or read live shared state.
-- `polar.json` stores learned-model data and metadata, never active settings. Runtime configuration is AvNav editable-parameter state.
+- `polar.json` stores learned-model data and metadata, never active settings. Runtime configuration is AvNav plugin configuration state, with only the host-facing `enabled` switch registered as an AvNav editable parameter.
 
 ---
 
@@ -177,7 +177,7 @@ These rules exist because AI agents reliably regress in specific ways: duplicati
 `README.md` is mandatory documentation when user-facing behavior changes; it is not optional. Update `README.md` in the same task whenever changes affect any of:
 
 1. Installation, plugin packaging, or activation workflow (dropping the plugin directory into AvNav).
-2. Configuration keys or defaults users set in AvNav (the editable parameters defined in `params.py` / `documentation/user/configuration.md`).
+2. Configuration keys or defaults users set in AvNav plugin configuration or the Settings tab (`params.py` / `documentation/user/configuration.md`).
 3. Export or import behavior (CSV/Windy export, presets, JSON backup, and restore).
 4. Requirements or platform support statements (Python 3.9+ stdlib, no target-device `pip install`).
 5. Viewer behavior visible to users (`window.Polarrecorder` viewer screens, charts, or controls).

@@ -823,6 +823,23 @@ textarea {
   margin: 0.8571rem 0;
 }
 
+.advanced-group + .advanced-group {
+  margin-top: 1rem;
+}
+
+.advanced-fields {
+  display: grid;
+  gap: 0.7143rem;
+}
+
+.advanced-setting {
+  gap: 0.2857rem;
+}
+
+.advanced-setting input {
+  margin-top: 0.2857rem;
+}
+
 @media (min-width: 37.5em) {
   .polarrecorder-app {
     padding-top: 5.2857rem;

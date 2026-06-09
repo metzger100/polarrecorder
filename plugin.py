@@ -24,7 +24,7 @@ from polarrecorder import api_dispatch, commit, export, persistence, preset_back
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
 from polarrecorder.logger import AvNavLogger
-from polarrecorder.params import EDITABLE_PARAMETERS
+from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.timeline import Timeline
@@ -139,9 +139,8 @@ class Plugin:
         )
         read_result = store_reader.read()
         data_status = _data_status(read_result)
-        if not config.record_enabled or self._paused:
-            reason = "reject_disabled" if not config.record_enabled else "reject_user_paused"
-            self._record_suppressed(read_result, data_status, reason)
+        if self._paused:
+            self._record_suppressed(read_result, data_status, "reject_user_paused")
             return
         pipeline_result, sample = pipeline.run(read_result, self._state, config)
         warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
@@ -255,7 +254,7 @@ class Plugin:
     def _load_initial_config(self) -> Config:
         raw_values = {
             str(spec["name"]): str(self.api.getConfigValue(str(spec["name"]), str(spec["default"])))
-            for spec in EDITABLE_PARAMETERS
+            for spec in CONFIG_PARAMETERS
         }
         return parse_config_values(raw_values, self._logger)
 

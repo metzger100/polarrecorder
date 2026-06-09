@@ -86,6 +86,13 @@ def make_plugin(tmp_path: Path, api: FakeAvNavAPI) -> plugin_module.Plugin:
     return plugin
 
 
+def test_plugin_registers_no_avnav_editable_parameters(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    make_plugin(tmp_path, api)
+
+    assert api.editable_parameters == []
+
+
 def test_full_fake_avnav_loop_updates_model_and_flushes_to_tmp_data_dir(tmp_path: Path) -> None:
     monotonic = FakeClock(100.0)
     wall = FakeClock(1000.0)

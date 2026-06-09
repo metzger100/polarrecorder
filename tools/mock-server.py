@@ -386,7 +386,6 @@ def status_response() -> dict[str, object]:
     return {
         "status": "OK",
         "data": {
-            "record_enabled": True,
             "recording": recording,
             "data_status": "receiving",
             "warming_up": True,
@@ -476,7 +475,6 @@ def config_response() -> dict[str, object]:
     return {
         "status": "OK",
         "data": {
-            "record_enabled": True,
             "sample_interval": 1.0,
             "percentile": 65,
             "flush_interval": 300,

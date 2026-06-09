@@ -89,8 +89,8 @@ with a `kind` discriminator and an upload token:
   excluded by validation and never written. No plugin-thread flush is involved.
 
 The polar `config.percentile`/`max_tws` are treated as metadata only and never
-overwrite live AvNav editable-parameter settings; only the `config` bin sizes are
-consumed, as the grid-match gate.
+overwrite live AvNav plugin configuration settings; only the `config` bin sizes
+are consumed, as the grid-match gate.
 
 ## Related
 

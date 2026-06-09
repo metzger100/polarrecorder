@@ -241,9 +241,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function deriveDecision(data) {
-    if (!data.record_enabled) {
-      return { state: "disabled", label: "Disabled" };
-    }
     if (!data.recording) {
       return { state: "paused", label: "Paused" };
     }
@@ -276,7 +273,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     title.appendChild(el("span", "", label.text));
     const meta = el("p", "helper", label.helper + " · Uptime " + formatDuration(data.uptime_seconds || 0));
     const action = el("button", "primary-action state-layer", data.recording ? "Pause" : "Resume");
-    action.hidden = !data.record_enabled;
     action.addEventListener("click", function () {
       const endpoint = data.recording ? "pause" : "resume";
       runAction(endpoint, action, fetchStatus);
@@ -290,9 +286,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function stateLabel(data) {
-    if (!data.record_enabled) {
-      return { text: "Disabled", className: "", helper: "Enable recording in AvNav settings" };
-    }
     if (!data.recording) {
       return { text: "Paused", className: "quarantined", helper: "Recording is paused" };
     }

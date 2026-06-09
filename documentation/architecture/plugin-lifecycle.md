@@ -13,7 +13,7 @@ Lifecycle implementation:
 | Phase | Polar Recorder behavior |
 |---|---|
 | Metadata | `Plugin.pluginInfo()` returns the description and runtime version reported by the release-stamped `plugin.json` when available. |
-| Construction | `Plugin.__init__(api)` stores the AvNav API, creates the single lock, registers editable parameters, loads config, creates model/counter/timeline state, registers the API handler, registers restart, and loads persistence. |
+| Construction | `Plugin.__init__(api)` stores the AvNav API, creates the single lock, registers the `enabled` editable parameter, loads config, creates model/counter/timeline state, registers the API handler, registers restart, and loads persistence. |
 | Run loop | `Plugin.run()` wakes on the NMEA queue, samples at `sample_interval`, runs one validation/model iteration, flushes periodically, and exits when AvNav or `_restart()` requests stop. |
 | Stop/restart | `_restart()` sets `_stop_requested`; the next loop check exits and the final flush runs. `_stop_requested` is reset at the next `run()` entry because AvNav can reuse the plugin instance. |
 | Status | `_set_status()` reports `STARTED`, `RUNNING`, `NMEA`, or `ERROR` using AvNav's status vocabulary. |
@@ -38,7 +38,7 @@ Runtime state ownership:
 
 | State | Owner | Notes |
 |---|---|---|
-| `Config` | `plugin.py` | Parsed from AvNav editable parameters and hot-swapped under the lock. |
+| `Config` | `plugin.py` | Parsed from AvNav plugin configuration values and hot-swapped under the lock. |
 | `ValidationState` | `plugin.py` | Observed after each built sample; not reset on normal config changes. |
 | `PolarModel` | `plugin.py` | Mutated only through `commit.commit_sample()` or reset under the lock. |
 | `Counters` | `plugin.py` | Updated with the same pipeline decision that updates the model. |

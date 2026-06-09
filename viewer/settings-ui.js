@@ -1,7 +1,7 @@
 /**
  * Module: Settings UI
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, dom.js, import-upload.js, enhanced-settings.js
+ * Depends: viewer.js, dom.js, import-upload.js, enhanced-settings.js, advanced-settings.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -24,6 +24,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.host.appendChild(learnedDataCard());
     state.host.appendChild(presetsCard());
     state.host.appendChild(Polarrecorder.EnhancedSettings.Render());
+    state.host.appendChild(Polarrecorder.AdvancedSettings.Render());
     state.host.appendChild(messageNode());
   }
 

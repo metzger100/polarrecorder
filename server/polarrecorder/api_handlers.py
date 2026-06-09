@@ -35,7 +35,6 @@ class CurrentValuesSnapshot:
 class StatusSnapshot:
     """Detached status input consumed by ``format_status``."""
 
-    record_enabled: bool
     recording: bool
     data_status: str
     warming_up: bool
@@ -76,7 +75,6 @@ def format_status(snapshot: StatusSnapshot) -> Response:
     }
     return ok(
         {
-            "record_enabled": snapshot.record_enabled,
             "recording": snapshot.recording,
             "data_status": snapshot.data_status,
             "warming_up": snapshot.warming_up,
