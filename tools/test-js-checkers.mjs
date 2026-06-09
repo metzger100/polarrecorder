@@ -244,6 +244,13 @@ function testFileSizeCheck() {
   );
   assert.equal(pluginPacked.ok, false);
   assert.ok(pluginPacked.failures.some((f) => f.includes("single-line-body")));
+
+  const legacyPluginPacked = runIn(
+    { "plugin.js": "function plugin() { const a = 1; const b = 2; }\n" },
+    (opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
+  );
+  assert.equal(legacyPluginPacked.ok, false);
+  assert.ok(legacyPluginPacked.failures.some((f) => f.includes("single-line-body")));
 }
 
 function assertFileSizeFails(label, rel, content, kind) {

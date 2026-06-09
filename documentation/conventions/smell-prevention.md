@@ -80,14 +80,14 @@ JavaScript and viewer rules:
 | JS unused fallback | Unused binding with `fallback` in its name | Remove it or wire it into a real path | `check-patterns.mjs` (`unused-fallback`) |
 | JS premature legacy support | Speculative `*legacy*`, `*compat*`, or `*deprecated*` declarations | Remove speculative compatibility paths | `check-patterns.mjs` (`premature-legacy-support`) |
 | Duplicate viewer helper | Duplicate viewer function bodies or long copied function blocks | Extract one canonical `window.Polarrecorder` helper | `check-js-duplication.mjs` |
-| Viewer file size | `viewer/*.js` or `plugin.mjs` over 400 non-empty lines | Split modules before the limit is exceeded | `check-file-size.mjs` |
+| Viewer file size | `viewer/*.js`, `plugin.js`, or `plugin.mjs` over 400 non-empty lines | Split modules before the limit is exceeded | `check-file-size.mjs` |
 | JS one-line compression | Dense statements, single-line blocks/bodies, collapsed literals, packed arrow bodies, chained ternaries, long packed lines, operator-dense lines, nested packed expressions, packed destructuring, or packed `for` headers | Keep viewer code readable and split statements | `check-file-size.mjs` |
 | Viewer coverage target | A viewer file missing from `COVERAGE_TARGETS` or never executed by coverage tests | Add a target and exercise it | `check-js-coverage.mjs`, `check-smell-contracts.mjs` (`viewer-coverage-target-contract`) |
 | Untested viewer logic | Viewer line coverage below the file floor | Add vm-based viewer tests | `check-js-coverage.mjs` |
 | Viewer rendered sentinel | Healthy payload renders `NaN`, `undefined`, or `null` | Route absent values to placeholders | `check-viewer-contracts.mjs` |
 | Viewer absent placeholder | Missing `current_values` does not render the approved placeholder | Render `No Data`, not sentinel text | `check-viewer-contracts.mjs` |
 | Viewer falsy preservation | Present zero readings fall back to placeholders | Preserve explicit `0` readings | `check-viewer-contracts.mjs` |
-| `plugin.mjs` entry contract | Default export missing or fake AvNav API call contract broken | Keep the entry stub-thin and executable | `test-plugin-mjs.mjs` |
+| Plugin entry contract | Legacy `plugin.js` throws during script execution, `plugin.mjs` default export is missing, or the fake AvNav API call contract breaks | Keep both entrypoints stub-thin and executable | `test-plugin-mjs.mjs` |
 | Viewer behavior regressions | Theme bridge, polar chart, or smoke flow breaks | Keep viewer behavior covered by stdlib Node tests | `test-viewer-*.mjs` |
 
 Documentation, repository, and release rules:

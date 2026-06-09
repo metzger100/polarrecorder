@@ -70,7 +70,7 @@ Documentation must be complete when added or changed. Do not leave stub sections
 Python:
 
 - Every Python file in `plugin.py`, `server/polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
-- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
+- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
 - `server/polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
 - All functions are typed; public functions have Google-style docstrings.
 - Ruff formatting and `mypy --strict` are binding.
@@ -79,10 +79,10 @@ Python:
 
 JavaScript:
 
-- `viewer/*.js` files are plain scripts, not ES modules. `plugin.mjs` is the only planned ES module exception.
+- `viewer/*.js` files and `plugin.js` are plain scripts, not ES modules. `plugin.mjs` is the only planned ES module exception.
 - `viewer/*.js` files must use `window.Polarrecorder`.
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
-- Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers. `plugin.mjs` is also covered by the JS pattern and file-size gates.
+- Viewer JS files have a 400-line hard limit and mandatory `/** Module: ... */` headers. `plugin.js` and `plugin.mjs` are also covered by the JS pattern and file-size gates.
 - Documentation and root project Markdown files have a 400 non-empty-line hard limit.
 
 State and threading:

@@ -76,7 +76,7 @@ export const REQUIRED_SMELL_RULES = [
   "Viewer rendered sentinel",
   "Viewer absent placeholder",
   "Viewer falsy preservation",
-  "`plugin.mjs` entry contract",
+  "Plugin entry contract",
   "Viewer behavior regressions",
   "Documentation TOC coverage",
   "Documentation format",

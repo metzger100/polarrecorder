@@ -21,7 +21,7 @@ Python standards:
 - `plugin.py` is the only AvNav boundary and stays thin.
 - `plugin.py` owns the single lock and snapshots live state for API, export, and persistence handoff.
 - Domain modules receive clocks, raw data, configs, snapshots, protocols, or fakes; they do not reach outward to runtime services.
-- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit.
+- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit.
 - Each `server/polarrecorder/` module's `Depends:` header must list exactly the intra-package modules it imports — no undeclared imports and no stale declarations. Runtime and `TYPE_CHECKING` imports of `polarrecorder.*` both count. The runtime import graph must stay acyclic (move type-only edges under `TYPE_CHECKING`). `tools/check-py-dependencies.py` enforces both.
 - Domain modules sit in four layers — primitives, core, domain, orchestration — and imports flow downward only: a module may import the same or a lower layer, never a higher one. `tools/check-py-dependencies.py` enforces the direction (`layer-direction`) against the `_LAYER_RANK` map and keeps that map equal to reality (`layer-map-stale`), so a new module must be assigned a layer in the same change.
 - `server/polarrecorder/**/*.py`, except `__init__.py`, must begin with:
@@ -45,7 +45,7 @@ Depends: <list of polarrecorder/ module dependencies>
 JavaScript standards:
 
 - `viewer/*.js` files are plain scripts loaded by `viewer/viewer.html`.
-- `plugin.mjs` is the only planned ES module exception; it is still scanned by the JS pattern and file-size gates.
+- `plugin.js` is a legacy plain-script entrypoint. `plugin.mjs` is the only planned ES module exception; both are scanned by the JS pattern and file-size gates.
 - Use `window.Polarrecorder` for all exported browser functionality.
 - Use kebab-case filenames, PascalCase exported namespace members, and camelCase functions.
 - No `console.log`, `var`, loose equality, `eval()`, `innerHTML` assignment, or commented-out code blocks.
@@ -58,8 +58,8 @@ JavaScript standards:
 - Every custom JS checker (`check-patterns.mjs`, `check-namespace.mjs`, `check-naming.mjs`, `check-headers.mjs`, `check-dependencies.mjs`, `check-smell-contracts.mjs`, `check-smell-catalog.mjs`, `check-js-duplication.mjs`, `check-file-size.mjs`, and `check-viewer-contracts.mjs`) exports a testable `run*` entry point and is exercised by `npm run test:tools` (`tools/test-check-patterns.mjs` and `tools/test-js-checkers.mjs`). Add a clean-pass and failing case when adding or changing a custom JS rule.
 - `viewer/*.js` behavioral contracts are executed, not just pattern-matched: `tools/check-viewer-contracts.mjs` drives the real scripts through the shared `tools/viewer-harness.mjs` and fails if any contract-valid payload renders a `NaN`/`undefined`/`null` token, clobbers a present `0`, or skips the absent-value placeholder. It is the viewer twin of `check-runtime-contracts.py`.
 - No lint/type suppression comments (`eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `prettier-ignore`, `istanbul ignore`); fix the root cause.
-- Viewer JS files have mandatory `/** Module: ... */` headers and a 400-line hard limit. `plugin.mjs` shares the JS file-size and one-liner-compression gate. `tools/check-file-size.mjs` also enforces the Markdown hard limit and blocks JS one-liner compression (dense statements, stacked declarations, packed destructuring or `for` headers, comma assignment sequences, collapsed literals/bodies, chained ternaries, operator-dense and over-long packed lines), matching the Python checker's coverage.
-- `plugin.mjs` has an executable entry-contract check (`npm run test:plugin`) in addition to the pattern and file-size gates; keep it stub-thin unless a documented AvNav module startup contract requires behavior there.
+- Viewer JS files have mandatory `/** Module: ... */` headers and a 400-line hard limit. `plugin.js` and `plugin.mjs` share the JS file-size and one-liner-compression gate. `tools/check-file-size.mjs` also enforces the Markdown hard limit and blocks JS one-liner compression (dense statements, stacked declarations, packed destructuring or `for` headers, comma assignment sequences, collapsed literals/bodies, chained ternaries, operator-dense and over-long packed lines), matching the Python checker's coverage.
+- `plugin.js` and `plugin.mjs` have an executable entry-contract check (`npm run test:plugin`) in addition to the pattern and file-size gates; keep them stub-thin unless a documented AvNav startup contract requires behavior there.
 - Every `viewer/*.js` file must have an explicit per-file line-coverage floor, enforced by `tools/check-js-coverage.mjs` over the vm-based viewer tests; new viewer files fail until listed and exercised.
 - Viewer `Depends:` headers must match real cross-file `window.Polarrecorder` references, and `viewer/viewer.html` must load the known viewer scripts in the documented order. `tools/check-smell-contracts.mjs` enforces both.
 - Do not commit machine-local absolute paths (`/home/<user>/...`, `/Users/<user>/...`) in source, docs, workflow files, or release metadata; `tools/check-patterns.mjs` blocks them. Use project-relative or redacted placeholders.

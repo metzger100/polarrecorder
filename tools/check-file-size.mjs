@@ -13,7 +13,7 @@ const ROOT_MARKDOWN_FILES = [
   "README.md",
   "ROADMAP.md"
 ];
-const ROOT_JS_FILES = ["plugin.mjs"];
+const ROOT_JS_FILES = ["plugin.js", "plugin.mjs"];
 
 // Thresholds mirror tools/check-python-filesize.py so the viewer JS checker is
 // no weaker than the Python checker at catching one-liner compression that

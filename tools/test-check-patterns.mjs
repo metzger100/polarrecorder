@@ -8,7 +8,7 @@ import path from "node:path";
 import { runPatternCheck } from "./check-patterns.mjs";
 
 testCleanWorkspacePasses();
-testPluginMjsIsScannedButAllowsEsModules();
+testPluginEntrypointsAreScannedWithModuleException();
 testDefaultTruthyFallbackFails();
 testHardcodedRuntimeDefaultFails();
 testConfigCacheLiteralDefaultFails();
@@ -48,7 +48,20 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.summary.ok, true);
 }
 
-function testPluginMjsIsScannedButAllowsEsModules() {
+function testPluginEntrypointsAreScannedWithModuleException() {
+  const legacyClean = runChecker({
+    "plugin.js": "(function () {\n  \"use strict\";\n}());\n"
+  });
+
+  assert.equal(legacyClean.status, 0, legacyClean.failures.join("\n"));
+
+  const legacyBad = runChecker({
+    "plugin.js": "export default function plugin(_api) {}\n"
+  });
+
+  assert.equal(legacyBad.status, 1);
+  assert.equal(legacyBad.summary.byRule["es-module-syntax"], 1);
+
   const clean = runChecker({
     "plugin.mjs": "export default function plugin(_api) {}\n"
   });

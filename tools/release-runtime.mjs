@@ -3,6 +3,7 @@ import path from "node:path";
 
 const FIXED_RUNTIME_FILES = [
   "plugin.css",
+  "plugin.js",
   "plugin.json",
   "plugin.mjs",
   "plugin.py",

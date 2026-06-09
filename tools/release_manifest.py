@@ -23,6 +23,7 @@ SEMVER_RE = re.compile(
 )
 ROOT_RUNTIME_FILES = (
     "plugin.css",
+    "plugin.js",
     "plugin.json",
     "plugin.mjs",
     "plugin.py",
