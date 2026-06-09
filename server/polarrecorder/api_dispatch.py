@@ -1,8 +1,9 @@
 """Module: API Dispatch - Request dispatch for the AvNav plugin shell.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_handlers, polarrecorder.bins, polarrecorder.export,
-polarrecorder.import_common, polarrecorder.persistence, polarrecorder.preset_backup
+Depends: polarrecorder.api_enhanced, polarrecorder.api_handlers, polarrecorder.bins,
+polarrecorder.export, polarrecorder.import_common, polarrecorder.persistence,
+polarrecorder.preset_backup
 """
 
 from __future__ import annotations
@@ -11,7 +12,14 @@ import secrets
 from collections.abc import Callable
 from typing import Any
 
-from polarrecorder import api_handlers, export, import_common, persistence, preset_backup
+from polarrecorder import (
+    api_enhanced,
+    api_handlers,
+    export,
+    import_common,
+    persistence,
+    preset_backup,
+)
 from polarrecorder.bins import TWS_BIN_MAX
 from polarrecorder.import_common import BackupError
 
@@ -377,4 +385,7 @@ ROUTES: dict[str, Route] = {
     "resume": _resume,
     "presets/save": _preset_save,
     "presets/delete": _preset_delete,
+    "enhanced/keys": api_enhanced.enhanced_keys,
+    "enhanced/status": api_enhanced.enhanced_status_view,
+    "enhanced/save": api_enhanced.enhanced_save,
 }

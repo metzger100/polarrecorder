@@ -134,7 +134,9 @@ class Plugin:
         self._flush()
 
     def _run_iteration(self, config: Config) -> None:
-        store_reader = reader.StoreReader(self.api, self._clock, self._wall_clock)
+        store_reader = reader.StoreReader(
+            self.api, self._clock, self._wall_clock, self._logger, config
+        )
         read_result = store_reader.read()
         data_status = _data_status(read_result)
         if not config.record_enabled or self._paused:

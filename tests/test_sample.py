@@ -9,6 +9,7 @@ def make_read_result(
     twa_raw: float | None = 270.0,
     tws_raw: float | None = 2.0,
     stw_raw: float | None = 3.0,
+    enhanced_raw: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     return ReadResult(
         timestamp_monotonic=100.0,
@@ -19,6 +20,7 @@ def make_read_result(
         twa_timestamp=99.5,
         tws_timestamp=98.0,
         stw_timestamp=99.0,
+        enhanced_raw=enhanced_raw,
     )
 
 
@@ -67,6 +69,37 @@ def test_build_sample_returns_none_for_non_finite_core_values() -> None:
     assert build_sample(make_read_result(twa_raw=math.nan)) is None
     assert build_sample(make_read_result(tws_raw=math.inf)) is None
     assert build_sample(make_read_result(stw_raw=-math.inf)) is None
+
+
+def test_build_sample_converts_enhanced_speeds_and_passes_through_other_roles() -> None:
+    sample = build_sample(
+        make_read_result(
+            enhanced_raw={
+                "sog_kt": (5.0, 99.5),
+                "aws_kt": (4.0, 99.5),
+                "current_drift_kt": (0.5, 99.5),
+                "depth_m": (3.0, 99.5),
+                "rpm": (800.0, 99.5),
+                "awa_deg": (30.0, 99.5),
+            }
+        )
+    )
+
+    assert sample is not None
+    assert sample.enhanced is not None
+    assert math.isclose(sample.enhanced["sog_kt"], 5.0 * 1.94384)
+    assert math.isclose(sample.enhanced["aws_kt"], 4.0 * 1.94384)
+    assert math.isclose(sample.enhanced["current_drift_kt"], 0.5 * 1.94384)
+    assert sample.enhanced["depth_m"] == 3.0
+    assert sample.enhanced["rpm"] == 800.0
+    assert sample.enhanced["awa_deg"] == 30.0
+
+
+def test_build_sample_enhanced_is_none_without_enhanced_raw() -> None:
+    sample = build_sample(make_read_result(enhanced_raw=None))
+
+    assert sample is not None
+    assert sample.enhanced is None
 
 
 def test_rule_result_is_shared_pipeline_rule_type() -> None:

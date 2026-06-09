@@ -44,6 +44,33 @@ class Config:
     engine_stw_floor: float = 3.0
     min_samples_for_export: int = 10
     debug_logging: bool = False
+    enh_rpm_enabled: bool = True
+    enh_rpm_key: str = ""
+    enh_rpm_idle_max: int = 900
+    enh_engine_state_enabled: bool = True
+    enh_engine_state_key: str = ""
+    enh_engine_state_on_threshold: float = 0.5
+    enh_depth_enabled: bool = True
+    enh_depth_key: str = "gps.depthBelowKeel"
+    enh_depth_floor_m: float = 1.0
+    enh_slip_enabled: bool = True
+    enh_sog_key: str = "gps.speed"
+    enh_current_drift_key: str = "gps.currentDrift"
+    enh_slip_sog_floor_kt: float = 1.0
+    enh_slip_ratio: float = 0.5
+    enh_tw_crosscheck_enabled: bool = True
+    enh_awa_key: str = "gps.windAngle"
+    enh_aws_key: str = "gps.windSpeed"
+    enh_tw_twa_tol_deg: float = 15.0
+    enh_tw_tws_tol_kt: float = 3.0
+    enh_heel_enabled: bool = True
+    enh_heel_key: str = ""
+    enh_heel_min_deg: float = 0.0
+    enh_heel_max_deg: float = 35.0
+    enh_turnconfirm_enabled: bool = True
+    enh_heading_key: str = "gps.headingTrue"
+    enh_cog_key: str = "gps.track"
+    enh_turn_min_roc: float = 3.0
 
 
 def parse_config_values(

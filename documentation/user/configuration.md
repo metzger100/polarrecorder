@@ -60,6 +60,51 @@ validation state, but no samples are committed to the learned polar.
 | `min_samples_for_export` | NUMBER | `10` | 3-100 | High-confidence export floor used when that export mode is requested. |
 | `debug_logging` | BOOLEAN | `false` | - | Enables one debug log line per pipeline iteration with decision and reason codes. |
 
+### Enhanced (optional-signal) rule settings
+
+Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and
+uses them to reject samples those signals prove unrepresentative. Each rule fires only when its
+switch is on, its store key(s) are configured, and the value is present and fresh; otherwise the
+rule is a no-op (fail-open per signal). Every switch defaults on.
+
+The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store
+keys, so those rules (R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the
+heading/COG turn confirmation) **activate automatically on upgrade** for any boat that already
+publishes those keys. To opt out, toggle the rule off or clear its key in the Settings tab's
+Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine_state_key`,
+`enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no
+standard key for them.
+
+| Name | Type | Default | Range | Behavior |
+|---|---:|---:|---:|---|
+| `enh_rpm_enabled` | BOOLEAN | `true` | - | Enable the engine-RPM reject (R17). |
+| `enh_rpm_key` | STRING | `""` | - | Store key for engine RPM. |
+| `enh_rpm_idle_max` | NUMBER | `900` | 200-4000 | RPM above this rejects the sample as motoring. |
+| `enh_engine_state_enabled` | BOOLEAN | `true` | - | Enable the engine-state reject (R18). |
+| `enh_engine_state_key` | STRING | `""` | - | Store key for engine state (boolean, RPM, or alternator voltage). |
+| `enh_engine_state_on_threshold` | FLOAT | `0.5` | 0.0-10000.0 | `engine_signal` at/above this means engine on (boolean 0.5, RPM ~50, voltage ~13.2). |
+| `enh_depth_enabled` | BOOLEAN | `true` | - | Enable the shallow-water reject (R19). |
+| `enh_depth_key` | STRING | `"gps.depthBelowKeel"` | - | Store key for depth in meters (keel clearance). |
+| `enh_depth_floor_m` | FLOAT | `1.0` | 0.5-50.0 | Clearance below this rejects the sample (shallow-water squat). |
+| `enh_slip_enabled` | BOOLEAN | `true` | - | Enable the STW-implausibly-low reject (R20). |
+| `enh_sog_key` | STRING | `"gps.speed"` | - | Store key for speed over ground. |
+| `enh_current_drift_key` | STRING | `"gps.currentDrift"` | - | Store key for current drift; corroborates R20. |
+| `enh_slip_sog_floor_kt` | FLOAT | `1.0` | 0.3-10.0 | SOG must exceed this for R20 to apply. |
+| `enh_slip_ratio` | FLOAT | `0.5` | 0.1-0.9 | Reject when STW < SOG * ratio and current cannot explain the gap. |
+| `enh_tw_crosscheck_enabled` | BOOLEAN | `true` | - | Enable the true-wind cross-check reject (R21). |
+| `enh_awa_key` | STRING | `"gps.windAngle"` | - | Store key for apparent wind angle. |
+| `enh_aws_key` | STRING | `"gps.windSpeed"` | - | Store key for apparent wind speed. |
+| `enh_tw_twa_tol_deg` | FLOAT | `15.0` | 3.0-45.0 | Allowed TWA disagreement for the cross-check. |
+| `enh_tw_tws_tol_kt` | FLOAT | `3.0` | 0.5-15.0 | Allowed TWS disagreement for the cross-check. |
+| `enh_heel_enabled` | BOOLEAN | `true` | - | Enable the heel-band reject (R22). |
+| `enh_heel_key` | STRING | `""` | - | Store key for heel/roll in degrees. |
+| `enh_heel_min_deg` | FLOAT | `0.0` | 0.0-45.0 | Reject below this absolute heel (0 disables it, multihull-safe). |
+| `enh_heel_max_deg` | FLOAT | `35.0` | 5.0-90.0 | Reject above this absolute heel. |
+| `enh_turnconfirm_enabled` | BOOLEAN | `true` | - | Enable heading/COG turn confirmation for R11/R14. |
+| `enh_heading_key` | STRING | `"gps.headingTrue"` | - | Store key for heading. |
+| `enh_cog_key` | STRING | `"gps.track"` | - | Store key for course over ground. |
+| `enh_turn_min_roc` | FLOAT | `3.0` | 0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn. |
+
 Config changes are hot-swapped. AvNav calls the registered change callback with changed string
 values; `plugin.py` acquires its single lock, parses and clamps the new values, and replaces the
 `Config` object. The sampling loop snapshots the current config once per iteration, so a change

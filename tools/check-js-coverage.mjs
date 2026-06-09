@@ -24,13 +24,15 @@ const ROOT = process.cwd();
 const TEST_FILES = [
   "tools/test-viewer-polar.mjs",
   "tools/test-viewer-smoke.mjs",
-  "tools/test-viewer-theme.mjs"
+  "tools/test-viewer-theme.mjs",
+  "tools/test-viewer-enhanced.mjs"
 ];
 
 // Per-file minimum line coverage. Every viewer/*.js file must be listed here
 // and exercised by the viewer tests.
 const COVERAGE_TARGETS = {
   "viewer/dom.js": 80,
+  "viewer/enhanced-settings.js": 80,
   "viewer/export-ui.js": 60,
   "viewer/grid-editor.js": 75,
   "viewer/import-upload.js": 80,

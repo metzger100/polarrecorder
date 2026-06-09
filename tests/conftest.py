@@ -108,6 +108,14 @@ class FakeAvNavAPI:
     def getExpiryPeriod(self) -> float:
         return 10.0
 
+    def getDataByPrefix(self, prefix: str) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        dotted = prefix + "."
+        for key in self.values:
+            if key.startswith(dotted):
+                result[key[len(dotted) :]] = self.values[key].value
+        return result
+
     def fetchFromQueue(
         self,
         sequence: int,

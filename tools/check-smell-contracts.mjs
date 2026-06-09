@@ -48,6 +48,7 @@ function checkViewerScriptContract(ctx) {
     "grid-editor.js",
     "export-ui.js",
     "import-upload.js",
+    "enhanced-settings.js",
     "settings-ui.js"
   ];
   const html = read(ctx, "viewer/viewer.html");

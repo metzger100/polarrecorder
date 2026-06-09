@@ -36,6 +36,7 @@ const VIEWER_MODULES = [
   "polar-chart.js",
   "timeline-chart.js",
   "export-ui.js",
+  "enhanced-settings.js",
   "settings-ui.js",
   "viewer.js"
 ];

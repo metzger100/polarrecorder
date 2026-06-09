@@ -769,6 +769,44 @@ textarea {
   color: var(--polarrecorder-attention-color);
 }
 
+.enhanced-rule {
+  padding: 0.7143rem 0;
+  border-top: 0.0714rem solid var(--polarrecorder-border-color);
+}
+
+.enhanced-rule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5714rem;
+}
+
+.enhanced-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1429rem 0.5714rem;
+  border-radius: var(--polarrecorder-radius-control);
+  background: var(--polarrecorder-surface-variant);
+  color: var(--polarrecorder-main-color);
+}
+
+.enhanced-badge-active {
+  background: var(--polarrecorder-accepted-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-disabled {
+  background: var(--polarrecorder-second-color);
+}
+
+.enhanced-key select {
+  margin-bottom: 0.2857rem;
+}
+
+.enhanced-rule .switch-field {
+  margin: 0.8571rem 0;
+}
+
 @media (min-width: 37.5em) {
   .polarrecorder-app {
     padding-top: 5.2857rem;

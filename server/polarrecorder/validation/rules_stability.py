@@ -9,17 +9,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from polarrecorder.sample import RuleResult
+from polarrecorder.sample import RuleResult, enhanced_value
 from polarrecorder.validation.angle_math import circular_distance, circular_range
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
     from polarrecorder.sample import Sample
-    from polarrecorder.validation.state import ValidationState
+    from polarrecorder.validation.state import ValidationState, WindowEntry
 
 
 def twa_rate_of_change(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
-    """Reject rapid TWA changes and start a maneuver cooldown."""
+    """Reject rapid TWA changes and start a maneuver cooldown.
+
+    When heading/COG turn confirmation is enabled and a prior+current heading or
+    COG is available, a high TWA rate with steady heading/COG is treated as a wind
+    shift: the sample passes and no cooldown starts.
+    """
     previous = state.previous_sample
     if previous is None:
         return _pass()
@@ -27,10 +32,40 @@ def twa_rate_of_change(sample: Sample, state: ValidationState, config: Config) -
     if elapsed_seconds <= 0.0:
         return _pass()
     rate = circular_distance(sample.twa_deg_raw, previous.twa_deg_raw) / elapsed_seconds
-    if rate > config.twa_roc_threshold:
-        state.cooldown_expires = sample.timestamp_monotonic + config.cooldown_seconds
-        return _reject("reject_twa_roc")
-    return _pass()
+    high_rate = rate > config.twa_roc_threshold
+    if not high_rate or _is_wind_shift(sample, previous, elapsed_seconds, config):
+        return _pass()
+    state.cooldown_expires = sample.timestamp_monotonic + config.cooldown_seconds
+    return _reject("reject_twa_roc")
+
+
+def _is_wind_shift(
+    sample: Sample,
+    previous: WindowEntry,
+    elapsed_seconds: float,
+    config: Config,
+) -> bool:
+    if not config.enh_turnconfirm_enabled:
+        return False
+    rates = _turn_rates(sample, previous, elapsed_seconds)
+    if not rates:
+        return False
+    return max(rates) < config.enh_turn_min_roc
+
+
+def _turn_rates(
+    sample: Sample,
+    previous: WindowEntry,
+    elapsed_seconds: float,
+) -> list[float]:
+    rates: list[float] = []
+    heading = enhanced_value(sample, "heading_deg")
+    if heading is not None and previous.heading_deg is not None:
+        rates.append(circular_distance(heading, previous.heading_deg) / elapsed_seconds)
+    cog = enhanced_value(sample, "cog_deg")
+    if cog is not None and previous.cog_deg is not None:
+        rates.append(circular_distance(cog, previous.cog_deg) / elapsed_seconds)
+    return rates
 
 
 def tws_rate_of_change(sample: Sample, state: ValidationState, config: Config) -> RuleResult:

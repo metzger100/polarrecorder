@@ -199,6 +199,21 @@ def export_json(serialized: Mapping[str, object]) -> Response:
     return ok(dict(serialized))
 
 
+def format_enhanced_keys(keys: Sequence[str]) -> Response:
+    """Format the available-store-keys endpoint."""
+    return ok({"keys": list(keys)})
+
+
+def format_enhanced_status(rows: Sequence[Mapping[str, object]]) -> Response:
+    """Format the enhanced-rule live-status endpoint."""
+    return ok({"rules": [dict(row) for row in rows]})
+
+
+def format_enhanced_config(values: Mapping[str, object]) -> Response:
+    """Format the saved enhanced configuration subset."""
+    return ok({"config": dict(values)})
+
+
 def _format_current_values(snapshot: StatusSnapshot) -> dict[str, object] | None:
     values = snapshot.current_values
     if values is None:
