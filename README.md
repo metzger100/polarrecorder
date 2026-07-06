@@ -51,15 +51,43 @@ The first minutes can look empty. That is normal. The plugin waits for stable, u
 
 ## Installation
 
-Manual installation:
+Linux AvNav servers can install or update from the latest GitHub Release with:
 
-1. Download the release zip from GitHub Releases or from `releases/` in this
-   repository.
-2. Extract the release zip into `<DATADIR>/plugins/` on the AvNav system. The
-   zip contains the `polarrecorder/` plugin directory.
-4. Restart AvNav or reload plugins from the AvNav plugin page.
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh)
+```
+
+The installer targets AvNav user plugins by default. It detects existing user plugin installs, AvNav service data directories, and documented Linux defaults before writing files. For custom setups, pass the AvNav data directory or the final plugin directory:
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh) --data-dir <AVNAV_DATA_DIR>
+bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh) --plugin-dir <AVNAV_PLUGIN_DIR>/polarrecorder
+```
+
+Pinned release example:
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh) --version 1.0.0
+```
+
+Beta prerelease example:
+
+```bash
+bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh) --version 1.0.0-beta.1
+```
+
+The same manual version can be supplied as `POLARRECORDER_VERSION=1.0.0-beta.1`.
+
+Manual install:
+
+1. Download the latest release zip from GitHub Releases (or from `releases/` in this repository).
+2. Extract it into your AvNav plugin directory so you get `<AVNAV_PLUGIN_DIR>/polarrecorder/`.
+3. Restart AvNav.
+4. Open the Polar Recorder User App from AvNav.
 
 When using AvNav's plugin upload page, upload the release zip and let AvNav extract it.
+
+AvNav documents user plugins under the data directory's `plugins` folder and system plugins under `/usr/lib/avnav/plugins`. Use the installer `--system` option only when you intentionally want a system plugin install.
 
 ## How recording works
 
