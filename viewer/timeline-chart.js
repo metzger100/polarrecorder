@@ -1,7 +1,7 @@
 /**
  * Module: Timeline Chart
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js
+ * Depends: viewer.js, dom.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -16,7 +16,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function render(data, minutes) {
     renderButtons(minutes);
     const host = document.getElementById("timeline-chart");
-    host.replaceChildren();
+    Polarrecorder.Dom.Clear(host);
     const buckets = (data && data.buckets) || [];
     const svg = svgNode("svg");
     svg.setAttribute("viewBox", "0 0 720 250");
@@ -37,7 +37,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function renderButtons(activeMinutes) {
     const host = document.getElementById("timeline-ranges");
-    host.replaceChildren();
+    Polarrecorder.Dom.Clear(host);
     [[30, "30 min"], [60, "1 h"], [240, "4 h"]].forEach(function (item) {
       const button = document.createElement("button");
       button.type = "button";

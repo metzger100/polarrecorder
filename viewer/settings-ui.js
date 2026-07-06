@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const button = Polarrecorder.Dom.Button;
   const actionRow = Polarrecorder.Dom.ActionRow;
+  const clear = Polarrecorder.Dom.Clear;
   const download = Polarrecorder.Dom.Download;
   const state = { host: null, message: "", messageKind: "info" };
 
@@ -20,7 +21,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function render() {
-    state.host.replaceChildren();
+    clear(state.host);
     state.host.appendChild(learnedDataCard());
     state.host.appendChild(presetsCard());
     state.host.appendChild(Polarrecorder.EnhancedSettings.Render());

@@ -1,7 +1,7 @@
 /**
  * Module: Polar Chart
  * Documentation: documentation/architecture/ui.md
- * Depends: placeholders.js, viewer.js
+ * Depends: placeholders.js, viewer.js, dom.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -48,8 +48,8 @@ window.Polarrecorder = window.Polarrecorder || {};
     }
     lastBandsKey = nextBandsKey;
     lastFormat = data.format;
-    host.replaceChildren();
-    chips.replaceChildren();
+    Polarrecorder.Dom.Clear(host);
+    Polarrecorder.Dom.Clear(chips);
     data.tws_bands.forEach(function (band, index) {
       chips.appendChild(chipForBand(data, band, index));
     });
