@@ -14,7 +14,7 @@ AvNav discovers plugin runtime files in a plugin directory. For Polar Recorder, 
 |---|---|
 | `plugin.py` | Python plugin entry point. |
 | `plugin.json` | Static user-app declaration for the viewer, including AddOn selector metadata. |
-| `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. `plugin.js` and `plugin.mjs` stay no-op adapters. |
+| `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. `plugin.js` stays a no-op adapter; `plugin.mjs` registers the user app on modern cores with runtime de-duplication (see below). |
 | `viewer/*` | Static browser user app served from the plugin directory. |
 | `server/polarrecorder/**/*.py` | Python package imported by `plugin.py` after it adds `server/` to `sys.path`. |
 
@@ -45,11 +45,17 @@ Polar Recorder boundaries:
 - AvNav access is represented as narrow protocols/fakes in domain-facing modules.
 - All lock ownership stays in `plugin.py`; domain modules remain thread-unaware.
 - Version authority lives in release tooling. Development checkouts may not carry a stamped runtime version in `plugin.json`.
-- User-app visibility is owned by `plugin.json`. AvNav imports that static
-  declaration into its AddOn list with the app name, AddOn page target, button
-  labels, icon, title, and viewer URL. `plugin.mjs` intentionally does not
-  register the same user app because AvNav versions that load both static and
-  module declarations would otherwise show a duplicate client-only entry.
+- User-app visibility is registered two ways so the same package works across
+  AvNav variants without a version check:
+  - `plugin.json` declares the user app statically. Cores that process
+    `plugin.json` (legacy-only and mixed) import it into their AddOn list with
+    the app name, AddOn page target, button labels, icon, title, and viewer URL.
+  - `plugin.mjs` registers the same user app through `api.registerUserApp` for
+    modern cores that ignore `plugin.json`. To avoid a duplicate entry on mixed
+    cores, the module first queries the core addon list (`/api/addon/list`) and
+    registers only when no AddOn already exists under this plugin's base URL. A
+    missing or failing addon list is treated as a modern-only core, so the
+    module registers rather than staying silent.
 
 ## Related
 
