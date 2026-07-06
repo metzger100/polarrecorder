@@ -93,6 +93,24 @@ def test_plugin_registers_no_avnav_editable_parameters(tmp_path: Path) -> None:
     assert api.editable_parameters == []
 
 
+def test_run_registers_viewer_user_app_once(tmp_path: Path) -> None:
+    monotonic = FakeClock(100.0)
+    wall = FakeClock(1000.0)
+    api = LoopAvNavAPI(max_fetches=2, monotonic=monotonic, wall=wall)
+    plugin = make_plugin(tmp_path, api)
+
+    plugin.run()
+    plugin.run()
+
+    assert api.user_apps == [
+        (
+            "/plugins/user-polarrecorder/viewer/viewer.html",
+            "viewer/icon.svg",
+            "Polar Recorder",
+        )
+    ]
+
+
 def test_full_fake_avnav_loop_updates_model_and_flushes_to_tmp_data_dir(tmp_path: Path) -> None:
     monotonic = FakeClock(100.0)
     wall = FakeClock(1000.0)

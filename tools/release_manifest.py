@@ -31,24 +31,6 @@ ROOT_RUNTIME_FILES = (
     "viewer/viewer.css",
     "viewer/viewer.html",
 )
-USER_APP_REQUIRED_FIELDS = (
-    "url",
-    "iconFile",
-    "title",
-    "name",
-    "page",
-    "shortText",
-    "longText",
-)
-POLARRECORDER_USER_APP = {
-    "url": "viewer/viewer.html",
-    "iconFile": "viewer/icon.svg",
-    "title": "Polar Recorder",
-    "name": "polarrecorder",
-    "page": "addonpage",
-    "shortText": "Polar",
-    "longText": "Polar Recorder",
-}
 EXCLUDED_PREFIXES = (
     ".git/",
     ".githooks/",
@@ -96,37 +78,6 @@ def plugin_json_data(root: Path = ROOT) -> dict[str, object]:
     return data
 
 
-def validate_plugin_json_user_apps(root: Path = ROOT) -> None:
-    data = plugin_json_data(root)
-    user_apps = data.get("userApps")
-    if not isinstance(user_apps, list) or not user_apps:
-        raise ReleaseError("plugin.json userApps must be a non-empty list")
-
-    polar_app = None
-    for index, app in enumerate(user_apps):
-        if not isinstance(app, dict):
-            raise ReleaseError(f"plugin.json userApps[{index}] must be an object")
-        missing = [
-            field
-            for field in USER_APP_REQUIRED_FIELDS
-            if not isinstance(app.get(field), str) or not app.get(field)
-        ]
-        if missing:
-            fields = ", ".join(missing)
-            raise ReleaseError(f"plugin.json userApps[{index}] missing required fields: {fields}")
-        if app.get("name") == POLARRECORDER_USER_APP["name"]:
-            polar_app = app
-
-    if polar_app is None:
-        raise ReleaseError("plugin.json userApps must contain the polarrecorder app")
-    for field, expected in POLARRECORDER_USER_APP.items():
-        actual = polar_app.get(field)
-        if actual != expected:
-            raise ReleaseError(
-                f"plugin.json polarrecorder user app {field} must be {expected!r}, got {actual!r}"
-            )
-
-
 def pyproject_project_version() -> str | None:
     try:
         lines = (ROOT / "pyproject.toml").read_text(encoding="utf-8").splitlines()
@@ -155,7 +106,6 @@ def pyproject_project_version() -> str | None:
 
 
 def expected_runtime_files() -> list[tuple[str, Path]]:
-    validate_plugin_json_user_apps()
     entries: list[tuple[str, Path]] = []
     for relative in ROOT_RUNTIME_FILES:
         source = ROOT / relative
