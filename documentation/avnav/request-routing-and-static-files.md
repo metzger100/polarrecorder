@@ -49,11 +49,15 @@ Transport contract (portable AvNav behavior):
 Static user app contract:
 
 - `plugin.json` declares the user app `name`, AddOn page target, short and long
-  button labels, title, icon, and `viewer/viewer.html` URL.
-- `plugin.mjs` is loadable by modern AvNav clients but does not register a
-  second user app. The static `plugin.json` declaration stays the single source
-  for AddOn selection so AvNav versions that process both paths do not show
-  duplicate Polar Recorder entries.
+  button labels, title, icon, and `viewer/viewer.html` URL. Cores that process
+  `plugin.json` register it server-side; it then appears in the core addon list
+  (`/api/addon/list`) under this plugin's base URL.
+- `plugin.mjs` registers the same user app through `api.registerUserApp` for
+  modern cores that ignore `plugin.json`. It first checks the core addon list
+  and registers only when no AddOn already exists under this plugin's base URL,
+  so mixed cores that honor both paths do not show duplicate Polar Recorder
+  entries. If the addon list is unreachable, the module assumes a modern-only
+  core and registers.
 - Runtime browser files are plain static files; there is no bundler and no runtime build step.
 - Viewer JavaScript files are plain scripts and export only through `window.Polarrecorder`.
 - Static viewer requests are read-only; model mutations happen through API endpoints.

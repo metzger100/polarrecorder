@@ -87,7 +87,7 @@ JavaScript and viewer rules:
 | Viewer rendered sentinel | Healthy payload renders `NaN`, `undefined`, or `null` | Route absent values to placeholders | `check-viewer-contracts.mjs` |
 | Viewer absent placeholder | Missing `current_values` does not render the approved placeholder | Render `No Data`, not sentinel text | `check-viewer-contracts.mjs` |
 | Viewer falsy preservation | Present zero readings fall back to placeholders | Preserve explicit `0` readings | `check-viewer-contracts.mjs` |
-| Plugin entry contract | Legacy `plugin.js` throws during script execution, `plugin.mjs` default export is missing, or the fake AvNav API call contract breaks | Keep both entrypoints stub-thin and executable | `test-plugin-mjs.mjs` |
+| Plugin entry contract | Legacy `plugin.js` throws during script execution, `plugin.mjs` default export is missing, or the fake AvNav API call contract breaks | Keep `plugin.js` stub-thin; keep `plugin.mjs` executable and limited to documented AvNav registration behavior | `test-plugin-mjs.mjs` |
 | Viewer behavior regressions | Theme bridge, polar chart, or smoke flow breaks | Keep viewer behavior covered by stdlib Node tests | `test-viewer-*.mjs` |
 
 Documentation, repository, and release rules:
