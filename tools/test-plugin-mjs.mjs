@@ -20,4 +20,29 @@ assert.doesNotThrow(function () {
   pluginModule.default({ marker: "fake-avnav-api" });
 });
 
+const registrations = [];
+const result = pluginModule.default({
+  registerUserApp(button, app, page) {
+    registrations.push({ button, app, page });
+    return "ignored-registration-id";
+  }
+});
+
+assert.equal(result, undefined);
+assert.deepEqual(registrations, [
+  {
+    button: {
+      name: "polarrecorder",
+      shortText: "Polar",
+      longText: "Polar Recorder",
+      icon: "viewer/icon.svg"
+    },
+    app: {
+      url: "viewer/viewer.html",
+      title: "Polar Recorder"
+    },
+    page: "addonpage"
+  }
+]);
+
 console.log("plugin entrypoint contract test passed.");

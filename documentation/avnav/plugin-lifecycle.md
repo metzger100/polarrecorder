@@ -13,8 +13,8 @@ AvNav discovers plugin runtime files in a plugin directory. For Polar Recorder, 
 | File | Role |
 |---|---|
 | `plugin.py` | Python plugin entry point. |
-| `plugin.json` | Static user-app declaration for the viewer. |
-| `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. The JavaScript entrypoints are stub-thin because `plugin.json` owns user-app registration. |
+| `plugin.json` | Static user-app declaration for the viewer, including AddOn selector metadata. |
+| `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. `plugin.js` stays a legacy no-op adapter; `plugin.mjs` mirrors user-app registration through AvNav's modern module API. |
 | `viewer/*` | Static browser user app served from the plugin directory. |
 | `server/polarrecorder/**/*.py` | Python package imported by `plugin.py` after it adds `server/` to `sys.path`. |
 
@@ -45,6 +45,10 @@ Polar Recorder boundaries:
 - AvNav access is represented as narrow protocols/fakes in domain-facing modules.
 - All lock ownership stays in `plugin.py`; domain modules remain thread-unaware.
 - Version authority lives in release tooling. Development checkouts may not carry a stamped runtime version in `plugin.json`.
+- User-app visibility is supported through both AvNav client generations:
+  `plugin.json` provides the legacy/static declaration, while `plugin.mjs`
+  registers the same app through the modern module API. Both use the same app
+  name, AddOn page target, button labels, icon, title, and viewer URL.
 
 ## Related
 

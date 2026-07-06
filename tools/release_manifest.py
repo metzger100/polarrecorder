@@ -31,6 +31,24 @@ ROOT_RUNTIME_FILES = (
     "viewer/viewer.css",
     "viewer/viewer.html",
 )
+USER_APP_REQUIRED_FIELDS = (
+    "url",
+    "iconFile",
+    "title",
+    "name",
+    "page",
+    "shortText",
+    "longText",
+)
+POLARRECORDER_USER_APP = {
+    "url": "viewer/viewer.html",
+    "iconFile": "viewer/icon.svg",
+    "title": "Polar Recorder",
+    "name": "polarrecorder",
+    "page": "addonpage",
+    "shortText": "Polar",
+    "longText": "Polar Recorder",
+}
 EXCLUDED_PREFIXES = (
     ".git/",
     ".githooks/",
@@ -58,10 +76,7 @@ class ReleaseError(ValueError):
 
 
 def plugin_json_version() -> str | None:
-    try:
-        data = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"Could not read plugin.json: {exc}") from exc
+    data = plugin_json_data()
     version = data.get("version")
     if version is None:
         return None
@@ -69,6 +84,47 @@ def plugin_json_version() -> str | None:
         raise ReleaseError("plugin.json version must be a non-empty string when present")
     validate_semver(version)
     return version
+
+
+def plugin_json_data(root: Path = ROOT) -> dict[str, object]:
+    try:
+        data = json.loads((root / "plugin.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ReleaseError(f"Could not read plugin.json: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ReleaseError("plugin.json must contain a JSON object")
+    return data
+
+
+def validate_plugin_json_user_apps(root: Path = ROOT) -> None:
+    data = plugin_json_data(root)
+    user_apps = data.get("userApps")
+    if not isinstance(user_apps, list) or not user_apps:
+        raise ReleaseError("plugin.json userApps must be a non-empty list")
+
+    polar_app = None
+    for index, app in enumerate(user_apps):
+        if not isinstance(app, dict):
+            raise ReleaseError(f"plugin.json userApps[{index}] must be an object")
+        missing = [
+            field
+            for field in USER_APP_REQUIRED_FIELDS
+            if not isinstance(app.get(field), str) or not app.get(field)
+        ]
+        if missing:
+            fields = ", ".join(missing)
+            raise ReleaseError(f"plugin.json userApps[{index}] missing required fields: {fields}")
+        if app.get("name") == POLARRECORDER_USER_APP["name"]:
+            polar_app = app
+
+    if polar_app is None:
+        raise ReleaseError("plugin.json userApps must contain the polarrecorder app")
+    for field, expected in POLARRECORDER_USER_APP.items():
+        actual = polar_app.get(field)
+        if actual != expected:
+            raise ReleaseError(
+                f"plugin.json polarrecorder user app {field} must be {expected!r}, got {actual!r}"
+            )
 
 
 def pyproject_project_version() -> str | None:
@@ -99,6 +155,7 @@ def pyproject_project_version() -> str | None:
 
 
 def expected_runtime_files() -> list[tuple[str, Path]]:
+    validate_plugin_json_user_apps()
     entries: list[tuple[str, Path]] = []
     for relative in ROOT_RUNTIME_FILES:
         source = ROOT / relative
@@ -170,12 +227,7 @@ def validate_semver(version: str) -> None:
 
 def stamp_plugin_json(version: str) -> bytes:
     validate_semver(version)
-    try:
-        data = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"Could not read plugin.json: {exc}") from exc
-    if not isinstance(data, dict):
-        raise ReleaseError("plugin.json must contain a JSON object")
+    data = plugin_json_data()
     stamped = {"version": version}
     stamped.update({key: value for key, value in data.items() if key != "version"})
     return (json.dumps(stamped, indent=2) + "\n").encode("utf-8")
