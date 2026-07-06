@@ -92,8 +92,10 @@ AvNav documents user plugins under the data directory's `plugins` folder and sys
 For a user-plugin install, AvNav serves the viewer under its runtime plugin name:
 `/plugins/user-polarrecorder/viewer/viewer.html`. If that direct URL opens but
 Polar Recorder is missing from AvNav's User Apps/AddOn selection, the plugin and
-viewer are installed; update to a release with the full selector metadata and
-modern module registration, then restart AvNav or hard-refresh the AvNav client.
+viewer are installed; update to a release with the full static selector metadata,
+then restart AvNav or hard-refresh the AvNav client. The module entrypoint is
+kept loadable for modern AvNav clients but intentionally does not register a
+second AddOn entry.
 
 ## How recording works
 

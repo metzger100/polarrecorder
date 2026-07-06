@@ -50,8 +50,10 @@ Static user app contract:
 
 - `plugin.json` declares the user app `name`, AddOn page target, short and long
   button labels, title, icon, and `viewer/viewer.html` URL.
-- `plugin.mjs` registers the same user app through AvNav's modern module API
-  for clients that surface module-registered add-ons.
+- `plugin.mjs` is loadable by modern AvNav clients but does not register a
+  second user app. The static `plugin.json` declaration stays the single source
+  for AddOn selection so AvNav versions that process both paths do not show
+  duplicate Polar Recorder entries.
 - Runtime browser files are plain static files; there is no bundler and no runtime build step.
 - Viewer JavaScript files are plain scripts and export only through `window.Polarrecorder`.
 - Static viewer requests are read-only; model mutations happen through API endpoints.
