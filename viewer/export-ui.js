@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const button = Polarrecorder.Dom.Button;
   const actionRow = Polarrecorder.Dom.ActionRow;
+  const clear = Polarrecorder.Dom.Clear;
   const download = Polarrecorder.Dom.Download;
   const state = {
     host: null,
@@ -39,7 +40,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function render() {
     state.previewActive = false;
-    state.host.replaceChildren();
+    clear(state.host);
     state.host.appendChild(configCard());
     applyValidity();
   }
@@ -148,7 +149,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
 
   function fillPresets(select) {
-    select.replaceChildren();
+    clear(select);
     sortedPresets().forEach(function (preset) {
       const option = document.createElement("option");
       option.value = preset.name;

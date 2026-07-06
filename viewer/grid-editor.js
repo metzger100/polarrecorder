@@ -1,7 +1,7 @@
 /**
  * Module: Grid Editor
  * Documentation: documentation/architecture/ui.md
- * Depends: none
+ * Depends: dom.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -37,7 +37,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function render(host, state) {
-    host.replaceChildren();
+    Polarrecorder.Dom.Clear(host);
     const title = document.createElement("h3");
     title.textContent = state.label;
     host.appendChild(title);

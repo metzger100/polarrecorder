@@ -59,7 +59,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function clear(node) {
-    node.replaceChildren();
+    Polarrecorder.Dom.Clear(node);
   }
 
   function wireTabs() {

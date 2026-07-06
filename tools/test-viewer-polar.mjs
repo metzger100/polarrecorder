@@ -6,6 +6,7 @@ import path from "node:path";
 import vm from "node:vm";
 
 const ROOT = process.cwd();
+const DOM_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "dom.js"), "utf8");
 const PLACEHOLDERS_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "placeholders.js"), "utf8");
 const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js"), "utf8");
 
@@ -250,6 +251,9 @@ function loadPolarChart() {
   vm.runInNewContext(PLACEHOLDERS_SOURCE, context, {
     filename: path.join(ROOT, "viewer", "placeholders.js")
   });
+  vm.runInNewContext(DOM_SOURCE, context, {
+    filename: path.join(ROOT, "viewer", "dom.js")
+  });
   vm.runInNewContext(POLAR_SOURCE, context, {
     filename: path.join(ROOT, "viewer", "polar-chart.js")
   });
@@ -261,7 +265,7 @@ function loadPolarChart() {
 }
 
 function makeElement(tagName) {
-  return {
+  const element = {
     attributes: new Map(),
     children: [],
     className: "",
@@ -272,16 +276,27 @@ function makeElement(tagName) {
     textContent: "",
     addEventListener() {},
     appendChild(child) {
+      child.parentNode = this;
       this.children.push(child);
       return child;
     },
-    replaceChildren() {
-      this.children = [];
+    removeChild(child) {
+      this.children = this.children.filter(function (item) {
+        return item !== child;
+      });
+      child.parentNode = null;
+      return child;
     },
     setAttribute(name, value) {
       this.attributes.set(name, String(value));
     }
   };
+  Object.defineProperty(element, "firstChild", {
+    get() {
+      return element.children[0] || null;
+    }
+  });
+  return element;
 }
 
 function textTree(node) {

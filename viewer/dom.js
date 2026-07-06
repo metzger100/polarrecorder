@@ -36,6 +36,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     return created;
   }
 
+  function clear(node) {
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
   function download(filename, text, type) {
     const blob = new Blob([text], { type: type });
     const url = URL.createObjectURL(blob);
@@ -51,6 +57,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   Polarrecorder.Dom = {
     ActionRow: actionRow,
     Button: button,
+    Clear: clear,
     Download: download,
     Node: node
   };

@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const button = Polarrecorder.Dom.Button;
   const actionRow = Polarrecorder.Dom.ActionRow;
+  const clear = Polarrecorder.Dom.Clear;
   const node = Polarrecorder.Dom.Node;
 
   const RULE_LABELS = {
@@ -91,7 +92,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function renderRules(rules) {
     state.controls = [];
     state.keySelects = [];
-    state.body.replaceChildren();
+    clear(state.body);
     if (!rules.length) {
       state.body.appendChild(node("p", "helper", "Enhanced status is unavailable."));
       return;
@@ -148,7 +149,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function populateSelect(select, current) {
-    select.replaceChildren();
+    clear(select);
     appendOption(select, "", "— none —");
     const options = state.keys.slice();
     if (current && options.indexOf(current) === -1) {

@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const button = Polarrecorder.Dom.Button;
   const actionRow = Polarrecorder.Dom.ActionRow;
+  const clear = Polarrecorder.Dom.Clear;
   const node = Polarrecorder.Dom.Node;
 
   const state = {
@@ -47,7 +48,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function renderGroups(groups) {
     state.controls = [];
-    state.body.replaceChildren();
+    clear(state.body);
     groups.forEach(function (group) {
       state.body.appendChild(groupBlock(group));
     });

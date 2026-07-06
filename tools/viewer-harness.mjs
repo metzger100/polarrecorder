@@ -355,16 +355,22 @@ function element(tagName) {
       });
       node.parentNode = null;
     },
-    replaceChildren(...children) {
-      node.children = [];
-      children.forEach(function (child) {
-        node.appendChild(child);
+    removeChild(child) {
+      node.children = node.children.filter(function (item) {
+        return item !== child;
       });
+      child.parentNode = null;
+      return child;
     },
     setAttribute(name, value) {
       node.attributes.set(name, String(value));
     }
   };
+  Object.defineProperty(node, "firstChild", {
+    get() {
+      return node.children[0] || null;
+    }
+  });
   node.classList = classList(node);
   return node;
 }
