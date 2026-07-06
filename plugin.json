@@ -1,13 +1,1 @@
-{
-  "userApps": [
-    {
-      "url": "viewer/viewer.html",
-      "iconFile": "viewer/icon.svg",
-      "title": "Polar Recorder",
-      "name": "polarrecorder",
-      "page": "addonpage",
-      "shortText": "Polar",
-      "longText": "Polar Recorder"
-    }
-  ]
-}
+{}

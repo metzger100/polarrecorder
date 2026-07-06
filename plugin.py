@@ -45,6 +45,9 @@ DESCRIPTION = (
 FALLBACK_VERSION = "0.0.0-dev"
 INCOMPLETE_DEMOTE_COUNT = 30
 QUEUE_WAIT_SECONDS = 0.5
+USER_APP_URL = "viewer/viewer.html"
+USER_APP_ICON = "viewer/icon.svg"
+USER_APP_TITLE = "Polar Recorder"
 
 
 class _CurrentValues(NamedTuple):
@@ -104,6 +107,7 @@ class Plugin:
         self._import_parts: list[str] = []
         self._import_bytes = 0
         self._import_last_activity = 0.0
+        self._user_app_registered = False
         api.registerRequestHandler(self._handle_request)
         api.registerRestart(self._restart)
         self._load_persistence()
@@ -112,6 +116,7 @@ class Plugin:
         """Run the AvNav sampling loop until AvNav requests shutdown."""
         self._stop_requested = False
         self._run_start_monotonic = self._clock()
+        self._register_user_app()
         if not self._startup_error_active:
             self._set_status("STARTED", "Polar Recorder started")
         sequence = 0
@@ -132,6 +137,23 @@ class Plugin:
             except Exception as exc:
                 self.api.error("Polar Recorder loop error: %s", exc)
         self._flush()
+
+    def _register_user_app(self) -> None:
+        """Publish the viewer as an AvNav user app through the Python plugin API.
+
+        This is the registration path every AvNav core honors, including cores
+        that neither read ``plugin.json`` nor load ``plugin.mjs``. Cores that do
+        load ``plugin.mjs`` de-duplicate against this AddOn, and older cores
+        without the API skip registration instead of failing.
+        """
+        if self._user_app_registered:
+            return
+        register = getattr(self.api, "registerUserApp", None)
+        if register is None:
+            return
+        base_url = self.api.getBaseUrl()
+        register(f"{base_url}/{USER_APP_URL}", USER_APP_ICON, USER_APP_TITLE)
+        self._user_app_registered = True
 
     def _run_iteration(self, config: Config) -> None:
         store_reader = reader.StoreReader(

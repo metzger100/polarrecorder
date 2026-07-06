@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
 from pathlib import Path
 from typing import Protocol, cast
 
@@ -11,7 +10,9 @@ import pytest
 class ReleaseManifestModule(Protocol):
     ReleaseError: type[ValueError]
 
-    def validate_plugin_json_user_apps(self, root: Path = Path()) -> None: ...
+    def plugin_json_data(self, root: Path = Path()) -> dict[str, object]: ...
+
+    def expected_runtime_files(self) -> list[tuple[str, Path]]: ...
 
 
 def load_release_manifest() -> ReleaseManifestModule:
@@ -24,37 +25,29 @@ def load_release_manifest() -> ReleaseManifestModule:
     return cast("ReleaseManifestModule", module)
 
 
-def write_plugin_json(root: Path, user_apps: list[dict[str, object]]) -> None:
-    payload = {"userApps": user_apps}
-    (root / "plugin.json").write_text(json.dumps(payload), encoding="utf-8")
-
-
-def valid_user_app() -> dict[str, object]:
-    return {
-        "url": "viewer/viewer.html",
-        "iconFile": "viewer/icon.svg",
-        "title": "Polar Recorder",
-        "name": "polarrecorder",
-        "page": "addonpage",
-        "shortText": "Polar",
-        "longText": "Polar Recorder",
-    }
-
-
-def test_validate_plugin_json_user_apps_accepts_selector_metadata(tmp_path: Path) -> None:
+def test_plugin_json_data_accepts_object(tmp_path: Path) -> None:
     manifest = load_release_manifest()
-    write_plugin_json(tmp_path, [valid_user_app()])
+    (tmp_path / "plugin.json").write_text("{}", encoding="utf-8")
 
-    manifest.validate_plugin_json_user_apps(tmp_path)
+    assert manifest.plugin_json_data(tmp_path) == {}
 
 
-def test_validate_plugin_json_user_apps_rejects_missing_selector_metadata(
-    tmp_path: Path,
-) -> None:
+def test_plugin_json_data_rejects_non_object(tmp_path: Path) -> None:
     manifest = load_release_manifest()
-    app = valid_user_app()
-    del app["shortText"]
-    write_plugin_json(tmp_path, [app])
+    (tmp_path / "plugin.json").write_text("[]", encoding="utf-8")
 
-    with pytest.raises(manifest.ReleaseError, match="shortText"):
-        manifest.validate_plugin_json_user_apps(tmp_path)
+    with pytest.raises(manifest.ReleaseError, match="JSON object"):
+        manifest.plugin_json_data(tmp_path)
+
+
+def test_expected_runtime_files_include_user_app_targets() -> None:
+    manifest = load_release_manifest()
+
+    names = {name for name, _source in manifest.expected_runtime_files()}
+
+    assert {
+        "plugin.py",
+        "plugin.json",
+        "viewer/viewer.html",
+        "viewer/icon.svg",
+    } <= names

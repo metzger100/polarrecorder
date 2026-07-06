@@ -93,6 +93,7 @@ class FakeAvNavAPI:
         self.restart_callback: Callable[[], None] | None = None
         self.stop_main_thread = False
         self.sequence = 0
+        self.user_apps: list[tuple[str, str, str | None]] = []
 
     def set_value(self, key: str, value: float, timestamp: float) -> None:
         self.values[key] = FakeDataEntry(value=value, timestamp=timestamp)
@@ -164,3 +165,16 @@ class FakeAvNavAPI:
 
     def saveConfigValues(self, configDict: dict[str, str]) -> None:
         self.saved_configs.append(configDict)
+
+    def getBaseUrl(self) -> str:
+        return "/plugins/user-polarrecorder"
+
+    def registerUserApp(
+        self,
+        url: str,
+        iconFile: str,
+        title: str | None = None,
+        preventConnectionLost: bool = False,
+    ) -> str:
+        self.user_apps.append((url, iconFile, title))
+        return "fake-user-app-id"

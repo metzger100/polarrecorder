@@ -93,12 +93,16 @@ For a user-plugin install, AvNav serves the viewer under its runtime plugin name
 `/plugins/user-polarrecorder/viewer/viewer.html`. If that direct URL opens but
 Polar Recorder is missing from AvNav's User Apps/AddOn selection, the plugin and
 viewer are installed; restart AvNav or hard-refresh the AvNav client. Polar
-Recorder registers its AddOn entry two ways so it appears on every AvNav variant
-without showing a duplicate: `plugin.json` declares it statically for cores that
-read it, and the `plugin.mjs` module registers it on modern cores that ignore
-`plugin.json`. The module skips its own registration when the core addon list
-already exposes the app, so hosts that honor both paths still show a single
-entry.
+Recorder registers its AddOn entry from a single place so it appears on every
+AvNav variant without showing a duplicate. The plugin backend (`plugin.py`)
+registers the viewer through AvNav's `registerUserApp` API when it starts; this
+is the path every core with a Python plugin API honors, and each core surfaces
+the resulting AddOn in its addon list. Because only the backend knows the real
+install prefix, it builds the viewer URL from `getBaseUrl()`, so the same
+package works whether it is installed as a user or system plugin. The frontend
+adapters (`plugin.js`, `plugin.mjs`) and `plugin.json` do not register the app —
+cores that read those paths would register a second identical AddOn alongside
+`plugin.py`. `plugin.json` carries only the release version.
 
 ## How recording works
 
