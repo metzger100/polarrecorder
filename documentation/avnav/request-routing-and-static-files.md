@@ -12,9 +12,14 @@ Base paths:
 
 | Path | Behavior |
 |---|---|
-| `/plugins/polarrecorder/api/<endpoint>` | Routed to the request handler registered by `plugin.py`. |
-| `/plugins/polarrecorder/viewer/viewer.html` | Serves the static viewer HTML declared in `plugin.json`. |
-| `/plugins/polarrecorder/viewer/*` | Serves viewer CSS, JavaScript, SVG, and icon files. |
+| `/plugins/<runtime-plugin-name>/api/<endpoint>` | Routed to the request handler registered by `plugin.py`. |
+| `/plugins/<runtime-plugin-name>/viewer/viewer.html` | Serves the static viewer HTML declared in `plugin.json`. |
+| `/plugins/<runtime-plugin-name>/viewer/*` | Serves viewer CSS, JavaScript, SVG, and icon files. |
+
+For user-plugin installs AvNav prefixes the runtime plugin name with `user-`,
+so the direct viewer URL is normally
+`/plugins/user-polarrecorder/viewer/viewer.html`. System-plugin installs use
+the corresponding `system-` runtime name.
 
 Request-handler contract:
 
@@ -43,7 +48,10 @@ Transport contract (portable AvNav behavior):
 
 Static user app contract:
 
-- `plugin.json` declares the user app title, icon, and `viewer/viewer.html` URL.
+- `plugin.json` declares the user app `name`, AddOn page target, short and long
+  button labels, title, icon, and `viewer/viewer.html` URL.
+- `plugin.mjs` registers the same user app through AvNav's modern module API
+  for clients that surface module-registered add-ons.
 - Runtime browser files are plain static files; there is no bundler and no runtime build step.
 - Viewer JavaScript files are plain scripts and export only through `window.Polarrecorder`.
 - Static viewer requests are read-only; model mutations happen through API endpoints.

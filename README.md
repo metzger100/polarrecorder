@@ -89,6 +89,12 @@ When using AvNav's plugin upload page, upload the release zip and let AvNav extr
 
 AvNav documents user plugins under the data directory's `plugins` folder and system plugins under `/usr/lib/avnav/plugins`. Use the installer `--system` option only when you intentionally want a system plugin install.
 
+For a user-plugin install, AvNav serves the viewer under its runtime plugin name:
+`/plugins/user-polarrecorder/viewer/viewer.html`. If that direct URL opens but
+Polar Recorder is missing from AvNav's User Apps/AddOn selection, the plugin and
+viewer are installed; update to a release with the full selector metadata and
+modern module registration, then restart AvNav or hard-refresh the AvNav client.
+
 ## How recording works
 
 Every sample goes through a simple decision:
