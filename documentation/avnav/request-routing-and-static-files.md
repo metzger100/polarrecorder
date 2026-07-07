@@ -13,7 +13,7 @@ Base paths:
 | Path | Behavior |
 |---|---|
 | `/plugins/<runtime-plugin-name>/api/<endpoint>` | Routed to the request handler registered by `plugin.py`. |
-| `/plugins/<runtime-plugin-name>/viewer/viewer.html` | Serves the static viewer HTML declared in `plugin.json`. |
+| `/plugins/<runtime-plugin-name>/viewer/viewer.html` | Serves the static viewer HTML registered by `plugin.py`. |
 | `/plugins/<runtime-plugin-name>/viewer/*` | Serves viewer CSS, JavaScript, SVG, and icon files. |
 
 For user-plugin installs AvNav prefixes the runtime plugin name with `user-`,
@@ -48,19 +48,24 @@ Transport contract (portable AvNav behavior):
 
 Static user app contract:
 
-- `plugin.json` declares the user app `name`, AddOn page target, short and long
-  button labels, title, icon, and `viewer/viewer.html` URL. Cores that process
-  `plugin.json` register it server-side; it then appears in the core addon list
-  (`/api/addon/list`) under this plugin's base URL.
-- `plugin.mjs` registers the same user app through `api.registerUserApp` for
-  modern cores that ignore `plugin.json`. It first checks the core addon list
-  and registers only when no AddOn already exists under this plugin's base URL,
-  so mixed cores that honor both paths do not show duplicate Polar Recorder
-  entries. If the addon list is unreachable, the module assumes a modern-only
-  core and registers.
+- `plugin.py` is the authoritative registration point. At `run()` startup it
+  calls AvNav's Python `registerUserApp` with the viewer URL built from
+  `getBaseUrl()` and skips only that optional registration when either method is
+  unavailable.
+- `plugin.json` does not declare `userApps`. Upstream AvNav cores that process
+  `userApps` call the same server-side `registerUserApp`, so a declaration
+  there would duplicate the backend registration.
+- `plugin.js` and `plugin.mjs` are intentional no-op adapters. Modern AvNav
+  frontends keep module-registered AddOns in a client-side set that is appended
+  to the server addon list, so registering here as well would show a duplicate
+  Polar Recorder entry.
 - Runtime browser files are plain static files; there is no bundler and no runtime build step.
 - Viewer JavaScript files are plain scripts and export only through `window.Polarrecorder`.
 - Static viewer requests are read-only; model mutations happen through API endpoints.
+- The static viewer computes its backend URL from its served location by using
+  `../api/` by default. From `viewer/viewer.html`, this resolves to
+  `/plugins/<runtime-plugin-name>/api/`, so it works with user and system
+  plugin prefixes without reading AvNav frontend globals.
 
 Concurrency contract:
 

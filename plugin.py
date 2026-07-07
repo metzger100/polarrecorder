@@ -20,12 +20,24 @@ _server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
-from polarrecorder import api_dispatch, commit, export, persistence, preset_backup, reader, restore
+from polarrecorder.api_dispatch import handle_request as handle_api_request
+from polarrecorder.commit import commit_sample
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
+from polarrecorder.export import replace_user_presets
 from polarrecorder.logger import AvNavLogger
 from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
+from polarrecorder.persistence import (
+    PersistenceMetadata,
+    SerializedDict,
+    load,
+    save,
+    serialize_to_dict,
+)
 from polarrecorder.polar_model import PolarModel
+from polarrecorder.preset_backup import validate_presets
+from polarrecorder.reader import StoreReader
+from polarrecorder.restore import validate_and_build
 from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.timeline import Timeline
 from polarrecorder.validation import pipeline
@@ -142,23 +154,23 @@ class Plugin:
         """Publish the viewer as an AvNav user app through the Python plugin API.
 
         This is the registration path every AvNav core honors, including cores
-        that neither read ``plugin.json`` nor load ``plugin.mjs``. Cores that do
-        load ``plugin.mjs`` de-duplicate against this AddOn, and older cores
-        without the API skip registration instead of failing.
+        that neither read ``plugin.json`` nor load ``plugin.mjs``. The frontend
+        adapters stay no-ops so they cannot duplicate this server AddOn, and
+        older cores without the complete API skip registration instead of
+        failing.
         """
         if self._user_app_registered:
             return
         register = getattr(self.api, "registerUserApp", None)
-        if register is None:
+        get_base_url = getattr(self.api, "getBaseUrl", None)
+        if not callable(register) or not callable(get_base_url):
             return
-        base_url = self.api.getBaseUrl()
+        base_url = get_base_url()
         register(f"{base_url}/{USER_APP_URL}", USER_APP_ICON, USER_APP_TITLE)
         self._user_app_registered = True
 
     def _run_iteration(self, config: Config) -> None:
-        store_reader = reader.StoreReader(
-            self.api, self._clock, self._wall_clock, self._logger, config
-        )
+        store_reader = StoreReader(self.api, self._clock, self._wall_clock, self._logger, config)
         read_result = store_reader.read()
         data_status = _data_status(read_result)
         if self._paused:
@@ -176,7 +188,7 @@ class Plugin:
             )
             self._logger.debug(message)
         with self._lock:
-            commit.commit_sample(pipeline_result, sample, self._model)
+            commit_sample(pipeline_result, sample, self._model)
             self._record_counters(pipeline_result)
             self._timeline.record(pipeline_result.decision, pipeline_result.reason_codes)
             self._write_status_scalars(read_result, sample, data_status, warming_up)
@@ -250,7 +262,7 @@ class Plugin:
 
     def _flush(self) -> None:
         payload = self._flush_payload()
-        size = persistence.save(self._data_dir, payload, logger=self._logger)
+        size = save(self._data_dir, payload, logger=self._logger)
         with self._lock:
             if size is not None:
                 self._last_flush_size_bytes = size
@@ -258,20 +270,20 @@ class Plugin:
                 self._created_wall = self._pending_created_wall
             self._flush_requested = False
 
-    def _flush_payload(self) -> persistence.SerializedDict:
+    def _flush_payload(self) -> SerializedDict:
         flush_wall = self._wall_clock()
         with self._lock:
             created_wall = self._created_wall if self._created_wall is not None else flush_wall
             self._pending_flush_wall = flush_wall
             self._pending_created_wall = created_wall
-            metadata = persistence.PersistenceMetadata(
+            metadata = PersistenceMetadata(
                 plugin_version=_read_plugin_version(),
                 created_wall=created_wall,
                 last_flush_wall=flush_wall,
                 percentile=self.config.percentile,
                 max_tws=self.config.max_tws,
             )
-            return persistence.serialize_to_dict(self._model, self._counters, metadata)
+            return serialize_to_dict(self._model, self._counters, metadata)
 
     def _load_initial_config(self) -> Config:
         raw_values = {
@@ -281,7 +293,7 @@ class Plugin:
         return parse_config_values(raw_values, self._logger)
 
     def _load_persistence(self) -> None:
-        result = persistence.load(self._data_dir, self._logger)
+        result = load(self._data_dir, self._logger)
         self._model = result.model
         self._counters = result.counters
         self._created_wall = result.created_wall
@@ -301,7 +313,7 @@ class Plugin:
         self._import_last_activity = 0.0
 
     def _apply_learned_data_restore(self, assembled: str) -> dict[str, object]:
-        result = restore.validate_and_build(assembled)
+        result = validate_and_build(assembled)
         with self._lock:
             result.model.generation = self._model.generation + 1
             self._model = result.model
@@ -320,9 +332,9 @@ class Plugin:
         }
 
     def _apply_presets_restore(self, assembled: str) -> dict[str, object]:
-        presets = preset_backup.validate_presets(assembled, self.config.max_tws)
+        presets = validate_presets(assembled, self.config.max_tws)
         with self._lock:
-            export.replace_user_presets(self._data_dir, presets, self._logger)
+            replace_user_presets(self._data_dir, presets, self._logger)
         return {"kind": "presets", "presets_restored": len(presets)}
 
     def _on_config_change(self, changed: Mapping[str, str]) -> None:
@@ -338,7 +350,7 @@ class Plugin:
     ) -> dict[str, object]:
         del handler
         try:
-            return api_dispatch.handle_request(self, url, _normalize_args(args))
+            return handle_api_request(self, url, _normalize_args(args))
         except Exception as exc:
             self.api.error("Polar Recorder request error: %s", exc)
             return {"status": "ERROR", "error": "Internal error"}
