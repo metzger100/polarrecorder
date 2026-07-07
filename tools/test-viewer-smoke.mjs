@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { createEnvironment, flushViewer, loadViewerFile, textTree } from "./viewer-harness.mjs";
 
 await testViewerModulesWorkTogether();
+await testViewerApiBaseOverride();
 
 console.log("Viewer smoke tests passed.");
 
@@ -27,6 +28,8 @@ async function testViewerModulesWorkTogether() {
   env.fireDOMContentLoaded();
   await flushViewer();
 
+  assert.equal(env.window.Polarrecorder.ApiBase, "../api/");
+  assert.equal(env.requests[0], "../api/presets");
   assert.equal(env.window.Polarrecorder.PresetsCache.length, 4);
   env.clickTab("polar");
   await flushViewer();
@@ -71,6 +74,20 @@ async function testViewerModulesWorkTogether() {
 
   env.window.Polarrecorder.ShowTooltip("hello", 500, 20);
   assert.ok(env.document.querySelector(".tooltip"));
+}
+
+async function testViewerApiBaseOverride() {
+  const env = createEnvironment();
+  env.document.body.dataset.apiBase = "/plugins/user-polarrecorder/api";
+  loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "presets.js");
+  loadViewerFile(env, "viewer.js");
+
+  env.fireDOMContentLoaded();
+  await flushViewer();
+
+  assert.equal(env.window.Polarrecorder.ApiBase, "/plugins/user-polarrecorder/api/");
+  assert.equal(env.requests[0], "/plugins/user-polarrecorder/api/presets");
 }
 
 async function testSettingsActions(env) {

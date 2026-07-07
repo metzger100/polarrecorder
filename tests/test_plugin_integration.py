@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
 from plugin_integration_support import assert_all_mvp_routes, response_data, sample_at
-from polarrecorder import api_dispatch, export, persistence, reader
+from polarrecorder import export, persistence, reader
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.timeline import Timeline
@@ -463,7 +463,7 @@ def test_request_handler_returns_error_for_internal_dispatch_failure(
         msg = "dispatcher failed"
         raise RuntimeError(msg)
 
-    monkeypatch.setattr(api_dispatch, "handle_request", fail_dispatch)
+    monkeypatch.setattr(plugin_module, "handle_api_request", fail_dispatch)
     handler = api.request_handler
     assert handler is not None
 

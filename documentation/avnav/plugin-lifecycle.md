@@ -49,10 +49,11 @@ Polar Recorder boundaries:
   across every AvNav variant without a version check or duplicate entries:
   - `plugin.py` calls `api.registerUserApp(getBaseUrl() + "/viewer/viewer.html",
     "viewer/icon.svg", "Polar Recorder")` once at the start of `run()`. This
-    backend call is the AddOn path every AvNav core with a Python plugin API
-    honors, and each core surfaces the resulting AddOn in its addon list. It is
-    the single, sufficient registration. A core without the API is tolerated:
-    registration is skipped rather than raising.
+    backend call is the AddOn path every AvNav core with the complete Python
+    plugin user-app API honors, and each core surfaces the resulting AddOn in
+    its addon list. It is the single, sufficient registration. A core without
+    `registerUserApp` or `getBaseUrl` is tolerated: registration is skipped
+    rather than raising.
   - The frontend adapters (`plugin.js`, `plugin.mjs`) do not register the user
     app. A modern frontend's module-side `registerUserApp` writes to a
     client-only AddOn set that the frontend appends to the server addon list

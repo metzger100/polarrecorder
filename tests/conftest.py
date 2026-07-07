@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Union
 
-from polarrecorder import commit
+from polarrecorder.commit import commit_sample
 from polarrecorder.validation import pipeline
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ def drive_read_results(
         pipeline_result, sample = pipeline.run(read_result, state, config)
         if sample is not None:
             state.observe(sample)
-        commit.commit_sample(pipeline_result, sample, model)
+        commit_sample(pipeline_result, sample, model)
         results.append((pipeline_result, sample))
     return results
 
