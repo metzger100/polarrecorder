@@ -2,12 +2,14 @@
 
 ## Status
 
-Finalized on 2026-07-22 and ready for implementation after repository verification, a commit-by-commit review of the
+Finalized on 2026-07-23 and ready for implementation after repository verification, a commit-by-commit review of the
 Dyninstruments quality-system work from `cb146da2535f86c2d23f51c934c5e86c88f935a1` through current Dyninstruments `HEAD`
-(`06875c3454fda9a734ee7193ff527cc5ed36f3b2`), and a final executability audit. The latter commit is the authority
-correction that removed remote quality governance while preserving the maintained local quality system. The audit also
-made Phase 0 capture canonicalization, transitional command activation, test-fixture provenance, full formatter scaling,
-formatter scope symmetry, and publisher allowlisting prescriptive rather than leaving them to implementation judgment.
+(`06875c3454fda9a734ee7193ff527cc5ed36f3b2`), and two final executability audits. The latter commit is the authority
+correction that removed remote quality governance while preserving the maintained local quality system. The audits made
+Phase 0 capture canonicalization, transitional command activation, test-fixture provenance, complete formatter and
+unsupported-format disposition, exact Python duplication ownership, developer-Python reproducibility, normalized
+coverage-contract ownership, phase-local documentation synchronization, and publisher allowlisting prescriptive rather
+than leaving them to implementation judgment.
 
 This plan covers the complete Polar Recorder migration to that final local-first model: reproducible development setup,
 maintained standard tools, strict JavaScript source and test typing, coverage and complexity ratchets, deterministic
@@ -21,9 +23,13 @@ The following parts are prescriptive:
 - the public command graph and final `check:all` composition;
 - the immutable Polar Recorder baseline/provenance rules;
 - the distinction between transitional command wiring and final command activation;
-- the exact maintained formatting inventory shared by write and check modes;
+- the exact maintained formatting inventory shared by write and check modes, plus explicit disposition of maintained
+  files that no selected formatter supports;
+- the verified developer-Python, bootstrap-installer, lock-generation, and supported-platform contract;
+- the exact JavaScript/CSS and Python duplication leaf commands and aggregate;
 - the strict-test and separately preauthorized non-executable quality-fixture model;
 - the coverage, complexity, test-inventory, hook, and release contracts;
+- phase-local owner-documentation synchronization and Phase 9's final consolidation-only boundary;
 - phase ordering, file-size constraints, phase exit conditions, and acceptance criteria.
 
 Implementers may choose equivalent internal helper names or split a large tool module differently, provided the same
@@ -62,8 +68,9 @@ Expected outcomes after completion:
   coverage checks;
 - maintained tools own generic formatting, JavaScript lint, CSS lint, Markdown lint/link checking, workflow lint,
   duplication, type checking, and coverage reporting;
-- `npm run format` and `npm run format:check` own the same complete maintained inventory, including declarations,
-  structured configuration, lock/package metadata, workflows, source, tests, tools, CSS, and active documentation;
+- `npm run format` and `npm run format:check` own the same complete supported maintained inventory, including HTML,
+  declarations, structured configuration, lock/package metadata, workflows, source, tests, tools, CSS, and active
+  documentation, while every unsupported maintained format has an explicit machine-checked disposition;
 - focused repository contracts retain Polar-specific AvNav, Python layering, static viewer, data-boundary,
   documentation-graph, packaging, and smell rules;
 - all shipped browser JavaScript and all classified JavaScript tests are strict no-emit TypeScript `checkJs` inputs
@@ -190,24 +197,24 @@ The following facts were rechecked against the live Polar Recorder repository be
 
 ## Target Authority and Adaptation Model
 
-| Concern                    | Polar Recorder target owner              | Decision                                                                                                                                                                        |
-| -------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Complete quality authority | local `npm run check:all`                | Canonical; shell entry remains only as a compatibility wrapper                                                                                                                  |
-| Generic JS lint/security   | ESLint flat config                       | Replace generic custom patterns only after parity proof                                                                                                                         |
-| CSS lint/namespace         | Stylelint                                | Enforce `--polarrecorder-*`; rename `--chip-color`                                                                                                                              |
-| JS/MJS/CSS/data/Markdown format | Prettier                            | Write/check commands share one exact maintained inventory; archives and preauthorized negative fixture inputs are narrowly excluded                                             |
-| Markdown style/links       | markdownlint-cli2 + Linkinator           | Retain focused Polar documentation graph/shape contracts                                                                                                                        |
-| Workflow syntax            | pinned actionlint                        | Provision only during setup; ordinary gates are offline                                                                                                                         |
-| JS/CSS clones              | jscpd                                    | Keep Python AST duplicate checker unless independent parity proves replacement                                                                                                  |
-| Python lint/type/tests     | Ruff + mypy + pytest                     | Preserve and pin; do not replace with JavaScript tooling                                                                                                                        |
-| JS source tests            | Node test runner + existing VM harness   | Do not add Vitest solely for topology parity                                                                                                                                    |
-| JS coverage                | c8/V8 summary plus inventory             | Must prove VM-loaded viewer attribution before retiring current collector                                                                                                       |
-| Property tests             | Hypothesis                               | Apply to Python-owned mathematical invariants                                                                                                                                   |
-| Schema/package contract    | executable Python release/package tests  | `plugin.json` is explicitly owned; `schema:check` is an approved non-port only because no separate schema/layout family exists, and a contract rejects any new unowned artifact |
-| Runtime packaging          | `release_manifest.py` + `release-zip.py` | Single Python authority; remove JS manifest duplication                                                                                                                         |
-| Scaling                    | deterministic Python operation counts    | Delete wall-clock performance gate after real-path proof                                                                                                                        |
-| Git push gate              | tracked local pre-push hook              | Explicit per-clone activation; no hidden setup mutation                                                                                                                         |
-| GitHub                     | one tag publisher                        | Transport only; no quality/build/package authority                                                                                                                              |
+| Concern                                     | Polar Recorder target owner              | Decision                                                                                                                                                                        |
+| ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Complete quality authority                  | local `npm run check:all`                | Canonical; shell entry remains only as a compatibility wrapper                                                                                                                  |
+| Generic JS lint/security                    | ESLint flat config                       | Replace generic custom patterns only after parity proof                                                                                                                         |
+| CSS lint/namespace                          | Stylelint                                | Enforce `--polarrecorder-*`; rename `--chip-color`                                                                                                                              |
+| Python/JS/MJS/HTML/CSS/data/Markdown format | Ruff + Prettier                          | Write/check commands share one exact supported inventory; every unsupported maintained format has an explicit machine-checked disposition                                       |
+| Markdown style/links                        | markdownlint-cli2 + Linkinator           | Retain focused Polar documentation graph/shape contracts                                                                                                                        |
+| Workflow syntax                             | pinned actionlint                        | Provision only during setup; ordinary gates are offline                                                                                                                         |
+| JS/CSS/Python clones                        | jscpd + Python AST checker               | `duplication:js` and `duplication:python` are distinct leaves aggregated exactly once by `duplication:check`                                                                    |
+| Python lint/type/tests                      | Ruff + mypy + pytest                     | Preserve and pin; do not replace with JavaScript tooling                                                                                                                        |
+| JS source tests                             | Node test runner + existing VM harness   | Do not add Vitest solely for topology parity                                                                                                                                    |
+| JS coverage                                 | c8/V8 summary plus inventory             | Must prove VM-loaded viewer attribution before retiring current collector                                                                                                       |
+| Property tests                              | Hypothesis                               | Apply to Python-owned mathematical invariants                                                                                                                                   |
+| Schema/package contract                     | executable Python release/package tests  | `plugin.json` is explicitly owned; `schema:check` is an approved non-port only because no separate schema/layout family exists, and a contract rejects any new unowned artifact |
+| Runtime packaging                           | `release_manifest.py` + `release-zip.py` | Single Python authority; remove JS manifest duplication                                                                                                                         |
+| Scaling                                     | deterministic Python operation counts    | Delete wall-clock performance gate after real-path proof                                                                                                                        |
+| Git push gate                               | tracked local pre-push hook              | Explicit per-clone activation; no hidden setup mutation                                                                                                                         |
+| GitHub                                      | one tag publisher                        | Transport only; no quality/build/package authority                                                                                                                              |
 
 Explicitly rejected additions:
 
@@ -251,6 +258,9 @@ Explicitly rejected additions:
   byte-compared policy artifacts.
 - New source/tests are strict and receive current default coverage/complexity policy immediately; new executable tests or
   helpers cannot enter an exception capture created after the baseline.
+- Every contract-owned coverage entry names normalized repository-relative owner-test paths that are executable,
+  runner-discovered, strict-inventory-owned where JavaScript, and proven to load or exercise the classified production
+  file. Fixtures, excluded tests, stale paths, and collection-only names are not owners.
 - Non-executable negative quality fixtures are not executable-test exceptions. Before any such file is created, Phase 0
   must preauthorize its exact path, strict owner test, rule, and reason in an independently anchored planned-fixture
   manifest; unplanned, executable, stale, or ownerless fixture entries fail.
@@ -298,9 +308,13 @@ Explicitly rejected additions:
 
 ### Documentation and scope
 
-- Semantic documentation changes are isolated to Phase 9. Phase 2 may make only mechanical Prettier and required
-  `@file`-header conversions across maintained Markdown/source files; evidence-based plan progress/status updates are
-  also allowed. Do not mix source/tool changes into the semantic documentation phase.
+- Update each owner document in the same phase that changes its live source, command, checker, workflow, hook, or release
+  contract. Phase 1 synchronizes setup, Phase 2 the viewer split/formatter scope, Phase 3 checker ownership, Phase 4
+  source typing, Phase 5 test ownership, Phase 6 coverage/property testing, Phase 7 complexity/scaling, and Phase 8 the
+  final command/release/hook/publisher and agent-guidance model before `docs:check` runs. Do not defer a required
+  owner-document update to Phase 9.
+- Phase 9 contains final cross-document consolidation and residue proof only. It must not change or delete source, tools,
+  package scripts, hooks, workflows, or release artifacts.
 - README changes are required because setup, validation, and release workflow are user-visible developer contracts. Keep
   the section concise enough to stay below 400 after formatting.
 - Make `AGENTS.md` canonical and reduce `CLAUDE.md` to a checked pointer only after equivalent
@@ -329,7 +343,8 @@ Use a disposable detached worktree at exactly `08edef88b0102af6507ef02fd4448f7fd
 worktree. From that clean capture worktree:
 
 1. Create an isolated developer virtualenv using the currently documented tools solely to measure the old system. Record
-   exact Python/package versions.
+   the exact interpreter executable/version, `ensurepip`/pip bootstrap version, package versions, and host
+   OS/architecture.
 2. Run and record:
 
    ```sh
@@ -344,12 +359,17 @@ worktree. From that clean capture worktree:
    viewer coverage values, package manifest count, current test/source inventories, and every command's exit status.
 4. If the old full gate fails after documented setup, classify and fix an existing repository defect before migration or
    amend this plan with the failure. Do not capture a failing state as accepted debt.
+5. Probe the locked Python tools against candidate developer interpreters and choose the exact supported developer-Python
+   range, preferred setup interpreter, pinned pip/bootstrap version, canonical lock generator/version/arguments, and
+   supported OS/architecture policy. The chosen tools must still analyze the Python 3.9 runtime target. Record evidence
+   before Phase 1; do not use an implicit system interpreter, unbounded `python3`, or any `latest` version.
 
 #### 0B. Create immutable canonical captures before active ledgers
 
 Create these Phase 0 artifacts before Phase 5-7 create any active policy:
 
-- `tools/quality-policy/phase0-baseline.json` for `capturedCommit`, exact tool versions, production/test inventories and
+- `tools/quality-policy/phase0-baseline.json` for `capturedCommit`, exact tool versions, the selected
+  developer-Python/bootstrap/lock-generation/platform contract, production/test/formatter-disposition inventories and
   counts, the old command graph, existing thresholds, and an explicit statement that Dyninstruments policy data is not
   an input;
 - `phase0-test-capture.json` for the complete executable JavaScript and Python test/helper inventories and the verified
@@ -399,7 +419,8 @@ At minimum, ledger these owners separately:
 - Python contract/dependency/filesize/compat/runtime checks;
 - documentation TOC/format/link/reachability and AI-sync checks;
 - JS namespace/naming/header/dependency/script-order checks;
-- JS/Python duplication checks;
+- JS/Python duplication checks, including the exact final `duplication:js`, `duplication:python`, and
+  `duplication:check` ownership;
 - viewer/Python coverage and current thresholds;
 - hook, release prepare/create, runtime-manifest, and publisher behavior.
 - focused/disabled test detection, structured boundary suppression, unsafe DOM sinks, selected hotspot budgets,
@@ -419,25 +440,33 @@ results. In particular, assert:
 - no other formatter target crosses 400;
 - Stylelint debt is limited to the named CSS variable/media syntax;
 - jscpd begins with zero accepted clones;
-- strict source typing begins with the measured error inventory rather than a guessed count.
+- strict source typing begins with the measured error inventory rather than a guessed count;
+- the complete maintained-file discovery includes `viewer/viewer.html`, all maintained Python tools, `pyproject.toml`,
+  the Python requirements input/lock, shell files, SVG files, and every other tracked non-historical file family;
+- every maintained file is classified as Ruff-owned, Prettier-owned, or explicitly unsupported by the selected
+  formatter set with a reason and alternate validation owner; no file disappears through an unmatched glob or broad
+  `tools/` exclusion.
 
 **Phase 0 exit conditions:**
 
 - The old complete gate passes from a documented environment.
 - Every current rule has one proposed owner and proof path.
+- The exact developer-Python range, interpreter selection, pip/bootstrap version, lock-generation command, and supported
+  platform policy are frozen from compatibility evidence.
 - Immutable test, coverage, and complexity-source captures reproduce from the captured Git commit.
 - Canonical capture regeneration is byte-stable across reordered input and volatile raw-report metadata.
 - Every planned negative quality fixture is preauthorized by exact path and strict owner before the file exists; the
   executable-test exception set remains empty.
-- Required splits and adoption debt are recorded before formatting/typing.
+- Required splits, complete formatter/disposition inventory, and adoption debt are recorded before formatting/typing.
 - `git status --short` contains only intentional Phase 0 policy/plan files.
 
 ---
 
 ### Phase 1 - Add reproducible setup and the additive command skeleton
 
-**Intent:** Make setup the only network-using provisioning step, record the final command graph, and activate only the
-new command leaves that are already green without removing old protections.
+**Intent:** Make setup the only routine network-using provisioning step, freeze the separate maintainer-only lock
+regeneration path, record the final command graph, and activate only the new command leaves that are already green
+without removing old protections.
 
 **Dependencies:** Phase 0.
 
@@ -452,10 +481,21 @@ Update `package.json` to include:
 
 Add `.nvmrc` containing `26`.
 
-Create a reviewable direct Python requirements input and a fully resolved, hash-locked developer requirements file. It
-must include exact compatible versions of Ruff, mypy, pytest, pytest-cov, coverage, and Hypothesis. Runtime installation
-remains dependency-free. Add a setup helper that creates/updates `venv` (or `POLARRECORDER_VENV`), installs only the
-locked development set, and fails clearly on an unsupported developer Python version.
+Create `tools/quality-policy/developer-python.json` from the Phase 0 decision. It is the machine-readable authority for
+the exact supported developer-Python range, preferred interpreter, pinned pip/bootstrap version, canonical lock
+generator/version/arguments, and supported OS/architecture combinations. The setup helper resolves
+`POLARRECORDER_PYTHON` first and otherwise the declared preferred interpreter; it must not silently fall through multiple
+system executables. Add `.python-version` when the contract selects one preferred concrete interpreter.
+
+Create reviewable `requirements-dev.in` and fully resolved, hash-locked `requirements-dev.txt`. The input includes exact
+direct versions of Ruff, mypy, pytest, pytest-cov, coverage, Hypothesis, and the selected lock generator where needed.
+The lock contains hashes for every resolved artifact admitted by the supported-platform policy. Expose one canonical,
+tested `requirements:lock` maintainer command using the frozen interpreter/generator/arguments; it may use the network
+only during intentional lock maintenance and is never called by a gate. Setup creates/updates `venv` (or
+`POLARRECORDER_VENV`), bootstraps through the interpreter's venv mechanism, upgrades pip to the frozen exact version, and
+installs only with `python -m pip install --require-hashes -r requirements-dev.txt`. Runtime installation remains
+dependency-free. Interpreter, pip, lock metadata, unsupported platform, or resolver-command drift must fail before
+ordinary checks run.
 
 `npm run setup` must perform, in order:
 
@@ -463,7 +503,8 @@ locked development set, and fails clearly on an unsupported developer Python ver
 2. locked Python developer-environment provisioning;
 3. checksum-verified actionlint provisioning.
 
-No other normal gate may access the network.
+No other normal gate may access the network; the explicit `requirements:lock` maintenance command is the only documented
+non-setup provisioning exception.
 
 Before the first setup run, extend `.gitignore` with `venv/`, `.hypothesis/`, and `coverage/`. Configure later c8
 temporary output under `coverage/viewer/tmp/`; `.nyc_output/` must not be produced at repository root. Add a clean-state
@@ -487,15 +528,16 @@ Add Polar-specific versions of:
 - `.markdownlint-cli2.jsonc`;
 - `linkinator.config.json`;
 - `jscpd.config.json`;
-- `tools/actionlint.sh` with pinned version/platform checksums and a persistent cache path under the Polar Recorder
-  name.
+- `tools/actionlint.sh` with pinned version/platform checksums and a persistent user-cache path under the Polar Recorder
+  name, outside the repository and `node_modules`.
 
 Use the verified Dyninstruments direct versions where the same tool is used. Pin c8 and Node test/type dependencies
 exactly. Only fixtures preauthorized in `phase0-planned-quality-fixtures.json` may be excluded, each by exact path rather
 than a broad directory pattern that could hide production files.
 
 `tools/actionlint.sh --install` may download only during setup. Normal `actions:lint` must use the verified cache or
-fail with the exact setup repair command. Support `ACTIONLINT_CACHE_DIR` for isolated tests.
+fail with the exact setup repair command. Support `ACTIONLINT_CACHE_DIR` for isolated tests and reject a default cache
+that resolves inside the repository.
 
 #### 1C. Specify the final public command graph and add only phase-green wiring
 
@@ -510,6 +552,9 @@ setup                   locked npm + Python dev tools + actionlint provision
 format                  Prettier + Ruff formatting writes over the shared inventory
 format:check            Prettier + Ruff formatting checks
 lint                    ESLint + Stylelint + Ruff lint
+duplication:js          jscpd over the reviewed JavaScript/CSS scope
+duplication:python      python tools/check-duplication.py
+duplication:check       duplication:js + duplication:python
 check:standard          format:check + lint + actions:lint + duplication:check
 typecheck               typecheck:source + typecheck:tests + typecheck:python
 test:node               test:tools + test:contract + test:viewer + test:plugin
@@ -536,10 +581,11 @@ check:all  = check:core && test:coverage:check
 ```
 
 This graph deliberately adapts Dyninstruments' core by retaining the Polar-specific Python contract group and runtime
-test split. It runs Ruff lint/format, strict mypy, Python compatibility/architecture/dependency/runtime contracts,
-pytest, every Node tool/contract/viewer/plugin suite, package checks, and both Python/JavaScript duplication policies
-exactly once. Coverage remains the sole second half of `check:all`. `test:contract` is reached through `test:node` and
-`test:split`, not repeated separately in `check:core`.
+test split. `check:python-contracts` does not also run `tools/check-duplication.py`; Python duplication is owned only by
+`duplication:python`. The graph runs Ruff lint/format, strict mypy, Python
+compatibility/architecture/dependency/runtime contracts, pytest, every Node tool/contract/viewer/plugin suite, package
+checks, and both duplication leaves exactly once. Coverage remains the sole second half of `check:all`.
+`test:contract` is reached through `test:node` and `test:split`, not repeated separately in `check:core`.
 
 Until a final group is activated, the old checker graph remains its blocking owner and must stay reachable through
 `tools/check-all.sh`; no replacement command may bypass adoption debt with ignores or partial source scope. Phase 2
@@ -560,14 +606,24 @@ Add focused tests for:
 
 - package identity/private/version declarations and exact direct pins;
 - Node/npm declarations;
-- locked Python requirements and no runtime dependency leakage;
+- the exact developer-Python/interpreter/bootstrap/platform contract, mismatch failure, canonical lock-generation command,
+  hash-required install, locked Python requirements, and no runtime dependency leakage;
 - setup ordering and no hook installation side effect;
 - actionlint cached success, missing-cache failure, checksum rejection, and install-only behavior;
 - the phase activation ledger, final command contract, and no accidental `check:ci`/pre-commit command;
+- exact `duplication:js`/`duplication:python` leaf ownership, `duplication:check` aggregation, and absence of a second
+  Python-duplication path through `check:python-contracts`;
 - eventual exact `check:core`/`check:all` expansion, one reachability path for every required leaf, and no omitted Python
   or Node test/contract command, without requiring not-yet-clean groups to be active package scripts in Phase 1;
 - transitional strict discovery/typechecking for every executable JavaScript test/helper added after Phase 0;
 - ignored setup/Hypothesis/coverage output and zero stray generated state.
+
+#### 1E. Synchronize setup guidance
+
+Update README's concise developer pointer and CONTRIBUTING's setup section in the same change. Document the declared
+Node/npm and developer-Python contract, `npm run setup`, the maintainer-only `requirements:lock` exception, hash-required
+Python installation, the persistent actionlint cache, and the fact that normal gates are offline. Do not document
+inactive Phase 2-8 command groups as already live.
 
 **Phase 1 exit conditions:**
 
@@ -576,6 +632,7 @@ npm run setup
 npm run actions:lint
 npm run test:tools
 npm run typecheck:migration-tests
+npm run check:docs
 tools/check-all.sh
 ```
 
@@ -606,6 +663,7 @@ Update in the same change:
 
 - `viewer/viewer.html` script order;
 - `Module`/`Documentation`/`Depends` headers;
+- `documentation/architecture/ui.md` ownership prose;
 - viewer smoke/status tests;
 - source/test/coverage inventories introduced later in this plan (or their temporary predecessor lists until those
   phases land).
@@ -617,28 +675,40 @@ limits rather than receive new baseline debt.
 
 Formatter ownership must explicitly cover:
 
-- Ruff formatting over `plugin.py`, `server/polarrecorder/**/*.py`, `tests/**/*.py`, and maintained Python tools;
+- Ruff formatting over `plugin.py`, `server/polarrecorder/**/*.py`, `tests/**/*.py`, and every repository-discovered
+  maintained `tools/**/*.py` file;
 - `package.json`, `package-lock.json`, all maintained JSON/JSONC configuration, TypeScript configuration, ESLint/tool
   configuration modules, and `.github/workflows/*.yml`;
 - `types/**/*.d.ts` as soon as Phase 4 creates declarations;
 - `plugin.js`, `plugin.mjs`, all `viewer/*.js`, maintained tool JS/MJS, and Node tests/helpers;
+- `viewer/**/*.html`;
 - `plugin.css`, `viewer/viewer.css`, and CSS fixtures;
 - root Markdown, `documentation/**/*.md`, `.githooks/**/*.md`, agent skill Markdown when present, and
   `exec-plans/active/*.md`.
 
-`format` and `format:check` must be generated from or mechanically compared against one ordered combined inventory;
-their only difference is Prettier write versus check mode and Ruff format write versus check mode. Use
-`--no-error-on-unmatched-pattern` for optional roots such as `.agents/skills/` or deterministic live-file enumeration
-with identical absence semantics. Adding a declaration, config, workflow, source, test/helper, CSS, root/project doc, or
-active-plan file must place it in both modes automatically or fail the scope contract.
+Create `tools/quality-policy/format-scope.json` as the machine-readable disposition of every maintained tracked file.
+Each path is discovered deterministically and classified as `prettier`, `ruff`, or `unsupported`, with exactly one reason
+and alternate validation owner for every unsupported file. At minimum, probe and explicitly disposition
+`pyproject.toml`, `requirements-dev.in`, `requirements-dev.txt`, shell files, and SVG files rather than letting them
+vanish through tool defaults. Historical releases/completed plans and generated/vendor artifacts are separately
+classified exclusions, not unsupported maintained files. A newly supported family must move to a formatter owner rather
+than retain a stale unsupported entry.
 
-For Markdown touched before Phase 9, changes in this phase are mechanical formatting only; semantic command and
-authority documentation remains a Phase 9 deliverable.
+`format` and `format:check` must be generated from or mechanically compared against the same ordered formatter-owned
+subset of that inventory; their only difference is Prettier write versus check mode and Ruff format write versus check
+mode. Use `--no-error-on-unmatched-pattern` for optional roots such as `.agents/skills/` or deterministic live-file
+enumeration with identical absence semantics. Adding an HTML file, declaration, config, workflow, source, test/helper,
+CSS, Python tool, root/project doc, active-plan file, or unsupported maintained family must place it in both modes or
+acquire an explicit disposition automatically, otherwise the scope contract fails.
+
+Semantic documentation changes in this phase are limited to owner documents made stale by this phase's viewer split,
+formatter scope, or lint commands; all other Prettier Markdown changes remain mechanical.
 
 Exclude immutable release notes, completed plans, generated coverage/artifacts, and only the exact negative fixture paths
 preauthorized by `phase0-planned-quality-fixtures.json`; `package-lock.json` is maintained and is not excluded. Add a
-formatting-scope contract that creates one synthetic maintained file in every supported family and proves both an omitted
-file and any write/check inventory asymmetry fail.
+formatting-scope contract that creates one synthetic maintained file in every supported family, including HTML and a
+maintained Python tool, and proves an omitted file, unknown family, stale/ownerless unsupported disposition, broad
+exclusion, or write/check inventory asymmetry fails.
 
 After the standard-tool group is green, create the explicitly temporary internal aggregate `check:migration`. It runs the
 old complete gate plus every newly activated migration leaf, and later phases append their new green leaves to it. A
@@ -668,6 +738,10 @@ fixes.
 Configure jscpd to fail on detected JS/CSS clones with the proven zero-clone baseline. Do not delete the Python AST
 duplicate checker in this phase.
 
+Remove `tools` from Ruff's broad exclusion. Ruff lint and format must discover every maintained Python tool; if a
+verified CLI boundary needs an exception, encode only an exact per-file/per-code lint exception with a reason and
+negative contract proof. Ruff formatting has no corresponding whole-tool exemption.
+
 #### 2D. Add persistent hotspot budgets below the global file limit
 
 Add a `test:contract` hotspot-budget owner for files whose Phase 0 count or formatter result is close enough to 400 that
@@ -689,13 +763,16 @@ npm run actions:lint
 npm run duplication:check
 npm run check:standard
 npm run test:viewer
+npm run check:docs
 npm run check:filesize
 npm run check:migration
 ```
 
-All exit zero. A file-count contract proves every maintained target is in both the write and check inventories, optional
-absent roots do not fail, and a newly added maintained file cannot escape either mode. No non-exempt file exceeds 400
-non-empty lines. Mock-server/manual viewer smoke confirms no visible change from the extraction or CSS variable rename.
+All exit zero. A file-count contract proves every formatter-owned target is in both the write and check inventories,
+every other maintained target has one explicit supported disposition, optional absent roots do not fail, and a newly
+added maintained file cannot escape classification. HTML and maintained Python tools are covered, no broad Ruff
+`tools/` exclusion remains, and no non-exempt file exceeds 400 non-empty lines. Mock-server/manual viewer smoke confirms
+no visible change from the extraction or CSS variable rename.
 
 ---
 
@@ -769,7 +846,13 @@ Retain focused contracts for Polar's TOC completeness, required document section
 accuracy, namespace cycles, kebab-case viewer filenames/Pascal namespace exports, and smell-catalog completeness. These
 may call shared parsing helpers, but must no longer be separate untested CLI implementations.
 
-Do not remove AGENTS/CLAUDE sync tooling until Phase 9 changes the instruction ownership model.
+Update the affected sections of `documentation/conventions/quality-gates.md`,
+`documentation/conventions/smell-prevention.md`, `documentation/conventions/coding-standards.md`, and
+`documentation/guides/documentation-maintenance.md` in this phase so every removed checker, replacement owner, and live
+command is truthful before `docs:check` runs.
+
+Do not remove AGENTS/CLAUDE sync tooling until Phase 8 changes the instruction ownership model and its replacement
+contract is active.
 
 #### 3C. Preserve Python-specific duplication and architecture checks
 
@@ -777,6 +860,11 @@ Keep `check-py-contracts.py`, `check-py-dependencies.py`, Python 3.9 compatibili
 Python filesize/header checks. Keep `check-duplication.py` unless a direct corpus plus negative-fixture proof shows
 jscpd catches both renamed function-body clones and long AST statement clones without noise. The verified default is to
 retain it.
+
+Activate the exact leaves `duplication:js = jscpd ...` and
+`duplication:python = python tools/check-duplication.py`; define `duplication:check` as their ordered aggregate and keep
+Python duplication out of `check:python-contracts`. Package-contract expansion must prove each leaf is reached exactly
+once from `check:standard`.
 
 Add missing self-tests for the Python duplication and release-check dry-run owners rather than treating tool exemptions
 as test exemptions.
@@ -801,6 +889,7 @@ Every custom rule or contract must have real-repository clean proof and a delibe
 - The parity ledger has no `unproven` generic checker row.
 - Deleted scripts have no package/doc references.
 - Retained custom code owns only Polar-specific contracts.
+- The two duplication leaves and their aggregate have exact command/reachability proof with no second Python path.
 - `npm run check:standard`, `npm run test:node`, `npm run docs:check`, `npm run check:smells`, and
   `npm run check:migration` all pass.
 - Linkinator proves file and heading-fragment links; negative fixtures prove missing files and missing anchors fail.
@@ -866,6 +955,13 @@ position under `typecheck` in `check:core`. Add negative contract fixtures for:
 - runtime `import`/`export` drift;
 - an incompatible mock payload.
 
+#### 4D. Synchronize source-typing documentation
+
+Update the affected source-typing/no-build sections of `documentation/conventions/coding-standards.md`,
+`documentation/conventions/quality-gates.md`, `documentation/conventions/testing-infrastructure.md`, and
+`documentation/architecture/ui.md`. Document the live source inventory and ambient-contract boundary without claiming
+the Phase 5 test inventory is active.
+
 **Phase 4 exit conditions:**
 
 ```sh
@@ -874,6 +970,7 @@ npm run format:check
 npm run test:viewer
 npm run test:plugin
 npm run check:filesize
+npm run docs:check
 npm run check:migration
 ```
 
@@ -936,6 +1033,12 @@ empty; an exception requires a plan amendment, owner/date/reason, hash-locked si
 The command-graph contract must prove `test:focus:check` is directly reached by `check:migration` now and remains a
 required direct group of the final `check:core`; it cannot disappear behind a runner configuration change.
 
+#### 5D. Synchronize test-ownership documentation
+
+Update `documentation/conventions/quality-gates.md`, `documentation/conventions/testing-infrastructure.md`, and the
+focused/disabled-test rows in `documentation/conventions/smell-prevention.md` with the live `node:test`, strict
+inventory, fixture provenance, and `test:focus:check` owners.
+
 **Phase 5 exit conditions:**
 
 ```sh
@@ -943,6 +1046,7 @@ npm run test:node
 npm run typecheck:tests
 npm run typecheck
 npm run test:split
+npm run docs:check
 npm run check:migration
 ```
 
@@ -1004,6 +1108,13 @@ non-executable or genuinely unmeasurable file and name the exact contract/integr
 coverage exclusions remain allowed for `TYPE_CHECKING`, abstract/overload bodies, and similarly non-runtime lines.
 `__init__.py` may be contract-owned only if it has no executable behavior.
 
+Normalize every owner path to one repository-relative identity. A JavaScript owner must be a runner-discovered
+executable test/helper in the strict test inventory; a Python owner must be present in pytest collection. Neither may be
+an excluded path, data-only fixture, planned negative quality input, or stale/non-test file. Where mechanically
+checkable, the owner must load/import and exercise the classified production file rather than merely exist. Add
+deliberate failures for absolute/traversal/duplicate paths, missing or stale owners, owners outside runner discovery,
+excluded/fixture owners, and owner tests that do not load the target.
+
 Policy rules:
 
 - current measured values/floors are captured from the clean Phase 0 run;
@@ -1040,6 +1151,13 @@ Add focused property tests for:
 Strategies must generate finite bounded values and useful edge examples; do not hide NaN/Infinity filtering inside
 production code. Pin Hypothesis in the developer lock only.
 
+#### 6D. Synchronize coverage and property-test documentation
+
+Update the live coverage, inventory, contract-ownership, c8 attribution, and Hypothesis sections of
+`documentation/conventions/quality-gates.md`, `documentation/conventions/testing-infrastructure.md`,
+`documentation/conventions/coding-standards.md`, and `documentation/conventions/smell-prevention.md`. Document normalized
+runner-discovered contract owners and the exact coverage floors in this phase.
+
 **Phase 6 exit conditions:**
 
 ```sh
@@ -1047,11 +1165,13 @@ npm run test:coverage:check
 npm run check:coverage-inventory
 npm run test:python
 npm run test:viewer
+npm run docs:check
 npm run check:migration
 ```
 
 All exit zero. The live production inventory has no unclassified path, every new source file fails until
-classified/tested, and deliberate floor/ownership regressions fail.
+classified/tested, every contract owner is normalized and runner-discovered, and deliberate floor/ownership regressions
+fail.
 
 ---
 
@@ -1092,8 +1212,8 @@ limits unchanged and covered by config contracts.
 
 #### 7B. Replace wall-clock performance checks
 
-Delete `tools/check-performance.py`, its timing constants/tests, and active documentation claims only after
-deterministic replacements pass.
+Delete `tools/check-performance.py` and its timing constants/tests only after deterministic replacements pass. In the
+same change, update active owner documentation rather than leaving stale performance claims for Phase 9.
 
 Add a small Python operation-count evaluator and focused tests that reject negative/non-integer counts, a synthetic
 quadratic sequence, and a configured step-bound violation. Add real contracts for:
@@ -1122,12 +1242,21 @@ Expose `check:complexity` as immutable-capture verification followed by the acti
 `check:scaling` into `check:migration`, and record their required final positions in `check:core` before docs/filesize, so
 failures are visible as named policy owners before the final graph is promoted.
 
+#### 7D. Synchronize complexity and scaling owner documentation
+
+Update the affected sections of `AGENTS.md`, `documentation/conventions/coding-standards.md`,
+`documentation/conventions/quality-gates.md`, `documentation/conventions/smell-prevention.md`, and
+`documentation/conventions/testing-infrastructure.md`. Remove the wall-clock command/ceiling claims and document the
+exact `check:complexity` and counted-operation `check:scaling` owners, including all three real paths from 7B. Keep any
+historical references only in completed plans/releases excluded by the active-residue contract.
+
 **Phase 7 exit conditions:**
 
 ```sh
 npm run check:complexity
 npm run check:scaling
 npm run test:python
+npm run docs:check
 npm run check:migration
 ```
 
@@ -1267,15 +1396,37 @@ package contract that recursively expands scripts and proves:
 Run a deliberate failing fixture for each required group and prove both `check:core` and the wrapper propagate its
 status. The hook and release tests must separately prove they invoke one `check:all`, not an expanded private copy.
 
+#### 8F. Synchronize delivery owners and canonical agent guidance
+
+In the same phase as 8A-8E, update the live owner documentation for setup, commands, hooks, packaging, local releases,
+and the publisher:
+
+- README's concise developer entry point and CONTRIBUTING's complete setup/command/hook/release workflow;
+- `documentation/conventions/quality-gates.md`, `documentation/conventions/testing-infrastructure.md`,
+  `documentation/conventions/smell-prevention.md`, `documentation/guides/documentation-maintenance.md`, and
+  `documentation/guides/release-workflow.md`;
+- `.githooks/README.md` for clone-local activation and repair.
+
+Make `AGENTS.md` the canonical instruction owner and replace `CLAUDE.md` with a short checked pointer to AGENTS plus the
+mandatory preflight files. Delete `sync-ai-instructions.mjs`, `check-ai-instructions.mjs`, and their package commands
+only after the pointer/reachability contract is active, every current reference is updated, and a negative test proves
+instruction drift or a broken pointer fails. Update smell-catalog rows and executable owner lists in the same change as
+their final command names. These owner updates are required for Phase 8's `docs:check`; Phase 9 must not be used to
+repair a knowingly stale live command or tool claim.
+
 **Phase 8 exit conditions:**
 
 ```sh
+npm run format:check
 npm run test:tools
 npm run test:contract
 npm run package:check
 npm run actions:lint
 bash -n .githooks/pre-push
+npm run docs:check
+npm run check:filesize
 npm run check:core
+git diff --check
 ```
 
 All exit zero. Repository searches prove one workflow and no CODEOWNERS, pre-commit config, branch/PR trigger, tag
@@ -1283,44 +1434,44 @@ quality job, or remote build path. Historical artifacts are byte-unchanged.
 
 ---
 
-### Phase 9 - Synchronize documentation and canonical agent guidance
+### Phase 9 - Consolidate documentation and audit canonical guidance
 
-**Intent:** Describe the final live system without source/tool changes.
+**Intent:** Consolidate cross-document guidance and prove the already-live system is described consistently, without
+source/tool changes.
 
 **Dependencies:** Phase 8.
 
-#### 9A. Update root developer guidance
+#### 9A. Audit root developer guidance
 
-Update README's developer section concisely:
+Verify the Phase 8 README developer section:
 
 - link to CONTRIBUTING for full setup;
 - name `npm run setup`, `hooks:install`, `hooks:doctor`, and canonical `npm run check:all`;
 - preserve the runtime stdlib/no-target-install statement;
 - state local release authority and link the release guide.
 
-Reduce duplicated prose so README remains below 400 non-empty lines after Prettier.
+Reduce duplicated prose only where the final cross-document audit finds it necessary so README remains below 400
+non-empty lines after Prettier.
 
-Update CONTRIBUTING with:
+Verify CONTRIBUTING covers:
 
 - Node 26/npm 12.0.1 and locked Python developer tooling;
-- setup as the only network provisioning step;
+- setup as the only routine network provisioning step, with the explicit maintainer-only `requirements:lock` exception;
 - explicit clone-local hook activation;
 - `format`, `format:check`, `check:standard`, `check:fast`, `check:core`, `test:split`, and `check:all`;
 - local release preparation/manual validation/create/push flow;
 - standard-tool-first rule ownership and focused custom-checker exception rule.
 
-#### 9B. Make AGENTS canonical
+#### 9B. Verify canonical agent guidance
 
-Update `AGENTS.md` shared instructions for the new command graph, coverage/ complexity/test inventories, standard tools,
-hook setup, local release model, and final gate. Replace `CLAUDE.md` with a short checked pointer to AGENTS and the
-mandatory preflight files.
+Verify the Phase 8 `AGENTS.md` instructions cover the new command graph, coverage/complexity/test inventories, standard
+tools, hook setup, local release model, and final gate. Verify `CLAUDE.md` is only the checked pointer to AGENTS and the
+mandatory preflight files, obsolete sync tools/package commands are already absent, and the replacement
+pointer/reachability contract has clean and deliberate-negative proof.
 
-Delete `sync-ai-instructions.mjs`, `check-ai-instructions.mjs`, and their package commands only after the
-pointer/reachability contract proves the new ownership and all active docs stop requiring byte-identical blocks.
+#### 9C. Consolidate remaining cross-cutting documentation
 
-#### 9C. Update focused quality/release documentation
-
-Update exactly the affected sections of:
+Review the already synchronized owner docs and update only remaining cross-document or architecture sections of:
 
 - `ARCHITECTURE.md`;
 - `documentation/core-principles.md` (canonical local gate wording only);
@@ -1335,7 +1486,7 @@ Update exactly the affected sections of:
 - `documentation/guides/exec-plan-authoring.md`;
 - `documentation/guides/release-workflow.md`.
 
-Document:
+Confirm the documentation set consistently covers:
 
 - exact command expansion/ownership;
 - standard-tool scopes, write/check formatter-inventory symmetry, and retained Polar-specific tools;
@@ -1349,13 +1500,12 @@ Document:
 - GitHub publisher as transport only;
 - explicit absence of CI governance, pre-commit, mutation, browser automation, and timing benchmarks.
 
-Update `documentation/architecture/ui.md` so status/history rendering is owned by the extracted module rather than stale
-`viewer.js` prose. Update the root architecture map for `types/`, `tests/js/`, `tools/quality-policy/`, the status
-module, and the Python/JavaScript quality boundaries; do not leave newly created top-level architecture roots
-undocumented.
+Verify `documentation/architecture/ui.md` already names the extracted status owner from Phase 2. Update the root
+architecture map for `types/`, `tests/js/`, `tools/quality-policy/`, the status module, and the Python/JavaScript quality
+boundaries; do not leave newly created top-level architecture roots undocumented.
 
-Update smell-catalog rows and executable rule lists in the same change as final owner names. Do not add a performance
-guide or a new documentation file unless the existing focused docs genuinely cannot hold the contract.
+Do not postpone a Phase 2/3/7/8 owner correction into this phase. Do not add a performance guide or a new documentation
+file unless the existing focused docs genuinely cannot hold the cross-cutting contract.
 
 #### 9D. Run documentation-only proof
 
@@ -1373,8 +1523,8 @@ npm run check:core
 git diff --check
 ```
 
-All exit zero. README and every changed Markdown file remain below 400 non-empty lines. No source, runtime, workflow, or
-release artifact change is part of this phase.
+All exit zero. README and every changed Markdown file remain below 400 non-empty lines. No source, tool, package-script,
+hook, runtime, workflow, or release artifact change is part of this phase.
 
 ---
 
@@ -1494,6 +1644,12 @@ Primary documentation owners:
 - release guide: full SemVer, clean-tree, local artifact authority, and pure publisher boundary;
 - `.githooks/README.md`: one-time clone-local activation and repair.
 
+These owners are synchronized in the phase that activates their underlying behavior: setup in Phase 1,
+viewer/formatter ownership in Phase 2, checker ownership in Phase 3, source typing in Phase 4, test ownership in Phase 5,
+coverage/property testing in Phase 6, complexity/scaling in Phase 7, and final
+command/hook/release/publisher/agent ownership in Phase 8. Phase 9 only consolidates cross-document guidance and proves
+residue-free consistency.
+
 `documentation/TABLEOFCONTENTS.md` remains unchanged unless implementation adds a new documentation file. No release
 notes are required because this plan does not create a release or change product behavior.
 
@@ -1506,6 +1662,11 @@ notes are required because this plan does not create a release or change product
 - [ ] `package.json` is private, uses non-release version `0.0.0-test`, declares Node 26/npm 12.0.1, has exact direct
       dev pins, and has a committed lockfile.
 - [ ] Python developer dependencies are exact/hash-locked and never become runtime dependencies.
+- [ ] A Phase 0-verified machine-readable contract freezes the supported developer-Python range, preferred interpreter,
+      exact pip/bootstrap version, canonical lock-generator/version/arguments, and supported platforms while preserving
+      Python 3.9 target analysis; mismatches fail before tool execution.
+- [ ] `requirements-dev.in` and `requirements-dev.txt` have one tested maintainer-only `requirements:lock` generation
+      path, and setup installs the resolved lock with `--require-hashes`.
 - [ ] `npm run setup` installs locked Node/Python tools and provisions pinned actionlint; ordinary gates perform no
       downloads.
 - [ ] `check:all` expands exactly to `check:core` plus `test:coverage:check`; `check:strict` aliases it and `check:ci`
@@ -1519,6 +1680,8 @@ notes are required because this plan does not create a release or change product
 - [ ] `check:standard`, `check:fast`, `check:core`, `test:split`, and focused commands have documented, tested meanings.
 - [ ] The literal `check:core` graph reaches Ruff/mypy, every retained Python contract, pytest, and every Node
       tool/contract/viewer/plugin suite exactly once; `test:focus:check` is a direct required group.
+- [ ] `duplication:js` owns jscpd, `duplication:python` owns `tools/check-duplication.py`, and `duplication:check`
+      aggregates both exactly once without a second Python path through `check:python-contracts`.
 - [ ] Phase 0 canonical test/coverage/complexity-source captures predate active ledgers, exclude volatile/raw-report
       metadata, regenerate byte-identically from normalized repository-relative facts, and have reordering/volatile-input
       negative proof; Phase 7 findings derive from captured Git blobs after tool lock, and independent commit/digest
@@ -1529,9 +1692,12 @@ notes are required because this plan does not create a release or change product
 ### Maintained tools and parity
 
 - [ ] `format` and `format:check` share one exact Prettier/Ruff inventory covering package/lock metadata, workflows,
-      JSON/JSONC/tool and TypeScript configuration, declarations, JS/MJS, CSS, root/project Markdown, active plans, and
-      optional agent-skill Markdown; scope/asymmetry contracts catch every new omitted file and absent optional roots are
-      safe.
+      JSON/JSONC/tool and TypeScript configuration, declarations, JS/MJS, viewer HTML, CSS, every maintained Python tool,
+      root/project Markdown, active plans, and optional agent-skill Markdown; scope/asymmetry contracts catch every new
+      omitted file and absent optional roots are safe.
+- [ ] A machine-readable complete maintained-file disposition gives every unsupported format, including probed TOML,
+      requirements, shell, and SVG families, an exact reason and alternate validation owner; unknown/stale dispositions
+      and broad Ruff `tools/` exclusions fail.
 - [ ] ESLint, Stylelint, markdownlint, Linkinator, actionlint, and jscpd pass with deliberate negative fixtures.
 - [ ] `--polarrecorder-*` CSS namespace enforcement passes and visual behavior is unchanged.
 - [ ] Every old checker/rule has a final owner; no custom checker was deleted before positive/negative parity proof.
@@ -1559,6 +1725,9 @@ notes are required because this plan does not create a release or change product
       amended with evidence.
 - [ ] All shipped Python/browser files are measured or wholly contract-owned; `plugin.py` is measured with reviewed
       per-file line/branch floors, and missing/stale/lowered/self-grandfathered coverage entries fail.
+- [ ] Every contract-owned coverage owner is a normalized repository-relative, runner-discovered executable test in
+      pytest collection or the strict JavaScript inventory, is not a fixture/exclusion, and loads or exercises its target
+      wherever mechanically provable.
 - [ ] Aggregate 90 percent, validation 95/95, histogram 95/90, and every old per-viewer floor are preserved or raised.
 - [ ] Native c8 global and viewer/entrypoint family thresholds enforce at least 80 percent lines/functions/statements
       and 65 percent branches, with negative proof for every metric.
@@ -1608,6 +1777,8 @@ notes are required because this plan does not create a release or change product
 
 - [ ] README, CONTRIBUTING, AGENTS/CLAUDE, quality/testing/smell/playbook/documentation-format/maintenance/release/plan
       authoring docs, and hook README match live commands and authority.
+- [ ] Required owner documentation lands in Phases 1-8 with the behavior it describes; Phase 9 changes only
+      cross-document prose and leaves source, tools, package scripts, hooks, workflows, and release artifacts untouched.
 - [ ] `documentation/architecture/ui.md` names the extracted status owner and `ARCHITECTURE.md` maps the new
       type/test/policy roots.
 - [ ] CLAUDE is a checked short pointer to canonical AGENTS; obsolete sync tools are gone.
