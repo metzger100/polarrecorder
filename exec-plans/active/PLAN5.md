@@ -4,12 +4,13 @@
 
 Finalized on 2026-07-23 and ready for implementation after repository verification, a commit-by-commit review of the
 Dyninstruments quality-system work from `cb146da2535f86c2d23f51c934c5e86c88f935a1` through current Dyninstruments `HEAD`
-(`06875c3454fda9a734ee7193ff527cc5ed36f3b2`), and two final executability audits. The latter commit is the authority
+(`06875c3454fda9a734ee7193ff527cc5ed36f3b2`), and four final executability audits. The latter commit is the authority
 correction that removed remote quality governance while preserving the maintained local quality system. The audits made
 Phase 0 capture canonicalization, transitional command activation, test-fixture provenance, complete formatter and
 unsupported-format disposition, exact Python duplication ownership, developer-Python reproducibility, normalized
-coverage-contract ownership, phase-local documentation synchronization, and publisher allowlisting prescriptive rather
-than leaving them to implementation judgment.
+coverage-contract ownership, immediate new-file enforcement, gap-free new-function complexity enforcement, structural
+JavaScript clone ownership, Python-tool adoption-debt capture, phase-local documentation synchronization, and publisher
+allowlisting prescriptive rather than leaving them to implementation judgment.
 
 This plan covers the complete Polar Recorder migration to that final local-first model: reproducible development setup,
 maintained standard tools, strict JavaScript source and test typing, coverage and complexity ratchets, deterministic
@@ -27,6 +28,10 @@ The following parts are prescriptive:
   files that no selected formatter supports;
 - the verified developer-Python, bootstrap-installer, lock-generation, and supported-platform contract;
 - the exact JavaScript/CSS and Python duplication leaf commands and aggregate;
+- retained structural JavaScript clone detection unless jscpd proves equivalent renamed-function and normalized-block
+  coverage;
+- transitional strict typing, coverage, and complexity enforcement from the first phase that creates a file or function;
+- explicit Ruff lint/format adoption-debt capture and disposition for every maintained Python tool;
 - the strict-test and separately preauthorized non-executable quality-fixture model;
 - the coverage, complexity, test-inventory, hook, and release contracts;
 - phase-local owner-documentation synchronization and Phase 9's final consolidation-only boundary;
@@ -78,6 +83,8 @@ Expected outcomes after completion:
 - every shipped Python/browser source file has a measured or narrowly justified contract-owned coverage classification,
   with immutable capture and active no-regression floors, plus native V8 global line/function/statement/branch
   thresholds;
+- token clone detection and structural renamed-function/normalized-block clone detection remain independently blocking,
+  with exact scan scopes and no duplicate command path;
 - JavaScript complexity debt is identity-stable and can only shrink, while Python keeps its existing strict Ruff limits;
 - structured boundary markers, generic-suppression blocking, exact unsafe-DOM-sink ownership, and selected hotspot
   budgets match the hardened local policy;
@@ -115,15 +122,19 @@ The following facts were rechecked against the live Polar Recorder repository be
    `plugin.mjs`. Viewer exports live under `window.Polarrecorder`; there is no runtime bundle or build step.
 7. `package.json` has 30 lines, an empty `devDependencies` object, no lockfile, no package identity/private marker, no
    `setup`, no Node/npm version contract, and no maintained standard-tool configuration files.
-8. The checkout has Node `v26.4.0` and npm `12.0.0`. The final Dyninstruments contract is Node major 26 and npm
-   `12.0.1`; migration must declare and test that contract rather than silently accepting drift.
+8. The initial verification environment had Node `v26.4.0` and npm `12.0.0`; the finalization recheck had the same Node
+   version and npm `12.0.1`. These are environment observations, not repository-owned guarantees. The final
+   Dyninstruments contract is Node major 26 and npm `12.0.1`; migration must declare and test that contract rather than
+   silently accepting either observed environment.
 9. CONTRIBUTING currently instructs developers to create `venv` and run an unpinned
    `pip install ruff mypy pytest pytest-cov coverage`. There is no Python developer requirements or lock file.
 10. `npm run check:js:all` passes. The observed baseline includes 15 JavaScript pattern files, 33 Python pattern files,
     27 documentation files, 30 reachable Markdown files, and 13 viewer modules.
-11. The full Python gate cannot start in this clean checkout because the documented development virtualenv is absent and
-    `/usr/bin/python` has no Ruff installation. Phase 0 must establish and record a complete Python baseline before
-    policy migration.
+11. The initial verification checkout had no documented development virtualenv and `/usr/bin/python` had no Ruff
+    installation. At finalization, an untracked local `venv` existed with Python 3.14.6, Ruff 0.15.16, mypy 2.1.0, and
+    pytest 9.0.3; `tools/check-all.sh` reached mypy and failed with a mypy internal error. Neither local state is an
+    accepted baseline. Phase 0 must select the supported developer-Python/tool combination and establish one complete
+    passing baseline before policy migration.
 12. Python quality already uses maintained Ruff, mypy, pytest, pytest-cov, and coverage.py. Ruff limits are complexity
     10, 40 statements, 10 branches, 4 returns, and 6 arguments. Mypy is strict over runtime, plugin, and tests.
 13. Python branch-enabled coverage is at least 90 percent overall. The validation package has 95 percent line/branch
@@ -192,29 +203,34 @@ The following facts were rechecked against the live Polar Recorder repository be
 37. The current tree has no `.agents/skills/` directory, while the target maintained formatting scope must include agent
     skill Markdown when that root exists. Optional maintained roots therefore require deterministic live-file discovery
     or an equivalent no-unmatched-glob contract.
+38. A finalization probe with the locally installed Ruff 0.15.16 found 203 lint findings across the 12 maintained Python
+    tools and eight tool files requiring Ruff formatting. The lint findings include existing docstring, exception-style,
+    magic-value, CLI `print`, and complexity debt. These counts are diagnostic rather than target-policy data; Phase 0
+    must rerun both tool probes with the selected locked Ruff version and freeze the exact adoption disposition before
+    Phase 2 removes the broad `tools` exclusion.
 
 ---
 
 ## Target Authority and Adaptation Model
 
-| Concern                                     | Polar Recorder target owner              | Decision                                                                                                                                                                        |
-| ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Complete quality authority                  | local `npm run check:all`                | Canonical; shell entry remains only as a compatibility wrapper                                                                                                                  |
-| Generic JS lint/security                    | ESLint flat config                       | Replace generic custom patterns only after parity proof                                                                                                                         |
-| CSS lint/namespace                          | Stylelint                                | Enforce `--polarrecorder-*`; rename `--chip-color`                                                                                                                              |
-| Python/JS/MJS/HTML/CSS/data/Markdown format | Ruff + Prettier                          | Write/check commands share one exact supported inventory; every unsupported maintained format has an explicit machine-checked disposition                                       |
-| Markdown style/links                        | markdownlint-cli2 + Linkinator           | Retain focused Polar documentation graph/shape contracts                                                                                                                        |
-| Workflow syntax                             | pinned actionlint                        | Provision only during setup; ordinary gates are offline                                                                                                                         |
-| JS/CSS/Python clones                        | jscpd + Python AST checker               | `duplication:js` and `duplication:python` are distinct leaves aggregated exactly once by `duplication:check`                                                                    |
-| Python lint/type/tests                      | Ruff + mypy + pytest                     | Preserve and pin; do not replace with JavaScript tooling                                                                                                                        |
-| JS source tests                             | Node test runner + existing VM harness   | Do not add Vitest solely for topology parity                                                                                                                                    |
-| JS coverage                                 | c8/V8 summary plus inventory             | Must prove VM-loaded viewer attribution before retiring current collector                                                                                                       |
-| Property tests                              | Hypothesis                               | Apply to Python-owned mathematical invariants                                                                                                                                   |
-| Schema/package contract                     | executable Python release/package tests  | `plugin.json` is explicitly owned; `schema:check` is an approved non-port only because no separate schema/layout family exists, and a contract rejects any new unowned artifact |
-| Runtime packaging                           | `release_manifest.py` + `release-zip.py` | Single Python authority; remove JS manifest duplication                                                                                                                         |
-| Scaling                                     | deterministic Python operation counts    | Delete wall-clock performance gate after real-path proof                                                                                                                        |
-| Git push gate                               | tracked local pre-push hook              | Explicit per-clone activation; no hidden setup mutation                                                                                                                         |
-| GitHub                                      | one tag publisher                        | Transport only; no quality/build/package authority                                                                                                                              |
+| Concern                                     | Polar Recorder target owner                        | Decision                                                                                                                                                                        |
+| ------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Complete quality authority                  | local `npm run check:all`                          | Canonical; shell entry remains only as a compatibility wrapper                                                                                                                  |
+| Generic JS lint/security                    | ESLint flat config                                 | Replace generic custom patterns only after parity proof                                                                                                                         |
+| CSS lint/namespace                          | Stylelint                                          | Enforce `--polarrecorder-*`; rename `--chip-color`                                                                                                                              |
+| Python/JS/MJS/HTML/CSS/data/Markdown format | Ruff + Prettier                                    | Write/check commands share one exact supported inventory; every unsupported maintained format has an explicit machine-checked disposition                                       |
+| Markdown style/links                        | markdownlint-cli2 + Linkinator                     | Retain focused Polar documentation graph/shape contracts                                                                                                                        |
+| Workflow syntax                             | pinned actionlint                                  | Provision only during setup; ordinary gates are offline                                                                                                                         |
+| JS/CSS/Python clones                        | jscpd + structural JS checker + Python AST checker | jscpd owns token clones; renamed-function/normalized-block JS clones stay focused unless direct parity proves jscpd equivalent; JS and Python groups aggregate exactly once     |
+| Python lint/type/tests                      | Ruff + mypy + pytest                               | Preserve and pin; do not replace with JavaScript tooling                                                                                                                        |
+| JS source tests                             | Node test runner + existing VM harness             | Do not add Vitest solely for topology parity                                                                                                                                    |
+| JS coverage                                 | c8/V8 summary plus inventory                       | Must prove VM-loaded viewer attribution before retiring current collector                                                                                                       |
+| Property tests                              | Hypothesis                                         | Apply to Python-owned mathematical invariants                                                                                                                                   |
+| Schema/package contract                     | executable Python release/package tests            | `plugin.json` is explicitly owned; `schema:check` is an approved non-port only because no separate schema/layout family exists, and a contract rejects any new unowned artifact |
+| Runtime packaging                           | `release_manifest.py` + `release-zip.py`           | Single Python authority; remove JS manifest duplication                                                                                                                         |
+| Scaling                                     | deterministic Python operation counts              | Delete wall-clock performance gate after real-path proof                                                                                                                        |
+| Git push gate                               | tracked local pre-push hook                        | Explicit per-clone activation; no hidden setup mutation                                                                                                                         |
+| GitHub                                      | one tag publisher                                  | Transport only; no quality/build/package authority                                                                                                                              |
 
 Explicitly rejected additions:
 
@@ -256,8 +272,13 @@ Explicitly rejected additions:
 - Immutable captures contain only canonical, sorted, repository-relative facts. Raw reports, timestamps, temporary or
   machine-local paths, wall-clock durations, and environment-specific metadata are ephemeral evidence and must not enter
   byte-compared policy artifacts.
-- New source/tests are strict and receive current default coverage/complexity policy immediately; new executable tests or
-  helpers cannot enter an exception capture created after the baseline.
+- New source/tests are strict and receive the strongest currently available default coverage/complexity policy from the
+  phase that first creates them. Every new JavaScript function receives 10/40/4/6 limits even when added to a source path
+  present in the Phase 0 capture. Phase 0 activates transitional strict ownership before adding executable policy tests;
+  Phase 2 activates transitional strict source typing, current-collector coverage, and a differential complexity owner
+  before adding or moving a source function. Later final owners replace those transitional checks atomically, never
+  after an unguarded commit. New executable tests or helpers cannot enter an exception capture created after the
+  baseline.
 - Every contract-owned coverage entry names normalized repository-relative owner-test paths that are executable,
   runner-discovered, strict-inventory-owned where JavaScript, and proven to load or exercise the classified production
   file. Fixtures, excluded tests, stale paths, and collection-only names are not owners.
@@ -385,6 +406,14 @@ Create these Phase 0 artifacts before Phase 5-7 create any active policy:
   the file and prove the path is absent. An empty manifest is valid; later implementation convenience is not authority to
   add an entry.
 
+Create `tsconfig.migration-tests.json` and `typecheck:migration-tests` immediately after the data-only
+`phase0-test-capture.json` exists and before adding the first executable JavaScript proof for the capture generators.
+The temporary owner derives the captured executable set, discovers every live executable JavaScript test/helper absent
+from it, and checks every such new file with strict no-emit `checkJs`; exact planned non-executable fixtures are the only
+exclusion. Missing/stale paths and an empty discovery after the first Phase 0 JavaScript proof exists must fail. Fully
+typed Python proof files remain owned by the existing strict mypy test scope. Phase 5 replaces this temporary owner only
+when the complete strict inventory passes in the same change.
+
 These are immutable evidence, not the active ledgers introduced later. Define a canonical schema and deterministic
 repository-rooted generator for each repository-derived capture. Canonical JSON contains sorted paths/keys,
 repository-relative identities, exact normalized numeric metrics, Git blob IDs/digests, and locked tool versions only.
@@ -419,6 +448,8 @@ At minimum, ledger these owners separately:
 - Python contract/dependency/filesize/compat/runtime checks;
 - documentation TOC/format/link/reachability and AI-sync checks;
 - JS namespace/naming/header/dependency/script-order checks;
+- jscpd token clones and the current JavaScript checker's renamed-function/normalized-block clone semantics as separate
+  rows, with a retained focused owner whenever direct parity is not proven;
 - JS/Python duplication checks, including the exact final `duplication:js`, `duplication:python`, and
   `duplication:check` ownership;
 - viewer/Python coverage and current thresholds;
@@ -441,6 +472,9 @@ results. In particular, assert:
 - Stylelint debt is limited to the named CSS variable/media syntax;
 - jscpd begins with zero accepted clones;
 - strict source typing begins with the measured error inventory rather than a guessed count;
+- `ruff check tools --statistics --no-cache` and `ruff format --check tools` run with the selected locked Ruff version;
+  record every finding by path/rule and every formatting target, reconcile the result with finalization diagnostic 38,
+  and assign each lint finding to refactoring or one exact justified per-file/per-code CLI exception before Phase 2;
 - the complete maintained-file discovery includes `viewer/viewer.html`, all maintained Python tools, `pyproject.toml`,
   the Python requirements input/lock, shell files, SVG files, and every other tracked non-historical file family;
 - every maintained file is classified as Ruff-owned, Prettier-owned, or explicitly unsupported by the selected
@@ -455,9 +489,12 @@ results. In particular, assert:
   platform policy are frozen from compatibility evidence.
 - Immutable test, coverage, and complexity-source captures reproduce from the captured Git commit.
 - Canonical capture regeneration is byte-stable across reordered input and volatile raw-report metadata.
+- `npm run typecheck:migration-tests` owns every executable JavaScript test/helper added after the captured test
+  inventory, including Phase 0 generator proofs.
 - Every planned negative quality fixture is preauthorized by exact path and strict owner before the file exists; the
   executable-test exception set remains empty.
-- Required splits, complete formatter/disposition inventory, and adoption debt are recorded before formatting/typing.
+- Required splits, complete formatter/disposition inventory, exact Python-tool lint/format debt, and all remaining
+  adoption debt are recorded before formatting/typing.
 - `git status --short` contains only intentional Phase 0 policy/plan files.
 
 ---
@@ -510,13 +547,10 @@ Before the first setup run, extend `.gitignore` with `venv/`, `.hypothesis/`, an
 temporary output under `coverage/viewer/tmp/`; `.nyc_output/` must not be produced at repository root. Add a clean-state
 test that runs setup/property/coverage commands in an isolated checkout and fails on any unowned generated path.
 
-Phase 1 itself adds executable JavaScript tests before the full legacy-test migration in Phase 5. Add a temporary
-`tsconfig.migration-tests.json` and `typecheck:migration-tests` owner before creating those tests. It derives the captured
-legacy executable set from `phase0-test-capture.json`, discovers every live executable JavaScript test/helper absent from
-that set, and checks every such new file with strict no-emit `checkJs`; exact planned non-executable fixtures are the only
-exclusion. Missing/stale paths and an empty discovery caused by a broken scan fail. This closes the Phase 1-4 enforcement
-gap without grandfathering a new file; Phase 5 replaces it with the complete strict inventory and deletes the temporary
-script/config.
+Keep the Phase 0 `typecheck:migration-tests` owner active while Phase 1 adds setup, actionlint, and package-contract
+tests. Extend its discovery contract rather than replacing or resetting its captured executable set. This keeps every
+Phase 0-4 JavaScript test/helper strict without grandfathering a new file; Phase 5 replaces it with the complete strict
+inventory and deletes the temporary script/config atomically.
 
 #### 1B. Add maintained-tool configuration
 
@@ -552,7 +586,7 @@ setup                   locked npm + Python dev tools + actionlint provision
 format                  Prettier + Ruff formatting writes over the shared inventory
 format:check            Prettier + Ruff formatting checks
 lint                    ESLint + Stylelint + Ruff lint
-duplication:js          jscpd over the reviewed JavaScript/CSS scope
+duplication:js          jscpd token-clone owner + retained structural JS clone owner unless parity proves replacement
 duplication:python      python tools/check-duplication.py
 duplication:check       duplication:js + duplication:python
 check:standard          format:check + lint + actions:lint + duplication:check
@@ -612,10 +646,12 @@ Add focused tests for:
 - actionlint cached success, missing-cache failure, checksum rejection, and install-only behavior;
 - the phase activation ledger, final command contract, and no accidental `check:ci`/pre-commit command;
 - exact `duplication:js`/`duplication:python` leaf ownership, `duplication:check` aggregation, and absence of a second
-  Python-duplication path through `check:python-contracts`;
+  Python-duplication path through `check:python-contracts`, plus structural renamed-clone coverage even when jscpd
+  reports no literal clone;
 - eventual exact `check:core`/`check:all` expansion, one reachability path for every required leaf, and no omitted Python
   or Node test/contract command, without requiring not-yet-clean groups to be active package scripts in Phase 1;
-- transitional strict discovery/typechecking for every executable JavaScript test/helper added after Phase 0;
+- transitional strict discovery/typechecking for every executable JavaScript test/helper added after the captured
+  Phase 0 inventory, including Phase 0 generator proofs;
 - ignored setup/Hypothesis/coverage output and zero stray generated state.
 
 #### 1E. Synchronize setup guidance
@@ -651,6 +687,31 @@ changing viewer behavior.
 
 #### 2A. Split `viewer/viewer.js` before formatting
 
+Before materializing a new shipped viewer file, add `tsconfig.migration-source.json` and
+`typecheck:migration-source`. The temporary project derives the captured plugin/viewer inventory from
+`phase0-complexity-source-capture.json`, discovers every live shipped JavaScript file absent from that capture, and
+checks those new files with strict no-emit `checkJs` plus the focused ambient declarations they require. Once the status
+module exists, empty discovery, missing/stale paths, broad `any`, or an omitted new source file fails. Existing captured
+files remain outside this temporary project until Phase 4; Phase 4 replaces it atomically with the complete source
+inventory.
+
+Before adding or moving any shipped JavaScript function, also add `check:complexity:migration`. Lock the selected
+parser/scanner version in Phase 1, derive legacy function/metric identities from the exact Git blobs in
+`phase0-complexity-source-capture.json`, and compare those identities with the live `plugin.js`, `plugin.mjs`, and
+`viewer/*.js` inventory. The temporary checker must:
+
+- allow a pre-existing Phase 0 function/metric to remain at or below its captured value without creating an active
+  self-authored baseline;
+- apply complexity 10, 40 statements, nesting depth 4, and 6 parameters to every live function identity absent from the
+  Phase 0 capture, including a new function inside a pre-existing source file;
+- reject path-change grandfathering, missing/stale source paths, duplicate identities, parser-version drift, and any
+  increase in a captured function's value;
+- have clean and deliberate-negative proofs for a new file, a new function in an existing file, a moved function, and a
+  regression in an existing function.
+
+Phase 7 replaces this temporary differential owner with the immutable findings capture and final active ledger in the
+same change.
+
 Extract status/history presentation from `viewer/viewer.js` into `viewer/status-ui.js` (or an equivalently focused
 role-based module). The new module owns recent-decision derivation, status cards, value/counter/persistence rendering,
 decision colors, and status-local duration/flush presentation.
@@ -668,8 +729,10 @@ Update in the same change:
 - source/test/coverage inventories introduced later in this plan (or their temporary predecessor lists until those
   phases land).
 
-Both modules must be below 400 non-empty lines before formatting. Extracted functions must satisfy strict new complexity
-limits rather than receive new baseline debt.
+In the same atomic change, add the new module to the current V8 coverage target inventory with a line floor of at least
+80 percent. The temporary differential complexity owner must cover both modules and every other live shipped source
+path; an extracted function is a new identity and must satisfy strict limits rather than receive baseline debt. Both
+modules must be below 400 non-empty lines before formatting.
 
 #### 2B. Apply Prettier to the complete maintained scope
 
@@ -717,6 +780,11 @@ reachable. Temporary duplicate execution inherited from the old graph is accepta
 public final-semantic command, must not be documented outside this plan, and is deleted when Phase 8 activates the exact
 once-only final graph.
 
+Add `typecheck:migration-source` to `check:migration` from its first authoritative Phase 2 commit. The old complete gate
+continues to run the current viewer coverage collector, including the new module; add
+`check:complexity:migration` directly to the aggregate. Package-contract proof must reject any Phase 2-6 aggregate that
+omits transitional source typing, current coverage, or differential complexity ownership.
+
 #### 2C. Land ESLint, Stylelint, jscpd, and actionlint cleanly
 
 Configure ESLint for:
@@ -735,12 +803,24 @@ Configure Stylelint standard rules and the `--polarrecorder-*` custom-property n
 `--polarrecorder-chip-color` in CSS and its JavaScript producer/tests; apply the three verified media-range syntax
 fixes.
 
-Configure jscpd to fail on detected JS/CSS clones with the proven zero-clone baseline. Do not delete the Python AST
-duplicate checker in this phase.
+Configure jscpd to fail on detected JS/CSS token clones with the proven zero-clone baseline. Freeze its exact maintained
+JavaScript/MJS/CSS roots and exact exclusions in policy and add a scope contract that fails when a maintained path is
+missing, a stale path is retained, or a broad directory exclusion could hide production/tool code.
+
+Keep the current identifier-normalizing JavaScript duplicate checker, or move its semantics into a focused retained
+contract, unless a direct corpus proves jscpd rejects both:
+
+- equivalent function bodies whose local identifiers were renamed;
+- long equivalent normalized statement blocks across different functions/files.
+
+Current Dyninstruments retains separate `duplicate-functions` and `duplicate-block-clones` rules alongside jscpd, so
+absence of literal token clones is not structural parity. Do not delete the Python AST duplicate checker in this phase.
 
 Remove `tools` from Ruff's broad exclusion. Ruff lint and format must discover every maintained Python tool; if a
 verified CLI boundary needs an exception, encode only an exact per-file/per-code lint exception with a reason and
-negative contract proof. Ruff formatting has no corresponding whole-tool exemption.
+negative contract proof. Implement the Phase 0 path/rule disposition explicitly: no finding may disappear merely because
+the selected Ruff version changed, an entire tool was excluded, or a broad rule family was ignored. Ruff formatting has
+no corresponding whole-tool exemption.
 
 #### 2D. Add persistent hotspot budgets below the global file limit
 
@@ -763,6 +843,9 @@ npm run actions:lint
 npm run duplication:check
 npm run check:standard
 npm run test:viewer
+npm run typecheck:migration-source
+npm run check:js-coverage
+npm run check:complexity:migration
 npm run check:docs
 npm run check:filesize
 npm run check:migration
@@ -771,8 +854,10 @@ npm run check:migration
 All exit zero. A file-count contract proves every formatter-owned target is in both the write and check inventories,
 every other maintained target has one explicit supported disposition, optional absent roots do not fail, and a newly
 added maintained file cannot escape classification. HTML and maintained Python tools are covered, no broad Ruff
-`tools/` exclusion remains, and no non-exempt file exceeds 400 non-empty lines. Mock-server/manual viewer smoke confirms
-no visible change from the extraction or CSS variable rename.
+`tools/` exclusion remains, every Phase 0 Python-tool finding has an explicit resolved disposition, the new viewer module
+and every new function in an existing viewer file are strict/covered/complexity-limited from their first commit, jscpd
+scope and structural clone ownership are exact, and no non-exempt file exceeds 400 non-empty lines. Mock-server/manual
+viewer smoke confirms no visible change from the extraction or CSS variable rename.
 
 ---
 
@@ -839,7 +924,8 @@ Move these responsibilities:
 - required documentation shape -> focused Node contract;
 - reachability from canonical agent guidance -> focused graph contract;
 - viewer file overview targets -> ESLint JSDoc + documentation contract;
-- JS/CSS clone detection -> jscpd;
+- literal/token JS/CSS clone detection -> jscpd;
+- renamed-function and normalized-block JavaScript clones -> retained focused checker unless direct jscpd parity passes;
 - generic namespace/global errors -> ESLint.
 
 Retain focused contracts for Polar's TOC completeness, required document sections, viewer script order, `Depends:`
@@ -857,14 +943,19 @@ contract is active.
 #### 3C. Preserve Python-specific duplication and architecture checks
 
 Keep `check-py-contracts.py`, `check-py-dependencies.py`, Python 3.9 compatibility, runtime finite-value checks, and
-Python filesize/header checks. Keep `check-duplication.py` unless a direct corpus plus negative-fixture proof shows
-jscpd catches both renamed function-body clones and long AST statement clones without noise. The verified default is to
-retain it.
+Python filesize/header checks. Keep both the Python AST duplicate checker and the structural JavaScript duplicate owner
+unless direct corpora plus negative-fixture proof show jscpd catches their renamed function-body and long normalized
+statement-block semantics without noise. The verified default is to retain both.
 
-Activate the exact leaves `duplication:js = jscpd ...` and
-`duplication:python = python tools/check-duplication.py`; define `duplication:check` as their ordered aggregate and keep
-Python duplication out of `check:python-contracts`. Package-contract expansion must prove each leaf is reached exactly
-once from `check:standard`.
+Activate these exact groups:
+
+- `duplication:js`: jscpd plus the retained structural JavaScript owner when parity is not proven;
+- `duplication:python`: `python tools/check-duplication.py`;
+- `duplication:check`: the ordered aggregate of the two groups.
+
+Keep Python duplication out of `check:python-contracts`. Package-contract expansion must prove every underlying owner is
+reached exactly once from `check:standard`, and a renamed clone must fail even when jscpd itself reports no literal
+clone.
 
 Add missing self-tests for the Python duplication and release-check dry-run owners rather than treating tool exemptions
 as test exemptions.
@@ -946,8 +1037,10 @@ newly annotated file against the 400-line limit; split in this phase if necessar
 
 #### 4C. Make source typing fail closed
 
-Wire `typecheck:source` into `check:migration` only after the entire live inventory passes and record its required final
-position under `typecheck` in `check:core`. Add negative contract fixtures for:
+Wire `typecheck:source` into `check:migration` only after the entire live inventory passes. Remove
+`tsconfig.migration-source.json` and `typecheck:migration-source` in that same change; there must be no commit where the
+Phase 2 new-source inventory loses strict ownership. Record the final source command's required position under
+`typecheck` in `check:core`. Add negative contract fixtures for:
 
 - a new viewer file omitted from the inventory;
 - a misspelled namespace method;
@@ -975,6 +1068,8 @@ npm run check:migration
 ```
 
 All exit zero, `tsc` emits no files, and the source inventory equals the live plugin/viewer set exactly.
+The transitional source project is absent, and the package contract proves the complete source project replaced it
+without an enforcement gap.
 
 ---
 
@@ -1209,6 +1304,11 @@ editing the scanner, capture, and embedded metadata together must not make a reg
 
 Do not create a Python debt ledger: Ruff already blocks those source/test limits without grandfathered debt. Keep Ruff
 limits unchanged and covered by config contracts.
+
+Only after the stable-identity checker proves the complete live source inventory may
+`check:complexity:migration` be removed. Replace it in the same change, and add package/config proof that every newly
+added production JavaScript function, including one added inside a pre-existing file, still receives the 10/40/4/6
+limits rather than falling between owners.
 
 #### 7B. Replace wall-clock performance checks
 
@@ -1680,12 +1780,15 @@ notes are required because this plan does not create a release or change product
 - [ ] `check:standard`, `check:fast`, `check:core`, `test:split`, and focused commands have documented, tested meanings.
 - [ ] The literal `check:core` graph reaches Ruff/mypy, every retained Python contract, pytest, and every Node
       tool/contract/viewer/plugin suite exactly once; `test:focus:check` is a direct required group.
-- [ ] `duplication:js` owns jscpd, `duplication:python` owns `tools/check-duplication.py`, and `duplication:check`
-      aggregates both exactly once without a second Python path through `check:python-contracts`.
+- [ ] `duplication:js` owns jscpd plus the retained structural JavaScript owner unless direct parity proves replacement;
+      `duplication:python` owns `tools/check-duplication.py`; `duplication:check` aggregates both groups exactly once
+      without a second Python path through `check:python-contracts`.
 - [ ] Phase 0 canonical test/coverage/complexity-source captures predate active ledgers, exclude volatile/raw-report
       metadata, regenerate byte-identically from normalized repository-relative facts, and have reordering/volatile-input
       negative proof; Phase 7 findings derive from captured Git blobs after tool lock, and independent commit/digest
       anchors prevent self-authorized drift.
+- [ ] The temporary strict test owner is active before Phase 0 adds its first executable JavaScript proof and remains
+      active until Phase 5 replaces it atomically.
 - [ ] Setup, Hypothesis, and c8 use ignored owned paths and a clean-state test proves they leave no stray generated
       repository state.
 
@@ -1703,6 +1806,13 @@ notes are required because this plan does not create a release or change product
 - [ ] Every old checker/rule has a final owner; no custom checker was deleted before positive/negative parity proof.
 - [ ] Retained custom tools own only Polar-specific contracts and have focused self-tests.
 - [ ] Python architecture, compatibility, finite-value, suppression, and duplicate-helper protections remain blocking.
+- [ ] jscpd has an exact maintained scan-scope contract, and renamed-function/normalized-block JavaScript clones remain
+      blocking through a retained focused owner unless direct parity proves jscpd catches both semantics.
+- [ ] `duplication:js`, `duplication:python`, and `duplication:check` reach every underlying clone owner exactly once,
+      including the retained structural JavaScript owner when required.
+- [ ] Phase 0 captures Ruff lint/format debt for every maintained Python tool with the selected locked version; Phase 2
+      resolves every path/rule finding through refactoring or one exact justified CLI exception, with no broad `tools`
+      exclusion or silent debt disappearance.
 - [ ] Structured boundary markers validate category/owner/date/reason/expiry and fail when malformed, stale, misplaced,
       unused, or applied to another rule.
 - [ ] Generic production suppressions are blocked; direct/computed/composed HTML and `on*` sinks fail outside an exact
@@ -1714,10 +1824,15 @@ notes are required because this plan does not create a release or change product
 
 - [ ] Every plugin/viewer source file is strict no-emit `checkJs` input with no `@ts-ignore`, `@ts-nocheck`, broad
       `any`, or runtime build output.
+- [ ] `viewer/status-ui.js` and every other source file created before Phase 4 are strict, carry at least the current
+      80-percent line-coverage default, and satisfy 10/40/4/6 complexity limits from their first commit.
+- [ ] Every JavaScript function added to a pre-existing shipped source file before Phase 7 also receives 10/40/4/6
+      limits immediately through the differential migration checker; the final stable-identity owner replaces it
+      atomically with no unguarded commit.
 - [ ] Every executable JavaScript test/helper, including the viewer harness, is inventory-owned and strict; the immutable
       executable exception baseline is empty.
-- [ ] Every executable JavaScript test/helper added in Phases 1-4 is strict from its first phase through the temporary
-      post-Phase-0 discovery typecheck, which Phase 5 replaces atomically with the complete strict test inventory.
+- [ ] Every executable JavaScript test/helper added in Phases 0-4 is strict from its first phase through the temporary
+      post-capture discovery typecheck, which Phase 5 replaces atomically with the complete strict test inventory.
 - [ ] Every committed negative quality fixture is non-executable, lives at an exact preauthorized
       `tests/fixtures/quality/` path, has a strict owner and content hash, and fails when unplanned, stale, ownerless,
       hash-mismatched, imported, or runner/process-discovered.
