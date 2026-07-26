@@ -8,4 +8,4 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   window.Polarrecorder.Placeholders = Object.freeze({ NoData: "No Data" });
-}());
+})();

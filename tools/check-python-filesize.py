@@ -47,16 +47,14 @@ def main() -> int:
         relative = path.relative_to(ROOT)
         if non_empty_lines > MAX_NON_EMPTY_LINES:
             failures.append(
-                f"{relative}: {non_empty_lines} non-empty lines "
-                f"(limit {MAX_NON_EMPTY_LINES})"
+                f"{relative}: {non_empty_lines} non-empty lines (limit {MAX_NON_EMPTY_LINES})"
             )
         if needs_header(path) and not has_module_header(path):
             failures.append(f"{relative}: missing required module header")
         for finding in detect_oneliner_findings(path):
             reason = ONELINER_MESSAGE_BY_KIND[finding.kind]
             failures.append(
-                f"{relative}:{finding.line}: {reason} "
-                f"({finding.kind}, length {finding.length})"
+                f"{relative}:{finding.line}: {reason} ({finding.kind}, length {finding.length})"
             )
 
     if failures:
@@ -188,9 +186,13 @@ def ast_oneliner_kind(node: ast.AST, raw_lines: list[str]) -> str | None:
     if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
         if is_crammed_comprehension(node, line):
             return "crammed-comprehension"
-    if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict)) and is_collapsed_literal(node, line):
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict)) and is_collapsed_literal(
+        node, line
+    ):
         return "collapsed-literal"
-    if isinstance(node, (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try)):
+    if isinstance(
+        node, (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try)
+    ):
         if has_collapsed_body(node, line_number):
             return "collapsed-compound-body"
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -234,7 +236,11 @@ def is_collapsed_literal(node: ast.List | ast.Tuple | ast.Set | ast.Dict, line: 
 
 
 def has_collapsed_body(node: ast.AST, line_number: int) -> bool:
-    bodies = [getattr(node, "body", []), getattr(node, "orelse", []), getattr(node, "finalbody", [])]
+    bodies = [
+        getattr(node, "body", []),
+        getattr(node, "orelse", []),
+        getattr(node, "finalbody", []),
+    ]
     if isinstance(node, ast.Try):
         bodies.extend(handler.body for handler in node.handlers)
     for body in bodies:
@@ -266,12 +272,14 @@ def text_oneliner_kind(masked_trimmed_line: str) -> str | None:
     operator_count = count_characters(masked_trimmed_line, "+-*/%&|^?:<>!=")
     paren_count = count_characters(masked_trimmed_line, "()")
 
-    if (
-        line_length > LONG_PACKED_LINE_THRESHOLD
-        and (bracket_count >= LONG_PACKED_MIN_BRACKETS or comma_count >= LONG_PACKED_MIN_COMMAS)
+    if line_length > LONG_PACKED_LINE_THRESHOLD and (
+        bracket_count >= LONG_PACKED_MIN_BRACKETS or comma_count >= LONG_PACKED_MIN_COMMAS
     ):
         return "long-packed"
-    if line_length > OPERATOR_DENSE_LINE_THRESHOLD and operator_count >= OPERATOR_DENSE_MIN_OPERATORS:
+    if (
+        line_length > OPERATOR_DENSE_LINE_THRESHOLD
+        and operator_count >= OPERATOR_DENSE_MIN_OPERATORS
+    ):
         return "operator-dense"
     if line_length > NESTED_PARENS_LINE_THRESHOLD and paren_count >= NESTED_PARENS_MIN_COUNT:
         return "nested-parens"

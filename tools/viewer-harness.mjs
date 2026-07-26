@@ -3,7 +3,7 @@
 /**
  * Dependency-free DOM/fetch harness for vm-loading the viewer scripts in Node.
  *
- * Shared by tools/test-viewer-smoke.mjs (end-to-end render walk) and
+ * Shared by tests/js/viewer-smoke.test.mjs (end-to-end render walk) and
  * tools/check-viewer-contracts.mjs (behavioral smell contracts) so both drive
  * the real viewer through one fake host instead of duplicating ~400 lines of
  * stub DOM. createEnvironment accepts an optional responder so a contract can
@@ -15,26 +15,228 @@ import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 
+/**
+ * @typedef {{
+ *   add: (name: string) => void,
+ *   contains: (name: string) => boolean,
+ *   remove: (name: string) => void,
+ *   toggle: (name: string, enabled: boolean) => void
+ * }} FakeClassList
+ */
+
+/**
+ * @typedef {{
+ *   background: string,
+ *   left: string,
+ *   top: string,
+ *   getPropertyValue: (name: string) => string,
+ *   removeProperty: (name: string) => void,
+ *   setProperty: (name: string, value: unknown) => void
+ * }} FakeStyle
+ */
+
+/**
+ * @typedef {{ clientX: number, clientY: number }} FakeClickEvent
+ */
+
+/**
+ * A fake DOM node produced by element(). Every node produced by the harness
+ * carries all of these members; classList and firstChild are populated by
+ * element() itself before the node is ever handed to a caller. id, onclick,
+ * onfocus, and checked are genuinely absent until the harness (or the
+ * vm-loaded viewer script) sets them -- checked stands in for a
+ * checkbox-role <input>'s real DOM `.checked` property, and onfocus is
+ * addEventListener("focus", ...)'s storage slot, mirroring onclick.
+ *
+ * @typedef {{
+ *   attributes: Map<string, string>,
+ *   checked?: boolean,
+ *   children: FakeElement[],
+ *   className: string,
+ *   classList: FakeClassList,
+ *   dataset: Record<string, string>,
+ *   disabled: boolean,
+ *   firstChild: FakeElement | null,
+ *   hidden: boolean,
+ *   id?: string,
+ *   onclick?: (event: FakeClickEvent) => void,
+ *   onfocus?: () => void,
+ *   parentNode: FakeElement | null,
+ *   style: FakeStyle,
+ *   tagName: string,
+ *   textContent: string,
+ *   value: string,
+ *   appendChild: (child: FakeElement) => FakeElement,
+ *   addEventListener: (name: string, callback: (event?: unknown) => void) => void,
+ *   click: () => void,
+ *   closest: (selector: string) => FakeElement | null,
+ *   getAttribute: (name: string) => string | undefined,
+ *   querySelector: (selector: string) => FakeElement | null,
+ *   querySelectorAll: (selector: string) => FakeElement[],
+ *   remove: () => void,
+ *   removeChild: (child: FakeElement) => FakeElement,
+ *   setAttribute: (name: string, value: unknown) => void
+ * }} FakeElement
+ */
+
+/**
+ * @typedef {{
+ *   addEventListener: (name: string, callback: () => void) => void,
+ *   body: FakeElement,
+ *   createElement: (tagName: string) => FakeElement,
+ *   createElementNS: (namespace: unknown, tagName: string) => FakeElement,
+ *   createTextNode: (text: string) => FakeElement,
+ *   getElementById: (id: string) => FakeElement | null,
+ *   querySelector: (selector: string) => FakeElement | null,
+ *   querySelectorAll: (selector: string) => FakeElement[]
+ * }} FakeDocument
+ */
+
+/**
+ * @typedef {{ createObjectURL: () => string, revokeObjectURL: () => void }} FakeUrl
+ */
+
+/**
+ * @typedef {{ ok: boolean, status: number, json: () => Promise<ApiResponse> }} FakeFetchResponse
+ */
+
+/**
+ * @typedef {(url: string) => Promise<FakeFetchResponse>} FetchFn
+ */
+
+/**
+ * @typedef {{
+ *   Blob: typeof Blob,
+ *   Polarrecorder: Record<string, unknown>,
+ *   URL: FakeUrl,
+ *   confirm: () => boolean,
+ *   innerHeight: number,
+ *   innerWidth: number,
+ *   setInterval: () => number,
+ *   setTimeout: (callback: unknown) => number,
+ *   fetch?: FetchFn
+ * }} FakeWindow
+ */
+
+/**
+ * @typedef {{
+ *   Blob: typeof Blob,
+ *   URL: FakeUrl,
+ *   URLSearchParams: typeof URLSearchParams,
+ *   document: FakeDocument,
+ *   fetch: FetchFn,
+ *   window: FakeWindow
+ * }} FakeContext
+ */
+
+/**
+ * @typedef {{ data: unknown, status: string }} ApiResponse
+ */
+
+/**
+ * @typedef {(endpoint: string) => ApiResponse} ApiResponder
+ */
+
+/**
+ * @typedef {{ responder?: ApiResponder }} CreateEnvironmentOptions
+ */
+
+/**
+ * @typedef {{
+ *   context: FakeContext,
+ *   document: FakeDocument,
+ *   elements: Record<string, FakeElement>,
+ *   fireDOMContentLoaded: () => void,
+ *   clickTab: (name: string) => void,
+ *   requests: string[],
+ *   window: FakeWindow
+ * }} Environment
+ */
+
+/**
+ * @typedef {{
+ *   acceptance_rate: number,
+ *   total_accepted: number,
+ *   total_quarantined: number,
+ *   total_rejected: number,
+ *   total_seen: number
+ * }} StatusCounters
+ */
+
+/**
+ * @typedef {{
+ *   stw_age_s: number,
+ *   stw_kt: number,
+ *   stw_stale: boolean,
+ *   twa_age_s: number,
+ *   twa_deg: number,
+ *   twa_stale: boolean,
+ *   tws_age_s: number,
+ *   tws_kt: number,
+ *   tws_stale: boolean
+ * }} StatusCurrentValues
+ */
+
+/**
+ * @typedef {{
+ *   counters: StatusCounters,
+ *   current_decision: { reason_codes: string[], state: string },
+ *   current_values: StatusCurrentValues | null,
+ *   data_status: string,
+ *   generation: number,
+ *   persistence: {
+ *     bins_total: number,
+ *     bins_with_data: number,
+ *     file_size_bytes: number,
+ *     last_flush_wall: number
+ *   },
+ *   recording: boolean,
+ *   top_rejections: Array<{ count: number, reason: string }>,
+ *   uptime_seconds: number,
+ *   warming_up: boolean
+ * }} StatusPayload
+ */
+
+/**
+ * @typedef {{ builtin: boolean, name: string, twa: number[], tws: number[] }} PresetFixture
+ */
+
+/**
+ * @param {Environment} env
+ * @param {string} name
+ * @param {string} [root]
+ * @returns {void}
+ */
 export function loadViewerFile(env, name, root = process.cwd()) {
   const filename = path.join(root, "viewer", name);
   const source = fs.readFileSync(filename, "utf8");
   vm.runInNewContext(source, env.context, { filename });
 }
 
+/**
+ * @template T
+ * @param {T} data
+ * @returns {{ data: T, status: string }}
+ */
 export function ok(data) {
   return { data, status: "OK" };
 }
 
+/**
+ * @param {string} endpoint
+ * @returns {ApiResponse}
+ */
 export function defaultResponseBody(endpoint) {
   if (endpoint.startsWith("presets")) {
     return ok({ presets: fallbackPresets() });
   }
   if (endpoint.startsWith("polar")) {
+    /** @type {Array<{ samples: number, stw: number }>} */
     const curve = [];
     curve[0] = { samples: 0, stw: 0 };
     curve[90] = { samples: 20, stw: 6.2 };
     return ok({
-      curves: { "12": curve },
+      curves: { 12: curve },
       format: "DefaultStarboard180",
       generation: 2,
       percentile: 65,
@@ -112,6 +314,10 @@ export function defaultResponseBody(endpoint) {
   return ok({});
 }
 
+/**
+ * @param {Partial<StatusPayload>} [overrides]
+ * @returns {StatusPayload}
+ */
 export function statusPayload(overrides = {}) {
   return {
     counters: {
@@ -149,6 +355,9 @@ export function statusPayload(overrides = {}) {
   };
 }
 
+/**
+ * @returns {PresetFixture[]}
+ */
 export function fallbackPresets() {
   return [
     { builtin: true, name: "DefaultStarboard180", twa: [0, 90, 180], tws: [4, 6, 8] },
@@ -158,9 +367,15 @@ export function fallbackPresets() {
   ];
 }
 
+/**
+ * @param {CreateEnvironmentOptions} [options]
+ * @returns {Environment}
+ */
 export function createEnvironment(options = {}) {
   const responder = options.responder || defaultResponseBody;
+  /** @type {Map<string, () => void>} */
   const listeners = new Map();
+  /** @type {Record<string, FakeElement>} */
   const elements = {
     "connection-banner": element("div"),
     "export-panel": element("div"),
@@ -188,6 +403,7 @@ export function createEnvironment(options = {}) {
   });
   const body = element("body");
   body.dataset.apiBase = "../api/";
+  /** @type {FakeDocument} */
   const document = {
     addEventListener(name, callback) {
       listeners.set(name, callback);
@@ -222,6 +438,7 @@ export function createEnvironment(options = {}) {
       return [];
     }
   };
+  /** @type {FakeWindow} */
   const window = {
     Blob,
     Polarrecorder: {},
@@ -238,11 +455,17 @@ export function createEnvironment(options = {}) {
       return 1;
     }
   };
+  /** @type {string[]} */
   const requests = [];
+  /**
+   * @param {string} url
+   * @returns {Promise<FakeFetchResponse>}
+   */
   const fetch = function (url) {
     requests.push(String(url));
     return fetchResponse(url, responder);
   };
+  /** @type {FakeContext} */
   const context = {
     Blob,
     URL: window.URL,
@@ -257,12 +480,19 @@ export function createEnvironment(options = {}) {
     document,
     elements,
     fireDOMContentLoaded() {
-      listeners.get("DOMContentLoaded")();
+      const callback = listeners.get("DOMContentLoaded");
+      if (!callback) {
+        throw new Error("viewer-harness: DOMContentLoaded listener not registered");
+      }
+      callback();
     },
     clickTab(name) {
       const button = tabButtons.find(function (item) {
         return item.dataset.tab === name;
       });
+      if (!button) {
+        throw new Error(`viewer-harness: no tab button for "${name}"`);
+      }
       button.click();
     },
     requests,
@@ -270,16 +500,28 @@ export function createEnvironment(options = {}) {
   };
 }
 
+/**
+ * @param {FakeElement} node
+ * @returns {string}
+ */
 export function textTree(node) {
   return node.textContent + node.children.map(textTree).join("");
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 export async function flushViewer() {
   for (let index = 0; index < 8; index += 1) {
     await Promise.resolve();
   }
 }
 
+/**
+ * @param {string} url
+ * @param {ApiResponder} responder
+ * @returns {Promise<FakeFetchResponse>}
+ */
 function fetchResponse(url, responder) {
   const endpoint = String(url).replace(/^\.\.\/api\//, "");
   return Promise.resolve({
@@ -291,13 +533,19 @@ function fetchResponse(url, responder) {
   });
 }
 
+/**
+ * @param {string} tagName
+ * @returns {FakeElement}
+ */
 function element(tagName) {
+  /** @type {FakeElement} */
   const node = {
     attributes: new Map(),
     children: [],
     className: "",
     dataset: {},
     disabled: false,
+    firstChild: null,
     hidden: false,
     parentNode: null,
     style: styleBag(),
@@ -310,13 +558,15 @@ function element(tagName) {
       return child;
     },
     addEventListener(name, callback) {
-      node["on" + name] = callback;
+      const bag = /** @type {Record<string, unknown>} */ (node);
+      bag["on" + name] = callback;
     },
     click() {
       if (node.onclick) node.onclick({ clientX: 20, clientY: 20 });
     },
     closest(selector) {
       if (!selector.startsWith(".")) return null;
+      /** @type {FakeElement | null} */
       let current = node;
       const className = selector.slice(1);
       while (current) {
@@ -364,9 +614,15 @@ function element(tagName) {
     },
     setAttribute(name, value) {
       node.attributes.set(name, String(value));
-    }
+    },
+    // classList closes over `node`, so it can only be built once `node`
+    // exists; this placeholder is overwritten immediately below, before the
+    // node is returned to any caller.
+    classList: /** @type {FakeClassList} */ ({})
   };
   Object.defineProperty(node, "firstChild", {
+    enumerable: false,
+    configurable: false,
     get() {
       return node.children[0] || null;
     }
@@ -375,6 +631,10 @@ function element(tagName) {
   return node;
 }
 
+/**
+ * @param {FakeElement} node
+ * @returns {FakeClassList}
+ */
 function classList(node) {
   return {
     add(name) {
@@ -397,20 +657,32 @@ function classList(node) {
   };
 }
 
+/**
+ * @param {FakeElement} node
+ * @returns {Set<string>}
+ */
 function classSet(node) {
-  return new Set(String(node.className || "").split(/\s+/).filter(Boolean));
+  return new Set(
+    String(node.className || "")
+      .split(/\s+/)
+      .filter(Boolean)
+  );
 }
 
+/**
+ * @returns {FakeStyle}
+ */
 function styleBag() {
+  /** @type {Map<string, string>} */
   const values = new Map();
   return {
-    set background(value) {
+    set background(/** @type {string} */ value) {
       values.set("background", value);
     },
-    set left(value) {
+    set left(/** @type {string} */ value) {
       values.set("left", value);
     },
-    set top(value) {
+    set top(/** @type {string} */ value) {
       values.set("top", value);
     },
     getPropertyValue(name) {
@@ -425,6 +697,9 @@ function styleBag() {
   };
 }
 
+/**
+ * @returns {FakeUrl}
+ */
 function fakeUrl() {
   return {
     createObjectURL() {
@@ -434,16 +709,32 @@ function fakeUrl() {
   };
 }
 
+/**
+ * @param {FakeElement} node
+ * @param {string} selector
+ * @returns {boolean}
+ */
 function matches(node, selector) {
   if (selector.startsWith(".")) return node.classList.contains(selector.slice(1));
   return false;
 }
 
+/**
+ * @param {FakeElement} root
+ * @param {(node: FakeElement) => boolean} predicate
+ * @returns {FakeElement | null}
+ */
 function findFirst(root, predicate) {
   return findAll(root, predicate)[0] || null;
 }
 
+/**
+ * @param {FakeElement} root
+ * @param {(node: FakeElement) => boolean} predicate
+ * @returns {FakeElement[]}
+ */
 function findAll(root, predicate) {
+  /** @type {FakeElement[]} */
   const out = [];
   walk(root, function (node) {
     if (predicate(node)) out.push(node);
@@ -451,18 +742,33 @@ function findAll(root, predicate) {
   return out;
 }
 
+/**
+ * @param {FakeElement} root
+ * @param {string} id
+ * @returns {FakeElement | null}
+ */
 function findById(root, id) {
   return findFirst(root, function (node) {
     return node.id === id;
   });
 }
 
+/**
+ * @param {FakeElement} root
+ * @param {string} name
+ * @returns {FakeElement | null}
+ */
 function findFirstByClass(root, name) {
   return findFirst(root, function (node) {
     return node.classList.contains(name);
   });
 }
 
+/**
+ * @param {FakeElement} node
+ * @param {(node: FakeElement) => void} visit
+ * @returns {void}
+ */
 function walk(node, visit) {
   visit(node);
   node.children.forEach(function (child) {

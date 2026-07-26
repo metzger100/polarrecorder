@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import io
 import json
 import re
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -13,13 +15,16 @@ PROJECT_RE = re.compile(r"^\[project\]\s*$")
 SECTION_RE = re.compile(r"^\[[^]]+\]\s*$")
 VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"')
 DYNAMIC_VERSION_RE = re.compile(r'^dynamic\s*=\s*\[[^]]*"version"[^]]*\]')
+# Canonical semver.org-recommended pattern -- byte-equivalent to tools/release-version.mjs's
+# SEMVER_REGEX. Both are asserted against the same tools/quality-policy/semver-corpus.json
+# corpus so the JS and Python SemVer authorities can never silently diverge.
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\."
     r"(0|[1-9]\d*)\."
     r"(0|[1-9]\d*)"
-    r"(?:-((?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*)"
-    r"(?:\.(?:0|[1-9]\d*|[A-Za-z-][0-9A-Za-z-]*))*))?"
-    r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
+    r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+    r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 )
 ROOT_RUNTIME_FILES = (
     "plugin.css",
@@ -28,7 +33,6 @@ ROOT_RUNTIME_FILES = (
     "plugin.mjs",
     "plugin.py",
     "viewer/icon.svg",
-    "viewer/viewer.css",
     "viewer/viewer.html",
 )
 EXCLUDED_PREFIXES = (
@@ -116,8 +120,9 @@ def expected_runtime_files() -> list[tuple[str, Path]]:
     viewer_root = ROOT / "viewer"
     if not viewer_root.is_dir():
         raise ReleaseError("Missing runtime viewer directory: viewer")
-    for source in sorted(viewer_root.glob("*.js"), key=lambda path: path.name):
-        entries.append((source.relative_to(ROOT).as_posix(), source))
+    for pattern in ("*.js", "*.css"):
+        for source in sorted(viewer_root.glob(pattern), key=lambda path: path.name):
+            entries.append((source.relative_to(ROOT).as_posix(), source))
 
     package_root = ROOT / "server" / "polarrecorder"
     if not package_root.is_dir():
@@ -175,6 +180,24 @@ def validate_semver(version: str) -> None:
         raise ReleaseError(f"Invalid SemVer version: {version!r}")
 
 
+def is_prerelease(version: str) -> bool:
+    """Return whether `version` carries a SemVer prerelease segment.
+
+    Build metadata alone (e.g. ``1.0.0+build.1``) never makes a version a prerelease;
+    only the prerelease segment (the part after ``-``, before any ``+``) does.
+
+    Args:
+        version: A valid SemVer string, without a leading ``v``.
+
+    Returns:
+        Whether the version's prerelease segment is present.
+    """
+    match = SEMVER_RE.match(version)
+    if match is None:
+        raise ReleaseError(f"Invalid SemVer version: {version!r}")
+    return match.group(4) is not None
+
+
 def stamp_plugin_json(version: str) -> bytes:
     validate_semver(version)
     data = plugin_json_data()
@@ -192,6 +215,30 @@ def runtime_file_bytes(name: str, source: Path, version: str | None = None) -> b
 def archive_name(runtime_name: str) -> str:
     validate_runtime_name(runtime_name)
     return f"{PLUGIN_DIR}/{runtime_name}"
+
+
+def build_zip_bytes(version: str, entries: list[tuple[str, Path]]) -> bytes:
+    """Build a deterministic release zip in memory.
+
+    Shared by `release-zip.py` (writes the bytes to `releases/`) and
+    `check-release.py --dry-run` (validates the bytes without ever touching disk), so
+    the archive-construction logic has exactly one owner.
+
+    Args:
+        version: The SemVer version to stamp into the archived `plugin.json`.
+        entries: `(runtime_name, source)` pairs, as returned by `expected_runtime_files()`.
+
+    Returns:
+        The zip file's raw bytes.
+    """
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for runtime_name, source in entries:
+            info = zipfile.ZipInfo(archive_name(runtime_name), FIXED_ZIP_TIME)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            archive.writestr(info, runtime_file_bytes(runtime_name, source, version))
+    return buffer.getvalue()
 
 
 def runtime_name_from_archive(name: str) -> str:

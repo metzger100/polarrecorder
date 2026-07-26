@@ -1,22 +1,32 @@
 /**
  * Module: Export UI
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, dom.js, presets.js, grid-editor.js
+ * Depends: viewer.js, dom.js, presets.js, export-fields.js, export-presets.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  const button = Polarrecorder.Dom.Button;
-  const actionRow = Polarrecorder.Dom.ActionRow;
-  const clear = Polarrecorder.Dom.Clear;
-  const download = Polarrecorder.Dom.Download;
+
+  /** @typedef {{name: string, builtin: boolean, twa: number[], tws: number[]}} Preset */
+  /** @typedef {{refreshPresets?: () => void}} ExportHooks */
+  /**
+   * @typedef {{
+   *   host: HTMLElement | null,
+   *   percentile: string,
+   *   highConfidence: boolean,
+   *   message: string,
+   *   messageKind: "info" | "error",
+   *   saveOpen: boolean,
+   *   previewActive: boolean,
+   *   hooks: ExportHooks
+   * }} ExportState
+   */
+
+  /** @type {ExportState} */
   const state = {
     host: null,
-    selected: "DefaultStarboard180",
-    twaEditor: null,
-    twsEditor: null,
     percentile: "",
     highConfidence: false,
     message: "",
@@ -26,11 +36,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     hooks: {}
   };
 
+  /** @param {ExportHooks} [hooks] */
   function init(hooks) {
-    state.host = document.getElementById("export-panel");
+    const host = Polarrecorder.Dom.RequireById("export-panel");
+    state.host = host;
     state.hooks = hooks || {};
-    state.host.classList.add("has-data");
-    if (!state.selected) state.selected = "DefaultStarboard180";
+    Polarrecorder.ExportPresets.Configure(applyValidity);
+    host.classList.add("has-data");
     render();
   }
 
@@ -39,26 +51,30 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function render() {
+    if (!state.host) return;
+    const host = state.host;
     state.previewActive = false;
-    clear(state.host);
-    state.host.appendChild(configCard());
+    Polarrecorder.Dom.Clear(host);
+    host.appendChild(configCard());
     applyValidity();
   }
 
+  /** @returns {HTMLElement} */
   function configCard() {
-    const card = section("Export Configurator");
-    const preset = field("Preset", "select");
+    const card = Polarrecorder.ExportFields.Section("Export Configurator");
+    const preset = Polarrecorder.ExportFields.Field("Preset", "select");
     fillPresets(preset.control);
-    preset.control.value = state.selected;
+    preset.control.value = Polarrecorder.ExportPresets.Selected();
     preset.control.addEventListener("change", function () {
-      state.selected = preset.control.value;
-      loadSelectedPreset();
+      Polarrecorder.ExportPresets.SetSelected(preset.control.value);
+      Polarrecorder.ExportPresets.LoadSelected();
+      render();
     });
     card.appendChild(preset.wrap);
-    ensureEditors();
-    card.appendChild(state.twaEditor.Element);
-    card.appendChild(state.twsEditor.Element);
-    const percentile = field("Percentile override", "input");
+    const editors = Polarrecorder.ExportPresets.Editors();
+    card.appendChild(editors.twa.Element);
+    card.appendChild(editors.tws.Element);
+    const percentile = Polarrecorder.ExportFields.Field("Percentile override", "input");
     percentile.control.type = "number";
     percentile.control.min = "1";
     percentile.control.max = "99";
@@ -69,14 +85,25 @@ window.Polarrecorder = window.Polarrecorder || {};
       state.percentile = percentile.control.value;
     });
     card.appendChild(percentile.wrap);
-    card.appendChild(percentileHelp());
-    card.appendChild(confidenceField());
-    card.appendChild(actionRow([
-      button("Preview", previewCsv, "primary-action preview-button"),
-      button("Download CSV", downloadCsv, "primary-action download-button"),
-      button("Save as Preset", showSaveBox, "secondary-action save-button"),
-      button("Delete", deletePreset, "danger-action delete-button")
-    ]));
+    card.appendChild(Polarrecorder.ExportFields.PercentileHelp());
+    card.appendChild(
+      Polarrecorder.ExportFields.ConfidenceField(
+        state.highConfidence,
+        minSamples(),
+        /** @param {boolean} checked */
+        function (checked) {
+          state.highConfidence = checked;
+        }
+      )
+    );
+    card.appendChild(
+      Polarrecorder.Dom.ActionRow([
+        Polarrecorder.Dom.Button("Preview", previewCsv, "primary-action preview-button"),
+        Polarrecorder.Dom.Button("Download CSV", downloadCsv, "primary-action download-button"),
+        Polarrecorder.Dom.Button("Save as Preset", showSaveBox, "secondary-action save-button"),
+        Polarrecorder.Dom.Button("Delete", deletePreset, "danger-action delete-button")
+      ])
+    );
     if (state.saveOpen) card.appendChild(saveBox());
     card.appendChild(messageNode());
     const preview = document.createElement("textarea");
@@ -87,70 +114,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     return card;
   }
 
-  function confidenceField() {
-    const label = document.createElement("label");
-    label.className = "switch-field";
-    const box = document.createElement("input");
-    box.type = "checkbox";
-    box.checked = state.highConfidence;
-    box.addEventListener("change", function () {
-      state.highConfidence = box.checked;
-    });
-    const track = document.createElement("span");
-    track.className = "switch-track";
-    const text = document.createElement("span");
-    text.className = "switch-copy";
-    text.textContent = "High-confidence cells only (≥ " + minSamples() + " samples)";
-    const helper = document.createElement("p");
-    helper.className = "helper";
-    helper.textContent = "Off: export cells once they meet the normal display sample floor. "
-      + "On: leave cells blank unless they meet the stricter high-confidence sample floor.";
-    label.appendChild(box);
-    label.appendChild(track);
-    label.appendChild(text);
-    label.appendChild(helper);
-    return label;
-  }
-
-  function percentileHelp() {
-    const node = document.createElement("p");
-    node.className = "helper";
-    node.textContent = "The percentile chooses the speed written for each polar cell from its accepted-sample histogram. "
-      + "Default 65 means about 65% of accepted samples in that cell were at or below the exported speed. "
-      + "Lower values export a more conservative, slower table; higher values export a more optimistic, faster table. "
-      + "Leave blank unless you intentionally want an alternate export.";
-    return node;
-  }
-
-  function section(title) {
-    const card = document.createElement("section");
-    card.className = "card export-card";
-    card.appendChild(header(title));
-    return card;
-  }
-
-  function header(title) {
-    const head = document.createElement("div");
-    head.className = "section-head";
-    head.appendChild(document.createElement("h2")).textContent = title;
-    return head;
-  }
-
-  function field(labelText, type) {
-    const wrap = document.createElement("label");
-    wrap.className = "field";
-    const label = document.createElement("span");
-    label.textContent = labelText;
-    const control = document.createElement(type);
-    wrap.appendChild(label);
-    wrap.appendChild(control);
-    return { wrap: wrap, control: control };
-  }
-
-
+  /** @param {HTMLSelectElement} select */
   function fillPresets(select) {
-    clear(select);
-    sortedPresets().forEach(function (preset) {
+    Polarrecorder.Dom.Clear(select);
+    Polarrecorder.ExportPresets.Sorted().forEach(function (/** @type {Preset} */ preset) {
       const option = document.createElement("option");
       option.value = preset.name;
       option.textContent = Polarrecorder.Presets.Label(preset);
@@ -158,94 +125,70 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
-  function sortedPresets() {
-    const presets = Polarrecorder["PresetsCache"].slice();
-    return presets.sort(function (a, b) {
-      if (a.builtin !== b.builtin) return a.builtin ? -1 : 1;
-      if (a.builtin && b.builtin) return 0;
-      return a.name.localeCompare(b.name);
-    });
-  }
-
-  function ensureEditors() {
-    const preset = selectedPreset();
-    if (!state.twaEditor) {
-      state.twaEditor = Polarrecorder.GridEditor.Create({
-        label: "TWA grid",
-        min: 0,
-        max: 359,
-        step: 10,
-        values: preset.twa,
-        onChange: applyValidity
-      });
-      state.twsEditor = Polarrecorder.GridEditor.Create({
-        label: "TWS grid",
-        min: 1,
-        max: 60,
-        step: 2,
-        values: preset.tws,
-        onChange: applyValidity
-      });
-    }
-  }
-
-  function loadSelectedPreset() {
-    const preset = selectedPreset();
-    state.twaEditor.SetValues(preset.twa);
-    state.twsEditor.SetValues(preset.tws);
-    render();
-  }
-
-  function selectedPreset() {
-    return Polarrecorder["PresetsCache"].find(function (preset) {
-      return preset.name === state.selected;
-    }) || Polarrecorder["PresetsCache"][0];
-  }
-
+  /** @returns {URLSearchParams} */
   function currentParams() {
+    const editors = Polarrecorder.ExportPresets.Editors();
     const params = new URLSearchParams();
-    params.set("twa", state.twaEditor.Values().join(","));
-    params.set("tws", state.twsEditor.Values().join(","));
+    params.set("twa", editors.twa.Values().join(","));
+    params.set("tws", editors.tws.Values().join(","));
     if (state.percentile) params.set("percentile", state.percentile);
     if (state.highConfidence) params.set("high_confidence", "yes");
     return params;
   }
 
   function previewCsv() {
-    requestCsv().then(function (csv) {
-      state.previewActive = true;
-      document.getElementById("csv-preview").value = previewRows(csv);
-      setMessage("Preview updated.", "info");
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    requestCsv()
+      .then(function (csv) {
+        state.previewActive = true;
+        const preview = /** @type {HTMLTextAreaElement} */ (
+          Polarrecorder.Dom.RequireById("csv-preview")
+        );
+        preview.value = previewRows(csv);
+        setMessage("Preview updated.", "info");
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
   function refreshPreview() {
-    if (!state.previewActive || !isValid()) return;
-    requestCsv().then(function (csv) {
-      const node = document.getElementById("csv-preview");
-      if (node) node.value = previewRows(csv);
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    if (!state.previewActive || !Polarrecorder.ExportPresets.IsValid()) return;
+    requestCsv()
+      .then(function (csv) {
+        const preview = /** @type {HTMLTextAreaElement} */ (
+          Polarrecorder.Dom.RequireById("csv-preview")
+        );
+        preview.value = previewRows(csv);
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
+  /**
+   * @param {string} csv
+   * @returns {string}
+   */
   function previewRows(csv) {
     return csv.split(/\r?\n/).slice(0, 11).join("\n");
   }
 
   function downloadCsv() {
-    requestCsv().then(function (csv) {
-      download("polarrecorder-custom.csv", csv, "text/csv");
-      setMessage("CSV downloaded.", "info");
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    requestCsv()
+      .then(function (csv) {
+        Polarrecorder.Dom.Download("polarrecorder-custom.csv", csv, "text/csv");
+        setMessage("CSV downloaded.", "info");
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
+  /** @returns {Promise<string>} */
   function requestCsv() {
-    if (!isValid()) return Promise.reject(new Error("Fix invalid grid values first."));
+    if (!Polarrecorder.ExportPresets.IsValid()) {
+      return Promise.reject(new Error("Fix invalid grid values first."));
+    }
     return fetchJson("export?" + currentParams().toString(), true).then(function (data) {
       return data.csv;
     });
@@ -256,45 +199,57 @@ window.Polarrecorder = window.Polarrecorder || {};
     render();
   }
 
+  /** @returns {HTMLDivElement} */
   function saveBox() {
     const box = document.createElement("div");
     box.className = "value-tile";
-    const nameField = field("Preset name", "input");
+    const nameField = Polarrecorder.ExportFields.Field("Preset name", "input");
     nameField.control.type = "text";
-    nameField.control.value = selectedPreset().name;
-    const save = button("Confirm Save", function () {
-      savePreset(nameField.control.value);
-    }, "primary-action");
-    const cancel = button("Cancel", function () {
-      state.saveOpen = false;
-      render();
-    }, "secondary-action");
+    nameField.control.value = Polarrecorder.ExportPresets.SelectedPreset().name;
+    const save = Polarrecorder.Dom.Button(
+      "Confirm Save",
+      function () {
+        savePreset(nameField.control.value);
+      },
+      "primary-action"
+    );
+    const cancel = Polarrecorder.Dom.Button(
+      "Cancel",
+      function () {
+        state.saveOpen = false;
+        render();
+      },
+      "secondary-action"
+    );
     box.appendChild(nameField.wrap);
-    box.appendChild(actionRow([save, cancel]));
+    box.appendChild(Polarrecorder.Dom.ActionRow([save, cancel]));
     return box;
   }
 
+  /** @param {string} rawName */
   function savePreset(rawName) {
     const name = rawName.trim();
     if (!name) {
       setMessage("Enter a preset name.", "error");
       return;
     }
-    const existing = Polarrecorder["PresetsCache"].find(function (preset) {
-      return preset.name === name && !preset.builtin;
-    });
+    const existing = Polarrecorder.ExportPresets.All().find(
+      function (/** @type {Preset} */ preset) {
+        return preset.name === name && !preset.builtin;
+      }
+    );
     if (existing && !window.confirm("Overwrite preset '" + name + "'?")) return;
     const params = currentParams();
     params.set("name", name);
     action("presets/save?" + params.toString(), "Preset saved.", function () {
-      state.selected = name;
+      Polarrecorder.ExportPresets.SetSelected(name);
       state.saveOpen = false;
       if (state.hooks.refreshPresets) state.hooks.refreshPresets();
     });
   }
 
   function deletePreset() {
-    const preset = selectedPreset();
+    const preset = Polarrecorder.ExportPresets.SelectedPreset();
     if (preset.builtin) {
       setMessage("Built-in presets cannot be deleted.", "error");
       return;
@@ -304,48 +259,62 @@ window.Polarrecorder = window.Polarrecorder || {};
     params.set("name", preset.name);
     params.set("confirm", "yes");
     action("presets/delete?" + params.toString(), "Preset deleted.", function () {
-      state.selected = "DefaultStarboard180";
+      Polarrecorder.ExportPresets.SetSelected("DefaultStarboard180");
       if (state.hooks.refreshPresets) state.hooks.refreshPresets();
     });
   }
 
+  /**
+   * @param {string} endpoint
+   * @param {string} success
+   * @param {() => void} [done]
+   */
   function action(endpoint, success, done) {
-    fetchJson(endpoint, true).then(function () {
-      setMessage(success, "info");
-      if (done) done();
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    fetchJson(endpoint, true)
+      .then(function () {
+        setMessage(success, "info");
+        if (done) done();
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
+  /**
+   * @param {string} endpoint
+   * @param {boolean} isAction
+   * @returns {Promise<any>}
+   */
   function fetchJson(endpoint, isAction) {
     const fn = Polarrecorder["FetchJson"];
     return fn(endpoint, { action: isAction });
   }
 
-
   function applyValidity() {
-    if (!state.host || !state.twaEditor || !state.twsEditor) return;
-    const valid = isValid();
-    state.host.querySelectorAll(".preview-button, .download-button, .save-button").forEach(function (buttonNode) {
+    if (!state.host) return;
+    const host = state.host;
+    const valid = Polarrecorder.ExportPresets.IsValid();
+    const buttons = /** @type {NodeListOf<HTMLButtonElement>} */ (
+      host.querySelectorAll(".preview-button, .download-button, .save-button")
+    );
+    buttons.forEach(function (buttonNode) {
       buttonNode.disabled = !valid;
     });
-    const deleteButton = state.host.querySelector(".delete-button");
-    if (deleteButton) deleteButton.hidden = selectedPreset().builtin;
+    const deleteButton = /** @type {HTMLElement | null} */ (host.querySelector(".delete-button"));
+    if (deleteButton) deleteButton.hidden = Polarrecorder.ExportPresets.SelectedPreset().builtin;
   }
 
-  function isValid() {
-    return state.twaEditor.IsValid() && state.twsEditor.IsValid();
-  }
-
+  /** @returns {string} */
   function minSamples() {
     return String(Polarrecorder["ConfigCache"].min_samples_for_export);
   }
 
+  /** @returns {string} */
   function defaultPercentile() {
     return String(Polarrecorder["ConfigCache"].percentile);
   }
 
+  /** @returns {HTMLParagraphElement} */
   function messageNode() {
     const node = document.createElement("p");
     node.className = messageClass();
@@ -354,10 +323,15 @@ window.Polarrecorder = window.Polarrecorder || {};
     return node;
   }
 
+  /** @returns {string} */
   function messageClass() {
     return state.message && state.messageKind === "error" ? "error-text" : "helper";
   }
 
+  /**
+   * @param {string} text
+   * @param {"info" | "error"} [kind]
+   */
   function setMessage(text, kind) {
     state.message = text;
     state.messageKind = kind || "info";
@@ -373,4 +347,4 @@ window.Polarrecorder = window.Polarrecorder || {};
     RefreshPresets: refreshPresets,
     RefreshPreview: refreshPreview
   };
-}());
+})();

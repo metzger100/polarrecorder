@@ -1,0 +1,5 @@
+{
+  "note": "Independently digest-anchored empty executable-JS-test-helper strict-typing exception baseline, derived from baseline-test-inventory.json's verified empty executableTestExceptionSet. Every executable JS test/helper is classified strict; there is no harness exception class. An exception here would name one specific executable test/helper file that genuinely cannot be strict-typechecked, and requires reviewed owner/date/reason justification plus a hash-locked site and an explicit negative test -- not silent implementation convenience. The expected SHA-256 of this file's bytes is independently anchored in tests/js/test-inventory.test.mjs, not derived from this file itself.",
+  "capturedCommit": "08edef88b0102af6507ef02fd4448f7fd1eaca45",
+  "exceptions": []
+}

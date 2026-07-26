@@ -9,7 +9,23 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   const Polarrecorder = window.Polarrecorder;
 
+  /** @typedef {{label: string, min: number, max: number, step: number, values: number[], onChange?: () => void}} GridOptions */
+  /** @typedef {{label: string, min: number, max: number, step: number, values: number[], onChange?: () => void}} GridState */
+  /**
+   * @typedef {{
+   *   Element: HTMLDivElement,
+   *   Values: () => number[],
+   *   IsValid: () => boolean,
+   *   SetValues: (values: number[]) => void
+   * }} GridEditor
+   */
+
+  /**
+   * @param {GridOptions} options
+   * @returns {GridEditor}
+   */
   function create(options) {
+    /** @type {GridState} */
     const state = {
       label: options.label,
       min: options.min,
@@ -36,6 +52,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     };
   }
 
+  /**
+   * @param {HTMLDivElement} host
+   * @param {GridState} state
+   */
   function render(host, state) {
     Polarrecorder.Dom.Clear(host);
     const title = document.createElement("h3");
@@ -44,7 +64,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const row = document.createElement("div");
     row.className = "grid-row";
     state.values.forEach(function (value, index) {
-      row.appendChild(token(state, index, value));
+      row.appendChild(token(host, state, index, value));
     });
     const add = document.createElement("button");
     add.type = "button";
@@ -66,7 +86,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     host.appendChild(error);
   }
 
-  function token(state, index, value) {
+  /**
+   * @param {HTMLDivElement} host
+   * @param {GridState} state
+   * @param {number} index
+   * @param {number} value
+   * @returns {HTMLDivElement}
+   */
+  function token(host, state, index, value) {
     const wrap = document.createElement("div");
     wrap.className = "grid-token";
     const input = document.createElement("input");
@@ -80,7 +107,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     input.addEventListener("blur", function () {
       state.values[index] = Number(input.value);
       sortValues(state);
-      render(wrap.closest(".grid-editor"), state);
+      render(host, state);
       notify(state);
     });
     const remove = document.createElement("button");
@@ -91,7 +118,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     remove.setAttribute("aria-label", "Remove " + state.label + " value");
     remove.addEventListener("click", function () {
       state.values.splice(index, 1);
-      render(wrap.closest(".grid-editor"), state);
+      render(host, state);
       notify(state);
     });
     wrap.appendChild(input);
@@ -99,22 +126,36 @@ window.Polarrecorder = window.Polarrecorder || {};
     return wrap;
   }
 
+  /** @param {GridState} state */
   function sortValues(state) {
     state.values.sort(function (a, b) {
       return a - b;
     });
   }
 
+  /**
+   * @param {GridState} state
+   * @returns {number[]}
+   */
   function validValues(state) {
     return state.values.filter(function (value) {
       return isValidNumber(value, state);
     });
   }
 
+  /**
+   * @param {number} value
+   * @param {GridState} state
+   * @returns {boolean}
+   */
   function isValidNumber(value, state) {
     return Number.isInteger(value) && value >= state.min && value <= state.max;
   }
 
+  /**
+   * @param {GridState} state
+   * @returns {string}
+   */
   function errorText(state) {
     if (state.values.length === 0) return "At least one value is required.";
     const invalid = state.values.filter(function (value) {
@@ -124,9 +165,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     return "Use whole numbers from " + String(state.min) + " to " + String(state.max) + ".";
   }
 
+  /** @param {GridState} state */
   function notify(state) {
     if (state.onChange) state.onChange();
   }
 
   Polarrecorder.GridEditor = { Create: create };
-}());
+})();

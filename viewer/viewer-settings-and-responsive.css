@@ -1,0 +1,257 @@
+.grid-editor {
+  display: grid;
+  gap: 0.5714rem;
+}
+
+.grid-row {
+  overflow-x: auto;
+  padding-bottom: 0.2857rem;
+}
+
+.grid-token {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.2857rem;
+  flex: 0 0 auto;
+}
+
+.grid-token input {
+  width: 4.5714rem;
+  text-align: center;
+}
+
+.grid-token input.is-invalid {
+  border-color: var(--polarrecorder-attention-color);
+  outline: 0.1429rem solid color-mix(in srgb, var(--polarrecorder-attention-color) 25%, transparent);
+}
+
+.small-icon {
+  display: grid;
+  place-items: center;
+  width: 3.1429rem;
+  height: 3.1429rem;
+  border-radius: 50%;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.reset-card {
+  border-color: var(--polarrecorder-attention-color);
+}
+
+.switch-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2857rem 0.8571rem;
+  align-items: center;
+  border-radius: 1.1429rem;
+  background: var(--polarrecorder-surface-variant);
+  padding: 0.8571rem;
+}
+
+.switch-field input {
+  position: absolute;
+  opacity: 0;
+}
+
+.switch-track {
+  position: relative;
+  width: 4.1429rem;
+  height: 2.4286rem;
+  border-radius: 999em;
+  background: var(--polarrecorder-second-color);
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+}
+
+.switch-track::after {
+  position: absolute;
+  top: 0.2857rem;
+  left: 0.2857rem;
+  width: 1.7143rem;
+  height: 1.7143rem;
+  border-radius: 50%;
+  background: var(--polarrecorder-fore-color);
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease;
+  content: "";
+}
+
+.switch-field input:checked + .switch-track {
+  background: var(--polarrecorder-active-color);
+}
+
+.switch-field input:checked + .switch-track::after {
+  transform: translateX(1.7143rem);
+  background: black;
+}
+
+.switch-copy {
+  font-weight: 700;
+}
+
+.switch-field .helper {
+  grid-column: 2;
+}
+
+.settings-list {
+  margin: 0 1rem 0 2rem;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.settings-group {
+  display: grid;
+  gap: 0.5714rem;
+}
+
+.settings-group + .settings-group {
+  padding-top: 1rem;
+  border-top: 0.0714rem solid color-mix(in srgb, var(--polarrecorder-border-color) 55%, transparent);
+}
+
+.settings-group + .settings-group-danger {
+  border-top-color: color-mix(in srgb, var(--polarrecorder-attention-color) 45%, transparent);
+}
+
+.settings-group-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-group-danger .settings-group-title {
+  color: var(--polarrecorder-attention-color);
+}
+
+.enhanced-rule {
+  padding: 0.7143rem 0;
+  border-top: 0.0714rem solid var(--polarrecorder-border-color);
+}
+
+.enhanced-rule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5714rem;
+}
+
+.enhanced-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1429rem 0.5714rem;
+  border-radius: var(--polarrecorder-radius-control);
+  background: var(--polarrecorder-surface-variant);
+  color: var(--polarrecorder-main-color);
+}
+
+.enhanced-badge-active {
+  background: var(--polarrecorder-accepted-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-inactive-value-missing {
+  background: var(--polarrecorder-quarantined-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-inactive-key-missing {
+  background: var(--polarrecorder-rejected-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.enhanced-badge-inactive-key-not-configured {
+  background: var(--polarrecorder-surface-variant);
+  color: var(--polarrecorder-main-color);
+  border: 0.0714rem dashed var(--polarrecorder-border-color);
+}
+
+.enhanced-badge-disabled {
+  background: var(--polarrecorder-second-color);
+}
+
+.enhanced-key select {
+  margin-bottom: 0.2857rem;
+}
+
+.enhanced-rule .switch-field {
+  margin: 0.8571rem 0;
+}
+
+.advanced-group + .advanced-group {
+  margin-top: 1rem;
+}
+
+.advanced-fields {
+  display: grid;
+  gap: 0.7143rem;
+}
+
+.advanced-setting {
+  gap: 0.2857rem;
+}
+
+.advanced-setting input {
+  margin-top: 0.2857rem;
+}
+
+@media (width >= 37.5em) {
+  .polarrecorder-app {
+    padding-top: 5.2857rem;
+    padding-bottom: 0;
+  }
+
+  .app-header {
+    position: fixed;
+    right: 0;
+    left: 0;
+  }
+
+  .connection-banner {
+    top: 5.2857rem;
+  }
+
+  .bottom-nav {
+    inset: 0 7vw auto auto;
+    width: 68vw;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .nav-item {
+    color: var(--polarrecorder-fore-color);
+  }
+
+  .tab-shell {
+    padding: 1.4286rem;
+  }
+
+  .chart-card {
+    height: calc(100svh - 8.1429rem);
+  }
+}
+
+@media (width >= 64.0625em) {
+  .status-grid.has-data {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .status-grid .wide-span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (width <= 37.4375em) {
+  .section-head,
+  .status-state {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .value-grid,
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

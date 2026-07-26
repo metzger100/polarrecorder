@@ -1,13 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-export LC_ALL=C
-
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-VENV_DIR="${POLARRECORDER_VENV:-$REPO_ROOT/venv}"
+cd "$REPO_ROOT"
 
+export LC_ALL=C
+export LANG=C
+
+VENV_DIR="${POLARRECORDER_VENV:-$REPO_ROOT/venv}"
 if [ -d "$VENV_DIR/bin" ]; then
   export PATH="$VENV_DIR/bin:$PATH"
 fi
 
-tools/check-all.sh
+npm run check:all

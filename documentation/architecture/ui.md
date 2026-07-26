@@ -12,18 +12,60 @@ AvNav without a build step, network access, or runtime dependencies.
 
 - `viewer/viewer.html` provides the shell, five tab panels, Material-style navigation,
   and fixed script load order.
-- `viewer/viewer.css` owns fallback day/night tokens and the Material
-  You-inspired shape, type, elevation, state-layer, card, chip, and responsive
-  layout rules. `viewer/theme.js` derives AvNav colors and font family from the
-  same-origin parent viewer when embedded, mirrors AvNav's surrounding
-  `.nightMode` page state into the standalone viewer body, and falls back to the
-  local tokens when no parent AvNav document is available.
+- Four CSS files, loaded by `viewer/viewer.html` in this cascade order, together
+  own fallback day/night tokens and the Material You-inspired shape, type,
+  elevation, state-layer, card, chip, and responsive layout rules:
+  `viewer/viewer-shell.css` (tokens, resets, app header, tabs, cards, loading
+  state), `viewer/viewer-nav-actions.css` (bottom nav, buttons/actions, form
+  controls, chips), `viewer/viewer-status-and-chart.css` (status/decision UI,
+  the polar chart SVG, and tooltips), and
+  `viewer/viewer-settings-and-responsive.css` (grid editor, switches,
+  settings/enhanced/advanced groups, and the responsive media queries). Split
+  from one file to stay under the 400-line budget; splitting preserved
+  cascade order exactly, since `<link>` load order is the only thing that
+  matters for equal-specificity rules. `viewer/theme.js` derives AvNav colors
+  and font family from the same-origin parent viewer when embedded, mirrors
+  AvNav's surrounding `.nightMode` page state into the standalone viewer body,
+  and falls back to the local tokens when no parent AvNav document is
+  available.
+- Every shipped `plugin.js`, `plugin.mjs`, and `viewer/*.js` file is fully
+  JSDoc-typed and strictly no-emit `checkJs`-checked (`tsconfig.checkjs.json`;
+  `npm run typecheck:source`) with no runtime build step or emitted output.
+  `types/polarrecorder-globals.d.ts` currently declares the shared
+  `window.Polarrecorder` namespace loosely (`any`) as an interim ambient
+  contract; each module's own functions and locally consumed DOM/API shapes are
+  precisely typed via JSDoc typedefs regardless. `viewer/dom.js`'s
+  `RequireById(id)` fails loudly instead of returning `null` for elements
+  `viewer/viewer.html` always provides, keeping DOM lookups non-nullable without
+  runtime guards that exist only to placate the checker.
 - `viewer/*.js` files are plain scripts that register functionality only on
   `window.Polarrecorder`. `viewer/viewer.js` owns startup, API access, polling, tab
-  switching, status rendering, and shared caches. `viewer/placeholders.js` owns
+  switching, preset/polar/timeline/export/settings orchestration, actions, and
+  shared caches (`ApiBase`, `PresetsCache`, `ConfigCache`). `viewer/dom.js` owns
+  shared DOM construction helpers (`Node`, `Clear`, `Button`, `ActionRow`,
+  `Download`) plus `ShowTooltip`, a lower-layer helper both the shell and status
+  rendering call without creating a namespace cycle between them.
+  `viewer/status-ui.js` owns the Status tab: recent-decision derivation and the
+  `RecentDecisions` cache, the state/values/counters/persistence cards, decision
+  strip coloring, and status-local duration/last-flush text, driven by
+  `StatusUI.Render(host, data, { runAction, fetchStatus })` and
+  `StatusUI.AppendRecentDecision(data)`; `viewer.js` passes its own `runAction` and
+  `fetchStatus` in as callbacks rather than status-ui.js reaching back into the
+  shell's namespace. `viewer/placeholders.js` owns
   shared absent-value display text so chart and status rendering reuse one
   vocabulary. Component modules add
   `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
+  `viewer/polar-chart-geometry.js` adds `PolarChartGeometry` (`SvgNode`,
+  `AddGrid`, `AddCurve`, `BandColor`), the SVG grid/curve drawing math that
+  `polar-chart.js` calls into so its own state/orchestration logic stays under
+  the file-size budget. `viewer/export-fields.js` adds `ExportFields`
+  (`Section`, `Header`, `Field`, `ConfidenceField`, `PercentileHelp`), the
+  stateless Export-tab field builders `export-ui.js` composes so its
+  preset/CSV orchestration logic stays under the file-size budget.
+  `viewer/export-presets.js` adds `ExportPresets`, owning the selected-preset
+  name and the TWA/TWS `GridEditor` instances (`Configure`, `All`, `Sorted`,
+  `Selected`, `SetSelected`, `SelectedPreset`, `Editors`, `LoadSelected`,
+  `IsValid`) so `export-ui.js` stays under its file-size budget.
   `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's third
   card, mounted by `settings-ui.js` so the transport-heavy markup stays out of the
   Settings budget.

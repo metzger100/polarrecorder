@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from counting_dict import CountingDict
+from operation_count_evaluator import evaluate_linear_scaling
+from polarrecorder.bins import Bin
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, Sample
 
@@ -104,3 +107,43 @@ def test_snapshot_bins_is_fully_detached_from_live_model() -> None:
     assert snapshot[(90, 12)]["rejection_histogram"] == {}
     assert snapshot[(90, 12)]["histogram"] is not model.bins[(90, 12)].histogram
     assert snapshot[(90, 12)]["rejection_histogram"] is not model.bins[(90, 12)].rejection_histogram
+
+
+def _update_accepted_samples(model: PolarModel, count: int) -> None:
+    for index in range(count):
+        model.update_accepted(
+            make_sample(stw_kt=5.0 + (index % 10) * 0.1, timestamp_wall=float(index))
+        )
+
+
+def test_update_accepted_has_a_linear_counted_dict_and_histogram_operation_envelope() -> None:
+    def measure(count: int) -> int:
+        counter = [0]
+        model = PolarModel()
+        model._bins = CountingDict(counter)
+        model._bins[(90, 12)] = Bin(twa_deg=90, tws_kt=12, histogram=CountingDict(counter))
+        _update_accepted_samples(model, count)
+        return counter[0]
+
+    result = evaluate_linear_scaling(
+        sizes=[500, 1000, 2000, 4000], measure=measure, fixed_overhead=4
+    )
+
+    assert result.ok, result.violations
+
+
+def test_update_accepted_scaling_instrumentation_preserves_correctness() -> None:
+    counter = [0]
+    instrumented = PolarModel()
+    instrumented._bins = CountingDict(counter)
+    instrumented._bins[(90, 12)] = Bin(twa_deg=90, tws_kt=12, histogram=CountingDict(counter))
+    _update_accepted_samples(instrumented, 500)
+
+    ordinary = PolarModel()
+    _update_accepted_samples(ordinary, 500)
+
+    assert instrumented.generation == ordinary.generation == 500
+    assert dict(instrumented.bins[(90, 12)].histogram) == ordinary.bins[(90, 12)].histogram
+    assert (
+        instrumented.bins[(90, 12)].total_accepted == ordinary.bins[(90, 12)].total_accepted == 500
+    )

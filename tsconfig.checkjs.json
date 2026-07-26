@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "es2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": [],
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": [
+    "types/polarrecorder-globals.d.ts",
+    "viewer/status-ui.js",
+    "viewer/placeholders.js",
+    "viewer/dom.js",
+    "viewer/theme.js",
+    "viewer/presets.js",
+    "viewer/grid-editor.js",
+    "viewer/import-upload.js",
+    "viewer/enhanced-settings.js",
+    "viewer/advanced-settings.js",
+    "viewer/polar-chart-geometry.js",
+    "viewer/polar-chart.js",
+    "viewer/timeline-chart.js",
+    "viewer/export-fields.js",
+    "viewer/export-presets.js",
+    "viewer/export-ui.js",
+    "viewer/viewer.js",
+    "viewer/settings-ui.js",
+    "plugin.js",
+    "plugin.mjs"
+  ]
+}

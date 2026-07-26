@@ -1,0 +1,174 @@
+.bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4286rem;
+  padding: 0.5714rem 0.5714rem calc(0.5714rem + env(safe-area-inset-bottom));
+  padding-right: calc(0.5714rem + env(safe-area-inset-right));
+  padding-left: calc(0.5714rem + env(safe-area-inset-left));
+  background: color-mix(
+    in srgb,
+    var(--polarrecorder-second-color) 92%,
+    var(--polarrecorder-back-color)
+  );
+  border-top: 0.0714rem solid var(--polarrecorder-border-color);
+}
+
+.nav-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0.4286rem;
+  border-radius: 1.4286rem;
+  background: transparent;
+  color: var(--polarrecorder-fore-color);
+  isolation: isolate;
+}
+
+.nav-item span:first-child {
+  display: grid;
+  place-items: center;
+  width: 2.7143rem;
+  height: 2rem;
+  border-radius: var(--polarrecorder-radius-control);
+  font-size: 1.4rem;
+}
+
+.nav-item span:last-child {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.nav-item.is-active span:first-child {
+  background: var(--polarrecorder-active-color);
+  color: black;
+}
+
+.state-layer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.state-layer::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: currentcolor;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  content: "";
+}
+
+.state-layer:hover::before {
+  opacity: 0.08;
+}
+
+.state-layer:active::before {
+  opacity: 0.16;
+}
+
+.primary-action,
+.secondary-action,
+.danger-action,
+.chip,
+.segmented button {
+  padding: 0.8571rem;
+  border-radius: var(--polarrecorder-radius-control);
+}
+
+.primary-action {
+  padding-inline: 1.2857rem;
+  background: var(--polarrecorder-main-color);
+  color: white;
+  font-weight: 700;
+}
+
+.secondary-action,
+.danger-action {
+  padding-inline: 1.1429rem;
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+  background: var(--polarrecorder-surface-color);
+  color: var(--polarrecorder-fore-color);
+  font-weight: 700;
+}
+
+.danger-action {
+  border-color: var(--polarrecorder-attention-color);
+  color: var(--polarrecorder-attention-color);
+}
+
+.field {
+  display: grid;
+  gap: 0.4286rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+select,
+input,
+textarea {
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+  border-radius: 0.8571rem;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+  padding: 0.5714rem 0.7143rem;
+}
+
+textarea {
+  width: 100%;
+  block-size: 12.8571rem;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.chip-row,
+.action-row,
+.segmented,
+.grid-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5714rem;
+}
+
+.chip-row {
+  overflow-x: auto;
+  padding: 0.8571rem;
+}
+
+.legend-title {
+  padding: 0.8571rem 0.8571rem 0;
+  font-weight: 700;
+}
+
+.chip {
+  flex: 0 0 auto;
+  border: 0.0714rem solid currentcolor;
+  background: var(--polarrecorder-surface-color);
+  color: var(--polarrecorder-chip-color, var(--polarrecorder-main-color));
+  font-weight: 700;
+  padding-inline: 1rem;
+}
+
+.chip.is-active {
+  background: var(--polarrecorder-chip-color, var(--polarrecorder-active-color));
+  color: black;
+}
+
+.segmented {
+  flex-wrap: wrap;
+}
+
+.segmented button {
+  padding-inline: 1rem;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.segmented button.is-active {
+  background: var(--polarrecorder-active-color);
+  color: black;
+}

@@ -35,6 +35,54 @@ const DENSE_MIN_STATEMENTS = 2;
 // '+' tokens into perfectly readable lines and is not operator density.
 const DENSE_OPERATOR_CHARS = "-*/%&|^?:<>!=";
 
+/**
+ * @typedef {"dense-statements"|"single-line-block"|"single-line-body"|"collapsed-literal"|"arrow-body-packed"|"chained-ternary"|"long-packed"|"operator-dense"|"nested-parens"} OnelinerKind
+ */
+
+/**
+ * @typedef {object} TargetFile
+ * @property {string} abs - Absolute filesystem path.
+ * @property {string} rel - Path relative to the scanned root, forward-slashed.
+ */
+
+/**
+ * @typedef {object} OnelinerFinding
+ * @property {string} file - Relative path of the file containing the finding.
+ * @property {number} line - 1-based line number of the finding.
+ * @property {OnelinerKind} kind - Which one-liner-compression pattern matched.
+ * @property {number} length - Trimmed length of the raw (unmasked) source line.
+ */
+
+/**
+ * @typedef {Record<OnelinerKind, number>} OnelinerCountsByKind
+ */
+
+/**
+ * @typedef {object} FileSizeOptions
+ * @property {string} [root] - Repository root to scan; defaults to process.cwd().
+ * @property {"warn"|"block"} [onelinerMode] - Whether one-liner findings fail the gate or only warn.
+ * @property {boolean} [print] - Whether to log a human-readable report.
+ */
+
+/**
+ * @typedef {object} FileSizeSummary
+ * @property {boolean} ok
+ * @property {number} checkedFiles
+ * @property {number} failures
+ * @property {"warn"|"block"} onelinerMode
+ * @property {number} onelinerFindings
+ * @property {OnelinerCountsByKind} onelinerByKind
+ */
+
+/**
+ * @typedef {object} FileSizeResult
+ * @property {boolean} ok
+ * @property {string[]} failures
+ * @property {OnelinerFinding[]} onelinerFindings
+ * @property {FileSizeSummary} summary
+ */
+
+/** @type {Record<OnelinerKind, string>} */
 const ONELINER_MESSAGE_BY_KIND = {
   "dense-statements": "multiple statements packed onto one line",
   "single-line-block": "compound statement body collapsed onto one line",
@@ -47,8 +95,18 @@ const ONELINER_MESSAGE_BY_KIND = {
   "nested-parens": "nested parenthesized expression packed onto one line"
 };
 
-export function runFileSizeCheck({ root = process.cwd(), onelinerMode = "warn", print = true } = {}) {
+/**
+ * @param {FileSizeOptions} [options]
+ * @returns {FileSizeResult}
+ */
+export function runFileSizeCheck({
+  root = process.cwd(),
+  onelinerMode = "warn",
+  print = true
+} = {}) {
+  /** @type {string[]} */
   const failures = [];
+  /** @type {OnelinerFinding[]} */
   const onelinerFindings = [];
   const targetFiles = collectTargetFiles(root);
 
@@ -84,6 +142,12 @@ export function runFileSizeCheck({ root = process.cwd(), onelinerMode = "warn", 
   return { ok: summary.ok, failures, onelinerFindings, summary };
 }
 
+/**
+ * @param {string[]} failures
+ * @param {string[]} warnings
+ * @param {FileSizeSummary} summary
+ * @returns {void}
+ */
 function reportFileSize(failures, warnings, summary) {
   for (const warning of warnings) console.warn(warning);
   if (failures.length > 0) {
@@ -95,13 +159,17 @@ function reportFileSize(failures, warnings, summary) {
   console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 }
 
+/**
+ * @param {string} root
+ * @returns {TargetFile[]}
+ */
 function collectTargetFiles(root) {
   const viewerRoot = path.join(root, "viewer");
   const docRoot = path.join(root, "documentation");
   const out = [];
   if (fs.existsSync(viewerRoot)) {
     for (const name of fs.readdirSync(viewerRoot)) {
-      if (name.endsWith(".js")) {
+      if (name.endsWith(".js") || name.endsWith(".css") || name.endsWith(".html")) {
         const abs = path.join(viewerRoot, name);
         out.push({ abs, rel: toRel(root, abs) });
       }
@@ -119,6 +187,12 @@ function collectTargetFiles(root) {
   return out.sort((a, b) => a.rel.localeCompare(b.rel));
 }
 
+/**
+ * @param {string} root
+ * @param {string} currentPath
+ * @param {TargetFile[]} out
+ * @returns {void}
+ */
 function walkMarkdown(root, currentPath, out) {
   const stat = fs.statSync(currentPath);
   if (stat.isFile()) {
@@ -130,10 +204,21 @@ function walkMarkdown(root, currentPath, out) {
   }
 }
 
+/**
+ * @param {string} root
+ * @param {string} absolutePath
+ * @returns {string}
+ */
 function toRel(root, absolutePath) {
   return path.relative(root, absolutePath).replace(/\\/g, "/");
 }
 
+/**
+ * @param {TargetFile} file
+ * @param {string} content
+ * @param {OnelinerFinding[]} onelinerFindings
+ * @returns {void}
+ */
 function detectOneliners(file, content, onelinerFindings) {
   const rawLines = content.split(/\r?\n/);
   const maskedLines = maskStringsAndComments(content).split(/\r?\n/);
@@ -149,6 +234,10 @@ function detectOneliners(file, content, onelinerFindings) {
 }
 
 // First matching kind wins so a single dense line is reported once.
+/**
+ * @param {string} masked
+ * @returns {OnelinerKind | null}
+ */
 function onelinerKind(masked) {
   if (countTernaryOperators(masked) >= 2) return "chained-ternary";
   if (isCollapsedLiteral(masked)) return "collapsed-literal";
@@ -162,7 +251,10 @@ function onelinerKind(masked) {
   const operators = countChars(masked, DENSE_OPERATOR_CHARS);
   const parens = countChars(masked, "()");
 
-  if (length > LONG_PACKED_LINE_THRESHOLD && (brackets >= LONG_PACKED_MIN_BRACKETS || commas >= LONG_PACKED_MIN_COMMAS)) {
+  if (
+    length > LONG_PACKED_LINE_THRESHOLD &&
+    (brackets >= LONG_PACKED_MIN_BRACKETS || commas >= LONG_PACKED_MIN_COMMAS)
+  ) {
     return "long-packed";
   }
   if (length > OPERATOR_DENSE_LINE_THRESHOLD && operators >= OPERATOR_DENSE_MIN_OPERATORS) {
@@ -175,6 +267,10 @@ function onelinerKind(masked) {
   return null;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isDenseOneliner(line) {
   if (countStatementSemicolons(line) >= DENSE_MIN_STATEMENTS) return true;
   if (/^for\s*\(/.test(line) && isPackedForHeader(line)) return true;
@@ -183,9 +279,15 @@ function isDenseOneliner(line) {
   if (isCommaAssignmentSequence(line)) return true;
   if (hasMultipleStatementLeaders(line)) return true;
   if (hasCommaCallChain(line)) return true;
-  return /(?:\)|\})\s*(?:if|for|while|switch|try|function|class|const|let|var|return|throw|do)\b/.test(line);
+  return /(?:\)|\})\s*(?:if|for|while|switch|try|function|class|const|let|var|return|throw|do)\b/.test(
+    line
+  );
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isSingleLineBody(line) {
   const body = functionBody(line);
   if (body === null || body.length === 0) return false;
@@ -193,6 +295,10 @@ function isSingleLineBody(line) {
   return true;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isBraceFreeGuardClause(line) {
   const start = skipSpaces(line, 0);
   if (!line.startsWith("if", start)) return false;
@@ -207,12 +313,21 @@ function isBraceFreeGuardClause(line) {
   return semicolon >= 0 && line.slice(semicolon + 1).trim() === "";
 }
 
+/**
+ * @param {string} text
+ * @param {number} index
+ * @returns {number}
+ */
 function skipSpaces(text, index) {
   let cursor = index;
   while (cursor < text.length && /\s/.test(text[cursor])) cursor += 1;
   return cursor;
 }
 
+/**
+ * @param {string} line
+ * @returns {string | null}
+ */
 function functionBody(line) {
   const arrow = line.indexOf("=>");
   const open = arrow >= 0 ? line.indexOf("{", arrow + 2) : openAfterSignature(line);
@@ -223,6 +338,10 @@ function functionBody(line) {
   return line.slice(open + 1, close).trim();
 }
 
+/**
+ * @param {string} line
+ * @returns {number}
+ */
 function openAfterSignature(line) {
   const signatureOpen = line.indexOf("(");
   if (signatureOpen < 0) return -1;
@@ -230,19 +349,36 @@ function openAfterSignature(line) {
   return signatureClose < 0 ? -1 : line.indexOf("{", signatureClose + 1);
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isCollapsedBlock(line) {
   return /\b(?:if|for|while|switch|try|else)\b[\s\S]*\{[^{}\n]*;[^{}\n]*\}/.test(line);
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isCollapsedLiteral(line) {
   if (line.length <= COLLAPSED_LITERAL_LINE_THRESHOLD) return false;
   if (/^(?:import|export)\b/.test(line) || /\brequire\s*\(/.test(line)) return false;
-  for (const pair of [["{", "}"], ["[", "]"]]) {
+  for (const pair of [
+    ["{", "}"],
+    ["[", "]"]
+  ]) {
     if (containsPackedPair(line, pair[0], pair[1])) return true;
   }
   return false;
 }
 
+/**
+ * @param {string} line
+ * @param {string} openChar
+ * @param {string} closeChar
+ * @returns {boolean}
+ */
 function containsPackedPair(line, openChar, closeChar) {
   for (let index = 0; index < line.length; index += 1) {
     if (line[index] !== openChar) continue;
@@ -254,11 +390,19 @@ function containsPackedPair(line, openChar, closeChar) {
   return false;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isStackedDeclaration(line) {
   const match = line.match(/^(?:const|let|var)\s+(.+);?$/);
   return !!match && countTopLevelCommas(stripTrailingSemicolon(match[1])) >= 1;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isPackedDestructuring(line) {
   const match = line.match(/^(?:const|let|var)\s+(.+?)=/);
   if (!match) return false;
@@ -267,16 +411,30 @@ function isPackedDestructuring(line) {
   return countMatches(left, /,/g) + 1 >= PACKED_DESTRUCTURING_MIN_BINDINGS;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isCommaAssignmentSequence(line) {
   if (/^(?:const|let|var)\b/.test(line)) return false;
   return countTopLevelCommas(line) >= 1 && countStandaloneAssignments(line) >= 2;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function isPackedForHeader(line) {
-  return countMatches(line, /,/g) >= PACKED_FOR_HEADER_MIN_COMMAS
-    && countStandaloneAssignments(line) >= PACKED_FOR_HEADER_MIN_ASSIGNMENTS;
+  return (
+    countMatches(line, /,/g) >= PACKED_FOR_HEADER_MIN_COMMAS &&
+    countStandaloneAssignments(line) >= PACKED_FOR_HEADER_MIN_ASSIGNMENTS
+  );
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function hasMultipleStatementLeaders(line) {
   const matches = line.match(
     /(?:^|[;}]\s*)(?:if|for|while|switch|try|function|class|const|let|var|return|throw|do)\b/g
@@ -284,12 +442,22 @@ function hasMultipleStatementLeaders(line) {
   return (matches || []).length >= 2;
 }
 
+/**
+ * @param {string} line
+ * @returns {boolean}
+ */
 function hasCommaCallChain(line) {
-  return /(?:^|[;{]\s*)(?:[A-Za-z_$][\w$]*\s*\([^()]*\)\s*,\s*){2,}[A-Za-z_$][\w$]*\s*\([^()]*\)/.test(line);
+  return /(?:^|[;{]\s*)(?:[A-Za-z_$][\w$]*\s*\([^()]*\)\s*,\s*){2,}[A-Za-z_$][\w$]*\s*\([^()]*\)/.test(
+    line
+  );
 }
 
 // Semicolons that separate statements: those at paren depth 0 (a for-header's
 // two semicolons live inside parentheses and are not counted).
+/**
+ * @param {string} line
+ * @returns {number}
+ */
 function countStatementSemicolons(line) {
   let depth = 0;
   let count = 0;
@@ -302,6 +470,10 @@ function countStatementSemicolons(line) {
 }
 
 // Ternary '?' only: optional chaining (?.) and nullish (??) are removed first.
+/**
+ * @param {string} line
+ * @returns {number}
+ */
 function countTernaryOperators(line) {
   let depth = 0;
   let count = 0;
@@ -315,6 +487,11 @@ function countTernaryOperators(line) {
   return count;
 }
 
+/**
+ * @param {string} text
+ * @param {string} characters
+ * @returns {number}
+ */
 function countChars(text, characters) {
   let count = 0;
   for (const char of text) {
@@ -323,6 +500,10 @@ function countChars(text, characters) {
   return count;
 }
 
+/**
+ * @param {string} text
+ * @returns {number}
+ */
 function countTopLevelCommas(text) {
   let depth = 0;
   let count = 0;
@@ -334,27 +515,57 @@ function countTopLevelCommas(text) {
   return count;
 }
 
+/**
+ * @param {string} text
+ * @returns {number}
+ */
 function countStandaloneAssignments(text) {
   let count = 0;
   for (let index = 0; index < text.length; index += 1) {
     if (text[index] !== "=") continue;
     const prev = text[index - 1] || "";
     const next = text[index + 1] || "";
-    if (next === "=" || next === ">" || prev === "=" || prev === "!" || prev === "<" || prev === ">") continue;
+    if (
+      next === "=" ||
+      next === ">" ||
+      prev === "=" ||
+      prev === "!" ||
+      prev === "<" ||
+      prev === ">"
+    )
+      continue;
     count += 1;
   }
   return count;
 }
 
+/**
+ * @param {string} text
+ * @param {RegExp} pattern
+ * @returns {number}
+ */
 function countMatches(text, pattern) {
   const matches = text.match(pattern);
   return matches ? matches.length : 0;
 }
 
+/**
+ * @param {string} text
+ * @returns {string}
+ */
 function stripTrailingSemicolon(text) {
-  return String(text || "").replace(/;\s*$/, "").trim();
+  return String(text || "")
+    .replace(/;\s*$/, "")
+    .trim();
 }
 
+/**
+ * @param {string} text
+ * @param {number} openIndex
+ * @param {string} openChar
+ * @param {string} closeChar
+ * @returns {number}
+ */
 function findMatching(text, openIndex, openChar, closeChar) {
   let depth = 0;
   for (let index = openIndex; index < text.length; index += 1) {
@@ -367,15 +578,26 @@ function findMatching(text, openIndex, openChar, closeChar) {
   return -1;
 }
 
+/**
+ * @param {OnelinerFinding[]} findings
+ * @returns {OnelinerCountsByKind}
+ */
 function countFindingsByKind(findings) {
-  const out = {};
-  for (const kind of Object.keys(ONELINER_MESSAGE_BY_KIND)) out[kind] = 0;
+  // Object.keys widens to string[], but every key of ONELINER_MESSAGE_BY_KIND
+  // is by construction a valid OnelinerKind.
+  const kinds = /** @type {OnelinerKind[]} */ (Object.keys(ONELINER_MESSAGE_BY_KIND));
+  const out = /** @type {OnelinerCountsByKind} */ ({});
+  for (const kind of kinds) out[kind] = 0;
   for (const finding of findings) out[finding.kind] = (out[finding.kind] || 0) + 1;
   return out;
 }
 
 // Replace string contents and comments with spaces of the same length so
 // structural counts ignore characters that live inside strings or comments.
+/**
+ * @param {string} content
+ * @returns {string}
+ */
 function maskStringsAndComments(content) {
   const chars = [...content];
   let mode = "code";
@@ -385,15 +607,24 @@ function maskStringsAndComments(content) {
     const next = chars[i + 1];
     if (mode === "code") {
       if (char === "/" && next === "/") {
-        while (i < chars.length && chars[i] !== "\n") { chars[i] = " "; i += 1; }
+        while (i < chars.length && chars[i] !== "\n") {
+          chars[i] = " ";
+          i += 1;
+        }
         i -= 1;
       } else if (char === "/" && next === "*") {
-        chars[i] = " "; chars[i + 1] = " "; i += 2;
+        chars[i] = " ";
+        chars[i + 1] = " ";
+        i += 2;
         while (i < chars.length && !(chars[i] === "*" && chars[i + 1] === "/")) {
           if (chars[i] !== "\n") chars[i] = " ";
           i += 1;
         }
-        if (i < chars.length) { chars[i] = " "; chars[i + 1] = " "; i += 1; }
+        if (i < chars.length) {
+          chars[i] = " ";
+          chars[i + 1] = " ";
+          i += 1;
+        }
       } else if (char === '"' || char === "'" || char === "`") {
         mode = "string";
         quote = char;
@@ -401,7 +632,10 @@ function maskStringsAndComments(content) {
     } else if (mode === "string") {
       if (char === "\\") {
         chars[i] = " ";
-        if (i + 1 < chars.length && chars[i + 1] !== "\n") { chars[i + 1] = " "; i += 1; }
+        if (i + 1 < chars.length && chars[i + 1] !== "\n") {
+          chars[i + 1] = " ";
+          i += 1;
+        }
       } else if (char === quote) {
         mode = "code";
         quote = "";

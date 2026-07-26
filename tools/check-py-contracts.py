@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed contract checker for server/polarrecorder/ domain code.
 
-Mechanically enforces the AI-agent anti-patterns documented in CLAUDE.md
+Mechanically enforces the AI-agent anti-patterns documented in AGENTS.md
 Section 8 that ruff/mypy cannot see:
 
 - truthy-fallback   : ``<expr> or <literal-default>`` clobbers a legitimate
@@ -163,8 +163,12 @@ def validate_canonical_helper_map(
         defines its mapped helper.
     """
     helpers = _CANONICAL_HELPERS if helpers is None else helpers
-    base = root if root is not None else Path(
-        os.environ.get("POLARRECORDER_CHECK_ROOT", Path(__file__).resolve().parent.parent)
+    base = (
+        root
+        if root is not None
+        else Path(
+            os.environ.get("POLARRECORDER_CHECK_ROOT", Path(__file__).resolve().parent.parent)
+        )
     )
     findings: list[str] = []
     for name, owner in sorted(helpers.items()):

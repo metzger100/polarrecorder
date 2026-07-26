@@ -1,0 +1,12 @@
+{
+  // Markdownlint config alongside the retained Polar documentation-shape contracts.
+  // Not yet wired into any package.json gate script.
+  "config": {
+    "default": true,
+    "MD013": false, // line length is owned by the repo's own 400-non-empty-line gate
+    "MD033": false, // a few docs use inline HTML (e.g. <br>) intentionally
+    "MD041": false // root Markdown files do not all start with a top-level heading
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", "venv/**", "coverage/**", "releases/**", "exec-plans/completed/**"]
+}

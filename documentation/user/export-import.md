@@ -24,7 +24,7 @@ deleted. All four share TWS columns `[4, 6, 8, 10, 12, 14, 16, 20, 25]`:
   360 deg back to 0 deg), covering the full circle so port and starboard export
   separately. A `Default360` CSV is not Windy.com-importable by design.
 - `windy` uses the irregular Windy.com angles `[0, 30, 40, 52, 60, 75, 90, 110,
-  120, 135, 150, 165, 180]` and remains the Windy-import grid.
+120, 135, 150, 165, 180]` and remains the Windy-import grid.
 
 User presets are stored in `<plugin_dir>/data/presets.json`, separate from the
 learned `polar.json`. Preset names are trimmed, case-sensitive, 1-30 characters,

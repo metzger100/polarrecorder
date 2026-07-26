@@ -215,9 +215,7 @@ def _resolve_deps(node: ast.Import | ast.ImportFrom, known: set[str]) -> set[str
     return out
 
 
-def _check_header(
-    path: Path, module: str, tree: ast.AST, all_deps: set[str]
-) -> list[str]:
+def _check_header(path: Path, module: str, tree: ast.AST, all_deps: set[str]) -> list[str]:
     """Compare the ``Depends:`` header against the module's real imports."""
     if module == PACKAGE or path.name == "__init__.py":
         return []
@@ -227,13 +225,9 @@ def _check_header(
         return [f"{rel}: module header is missing a 'Depends:' line"]
     findings: list[str] = []
     for missing in sorted(all_deps - declared):
-        findings.append(
-            f"{rel}: imports '{missing}' but the 'Depends:' header omits it"
-        )
+        findings.append(f"{rel}: imports '{missing}' but the 'Depends:' header omits it")
     for stale in sorted(declared - all_deps):
-        findings.append(
-            f"{rel}: 'Depends:' header lists '{stale}' but it is not imported"
-        )
+        findings.append(f"{rel}: 'Depends:' header lists '{stale}' but it is not imported")
     return findings
 
 

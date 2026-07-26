@@ -1,0 +1,9 @@
+{
+  // PLAN5.md has a pre-existing duplicate "Hooks, release, and GitHub" heading (once in
+  // Hard Constraints, once as the Phase 8 title). This migration does not edit the plan's
+  // substantive content, only its Status/progress fields, so MD024 is disabled for active
+  // exec-plans rather than rewritten headings in a document this migration must not alter.
+  "config": {
+    "MD024": false
+  }
+}

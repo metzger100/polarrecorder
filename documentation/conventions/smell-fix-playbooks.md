@@ -48,7 +48,7 @@ and the concrete fix. Pair this with [smell-prevention.md](smell-prevention.md)
 - **Fix:** Extract one canonical helper into the appropriate existing module
   (`units.py`, `bins.py`, a `window.Polarrecorder` namespace) and import/reuse it.
   Search before writing (`grep -rn "def <name>" server/`, `grep -rn
-  "Polarrecorder\." viewer/`).
+"Polarrecorder\." viewer/`).
 
 ### Silent error swallowing (`empty-catch`, `catch-fallback`, `promise-empty-catch`)
 

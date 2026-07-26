@@ -10,13 +10,13 @@ AvNav loads Polar Recorder as a Python plugin and calls a small lifecycle surfac
 
 AvNav discovers plugin runtime files in a plugin directory. For Polar Recorder, the relevant files are:
 
-| File | Role |
-|---|---|
-| `plugin.py` | Python plugin entry point. |
-| `plugin.json` | Static plugin metadata (release-stamped `version`). It does not declare the user app. |
+| File                                      | Role                                                                                                                                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plugin.py`                               | Python plugin entry point.                                                                                                                                                        |
+| `plugin.json`                             | Static plugin metadata (release-stamped `version`). It does not declare the user app.                                                                                             |
 | `plugin.js` / `plugin.mjs` / `plugin.css` | Runtime client files included in release artifacts when present. Both `plugin.js` and `plugin.mjs` are no-op adapters; user-app registration is owned by `plugin.py` (see below). |
-| `viewer/*` | Static browser user app served from the plugin directory. |
-| `server/polarrecorder/**/*.py` | Python package imported by `plugin.py` after it adds `server/` to `sys.path`. |
+| `viewer/*`                                | Static browser user app served from the plugin directory.                                                                                                                         |
+| `server/polarrecorder/**/*.py`            | Python package imported by `plugin.py` after it adds `server/` to `sys.path`.                                                                                                     |
 
 Python lifecycle contract:
 
@@ -30,13 +30,13 @@ Python lifecycle contract:
 
 Status contract:
 
-| Status | Polar Recorder use |
-|---|---|
-| `STARTED` | Plugin is alive but not currently receiving complete core data, or has been demoted after missing data. |
-| `RUNNING` | Core instrument data is being received. |
-| `NMEA` | At least one accepted sample has recently updated the learned model. |
-| `ERROR` | Startup or unrecoverable persistence problem surfaced to AvNav. |
-| `INACTIVE` | Host-owned disabled/stopped state. |
+| Status     | Polar Recorder use                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| `STARTED`  | Plugin is alive but not currently receiving complete core data, or has been demoted after missing data. |
+| `RUNNING`  | Core instrument data is being received.                                                                 |
+| `NMEA`     | At least one accepted sample has recently updated the learned model.                                    |
+| `ERROR`    | Startup or unrecoverable persistence problem surfaced to AvNav.                                         |
+| `INACTIVE` | Host-owned disabled/stopped state.                                                                      |
 
 Polar Recorder boundaries:
 
@@ -48,7 +48,7 @@ Polar Recorder boundaries:
 - User-app visibility is registered from one place so the same package works
   across every AvNav variant without a version check or duplicate entries:
   - `plugin.py` calls `api.registerUserApp(getBaseUrl() + "/viewer/viewer.html",
-    "viewer/icon.svg", "Polar Recorder")` once at the start of `run()`. This
+"viewer/icon.svg", "Polar Recorder")` once at the start of `run()`. This
     backend call is the AddOn path every AvNav core with the complete Python
     plugin user-app API honors, and each core surfaces the resulting AddOn in
     its addon list. It is the single, sufficient registration. A core without

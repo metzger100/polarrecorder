@@ -1,0 +1,45 @@
+{
+  "families": {
+    "histogramCoreBranchPercent": 90.0,
+    "histogramCoreLinePercent": 95.0,
+    "pluginEntrypointFamilyBranchPercent": 65.0,
+    "pluginEntrypointFamilyFunctionPercent": 80.0,
+    "pluginEntrypointFamilyLinePercent": 80.0,
+    "pluginEntrypointFamilyStatementPercent": 80.0,
+    "pythonAggregateCombinedPercent": 90.0,
+    "validationPackageBranchPercent": 95.0,
+    "validationPackageLinePercent": 95.0,
+    "viewerFamilyBranchPercent": 65.0,
+    "viewerFamilyFunctionPercent": 80.0,
+    "viewerFamilyLinePercent": 80.0,
+    "viewerFamilyStatementPercent": 80.0
+  },
+  "pluginPy": {
+    "combinedLineAndBranchPercent": 94.32
+  },
+  "viewerPerFileLinePercent": {
+    "viewer/advanced-settings.js": 80.0,
+    "viewer/dom.js": 80.0,
+    "viewer/enhanced-settings.js": 80.0,
+    "viewer/export-fields.js": 80.0,
+    "viewer/export-presets.js": 80.0,
+    "viewer/export-ui.js": 60.0,
+    "viewer/grid-editor.js": 75.0,
+    "viewer/import-upload.js": 80.0,
+    "viewer/placeholders.js": 100.0,
+    "viewer/polar-chart-geometry.js": 85.0,
+    "viewer/polar-chart.js": 85.0,
+    "viewer/presets.js": 90.0,
+    "viewer/settings-ui.js": 60.0,
+    "viewer/status-ui.js": 80.0,
+    "viewer/theme.js": 95.0,
+    "viewer/timeline-chart.js": 75.0,
+    "viewer/viewer.js": 45.0
+  },
+  "defaultNewFileLinePercent": 80.0,
+  "defaultNewFileBranchPercent": 65.0,
+  "contractOwned": {
+    "javascript": {},
+    "python": {}
+  }
+}

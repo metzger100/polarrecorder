@@ -1,0 +1,52 @@
+{
+  "capturedCommit": "08edef88b0102af6507ef02fd4448f7fd1eaca45",
+  "pluginPyCoverage": {
+    "combinedLineAndBranchPercent": 94.32,
+    "missingBranches": 9,
+    "missingLines": 11,
+    "numBranches": 62,
+    "numStatements": 290
+  },
+  "preMigrationConfiguredFloors": {
+    "histogramCoreBranchPercent": 90.0,
+    "histogramCoreLinePercent": 95.0,
+    "pythonAggregateCombinedPercent": 90.0,
+    "validationPackageBranchPercent": 95.0,
+    "validationPackageLinePercent": 95.0,
+    "viewerAdvancedSettingsJsLinePercent": 80.0,
+    "viewerDomJsLinePercent": 80.0,
+    "viewerEnhancedSettingsJsLinePercent": 80.0,
+    "viewerExportUiJsLinePercent": 60.0,
+    "viewerGridEditorJsLinePercent": 75.0,
+    "viewerImportUploadJsLinePercent": 80.0,
+    "viewerPlaceholdersJsLinePercent": 100.0,
+    "viewerPolarChartJsLinePercent": 85.0,
+    "viewerPresetsJsLinePercent": 90.0,
+    "viewerSettingsUiJsLinePercent": 60.0,
+    "viewerThemeJsLinePercent": 95.0,
+    "viewerTimelineChartJsLinePercent": 75.0,
+    "viewerViewerJsLinePercent": 45.0
+  },
+  "pythonPackageCoverage": {
+    "combinedLineAndBranchPercent": 95.97,
+    "missingBranches": 40,
+    "missingLines": 67,
+    "numBranches": 532,
+    "numStatements": 2120
+  },
+  "viewerLineCoveragePercentByFile": {
+    "viewer/advanced-settings.js": 97.5,
+    "viewer/dom.js": 100.0,
+    "viewer/enhanced-settings.js": 96.9,
+    "viewer/export-ui.js": 73.1,
+    "viewer/grid-editor.js": 80.3,
+    "viewer/import-upload.js": 84.1,
+    "viewer/placeholders.js": 100.0,
+    "viewer/polar-chart.js": 87.6,
+    "viewer/presets.js": 100.0,
+    "viewer/settings-ui.js": 83.3,
+    "viewer/theme.js": 100.0,
+    "viewer/timeline-chart.js": 85.6,
+    "viewer/viewer.js": 86.2
+  }
+}

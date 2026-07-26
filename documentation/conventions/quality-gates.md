@@ -11,64 +11,64 @@ The quality gate is the executable contract for Polar Recorder development. Run 
 Full gate:
 
 ```bash
-tools/check-all.sh
+npm run check:all
 ```
 
-The full gate runs from the repository root, prepends `venv/bin` or `POLARRECORDER_VENV/bin` to `PATH` when present, and fails on the first failing command.
+`tools/check-all.sh` is a pure compatibility wrapper: it resolves the repository root and runs `npm run check:all`. `npm run check:strict` is an exact alias of `check:all`.
 
-Python gate commands:
+`check:all` is exactly `check:core` plus `test:coverage:check`, the sole coverage half of the gate. `check:core` is the literal, locked group order:
 
-| Command | Purpose |
-|---|---|
-| `python -m ruff check .` | Python linting, import rules, docstrings, print bans, complexity, security, and configured Ruff families |
-| `python -m ruff format --check .` | Python formatting stability |
-| `python -m mypy server/polarrecorder tests plugin.py --strict` | Strict Python typing |
-| `python tools/check-python-compat.py` | Python 3.9 runtime compatibility |
-| `python -m pytest tests/ --tb=short` | Python unit, integration, and smoke tests |
-| `python -m pytest tests/ --cov=polarrecorder --cov-branch --cov-report=term-missing --cov-report=json:/tmp/polarrecorder-coverage.json --cov-fail-under=90` | Overall branch-enabled coverage floor |
-| `python tools/check-coverage.py /tmp/polarrecorder-coverage.json` | Per-area validation and histogram coverage floors |
-| `python tools/check-python-filesize.py` | Python 400-line limit, mandatory headers, and one-line compression checks |
-| `python tools/check-py-contracts.py` | Python contract-trust smells, sentinels, canonical helper ownership, and legacy-shim checks |
-| `python tools/check-py-dependencies.py` | Domain dependency headers, import cycles, and layer direction |
-| `python tools/check-duplication.py` | Python duplicate helper/function/block detection |
-| `python tools/check-performance.py` | Deterministic hot-path performance backstops |
-| `python tools/check-runtime-contracts.py` | Runtime finite-number export/API contract checks |
-| `python tools/check-release.py --dry-run` | Release manifest and artifact sanity checks |
+```text
+check:core = check:standard && typecheck && package:check &&
+             test:focus:check && check:smells &&
+             check:python-contracts && test:split && check:complexity &&
+             check:scaling && check:docs && check:filesize
+```
 
-JavaScript, documentation, and viewer gate commands:
-
-| Command | Purpose |
-|---|---|
-| `npm run test:tools` | Custom JS checker self-tests |
-| `npm run check:smells` | JS/Python pattern checks plus viewer contract metadata checks |
-| `npm run check:docs` | Documentation TOC, format, reachability, smell-catalog completeness, and AI instruction sync |
-| `npm run check:filesize` | Viewer, plugin entrypoint, Markdown file-size and JS one-line compression checks |
-| `npm run check:headers` | Viewer module headers and documentation targets |
-| `npm run check:namespace` | `window.Polarrecorder` namespace discipline |
-| `npm run check:naming` | Viewer filename, namespace member, and function naming |
-| `npm run test:plugin` | `plugin.js` and `plugin.mjs` entry-contract smoke test |
-| `npm run test:viewer` | Theme, polar chart, and viewer smoke tests |
-| `npm run check:viewer-contracts` | Rendered sentinel, absent-placeholder, and zero-preservation contracts |
-| `npm run check:js-coverage` | Per-viewer-file V8 line coverage floors |
-| `npm run check:js-duplication` | Viewer duplicate helper/block detection |
-| `npm run check:deps` | Viewer namespace dependency cycles and module-load dependency checks |
+| Group                            | Composition                                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run check:standard`         | `format:check && lint && actions:lint && duplication:check`                                                                                |
+| `npm run typecheck`              | `typecheck:source && typecheck:tests && typecheck:python` (strict no-emit JS typing plus `mypy --strict`)                                  |
+| `npm run package:check`          | Release dry-run build/validate plus dedicated package/release/installer tests                                                              |
+| `npm run test:focus:check`       | Blocks JS `.only`/`.skip`/`.todo`/focus and Python pytest/unittest skip/skipif/xfail markers                                               |
+| `npm run check:smells`           | JS/Python pattern checks plus viewer contract metadata checks                                                                              |
+| `npm run check:python-contracts` | Python 3.9 compatibility, contract-trust smells, architecture/dependency, and runtime finite-number contracts                              |
+| `npm run test:split`             | `test:python && test:node` (pytest, then `test:tools && test:contract && test:viewer && test:plugin`)                                      |
+| `npm run check:complexity`       | Immutable baseline complexity capture verification, then the active complexity budget over shipped JS                                      |
+| `npm run check:scaling`          | Deterministic counted-operation scaling contracts for `PolarModel.update_accepted`, `projection.project_grid`, `api_handlers.format_polar` |
+| `npm run check:docs`             | Documentation TOC, format, reachability, smell-catalog completeness, and the `CLAUDE.md` pointer contract                                  |
+| `npm run check:filesize`         | Combined viewer JS/CSS/HTML, plugin, and Markdown file-size checks plus the Python file-size/header/one-line-compression check             |
 
 Convenience aliases:
 
-| Alias | Expands To |
-|---|---|
-| `npm run check:all` | `tools/check-all.sh` |
-| `npm run check:js:all` | The complete JavaScript, viewer, and documentation subgate |
-| `npm run check:core` | Alias for the JavaScript, viewer, and documentation subgate |
+| Alias                  | Purpose                                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| `npm run check:fast`   | `check:standard && typecheck && test:split && check:python-contracts`; a faster subset for iteration |
+| `npm run check:all`    | `check:core && test:coverage:check`; the canonical complete local gate                               |
+| `npm run check:strict` | Exact alias of `check:all`                                                                           |
+
+Coverage half of the gate:
+
+| Command                            | Purpose                                                                                                                                                                                                   |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:coverage:python`     | Cleans and regenerates `coverage/python/coverage.json` (`pytest --cov=polarrecorder --cov=plugin --cov-branch --cov-fail-under=90`); Python's own native aggregate floor                                  |
+| `npm run test:coverage:viewer`     | Cleans and regenerates `coverage/viewer/coverage-summary.json` via c8 over the viewer + plugin-entrypoint tests, with c8's own native 80/80/80/65 line/function/statement/branch `--check-coverage` floor |
+| `npm run check:coverage-inventory` | Full Python + viewer/plugin JS coverage classification (measured/contract-owned), family and per-file floors, and the floor-vs-baseline ratchet (`check-coverage-inventory.mjs`)                          |
+| `npm run test:coverage:check`      | `test:coverage:python` then `test:coverage:viewer` then `check:coverage-inventory`; the sole coverage half of `check:all`                                                                                 |
 
 Optional maintainer gates:
 
-| Command | Purpose |
-|---|---|
-| `npm run hooks:install` | Install the pre-push hook path |
-| `npm run hooks:doctor` | Verify hook installation |
-| `npm run release:prepare` | Collect release context for version and notes decisions |
-| `npm run release:create -- --version=X.Y.Z` | Run the full gate, build release artifacts, commit them, and tag the release |
+| Command                                     | Purpose                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm run hooks:install`                     | Install the pre-push hook path                                                                    |
+| `npm run hooks:doctor`                      | Verify hook installation                                                                          |
+| `npm run release:prepare`                   | Collect release context for version and notes decisions                                           |
+| `npm run release:create -- --version=X.Y.Z` | Run the full gate, build release artifacts, commit them, and tag the release                      |
+| `npm run actions:lint`                      | actionlint over `.github/workflows/*.yml` plus the publisher workflow's exact structural contract |
+
+The pre-push hook (`.githooks/pre-push`, installed via `npm run hooks:install`) resolves the repository root, sets a stable locale, and runs exactly one `npm run check:all`, propagating its status.
+
+Deliberately out of scope: there is no CI governance (no CODEOWNERS, no branch/PR-triggered workflow, no tag-triggered quality job), no pre-commit framework, no mutation testing, no browser automation, and no wall-clock timing benchmark. `.github/workflows/publish-release.yml` is a transport-only publisher (see [release workflow](../guides/release-workflow.md)): it verifies and republishes artifacts already built and committed locally by `npm run check:all` and `release:create`, and never itself installs dependencies, lints, tests, or builds.
 
 Rule ownership:
 
