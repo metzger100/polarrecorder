@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import zipfile
+import json
 
 import release_manifest as manifest
 
 
 def main() -> int:
+    """Build the Polar Recorder release zip and report its manifest as JSON.
+
+    Returns:
+        Process exit code: always 0 on success (errors raise and propagate).
+    """
     parser = argparse.ArgumentParser(description="Build the Polar Recorder release zip.")
     parser.add_argument("--version", required=True, help="SemVer release version without v prefix.")
     args = parser.parse_args()
@@ -15,14 +20,12 @@ def main() -> int:
     entries = manifest.expected_runtime_files()
     manifest.RELEASES.mkdir(exist_ok=True)
     zip_path = manifest.default_zip_path(version)
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for runtime_name, source in entries:
-            archive_name = manifest.archive_name(runtime_name)
-            info = zipfile.ZipInfo(archive_name, manifest.FIXED_ZIP_TIME)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
-            archive.writestr(info, manifest.runtime_file_bytes(runtime_name, source, version))
+    zip_path.write_bytes(manifest.build_zip_bytes(version, entries))
     print(f"Wrote {zip_path.relative_to(manifest.ROOT)} with {len(entries)} files.")
+    print(
+        "SUMMARY_JSON="
+        + json.dumps({"filesIncluded": len(entries), "totalSizeBytes": zip_path.stat().st_size})
+    )
     return 0
 
 

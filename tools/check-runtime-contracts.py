@@ -74,8 +74,7 @@ def main() -> int:
         sys.stderr.write(f"[runtime-contracts] {len(failures)} violation(s) found.\n")
         return 1
     sys.stdout.write(
-        f"[runtime-contracts] polar and export boundaries finite across "
-        f"{SAMPLE_COUNT} samples.\n"
+        f"[runtime-contracts] polar and export boundaries finite across {SAMPLE_COUNT} samples.\n"
     )
     sys.stdout.write("Runtime contract check passed.\n")
     return 0

@@ -12,9 +12,9 @@ here is committed or scheduled; ordering does not imply priority.
 
 ## Key Details
 
-### 1. Refactor css
+### 1. basic keys in the settings
 
-Goal: Refactor the css of the project to match the 400 lines limit and enforce the rule for css
+Goal: Add an option to configure the keys for twa, tws and stw in the settings tab
 
 ### 2. AvNav dashboard widgets
 
@@ -25,7 +25,7 @@ and responsive across any dashboard cell size.
 This is the most ambitious roadmap item. The reference implementation is the
 sibling `dyninstruments` plugin, which registers configurable instrument widgets
 with a `kind` selector. We copy its registration, kind-dispatch, theming, and
-responsiveness *patterns*, but deliberately stay far simpler: `renderHtml` only
+responsiveness _patterns_, but deliberately stay far simpler: `renderHtml` only
 (no canvas), three kinds, and a small theme-token set. The notes below say what
 to implement and how.
 
@@ -159,13 +159,13 @@ this is three `renderHtml` views.
 and reads more clearly than today's colors.
 
 Today the viewer defines a day palette in `:root` and a night palette under
-`.nightMode` ([viewer.css](viewer/viewer.css)), and [theme.js](viewer/theme.js)
+`.nightMode` ([viewer-shell.css](viewer/viewer-shell.css)), and [theme.js](viewer/theme.js)
 mirrors AvNav's live `--avnav-*` colors into the `--polarrecorder-*` tokens and
 toggles `.nightMode` from AvNav.
 
 This idea re-bases the `--polarrecorder-*` tokens on the dyninstruments **default**
 palette (only the default color set — not the `darkmode`, `bold`, or other
-presets). We keep our mandated `--polarrecorder-` prefix and adopt the *values*,
+presets). We keep our mandated `--polarrecorder-` prefix and adopt the _values_,
 not the `--dyni-` names:
 
 - **Semantic colors** map to the dyninstruments default set: ok `#70F3AF` →

@@ -1,0 +1,257 @@
+.status-grid,
+.export-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.status-grid.has-data,
+.export-stack.has-data {
+  display: grid;
+  place-items: stretch;
+}
+
+.status-state,
+.value-grid,
+.stat-grid,
+.export-card {
+  padding: 1rem;
+}
+
+.status-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8571rem;
+}
+
+.state-title {
+  display: flex;
+  align-items: center;
+  gap: 0.7143rem;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--polarrecorder-second-color);
+  box-shadow: 0 0 0 0.2857rem color-mix(in srgb, currentcolor 14%, transparent);
+}
+
+.dot.accepted,
+.decision-accepted {
+  background: var(--polarrecorder-accepted-color);
+}
+
+.dot.rejected,
+.decision-rejected {
+  background: var(--polarrecorder-rejected-color);
+}
+
+.dot.quarantined,
+.decision-quarantined {
+  background: var(--polarrecorder-quarantined-color);
+}
+
+.dot.stale {
+  background: var(--polarrecorder-attention-color);
+}
+
+.value-grid,
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7143rem;
+}
+
+.stat-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.value-tile,
+.stat-tile {
+  border-radius: 0.8571rem;
+  background: var(--polarrecorder-surface-variant);
+  padding: 0.8571rem;
+}
+
+.value-number,
+.stat-number {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.helper,
+.error-text {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  opacity: 0.78;
+}
+
+.error-text {
+  color: var(--polarrecorder-attention-color);
+  opacity: 1;
+}
+
+.decision-strip {
+  display: grid;
+  grid-template-columns: repeat(60, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 0.8571rem;
+  background: var(--polarrecorder-second-color);
+}
+
+.card > .helper,
+.card > .error-text {
+  margin: 0 1rem 1rem;
+}
+
+.card > .value-tile,
+.card > .decision-strip {
+  margin: 0 1rem 1rem;
+}
+
+.decision-cell {
+  border: 0;
+  border-radius: 0;
+  background: var(--polarrecorder-second-color);
+  aspect-ratio: 1;
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5714rem 0.8571rem 0;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.legend-swatch {
+  width: 0.8571rem;
+  height: 0.8571rem;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.chart-svg {
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  touch-action: manipulation;
+}
+
+#polar-chart.has-data {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#polar-chart.has-data .chart-svg {
+  width: 100%;
+}
+
+.chart-empty-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  max-width: min(26rem, calc(100% - 2rem));
+  padding: 1.1429rem 1.4286rem;
+  border: 0.0714rem solid var(--polarrecorder-border-color);
+  border-radius: 0.8571rem;
+  background: color-mix(
+    in srgb,
+    var(--polarrecorder-surface-color) 94%,
+    var(--polarrecorder-back-color)
+  );
+  box-shadow: 0 0.4286rem 1.4286rem var(--polarrecorder-shadow-color);
+  color: var(--polarrecorder-fore-color);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.chart-grid-line {
+  stroke: color-mix(in srgb, var(--polarrecorder-fore-color) 28%, transparent);
+  stroke-width: 1.125;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-angle-label,
+.chart-axis-label {
+  fill: color-mix(in srgb, var(--polarrecorder-fore-color) 66%, transparent);
+  font-size: 0.7143rem;
+}
+
+.chart-angle-label {
+  font-size: 0.7857rem;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-point {
+  vector-effect: non-scaling-stroke;
+}
+
+.nightMode .chart-line,
+.nightMode .chart-point {
+  opacity: 0.5;
+}
+
+.chart-hit-point {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 80;
+  border-radius: 0.8571rem;
+  padding: 0.7143rem 0.8571rem;
+  background: var(--polarrecorder-main-color);
+  color: white;
+  box-shadow: 0 0.4286rem 1.4286rem var(--polarrecorder-shadow-color);
+  font-size: 0.85rem;
+  pointer-events: none;
+  transform: translate(0.8571rem, -0.8571rem);
+}
+
+.tooltip.is-left {
+  transform: translate(calc(-100% - 0.8571rem), -0.8571rem);
+}
+
+.tooltip.is-below {
+  transform: translate(0.8571rem, 0.8571rem);
+}
+
+.tooltip.is-left.is-below {
+  transform: translate(calc(-100% - 0.8571rem), 0.8571rem);
+}
+
+.export-card {
+  display: grid;
+  gap: 0.8571rem;
+}
+
+.export-card > .section-head {
+  margin: -1rem -1rem 0;
+}

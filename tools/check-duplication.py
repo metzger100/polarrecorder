@@ -2,7 +2,7 @@
 """Cross-file duplicate-function detector for server/polarrecorder/.
 
 AI agents reliably re-implement a helper instead of importing the canonical
-one (CLAUDE.md Section 8, "Before creating any helper"). ruff cannot see
+one (AGENTS.md Section 8, "Before creating any helper"). ruff cannot see
 cross-file clones; this checker does.
 
 Each function/method body is reduced to a structural fingerprint: local

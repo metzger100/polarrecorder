@@ -20,43 +20,43 @@ Default workflow:
 Default validation gate:
 
 ```bash
-tools/check-all.sh
+npm run check:all
 ```
 
-The full gate runs Python linting, formatting checks, strict typing, tests, coverage, Python file-size checks, release validation, and `npm run check:js:all`.
+`tools/check-all.sh` is a compatibility wrapper around the same command. The full gate is exactly `check:core` (Python linting/formatting/strict typing/tests/file-size/contracts, JS lint/format/tests/typecheck/duplication, docs, complexity, scaling, and package/release validation) plus `test:coverage:check` (Python + viewer/plugin JS coverage inventory). See [quality gates](../conventions/quality-gates.md) for the exact group composition.
 
 Useful targeted checks:
 
 ```bash
 npm run check:docs
-npm run check:js:all
+npm run check:fast
 python -m pytest tests/ --tb=short
 python tools/check-release.py --dry-run
 ```
 
 Touchpoint matrix:
 
-| Change Type | Minimum Docs to Update |
-|---|---|
-| AvNav lifecycle, plugin loading, or API boundary | `documentation/avnav/plugin-lifecycle.md`, `documentation/architecture/plugin-lifecycle.md`, `documentation/architecture/api.md`, `ARCHITECTURE.md` when structure changes |
-| AvNav request routing, static files, or user app exposure | `documentation/avnav/request-routing-and-static-files.md`, `documentation/architecture/api.md`, `documentation/architecture/ui.md`, `README.md` when user-visible |
-| NMEA key, unit, or conversion behavior | `documentation/avnav/keys-and-units.md`, `documentation/user/configuration.md`, `README.md` when user-visible |
-| Editable parameter registration, defaults, or parsing | `documentation/avnav/editable-parameters.md`, `documentation/user/configuration.md`, `README.md` when user-visible |
-| Runtime configuration defaults or editable parameters | `documentation/user/configuration.md`, `README.md`, affected tests or mock data |
-| Validation rules, rejection reasons, or poisoning defenses | `documentation/filters/rejection-rules.md`, `documentation/filters/poisoning-resistance.md`, `documentation/architecture/data-pipeline.md` |
-| Polar model, histogram bins, confidence, or persistence | `documentation/architecture/polar-model.md`, `documentation/architecture/persistence.md` |
-| Viewer behavior, tabs, charts, editor, export UI, or CSS | `documentation/architecture/ui.md`, `README.md` when user-facing |
-| Export/import format or backup behavior | `documentation/user/export-import.md`, `README.md`, related mock data |
-| Troubleshooting-relevant behavior or known failure mode | `documentation/user/troubleshooting.md` |
-| Release packaging, versioning, or install flow | `documentation/guides/release-workflow.md`, `README.md`, companion release notes under `releases/` |
-| Development workflow, checks, or agent guidance | `documentation/guides/documentation-maintenance.md`, `documentation/conventions/quality-gates.md`, `documentation/conventions/coding-standards.md`, `documentation/conventions/smell-prevention.md`, `documentation/conventions/testing-infrastructure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
+| Change Type                                                | Minimum Docs to Update                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AvNav lifecycle, plugin loading, or API boundary           | `documentation/avnav/plugin-lifecycle.md`, `documentation/architecture/plugin-lifecycle.md`, `documentation/architecture/api.md`, `ARCHITECTURE.md` when structure changes                                                                                                                              |
+| AvNav request routing, static files, or user app exposure  | `documentation/avnav/request-routing-and-static-files.md`, `documentation/architecture/api.md`, `documentation/architecture/ui.md`, `README.md` when user-visible                                                                                                                                       |
+| NMEA key, unit, or conversion behavior                     | `documentation/avnav/keys-and-units.md`, `documentation/user/configuration.md`, `README.md` when user-visible                                                                                                                                                                                           |
+| Editable parameter registration, defaults, or parsing      | `documentation/avnav/editable-parameters.md`, `documentation/user/configuration.md`, `README.md` when user-visible                                                                                                                                                                                      |
+| Runtime configuration defaults or editable parameters      | `documentation/user/configuration.md`, `README.md`, affected tests or mock data                                                                                                                                                                                                                         |
+| Validation rules, rejection reasons, or poisoning defenses | `documentation/filters/rejection-rules.md`, `documentation/filters/poisoning-resistance.md`, `documentation/architecture/data-pipeline.md`                                                                                                                                                              |
+| Polar model, histogram bins, confidence, or persistence    | `documentation/architecture/polar-model.md`, `documentation/architecture/persistence.md`                                                                                                                                                                                                                |
+| Viewer behavior, tabs, charts, editor, export UI, or CSS   | `documentation/architecture/ui.md`, `README.md` when user-facing                                                                                                                                                                                                                                        |
+| Export/import format or backup behavior                    | `documentation/user/export-import.md`, `README.md`, related mock data                                                                                                                                                                                                                                   |
+| Troubleshooting-relevant behavior or known failure mode    | `documentation/user/troubleshooting.md`                                                                                                                                                                                                                                                                 |
+| Release packaging, versioning, or install flow             | `documentation/guides/release-workflow.md`, `README.md`, companion release notes under `releases/`                                                                                                                                                                                                      |
+| Development workflow, checks, or agent guidance            | `documentation/guides/documentation-maintenance.md`, `documentation/conventions/quality-gates.md`, `documentation/conventions/coding-standards.md`, `documentation/conventions/smell-prevention.md`, `documentation/conventions/testing-infrastructure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
 
 Documentation checks:
 
 - `tools/check-docs.mjs` verifies that every documentation file is linked from `TABLEOFCONTENTS.md`.
 - `tools/check-doc-format.mjs` verifies required sections.
 - `tools/check-doc-reachability.mjs` verifies docs are reachable from `AGENTS.md` or `CLAUDE.md` and that markdown links exist.
-- `tools/check-ai-instructions.mjs` verifies the shared instruction block in `AGENTS.md` and `CLAUDE.md` stays synchronized.
+- `tools/check-agents-pointer.mjs` verifies `CLAUDE.md` stays a short, valid pointer to `AGENTS.md` (the sole canonical instruction owner) plus the mandatory preflight files, never a re-expanded duplicate.
 
 AvNav documentation rule:
 

@@ -71,6 +71,7 @@ export const REQUIRED_SMELL_RULES = [
   "Duplicate viewer helper",
   "Viewer file size",
   "JS one-line compression",
+  "JS complexity regression",
   "Viewer coverage target",
   "Untested viewer logic",
   "Viewer rendered sentinel",
@@ -81,10 +82,11 @@ export const REQUIRED_SMELL_RULES = [
   "Documentation TOC coverage",
   "Documentation format",
   "Documentation reachability",
-  "AI instruction drift",
+  "CLAUDE.md pointer drift",
   "Markdown file size",
   "Machine-specific host citation",
   "Unowned TODO",
+  "Exec-plan/phase citation",
   "Release artifact drift",
   "Hook installation drift",
   "Custom checker without tests",
@@ -93,14 +95,53 @@ export const REQUIRED_SMELL_RULES = [
   "Overall Python coverage",
   "Validation coverage floor",
   "Histogram coverage floor",
-  "Fixture drift"
+  "Plugin.py coverage floor",
+  "JS coverage family floor",
+  "Coverage inventory completeness",
+  "Coverage floor regression",
+  "Fixture drift",
+  "Focused JS test",
+  "Focused Python test"
 ];
 
+/**
+ * @typedef {object} ExecutableSmellRuleId
+ * @property {string} owner Checker module that enforces this rule.
+ * @property {string} id Rule identifier as it appears in the smell catalog.
+ */
+
+/** @type {ExecutableSmellRuleId[]} */
 export const EXECUTABLE_SMELL_RULE_IDS = [
   ...PATTERN_RULE_IDS.map((id) => ({ owner: "check-patterns.mjs", id })),
   ...SMELL_CONTRACT_RULE_IDS.map((id) => ({ owner: "check-smell-contracts.mjs", id }))
 ];
 
+/**
+ * @typedef {object} SmellCatalogSummary
+ * @property {boolean} ok Whether the check found zero failures.
+ * @property {number} requiredRules Count of required smell catalog rules.
+ * @property {number} executableRuleIds Count of executable rule ids checked.
+ * @property {number} failures Count of failures found.
+ */
+
+/**
+ * @typedef {object} SmellCatalogCheckResult
+ * @property {boolean} ok Whether the check found zero failures.
+ * @property {string[]} failures Human-readable failure messages.
+ * @property {SmellCatalogSummary} summary Machine-readable summary of the run.
+ */
+
+/**
+ * Checks that `documentation/conventions/smell-prevention.md` lists exactly
+ * the required smell catalog rules, with no duplicates, and that every
+ * executable rule id from the pattern and smell-contract checkers appears in
+ * the catalog text.
+ *
+ * @param {object} [options] Check options.
+ * @param {string} [options.root] Repository root to scan from.
+ * @param {boolean} [options.print] Whether to print results to the console.
+ * @returns {SmellCatalogCheckResult} The check outcome.
+ */
 export function runSmellCatalogCheck({ root = process.cwd(), print = true } = {}) {
   const docPath = path.join(root, "documentation", "conventions", "smell-prevention.md");
   const failures = [];
@@ -143,6 +184,19 @@ export function runSmellCatalogCheck({ root = process.cwd(), print = true } = {}
   return { ok: summary.ok, failures, summary };
 }
 
+/**
+ * @typedef {object} RuleRow
+ * @property {string} name Trimmed rule name from the leading table cell.
+ * @property {string} text Full raw table row line.
+ */
+
+/**
+ * Parses smell catalog table rows out of the catalog Markdown, skipping the
+ * header row and the separator row.
+ *
+ * @param {string} markdown Full contents of the smell catalog Markdown file.
+ * @returns {RuleRow[]} Parsed rule rows.
+ */
 function parseRuleRows(markdown) {
   const rows = [];
   for (const line of markdown.split(/\r?\n/)) {
@@ -156,6 +210,12 @@ function parseRuleRows(markdown) {
   return rows;
 }
 
+/**
+ * Finds rule names that appear more than once.
+ *
+ * @param {string[]} rows Rule names, one per parsed catalog row.
+ * @returns {string[]} Duplicate rule names, sorted alphabetically.
+ */
 function duplicateRows(rows) {
   const seen = new Set();
   const duplicates = new Set();
@@ -166,6 +226,13 @@ function duplicateRows(rows) {
   return Array.from(duplicates).sort();
 }
 
+/**
+ * Prints smell catalog check results to the console.
+ *
+ * @param {string[]} failures Human-readable failure messages.
+ * @param {SmellCatalogSummary} summary Machine-readable summary of the run.
+ * @returns {void}
+ */
 function reportSmellCatalog(failures, summary) {
   if (failures.length > 0) {
     for (const failure of failures) console.error(`[smell-catalog] ${failure}`);

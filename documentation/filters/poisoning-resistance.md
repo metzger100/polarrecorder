@@ -28,12 +28,12 @@ without discarding genuine light-air sailing. A depth signal rejects shallow-wat
 There is deliberately **no current-strength reject**. A polar maps STW (through water) against
 true wind over water, and AvNav publishes `gps.trueWindAngle` as `angleTrueWater`, so TWS and STW
 live in the same water frame. A uniform current is a Galilean translation of that frame: it
-changes SOG/COG but shifts the recorded TWS and the resulting STW *together*, leaving the
-`(STW, TWS_water)` point valid. A current-*magnitude* reject would discard good data, and as a
+changes SOG/COG but shifts the recorded TWS and the resulting STW _together_, leaving the
+`(STW, TWS_water)` point valid. A current-_magnitude_ reject would discard good data, and as a
 wind-against-tide sea-state proxy it is too blunt (it cannot tell flat wind-with-tide from rough
 wind-against-tide). Current drift is read only by R20.
 
-R20 (SOG/STW paddlewheel check) fires only when STW reads implausibly low versus SOG *and* the
+R20 (SOG/STW paddlewheel check) fires only when STW reads implausibly low versus SOG _and_ the
 present current is too small to account for the gap (`current_drift_kt < sog_kt - stw_kt`).
 Limitations: boats without a current-drift source get no SOG/STW-mismatch detection, and if the
 VDR set/drift device derives drift from the same paddlewheel that feeds `gps.waterSpeed`, a

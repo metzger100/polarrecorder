@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import re
 import zipfile
 from pathlib import Path
@@ -12,8 +13,17 @@ ZIP_NAME_RE = re.compile(r"^polarrecorder-(?P<version>.+)\.zip$")
 
 
 def main() -> int:
+    """Validate polarrecorder release artifacts, or dry-run an in-memory build.
+
+    Returns:
+        Process exit code: 0 on success, 1 on a `ReleaseError`.
+    """
     parser = argparse.ArgumentParser(description="Validate polarrecorder release artifacts.")
-    parser.add_argument("--dry-run", action="store_true", help="Skip full release validation.")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Build and validate a temporary in-memory development-version artifact; never touches releases/.",
+    )
     parser.add_argument("--version", help="SemVer release version without v prefix.")
     parser.add_argument(
         "zip_path",
@@ -24,9 +34,13 @@ def main() -> int:
 
     try:
         expected_entries = manifest.expected_runtime_files()
-        expected = {name for name, _source in expected_entries}
         if args.dry_run:
-            print(f"Release check dry-run passed: {len(expected)} runtime files.")
+            zip_bytes = manifest.build_zip_bytes(manifest.DEV_VERSION, expected_entries)
+            validate_zip_bytes(zip_bytes, expected_entries, manifest.DEV_VERSION)
+            print(
+                f"Release check dry-run passed: {len(expected_entries)} runtime files "
+                f"(in-memory {manifest.DEV_VERSION} artifact built and validated)."
+            )
             return 0
 
         release_version = resolve_release_version(args.version, args.zip_path)
@@ -36,10 +50,12 @@ def main() -> int:
         if not notes_path.is_file():
             raise manifest.ReleaseError(f"Companion release notes are missing: {notes_path}")
 
-        zip_path = Path(args.zip_path) if args.zip_path else manifest.default_zip_path(release_version)
+        zip_path = (
+            Path(args.zip_path) if args.zip_path else manifest.default_zip_path(release_version)
+        )
         if not zip_path.is_absolute():
             zip_path = manifest.ROOT / zip_path
-        validate_zip(zip_path, expected_entries, release_version)
+        validate_zip_file(zip_path, expected_entries, release_version)
     except manifest.ReleaseError as exc:
         print(f"Release check failed: {exc}")
         return 1
@@ -64,24 +80,39 @@ def resolve_release_version(version: str | None, zip_path: str | None) -> str:
     raise manifest.ReleaseError("Release version is required; pass --version or a release zip path")
 
 
-def validate_zip(
+def validate_zip_file(
     zip_path: Path,
     expected_entries: list[tuple[str, Path]],
     release_version: str,
 ) -> None:
     if not zip_path.is_file():
         raise manifest.ReleaseError(f"Release zip does not exist: {zip_path}")
-
     try:
         with zipfile.ZipFile(zip_path) as archive:
-            names = [info.filename for info in archive.infolist() if not info.is_dir()]
-            normalized_to_original = {
-                manifest.runtime_name_from_archive(normalize_zip_name(name)): name
-                for name in names
-            }
-            validate_zip_contents(archive, normalized_to_original, expected_entries, release_version)
+            validate_zip_archive(archive, expected_entries, release_version)
     except zipfile.BadZipFile as exc:
         raise manifest.ReleaseError(f"Release artifact is not a valid zip: {zip_path}") from exc
+
+
+def validate_zip_bytes(
+    zip_bytes: bytes,
+    expected_entries: list[tuple[str, Path]],
+    release_version: str,
+) -> None:
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
+        validate_zip_archive(archive, expected_entries, release_version)
+
+
+def validate_zip_archive(
+    archive: zipfile.ZipFile,
+    expected_entries: list[tuple[str, Path]],
+    release_version: str,
+) -> None:
+    names = [info.filename for info in archive.infolist() if not info.is_dir()]
+    normalized_to_original = {
+        manifest.runtime_name_from_archive(normalize_zip_name(name)): name for name in names
+    }
+    validate_zip_contents(archive, normalized_to_original, expected_entries, release_version)
 
     normalized = {manifest.runtime_name_from_archive(normalize_zip_name(name)) for name in names}
     if len(normalized) != len(names):
@@ -95,7 +126,9 @@ def validate_zip(
     if missing:
         raise manifest.ReleaseError(f"Release zip is missing runtime files: {', '.join(missing)}")
     if unexpected:
-        raise manifest.ReleaseError(f"Release zip contains non-runtime files: {', '.join(unexpected)}")
+        raise manifest.ReleaseError(
+            f"Release zip contains non-runtime files: {', '.join(unexpected)}"
+        )
     if excluded:
         raise manifest.ReleaseError(f"Release zip contains excluded paths: {', '.join(excluded)}")
 

@@ -1,0 +1,11 @@
+# Reviewable direct developer-dependency input. Compile with:
+#   python -m piptools compile --generate-hashes --output-file=requirements-dev.txt requirements-dev.in
+# via `npm run requirements:lock` (the only routine command allowed to touch the network
+# for Python dependencies; ordinary `npm run setup` only installs the resulting lock).
+ruff==0.16.0
+mypy==2.3.0
+pytest==9.1.1
+pytest-cov==7.1.0
+coverage==7.15.2
+hypothesis==6.161.2
+pip-tools==7.6.0

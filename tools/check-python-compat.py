@@ -68,9 +68,7 @@ def check_import(node: ast.Import, rel: str) -> list[str]:
     for alias in node.names:
         root_name = alias.name.split(".", 1)[0]
         if root_name in PY310_STDLIB_MODULES:
-            findings.append(
-                f"{rel}:{node.lineno}: '{root_name}' is not available in Python 3.9"
-            )
+            findings.append(f"{rel}:{node.lineno}: '{root_name}' is not available in Python 3.9")
     return findings
 
 

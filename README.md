@@ -27,11 +27,11 @@ Polar Recorder is not a sail-trim teacher and not a weather router. It records a
 
 Polar Recorder uses three AvNav values:
 
-| Short name | Meaning | AvNav source |
-|---|---|---|
-| TWA | True wind angle. Where the true wind comes from, relative to the boat. | `gps.trueWindAngle` |
-| TWS | True wind speed. The real wind speed after AvNav has calculated true wind. | `gps.trueWindSpeed` |
-| STW | Speed through water. Usually from the log or paddlewheel. | `gps.waterSpeed` |
+| Short name | Meaning                                                                    | AvNav source        |
+| ---------- | -------------------------------------------------------------------------- | ------------------- |
+| TWA        | True wind angle. Where the true wind comes from, relative to the boat.     | `gps.trueWindAngle` |
+| TWS        | True wind speed. The real wind speed after AvNav has calculated true wind. | `gps.trueWindSpeed` |
+| STW        | Speed through water. Usually from the log or paddlewheel.                  | `gps.waterSpeed`    |
 
 TWS and STW are shown and stored in knots. TWA is shown in degrees.
 
@@ -108,11 +108,11 @@ cores that read those paths would register a second identical AddOn alongside
 
 Every sample goes through a simple decision:
 
-| Decision | Meaning | Does it change the polar? |
-|---|---|---|
-| Accepted | The data looked like usable sailing data. | Yes |
-| Rejected | The data looked wrong, incomplete, too unstable, or not useful. | No |
-| Quarantined | The data looked like possible sailing, but suspicious enough to keep out. | No |
+| Decision    | Meaning                                                                   | Does it change the polar? |
+| ----------- | ------------------------------------------------------------------------- | ------------------------- |
+| Accepted    | The data looked like usable sailing data.                                 | Yes                       |
+| Rejected    | The data looked wrong, incomplete, too unstable, or not useful.           | No                        |
+| Quarantined | The data looked like possible sailing, but suspicious enough to keep out. | No                        |
 
 Rejected and quarantined samples are not failures. They are the plugin protecting your polar from bad data.
 
@@ -197,13 +197,13 @@ A `360°` preset (or any custom grid with angles above `180°`) exports true por
 
 The Settings tab groups maintenance and configuration actions into four cards:
 
-**Learned Data**
+#### Learned Data
 
 - Download saves all learned data (bins, counters, and metadata) as a JSON file.
 - Restore replaces the learned model and counters from a learned-data backup.
 - Reset clears the learned model and counters.
 
-**Presets**
+#### Presets
 
 - Download saves your export presets as a JSON file.
 - Restore replaces your export presets from a presets backup.
@@ -247,7 +247,7 @@ The six rules are:
   an RPM, or an alternator voltage; one threshold interprets all three.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
 - **SOG / STW paddlewheel** — rejects when speed through water reads implausibly low versus speed
-  over ground *and* the reported current drift is too small to explain the gap (a failing
+  over ground _and_ the reported current drift is too small to explain the gap (a failing
   paddlewheel). Honest strong following current is never rejected.
 - **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects
   when it disagrees with the reported true wind (a miscalibrated wind sensor).
@@ -319,32 +319,32 @@ The names look technical because they are also used internally and in API data.
 Here is the plain-language version. The thresholds shown are the defaults; many
 of them can be changed in AvNav plugin settings.
 
-| Reason | Plain meaning | Default rule |
-|---|---|---|
-| `reject_missing_twa` | No true wind angle was available. | TWA must be present. |
-| `reject_missing_tws` | No true wind speed was available. | TWS must be present. |
-| `reject_missing_stw` | No speed through water was available. | STW must be present. |
-| `reject_non_finite_twa` | TWA was not a usable number. | TWA must be a real number, not empty, infinite, or invalid. |
-| `reject_non_finite_tws` | TWS was not a usable number. | TWS must be a real number, not empty, infinite, or invalid. |
-| `reject_non_finite_stw` | STW was not a usable number. | STW must be a real number, not empty, infinite, or invalid. |
-| `reject_stale_twa` | TWA was too old. | TWA must be at most 3.0 seconds old. |
-| `reject_stale_tws` | TWS was too old. | TWS must be at most 3.0 seconds old. |
-| `reject_stale_stw` | STW was too old. | STW must be at most 3.0 seconds old. |
-| `reject_age_skew` | TWA, TWS, and STW did not arrive at similar times. | Their timestamps must be less than 2.0 seconds apart. |
-| `reject_twa_range` | TWA was outside the valid wind-angle range. | TWA must be 0-360 deg. |
-| `reject_tws_range` | TWS was outside the allowed wind-speed range. | TWS must be 0-60 kt by default. `max_tws` can be set from 20-60 kt. |
-| `reject_stw_range` | STW was outside the allowed boat-speed range. | STW must be 0-40 kt by default. `max_stw` can be set from 10-80 kt. |
-| `reject_head_to_wind` | The boat was too close to head-to-wind for useful polar learning. | Absolute TWA must be at least 10 deg. |
-| `reject_low_wind` | The true wind was too light for useful learning. | TWS must be at least 3.0 kt. |
-| `reject_anchored` | The boat looked stopped or anchored. | STW below 0.3 kt with wind present is rejected. |
-| `reject_twa_roc` | Wind angle changed too quickly, often during a tack or gybe. | TWA change must be at most 15 deg/s. |
-| `reject_tws_roc` | Wind speed jumped too quickly. | TWS change must be at most 10 kt/s. |
-| `reject_stw_roc` | Boat speed changed too quickly. | STW change must be at most 2 kt/s. |
-| `reject_maneuver_cooldown` | The plugin is waiting after a maneuver before trusting samples again. | After a TWA maneuver, samples are rejected for 30 seconds. |
-| `reject_warming_up` | The plugin is filling its stability window after startup or resume. | It needs 15 seconds of previous data before stability can be judged. |
-| `reject_unstable` | Recent wind or boat-speed values were too unstable. | Over the 15-second window, changes must stay below TWA 20 deg, TWS 10 kt, and STW 4 kt. |
-| `reject_user_paused` | Recording was paused in the Polar Recorder viewer. | Pause/Resume button is set to paused. |
-| `quarantine_engine_suspected` | Low wind plus high boat speed looked like possible engine use. | TWS below 5.0 kt and STW above 3.0 kt is quarantined. |
+| Reason                        | Plain meaning                                                         | Default rule                                                                            |
+| ----------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `reject_missing_twa`          | No true wind angle was available.                                     | TWA must be present.                                                                    |
+| `reject_missing_tws`          | No true wind speed was available.                                     | TWS must be present.                                                                    |
+| `reject_missing_stw`          | No speed through water was available.                                 | STW must be present.                                                                    |
+| `reject_non_finite_twa`       | TWA was not a usable number.                                          | TWA must be a real number, not empty, infinite, or invalid.                             |
+| `reject_non_finite_tws`       | TWS was not a usable number.                                          | TWS must be a real number, not empty, infinite, or invalid.                             |
+| `reject_non_finite_stw`       | STW was not a usable number.                                          | STW must be a real number, not empty, infinite, or invalid.                             |
+| `reject_stale_twa`            | TWA was too old.                                                      | TWA must be at most 3.0 seconds old.                                                    |
+| `reject_stale_tws`            | TWS was too old.                                                      | TWS must be at most 3.0 seconds old.                                                    |
+| `reject_stale_stw`            | STW was too old.                                                      | STW must be at most 3.0 seconds old.                                                    |
+| `reject_age_skew`             | TWA, TWS, and STW did not arrive at similar times.                    | Their timestamps must be less than 2.0 seconds apart.                                   |
+| `reject_twa_range`            | TWA was outside the valid wind-angle range.                           | TWA must be 0-360 deg.                                                                  |
+| `reject_tws_range`            | TWS was outside the allowed wind-speed range.                         | TWS must be 0-60 kt by default. `max_tws` can be set from 20-60 kt.                     |
+| `reject_stw_range`            | STW was outside the allowed boat-speed range.                         | STW must be 0-40 kt by default. `max_stw` can be set from 10-80 kt.                     |
+| `reject_head_to_wind`         | The boat was too close to head-to-wind for useful polar learning.     | Absolute TWA must be at least 10 deg.                                                   |
+| `reject_low_wind`             | The true wind was too light for useful learning.                      | TWS must be at least 3.0 kt.                                                            |
+| `reject_anchored`             | The boat looked stopped or anchored.                                  | STW below 0.3 kt with wind present is rejected.                                         |
+| `reject_twa_roc`              | Wind angle changed too quickly, often during a tack or gybe.          | TWA change must be at most 15 deg/s.                                                    |
+| `reject_tws_roc`              | Wind speed jumped too quickly.                                        | TWS change must be at most 10 kt/s.                                                     |
+| `reject_stw_roc`              | Boat speed changed too quickly.                                       | STW change must be at most 2 kt/s.                                                      |
+| `reject_maneuver_cooldown`    | The plugin is waiting after a maneuver before trusting samples again. | After a TWA maneuver, samples are rejected for 30 seconds.                              |
+| `reject_warming_up`           | The plugin is filling its stability window after startup or resume.   | It needs 15 seconds of previous data before stability can be judged.                    |
+| `reject_unstable`             | Recent wind or boat-speed values were too unstable.                   | Over the 15-second window, changes must stay below TWA 20 deg, TWS 10 kt, and STW 4 kt. |
+| `reject_user_paused`          | Recording was paused in the Polar Recorder viewer.                    | Pause/Resume button is set to paused.                                                   |
+| `quarantine_engine_suspected` | Low wind plus high boat speed looked like possible engine use.        | TWS below 5.0 kt and STW above 3.0 kt is quarantined.                                   |
 
 If you see many rejected samples, it does not automatically mean something is wrong. Sailing data is messy. The important question is whether accepted samples appear while you are sailing steadily with good instruments.
 
@@ -484,21 +484,24 @@ If the AvNav computer corrects its clock after boot, timeline buckets can briefl
 
 ## For developers
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development setup (virtual environment, dev tooling, and git hooks).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development setup: `npm run setup` provisions the
+locked npm and Python dev tools, and `npm run hooks:install`/`npm run hooks:doctor` install and verify
+the pre-push hook.
 
-Runtime code must remain dependency-free on target devices. Development tooling is allowed and is checked by:
-
-```sh
-tools/check-all.sh
-```
-
-The same full gate is available through npm so agents do not accidentally run only the viewer subgate:
+Runtime code must remain dependency-free on target devices. Development tooling is allowed and is
+checked by the canonical local gate:
 
 ```sh
 npm run check:all
 ```
 
-Targeted Node.js viewer and documentation checks run through `npm run check:js:all`.
+`tools/check-all.sh` is a compatibility wrapper around the same command. Targeted Node.js viewer and
+documentation checks run through `npm run check:core` (see [quality gates](documentation/conventions/quality-gates.md)
+for the exact group composition).
+
+Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`);
+GitHub Releases only republishes an already-committed local artifact when a `v*` tag is pushed. See
+the [release workflow guide](documentation/guides/release-workflow.md) for the full flow.
 
 For local viewer/API work without AvNav, use the mock server:
 

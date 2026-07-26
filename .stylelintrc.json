@@ -1,0 +1,12 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "custom-property-pattern": "^polarrecorder-[a-z0-9-]+$",
+    "selector-class-pattern": [
+      "^(polarrecorder-)?[a-z][a-z0-9]*(-[a-z0-9]+)*$|^nightMode$",
+      {
+        "message": "Expected class selector to be kebab-case (the sole exception, \"nightMode\", mirrors AvNav's own DOM class and is not ours to rename)"
+      }
+    ]
+  }
+}

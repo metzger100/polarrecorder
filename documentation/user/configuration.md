@@ -36,30 +36,30 @@ plugin. Polar Recorder does not register or own that switch. Within a running pl
 paused and resumed from the viewer (the Pause/Resume control), tracked by the transient `_paused`
 flag rather than a persisted setting.
 
-| Name | Type | Default | Range | Behavior |
-|---|---:|---:|---:|---|
-| `sample_interval` | FLOAT | `1.0` | 0.5-5.0 | Seconds between store reads after NMEA queue wakeups. |
-| `percentile` | NUMBER | `65` | 1-99 | Percentile used when extracting learned speed from each histogram. |
-| `flush_interval` | NUMBER | `300` | 60-3600 | Seconds between periodic `polar.json` flushes. |
-| `stale_threshold` | FLOAT | `3.0` | 1.0-30.0 | Maximum monotonic age for each store value before R3 rejects it as stale. |
-| `age_skew_threshold` | FLOAT | `2.0` | 0.5-10.0 | Maximum timestamp spread between TWA, TWS, and STW before R4 rejects. |
-| `max_tws` | NUMBER | `60` | 20-60 | Maximum plausible true wind speed in knots for R6. Capped at the bin-grid ceiling. |
-| `max_stw` | NUMBER | `40` | 10-80 | Maximum plausible speed through water in knots for R7. |
-| `low_wind_threshold` | FLOAT | `3.0` | 0.5-10.0 | TWS below this threshold is rejected by R9. |
-| `head_to_wind_threshold` | NUMBER | `10` | 5-30 | Absolute TWA below this threshold is rejected by R8. |
-| `anchored_stw_threshold` | FLOAT | `0.3` | 0.1-1.0 | STW below this value with nonzero wind is rejected by R10. |
-| `twa_roc_threshold` | FLOAT | `15.0` | 5.0-45.0 | Maximum TWA change in degrees per second before R11 detects a maneuver. |
-| `tws_roc_threshold` | FLOAT | `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike. |
-| `stw_roc_threshold` | FLOAT | `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects. |
-| `cooldown_seconds` | NUMBER | `30` | 5-120 | Time R14 rejects after a TWA maneuver detection. |
-| `stability_window_seconds` | NUMBER | `15` | 5-60 | Time span of stable prior samples required by R15. |
-| `stability_twa_range` | FLOAT | `20.0` | 5.0-45.0 | Maximum TWA range in the stability window. |
-| `stability_tws_range` | FLOAT | `10.0` | 3.0-20.0 | Maximum TWS range in the stability window. |
-| `stability_stw_range` | FLOAT | `4.0` | 1.0-10.0 | Maximum STW range in the stability window. |
-| `engine_tws_ceil` | FLOAT | `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine. |
-| `engine_stw_floor` | FLOAT | `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine. |
-| `min_samples_for_export` | NUMBER | `10` | 3-100 | High-confidence export floor used when that export mode is requested. |
-| `debug_logging` | BOOLEAN | `false` | - | Enables one debug log line per pipeline iteration with decision and reason codes. |
+| Name                       |    Type | Default |    Range | Behavior                                                                           |
+| -------------------------- | ------: | ------: | -------: | ---------------------------------------------------------------------------------- |
+| `sample_interval`          |   FLOAT |   `1.0` |  0.5-5.0 | Seconds between store reads after NMEA queue wakeups.                              |
+| `percentile`               |  NUMBER |    `65` |     1-99 | Percentile used when extracting learned speed from each histogram.                 |
+| `flush_interval`           |  NUMBER |   `300` |  60-3600 | Seconds between periodic `polar.json` flushes.                                     |
+| `stale_threshold`          |   FLOAT |   `3.0` | 1.0-30.0 | Maximum monotonic age for each store value before R3 rejects it as stale.          |
+| `age_skew_threshold`       |   FLOAT |   `2.0` | 0.5-10.0 | Maximum timestamp spread between TWA, TWS, and STW before R4 rejects.              |
+| `max_tws`                  |  NUMBER |    `60` |    20-60 | Maximum plausible true wind speed in knots for R6. Capped at the bin-grid ceiling. |
+| `max_stw`                  |  NUMBER |    `40` |    10-80 | Maximum plausible speed through water in knots for R7.                             |
+| `low_wind_threshold`       |   FLOAT |   `3.0` | 0.5-10.0 | TWS below this threshold is rejected by R9.                                        |
+| `head_to_wind_threshold`   |  NUMBER |    `10` |     5-30 | Absolute TWA below this threshold is rejected by R8.                               |
+| `anchored_stw_threshold`   |   FLOAT |   `0.3` |  0.1-1.0 | STW below this value with nonzero wind is rejected by R10.                         |
+| `twa_roc_threshold`        |   FLOAT |  `15.0` | 5.0-45.0 | Maximum TWA change in degrees per second before R11 detects a maneuver.            |
+| `tws_roc_threshold`        |   FLOAT |  `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike.                 |
+| `stw_roc_threshold`        |   FLOAT |   `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects.                   |
+| `cooldown_seconds`         |  NUMBER |    `30` |    5-120 | Time R14 rejects after a TWA maneuver detection.                                   |
+| `stability_window_seconds` |  NUMBER |    `15` |     5-60 | Time span of stable prior samples required by R15.                                 |
+| `stability_twa_range`      |   FLOAT |  `20.0` | 5.0-45.0 | Maximum TWA range in the stability window.                                         |
+| `stability_tws_range`      |   FLOAT |  `10.0` | 3.0-20.0 | Maximum TWS range in the stability window.                                         |
+| `stability_stw_range`      |   FLOAT |   `4.0` | 1.0-10.0 | Maximum STW range in the stability window.                                         |
+| `engine_tws_ceil`          |   FLOAT |   `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
+| `engine_stw_floor`         |   FLOAT |   `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
+| `min_samples_for_export`   |  NUMBER |    `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
+| `debug_logging`            | BOOLEAN | `false` |        - | Enables one debug log line per pipeline iteration with decision and reason codes.  |
 
 The Settings tab's **Advanced Settings** card exposes the safe runtime-tuning subset from this
 table: sampling cadence, flush cadence, sensor freshness, core filters, stability/maneuver
@@ -82,35 +82,35 @@ Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine
 `enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no
 standard key for them.
 
-| Name | Type | Default | Range | Behavior |
-|---|---:|---:|---:|---|
-| `enh_rpm_enabled` | BOOLEAN | `true` | - | Enable the engine-RPM reject (R17). |
-| `enh_rpm_key` | STRING | `""` | - | Store key for engine RPM. |
-| `enh_rpm_idle_max` | NUMBER | `900` | 200-4000 | RPM above this rejects the sample as motoring. |
-| `enh_engine_state_enabled` | BOOLEAN | `true` | - | Enable the engine-state reject (R18). |
-| `enh_engine_state_key` | STRING | `""` | - | Store key for engine state (boolean, RPM, or alternator voltage). |
-| `enh_engine_state_on_threshold` | FLOAT | `0.5` | 0.0-10000.0 | `engine_signal` at/above this means engine on (boolean 0.5, RPM ~50, voltage ~13.2). |
-| `enh_depth_enabled` | BOOLEAN | `true` | - | Enable the shallow-water reject (R19). |
-| `enh_depth_key` | STRING | `"gps.depthBelowKeel"` | - | Store key for depth in meters (keel clearance). |
-| `enh_depth_floor_m` | FLOAT | `1.0` | 0.5-50.0 | Clearance below this rejects the sample (shallow-water squat). |
-| `enh_slip_enabled` | BOOLEAN | `true` | - | Enable the STW-implausibly-low reject (R20). |
-| `enh_sog_key` | STRING | `"gps.speed"` | - | Store key for speed over ground. |
-| `enh_current_drift_key` | STRING | `"gps.currentDrift"` | - | Store key for current drift; corroborates R20. |
-| `enh_slip_sog_floor_kt` | FLOAT | `1.0` | 0.3-10.0 | SOG must exceed this for R20 to apply. |
-| `enh_slip_ratio` | FLOAT | `0.5` | 0.1-0.9 | Reject when STW < SOG * ratio and current cannot explain the gap. |
-| `enh_tw_crosscheck_enabled` | BOOLEAN | `true` | - | Enable the true-wind cross-check reject (R21). |
-| `enh_awa_key` | STRING | `"gps.windAngle"` | - | Store key for apparent wind angle. |
-| `enh_aws_key` | STRING | `"gps.windSpeed"` | - | Store key for apparent wind speed. |
-| `enh_tw_twa_tol_deg` | FLOAT | `15.0` | 3.0-45.0 | Allowed TWA disagreement for the cross-check. |
-| `enh_tw_tws_tol_kt` | FLOAT | `3.0` | 0.5-15.0 | Allowed TWS disagreement for the cross-check. |
-| `enh_heel_enabled` | BOOLEAN | `true` | - | Enable the heel-band reject (R22). |
-| `enh_heel_key` | STRING | `""` | - | Store key for heel/roll in degrees. |
-| `enh_heel_min_deg` | FLOAT | `0.0` | 0.0-45.0 | Reject below this absolute heel (0 disables it, multihull-safe). |
-| `enh_heel_max_deg` | FLOAT | `35.0` | 5.0-90.0 | Reject above this absolute heel. |
-| `enh_turnconfirm_enabled` | BOOLEAN | `true` | - | Enable heading/COG turn confirmation for R11/R14. |
-| `enh_heading_key` | STRING | `"gps.headingTrue"` | - | Store key for heading. |
-| `enh_cog_key` | STRING | `"gps.track"` | - | Store key for course over ground. |
-| `enh_turn_min_roc` | FLOAT | `3.0` | 0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn. |
+| Name                            |    Type |                Default |       Range | Behavior                                                                             |
+| ------------------------------- | ------: | ---------------------: | ----------: | ------------------------------------------------------------------------------------ |
+| `enh_rpm_enabled`               | BOOLEAN |                 `true` |           - | Enable the engine-RPM reject (R17).                                                  |
+| `enh_rpm_key`                   |  STRING |                   `""` |           - | Store key for engine RPM.                                                            |
+| `enh_rpm_idle_max`              |  NUMBER |                  `900` |    200-4000 | RPM above this rejects the sample as motoring.                                       |
+| `enh_engine_state_enabled`      | BOOLEAN |                 `true` |           - | Enable the engine-state reject (R18).                                                |
+| `enh_engine_state_key`          |  STRING |                   `""` |           - | Store key for engine state (boolean, RPM, or alternator voltage).                    |
+| `enh_engine_state_on_threshold` |   FLOAT |                  `0.5` | 0.0-10000.0 | `engine_signal` at/above this means engine on (boolean 0.5, RPM ~50, voltage ~13.2). |
+| `enh_depth_enabled`             | BOOLEAN |                 `true` |           - | Enable the shallow-water reject (R19).                                               |
+| `enh_depth_key`                 |  STRING | `"gps.depthBelowKeel"` |           - | Store key for depth in meters (keel clearance).                                      |
+| `enh_depth_floor_m`             |   FLOAT |                  `1.0` |    0.5-50.0 | Clearance below this rejects the sample (shallow-water squat).                       |
+| `enh_slip_enabled`              | BOOLEAN |                 `true` |           - | Enable the STW-implausibly-low reject (R20).                                         |
+| `enh_sog_key`                   |  STRING |          `"gps.speed"` |           - | Store key for speed over ground.                                                     |
+| `enh_current_drift_key`         |  STRING |   `"gps.currentDrift"` |           - | Store key for current drift; corroborates R20.                                       |
+| `enh_slip_sog_floor_kt`         |   FLOAT |                  `1.0` |    0.3-10.0 | SOG must exceed this for R20 to apply.                                               |
+| `enh_slip_ratio`                |   FLOAT |                  `0.5` |     0.1-0.9 | Reject when STW < SOG * ratio and current cannot explain the gap.                    |
+| `enh_tw_crosscheck_enabled`     | BOOLEAN |                 `true` |           - | Enable the true-wind cross-check reject (R21).                                       |
+| `enh_awa_key`                   |  STRING |      `"gps.windAngle"` |           - | Store key for apparent wind angle.                                                   |
+| `enh_aws_key`                   |  STRING |      `"gps.windSpeed"` |           - | Store key for apparent wind speed.                                                   |
+| `enh_tw_twa_tol_deg`            |   FLOAT |                 `15.0` |    3.0-45.0 | Allowed TWA disagreement for the cross-check.                                        |
+| `enh_tw_tws_tol_kt`             |   FLOAT |                  `3.0` |    0.5-15.0 | Allowed TWS disagreement for the cross-check.                                        |
+| `enh_heel_enabled`              | BOOLEAN |                 `true` |           - | Enable the heel-band reject (R22).                                                   |
+| `enh_heel_key`                  |  STRING |                   `""` |           - | Store key for heel/roll in degrees.                                                  |
+| `enh_heel_min_deg`              |   FLOAT |                  `0.0` |    0.0-45.0 | Reject below this absolute heel (0 disables it, multihull-safe).                     |
+| `enh_heel_max_deg`              |   FLOAT |                 `35.0` |    5.0-90.0 | Reject above this absolute heel.                                                     |
+| `enh_turnconfirm_enabled`       | BOOLEAN |                 `true` |           - | Enable heading/COG turn confirmation for R11/R14.                                    |
+| `enh_heading_key`               |  STRING |    `"gps.headingTrue"` |           - | Store key for heading.                                                               |
+| `enh_cog_key`                   |  STRING |          `"gps.track"` |           - | Store key for course over ground.                                                    |
+| `enh_turn_min_roc`              |   FLOAT |                  `3.0` |    0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.              |
 
 Config changes are hot-swapped. Viewer Settings endpoints validate changed string values, acquire
 the single `plugin.py` lock, parse and clamp the new values, and replace the `Config` object before

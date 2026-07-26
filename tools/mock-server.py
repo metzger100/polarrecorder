@@ -101,7 +101,9 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if endpoint == "polar":
                 self.send_json(
-                    polar_response(scalar(query, "format", "windy"), int_arg(query, "percentile", 65))
+                    polar_response(
+                        scalar(query, "format", "windy"), int_arg(query, "percentile", 65)
+                    )
                 )
                 return
             if endpoint == "export/json":
@@ -245,7 +247,8 @@ def save_preset_response(query: dict[str, list[str]]) -> dict[str, object]:
     }
     with STATE.lock:
         STATE.presets = [
-            existing for existing in STATE.presets
+            existing
+            for existing in STATE.presets
             if existing["builtin"] or existing["name"] != preset["name"]
         ]
         STATE.presets.append(preset)
@@ -264,8 +267,7 @@ def delete_preset_response(query: dict[str, list[str]]) -> dict[str, object]:
     with STATE.lock:
         before = len(STATE.presets)
         STATE.presets = [
-            preset for preset in STATE.presets
-            if preset["builtin"] or preset["name"] != name
+            preset for preset in STATE.presets if preset["builtin"] or preset["name"] != name
         ]
         if len(STATE.presets) == before:
             msg = f"Unknown preset '{name}'"

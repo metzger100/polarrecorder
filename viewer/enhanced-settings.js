@@ -8,11 +8,34 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  const button = Polarrecorder.Dom.Button;
-  const actionRow = Polarrecorder.Dom.ActionRow;
-  const clear = Polarrecorder.Dom.Clear;
-  const node = Polarrecorder.Dom.Node;
 
+  /** @typedef {{field: string, key?: string}} EnhancedKeyEntry */
+  /**
+   * @typedef {{
+   *   rule: string,
+   *   status: string,
+   *   enabled: boolean,
+   *   enable_field: string,
+   *   keys?: EnhancedKeyEntry[],
+   *   thresholds?: Record<string, number>
+   * }} EnhancedRule
+   */
+  /** @typedef {{field: string, kind: "bool", control: HTMLInputElement}} BoolControlItem */
+  /** @typedef {{field: string, kind: "text", control: HTMLSelectElement}} TextControlItem */
+  /** @typedef {{field: string, kind: "number", control: HTMLInputElement}} NumberControlItem */
+  /** @typedef {BoolControlItem | TextControlItem | NumberControlItem} ControlItem */
+  /**
+   * @typedef {{
+   *   body: HTMLElement,
+   *   messageNode: HTMLElement,
+   *   keys: string[],
+   *   controls: ControlItem[],
+   *   keySelects: HTMLSelectElement[],
+   *   keysLoading: boolean
+   * }} EnhancedState
+   */
+
+  /** @type {Record<string, string>} */
   const RULE_LABELS = {
     reject_engine_rpm: "Engine RPM",
     reject_engine_on: "Engine on/off",
@@ -22,6 +45,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     reject_heel_out_of_band: "Heel angle",
     turn_confirm: "Turn vs. wind-shift detection"
   };
+  /** @type {Record<string, string>} */
   const FIELD_LABELS = {
     enh_rpm_key: "Engine RPM source",
     enh_rpm_idle_max: "Reject above RPM",
@@ -44,6 +68,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     enh_cog_key: "Course over ground source",
     enh_turn_min_roc: "Turn rate threshold (°/s)"
   };
+  /** @type {Record<string, string>} */
   const STATUS_LABELS = {
     active: "active",
     disabled: "disabled",
@@ -52,49 +77,62 @@ window.Polarrecorder = window.Polarrecorder || {};
     inactive_value_missing: "value stale"
   };
 
+  /** @type {EnhancedState} */
   const state = {
-    body: null,
-    messageNode: null,
+    body: document.createElement("div"),
+    messageNode: document.createElement("p"),
     keys: [],
     controls: [],
     keySelects: [],
     keysLoading: false
   };
 
+  /** @returns {HTMLElement} */
   function render() {
-    const card = node("section", "card export-card");
-    const head = node("div", "section-head");
-    head.appendChild(node("h2", null, "Enhanced Rules"));
+    const card = Polarrecorder.Dom.Node("section", "card export-card");
+    const head = Polarrecorder.Dom.Node("div", "section-head");
+    head.appendChild(Polarrecorder.Dom.Node("h2", null, "Enhanced Rules"));
     card.appendChild(head);
-    card.appendChild(node(
-      "p",
-      "helper",
-      "Optional boat signals that reject unrepresentative samples. Each rule defaults on; clear its key or switch it off to opt out."
-    ));
-    state.body = node("div", "enhanced-rules");
+    card.appendChild(
+      Polarrecorder.Dom.Node(
+        "p",
+        "helper",
+        "Optional boat signals that reject unrepresentative samples. Each rule defaults on; clear its key or switch it off to opt out."
+      )
+    );
+    state.body = Polarrecorder.Dom.Node("div", "enhanced-rules");
     card.appendChild(state.body);
-    card.appendChild(actionRow([button("Save Enhanced Settings", save, "primary-action")]));
-    state.messageNode = node("p", "helper");
+    card.appendChild(
+      Polarrecorder.Dom.ActionRow([
+        Polarrecorder.Dom.Button("Save Enhanced Settings", save, "primary-action")
+      ])
+    );
+    state.messageNode = Polarrecorder.Dom.Node("p", "helper");
     card.appendChild(state.messageNode);
     reload();
     return card;
   }
 
   function reload() {
-    Promise.all([action("enhanced/keys"), action("enhanced/status")]).then(function (results) {
-      state.keys = (results[0] && results[0].keys) || [];
-      renderRules((results[1] && results[1].rules) || []);
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    Promise.all([action("enhanced/keys"), action("enhanced/status")])
+      .then(function (results) {
+        state.keys = (results[0] && results[0].keys) || [];
+        renderRules((results[1] && results[1].rules) || []);
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
+  /** @param {EnhancedRule[]} rules */
   function renderRules(rules) {
     state.controls = [];
     state.keySelects = [];
-    clear(state.body);
+    Polarrecorder.Dom.Clear(state.body);
     if (!rules.length) {
-      state.body.appendChild(node("p", "helper", "Enhanced status is unavailable."));
+      state.body.appendChild(
+        Polarrecorder.Dom.Node("p", "helper", "Enhanced status is unavailable.")
+      );
       return;
     }
     rules.forEach(function (rule) {
@@ -102,10 +140,16 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
+  /**
+   * @param {EnhancedRule} rule
+   * @returns {HTMLElement}
+   */
   function ruleBlock(rule) {
-    const wrap = node("div", "enhanced-rule");
-    const header = node("div", "enhanced-rule-head");
-    header.appendChild(node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule));
+    const wrap = Polarrecorder.Dom.Node("div", "enhanced-rule");
+    const header = Polarrecorder.Dom.Node("div", "enhanced-rule-head");
+    header.appendChild(
+      Polarrecorder.Dom.Node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule)
+    );
     header.appendChild(badge(String(rule.status)));
     wrap.appendChild(header);
     wrap.appendChild(toggleField(rule));
@@ -119,27 +163,39 @@ window.Polarrecorder = window.Polarrecorder || {};
     return wrap;
   }
 
+  /**
+   * @param {EnhancedRule} rule
+   * @returns {HTMLElement}
+   */
   function toggleField(rule) {
-    const wrap = node("label", "switch-field");
+    const wrap = Polarrecorder.Dom.Node("label", "switch-field");
     const box = document.createElement("input");
     box.type = "checkbox";
     box.checked = rule.enabled === true;
     wrap.appendChild(box);
-    wrap.appendChild(node("span", "switch-track"));
-    wrap.appendChild(node("span", "switch-copy", "Enabled"));
+    wrap.appendChild(Polarrecorder.Dom.Node("span", "switch-track"));
+    wrap.appendChild(Polarrecorder.Dom.Node("span", "switch-copy", "Enabled"));
     state.controls.push({ field: rule.enable_field, kind: "bool", control: box });
     return wrap;
   }
 
+  /**
+   * @param {EnhancedKeyEntry} entry
+   * @returns {HTMLElement}
+   */
   function keyField(entry) {
-    const wrap = node("label", "field enhanced-key");
-    wrap.appendChild(node("span", null, fieldLabel(entry.field)));
+    const wrap = Polarrecorder.Dom.Node("label", "field enhanced-key");
+    wrap.appendChild(Polarrecorder.Dom.Node("span", null, fieldLabel(entry.field)));
     const select = keySelect(entry.key || "");
     wrap.appendChild(select);
     state.controls.push({ field: entry.field, kind: "text", control: select });
     return wrap;
   }
 
+  /**
+   * @param {string} current
+   * @returns {HTMLSelectElement}
+   */
   function keySelect(current) {
     const select = document.createElement("select");
     populateSelect(select, current);
@@ -148,8 +204,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     return select;
   }
 
+  /**
+   * @param {HTMLSelectElement} select
+   * @param {string} current
+   */
   function populateSelect(select, current) {
-    clear(select);
+    Polarrecorder.Dom.Clear(select);
     appendOption(select, "", "— none —");
     const options = state.keys.slice();
     if (current && options.indexOf(current) === -1) {
@@ -166,18 +226,26 @@ window.Polarrecorder = window.Polarrecorder || {};
       return;
     }
     state.keysLoading = true;
-    action("enhanced/keys").then(function (data) {
-      state.keys = (data && data.keys) || [];
-      state.keySelects.forEach(function (select) {
-        populateSelect(select, select.value);
+    action("enhanced/keys")
+      .then(function (data) {
+        state.keys = (data && data.keys) || [];
+        state.keySelects.forEach(function (select) {
+          populateSelect(select, select.value);
+        });
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      })
+      .then(function () {
+        state.keysLoading = false;
       });
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    }).then(function () {
-      state.keysLoading = false;
-    });
   }
 
+  /**
+   * @param {HTMLSelectElement} select
+   * @param {string} value
+   * @param {string} label
+   */
   function appendOption(select, value, label) {
     const option = document.createElement("option");
     option.value = value;
@@ -185,9 +253,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     select.appendChild(option);
   }
 
+  /**
+   * @param {string} field
+   * @param {number} value
+   * @returns {HTMLElement}
+   */
   function thresholdField(field, value) {
-    const wrap = node("label", "field enhanced-threshold");
-    wrap.appendChild(node("span", null, fieldLabel(field)));
+    const wrap = Polarrecorder.Dom.Node("label", "field enhanced-threshold");
+    wrap.appendChild(Polarrecorder.Dom.Node("span", null, fieldLabel(field)));
     const control = document.createElement("input");
     control.type = "number";
     control.value = String(value);
@@ -196,14 +269,23 @@ window.Polarrecorder = window.Polarrecorder || {};
     return wrap;
   }
 
+  /**
+   * @param {string} status
+   * @returns {HTMLElement}
+   */
   function badge(status) {
-    return node(
+    const cssStatus = status.replace(/_/g, "-");
+    return Polarrecorder.Dom.Node(
       "span",
-      "enhanced-badge enhanced-badge-" + status,
+      "enhanced-badge enhanced-badge-" + cssStatus,
       STATUS_LABELS[status] || status
     );
   }
 
+  /**
+   * @param {ControlItem} item
+   * @returns {string}
+   */
   function controlValue(item) {
     if (item.kind === "bool") {
       return item.control.checked ? "true" : "false";
@@ -211,6 +293,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     return String(item.control.value);
   }
 
+  /**
+   * @param {ControlItem} item
+   * @returns {boolean}
+   */
   function isInvalidNumber(item) {
     if (item.kind !== "number") {
       return false;
@@ -227,26 +313,40 @@ window.Polarrecorder = window.Polarrecorder || {};
     const params = state.controls.map(function (item) {
       return encodeURIComponent(item.field) + "=" + encodeURIComponent(controlValue(item));
     });
-    action("enhanced/save?" + params.join("&")).then(function () {
-      setMessage("Enhanced settings saved.", "info");
-      reload();
-    }).catch(function (error) {
-      setMessage(error.message, "error");
-    });
+    action("enhanced/save?" + params.join("&"))
+      .then(function () {
+        setMessage("Enhanced settings saved.", "info");
+        reload();
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
   }
 
+  /**
+   * @param {string} text
+   * @param {"error" | "info"} kind
+   */
   function setMessage(text, kind) {
     state.messageNode.className = kind === "error" ? "error-text" : "helper";
     state.messageNode.textContent = text;
   }
 
+  /**
+   * @param {string} field
+   * @returns {string}
+   */
   function fieldLabel(field) {
     return FIELD_LABELS[field] || field;
   }
 
+  /**
+   * @param {string} endpoint
+   * @returns {Promise<any>}
+   */
   function action(endpoint) {
     return Polarrecorder["FetchJson"](endpoint, { action: true });
   }
 
   Polarrecorder.EnhancedSettings = { Render: render };
-}());
+})();

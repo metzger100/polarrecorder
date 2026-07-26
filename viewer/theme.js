@@ -7,6 +7,8 @@ window.Polarrecorder = window.Polarrecorder || {};
 (function () {
   "use strict";
 
+  /** @typedef {{element: Element, fontElement: Element, nightMode: boolean, window: Window}} ThemeSource */
+
   const TOKEN_MAP = [
     ["--avnav-fore-color", "--polarrecorder-fore-color"],
     ["--avnav-back-color", "--polarrecorder-back-color"],
@@ -39,6 +41,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     copyTokens(source);
   }
 
+  /** @returns {ThemeSource | null} */
   function avNavThemeSource() {
     const sourceDocument = avNavDocument();
     if (!sourceDocument) return null;
@@ -51,6 +54,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     };
   }
 
+  /** @returns {Document | null} */
   function avNavDocument() {
     try {
       return window.parent && window.parent !== window ? window.parent.document : null;
@@ -63,6 +67,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     }
   }
 
+  /** @param {ThemeSource} source */
   function copyTokens(source) {
     const sourceStyle = source.window.getComputedStyle(source.element);
     TOKEN_MAP.forEach(function (entry) {
@@ -81,4 +86,4 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
     document.body.style.removeProperty("--polarrecorder-font-stack");
   }
-}());
+})();

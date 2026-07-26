@@ -4,7 +4,7 @@
  * Cross-file duplicate-function detector for viewer/*.js.
  *
  * AI agents reliably re-implement a viewer helper instead of reusing the
- * canonical one under window.Polarrecorder (CLAUDE.md Section 8). This is the
+ * canonical one under window.Polarrecorder (AGENTS.md Section 8). This is the
  * JS counterpart to tools/check-duplication.py, which only covers Python.
  *
  * Each function body is reduced to a structural fingerprint: bare local
@@ -28,20 +28,109 @@ const DUPLICATE_BLOCK_WINDOW = 35;
 const DUPLICATE_BLOCK_MIN_TOKENS = 120;
 
 const KEYWORDS = new Set([
-  "var", "let", "const", "function", "return", "if", "else", "for", "while",
-  "do", "switch", "case", "default", "break", "continue", "throw", "try",
-  "catch", "finally", "new", "delete", "typeof", "instanceof", "in", "of",
-  "void", "this", "null", "true", "false", "undefined"
+  "var",
+  "let",
+  "const",
+  "function",
+  "return",
+  "if",
+  "else",
+  "for",
+  "while",
+  "do",
+  "switch",
+  "case",
+  "default",
+  "break",
+  "continue",
+  "throw",
+  "try",
+  "catch",
+  "finally",
+  "new",
+  "delete",
+  "typeof",
+  "instanceof",
+  "in",
+  "of",
+  "void",
+  "this",
+  "null",
+  "true",
+  "false",
+  "undefined"
 ]);
 
+/**
+ * @typedef {object} FunctionEntry
+ * @property {number} id - Sequential id assigned during collection; used to
+ *   establish a stable left/right ordering when comparing candidate pairs.
+ * @property {string} rel - File path relative to the repo root (e.g. "viewer/foo.js").
+ * @property {number} line - 1-based source line where the function body opens.
+ * @property {number} size - Token count of the function body.
+ * @property {string} fingerprint - Space-joined structural token sequence.
+ * @property {string[]} tokens - Structural tokens making up the fingerprint.
+ */
+
+/**
+ * @typedef {object} DuplicationOptions
+ * @property {string} [root] - Repository root to scan; defaults to process.cwd().
+ * @property {boolean} [print] - Whether to log a human-readable report.
+ */
+
+/**
+ * @typedef {object} DuplicationSummary
+ * @property {boolean} ok
+ * @property {number} checkedFunctions
+ * @property {number} failures
+ */
+
+/**
+ * @typedef {object} DuplicationResult
+ * @property {boolean} ok
+ * @property {string[]} failures
+ * @property {DuplicationSummary} summary
+ */
+
+/**
+ * @typedef {object} WindowMatch
+ * @property {FunctionEntry} entry
+ * @property {number} start
+ * @property {number} end
+ */
+
+/**
+ * @typedef {object} PairSegment
+ * @property {number} leftStart
+ * @property {number} leftEnd
+ * @property {number} rightStart
+ * @property {number} rightEnd
+ */
+
+/**
+ * @typedef {object} PairGroup
+ * @property {FunctionEntry} left
+ * @property {FunctionEntry} right
+ * @property {PairSegment[]} segments
+ */
+
+/**
+ * @param {DuplicationOptions} [options]
+ * @returns {DuplicationResult}
+ */
 export function runJsDuplicationCheck({ root = process.cwd(), print = true } = {}) {
   const viewerRoot = path.join(root, "viewer");
   const functions = collectFunctions(viewerRoot);
+  /** @type {Map<string, FunctionEntry[]>} */
   const byFingerprint = new Map();
   for (const fn of functions) {
     if (fn.size < MIN_FINGERPRINT_TOKENS) continue;
-    if (!byFingerprint.has(fn.fingerprint)) byFingerprint.set(fn.fingerprint, []);
-    byFingerprint.get(fn.fingerprint).push(fn);
+    let bucket = byFingerprint.get(fn.fingerprint);
+    if (!bucket) {
+      bucket = [];
+      byFingerprint.set(fn.fingerprint, bucket);
+    }
+    bucket.push(fn);
   }
 
   const failures = [];
@@ -50,18 +139,26 @@ export function runJsDuplicationCheck({ root = process.cwd(), print = true } = {
     if (files.size < 2) continue;
     const locations = group.map((fn) => `${fn.rel}:${fn.line}`).join(", ");
     failures.push(
-      `duplicate function body across files: ${locations}; `
-      + "extract one canonical helper under window.Polarrecorder and reuse it"
+      `duplicate function body across files: ${locations}; ` +
+        "extract one canonical helper under window.Polarrecorder and reuse it"
     );
   }
   failures.push(...duplicateBlockFailures(functions));
   failures.sort();
 
-  const summary = { ok: failures.length === 0, checkedFunctions: functions.length, failures: failures.length };
+  const summary = {
+    ok: failures.length === 0,
+    checkedFunctions: functions.length,
+    failures: failures.length
+  };
   if (print) reportDuplication(failures);
   return { ok: summary.ok, failures, summary };
 }
 
+/**
+ * @param {string[]} failures
+ * @returns {void}
+ */
 function reportDuplication(failures) {
   if (failures.length > 0) {
     for (const failure of failures) console.error(`[js-duplication] ${failure}`);
@@ -71,10 +168,18 @@ function reportDuplication(failures) {
   console.log("JS duplication check passed.");
 }
 
+/**
+ * @param {string} viewerRoot
+ * @returns {FunctionEntry[]}
+ */
 function collectFunctions(viewerRoot) {
+  /** @type {FunctionEntry[]} */
   const out = [];
   if (!fs.existsSync(viewerRoot)) return out;
-  for (const name of fs.readdirSync(viewerRoot).filter((n) => n.endsWith(".js")).sort()) {
+  for (const name of fs
+    .readdirSync(viewerRoot)
+    .filter((n) => n.endsWith(".js"))
+    .sort()) {
     const rel = `viewer/${name}`;
     const content = fs.readFileSync(path.join(viewerRoot, name), "utf8");
     const masked = maskStringsAndComments(content);
@@ -95,17 +200,27 @@ function collectFunctions(viewerRoot) {
   return out;
 }
 
+/**
+ * @param {FunctionEntry[]} entries
+ * @returns {string[]}
+ */
 function duplicateBlockFailures(entries) {
+  /** @type {Map<string, WindowMatch[]>} */
   const windows = new Map();
   for (const entry of entries) {
     if (entry.tokens.length < DUPLICATE_BLOCK_WINDOW) continue;
     for (let index = 0; index <= entry.tokens.length - DUPLICATE_BLOCK_WINDOW; index += 1) {
       const key = entry.tokens.slice(index, index + DUPLICATE_BLOCK_WINDOW).join(" ");
-      if (!windows.has(key)) windows.set(key, []);
-      windows.get(key).push({ entry, start: index, end: index + DUPLICATE_BLOCK_WINDOW });
+      let bucket = windows.get(key);
+      if (!bucket) {
+        bucket = [];
+        windows.set(key, bucket);
+      }
+      bucket.push({ entry, start: index, end: index + DUPLICATE_BLOCK_WINDOW });
     }
   }
 
+  /** @type {Map<string, PairGroup>} */
   const pairs = new Map();
   for (const matches of windows.values()) {
     if (matches.length < 2) continue;
@@ -116,7 +231,9 @@ function duplicateBlockFailures(entries) {
     }
   }
 
+  /** @type {string[]} */
   const out = [];
+  /** @type {Set<string>} */
   const seen = new Set();
   for (const group of pairs.values()) {
     for (const segment of mergeSegments(group.segments)) {
@@ -126,15 +243,21 @@ function duplicateBlockFailures(entries) {
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(
-        `duplicate function block across files: ${group.left.rel}:${group.left.line}, `
-        + `${group.right.rel}:${group.right.line} (${tokenCount} tokens); `
-        + "extract one canonical helper under window.Polarrecorder and reuse it"
+        `duplicate function block across files: ${group.left.rel}:${group.left.line}, ` +
+          `${group.right.rel}:${group.right.line} (${tokenCount} tokens); ` +
+          "extract one canonical helper under window.Polarrecorder and reuse it"
       );
     }
   }
   return out.sort();
 }
 
+/**
+ * @param {Map<string, PairGroup>} pairs
+ * @param {WindowMatch} leftMatch
+ * @param {WindowMatch} rightMatch
+ * @returns {void}
+ */
 function addPairSegment(pairs, leftMatch, rightMatch) {
   if (leftMatch.entry.rel === rightMatch.entry.rel) return;
   let left = leftMatch;
@@ -145,10 +268,12 @@ function addPairSegment(pairs, leftMatch, rightMatch) {
   }
   const delta = left.start - right.start;
   const key = `${left.entry.id}:${right.entry.id}:${delta}`;
-  if (!pairs.has(key)) {
-    pairs.set(key, { left: left.entry, right: right.entry, segments: [] });
+  let group = pairs.get(key);
+  if (!group) {
+    group = { left: left.entry, right: right.entry, segments: [] };
+    pairs.set(key, group);
   }
-  pairs.get(key).segments.push({
+  group.segments.push({
     leftStart: left.start,
     leftEnd: left.end,
     rightStart: right.start,
@@ -156,6 +281,10 @@ function addPairSegment(pairs, leftMatch, rightMatch) {
   });
 }
 
+/**
+ * @param {PairSegment[]} segments
+ * @returns {PairSegment[]}
+ */
 function mergeSegments(segments) {
   const sorted = segments
     .slice()
@@ -174,12 +303,13 @@ function mergeSegments(segments) {
 }
 
 // Offsets of the '{' that opens each function/arrow block body.
+/**
+ * @param {string} masked
+ * @returns {number[]}
+ */
 function functionBodyStarts(masked) {
   const starts = [];
-  const patterns = [
-    /\bfunction\b\s*[A-Za-z0-9_$]*\s*\([^)]*\)\s*\{/g,
-    /=>\s*\{/g
-  ];
+  const patterns = [/\bfunction\b\s*[A-Za-z0-9_$]*\s*\([^)]*\)\s*\{/g, /=>\s*\{/g];
   for (const pattern of patterns) {
     let match;
     while ((match = pattern.exec(masked)) !== null) {
@@ -189,6 +319,11 @@ function functionBodyStarts(masked) {
   return starts;
 }
 
+/**
+ * @param {string} masked
+ * @param {number} openIndex
+ * @returns {number}
+ */
 function matchBrace(masked, openIndex) {
   let depth = 0;
   for (let i = openIndex; i < masked.length; i += 1) {
@@ -201,12 +336,19 @@ function matchBrace(masked, openIndex) {
   return -1;
 }
 
+/**
+ * @param {string} body
+ * @returns {string[]}
+ */
 function tokenize(body) {
   const tokens = [];
   let i = 0;
   while (i < body.length) {
     const char = body[i];
-    if (/\s/.test(char)) { i += 1; continue; }
+    if (/\s/.test(char)) {
+      i += 1;
+      continue;
+    }
     if (char === "/" && body[i + 1] === "/") {
       while (i < body.length && body[i] !== "\n") i += 1;
       continue;
@@ -235,6 +377,12 @@ function tokenize(body) {
   return tokens;
 }
 
+/**
+ * @param {string} body
+ * @param {number} start
+ * @param {string[]} tokens
+ * @returns {number}
+ */
 function consumeString(body, start, tokens) {
   const quote = body[start];
   let i = start + 1;
@@ -246,6 +394,12 @@ function consumeString(body, start, tokens) {
   return i + 1;
 }
 
+/**
+ * @param {string} body
+ * @param {number} start
+ * @param {string[]} tokens
+ * @returns {number}
+ */
 function consumeNumber(body, start, tokens) {
   let i = start;
   while (i < body.length && /[0-9a-fA-FxX._]/.test(body[i])) i += 1;
@@ -253,6 +407,12 @@ function consumeNumber(body, start, tokens) {
   return i;
 }
 
+/**
+ * @param {string} body
+ * @param {number} start
+ * @param {string[]} tokens
+ * @returns {number}
+ */
 function consumeWord(body, start, tokens) {
   let i = start;
   while (i < body.length && /[A-Za-z0-9_$]/.test(body[i])) i += 1;
@@ -266,6 +426,10 @@ function consumeWord(body, start, tokens) {
 
 // Replace string contents and comments with same-length spaces so brace
 // matching and the function-start scan ignore braces inside strings/comments.
+/**
+ * @param {string} content
+ * @returns {string}
+ */
 function maskStringsAndComments(content) {
   const chars = [...content];
   let mode = "code";
@@ -275,22 +439,34 @@ function maskStringsAndComments(content) {
     const next = chars[i + 1];
     if (mode === "code") {
       if (char === "/" && next === "/") {
-        while (i < chars.length && chars[i] !== "\n") { chars[i] = " "; i += 1; }
+        while (i < chars.length && chars[i] !== "\n") {
+          chars[i] = " ";
+          i += 1;
+        }
         i -= 1;
       } else if (char === "/" && next === "*") {
-        chars[i] = " "; chars[i + 1] = " "; i += 2;
+        chars[i] = " ";
+        chars[i + 1] = " ";
+        i += 2;
         while (i < chars.length && !(chars[i] === "*" && chars[i + 1] === "/")) {
           if (chars[i] !== "\n") chars[i] = " ";
           i += 1;
         }
-        if (i < chars.length) { chars[i] = " "; chars[i + 1] = " "; i += 1; }
+        if (i < chars.length) {
+          chars[i] = " ";
+          chars[i + 1] = " ";
+          i += 1;
+        }
       } else if (char === '"' || char === "'" || char === "`") {
         mode = "string";
         quote = char;
       }
     } else if (char === "\\") {
       chars[i] = " ";
-      if (i + 1 < chars.length && chars[i + 1] !== "\n") { chars[i + 1] = " "; i += 1; }
+      if (i + 1 < chars.length && chars[i + 1] !== "\n") {
+        chars[i + 1] = " ";
+        i += 1;
+      }
     } else if (char === quote) {
       mode = "code";
       quote = "";

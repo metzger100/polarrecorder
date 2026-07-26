@@ -1,0 +1,5 @@
+{
+  "capturedCommit": "08edef88b0102af6507ef02fd4448f7fd1eaca45",
+  "note": "Reviewer-authored, not derived. Empty is valid: no non-executable negative quality fixture under tests/fixtures/quality/ is required yet. Each future entry must name one exact path, one strict JavaScript or fully typed Python owner test, the rule/command it proves, the expected SHA-256 of its intended canonical bytes, and why source text rather than a generated in-memory case is necessary, before the fixture file is created. Adding an entry after this baseline requires reviewed owner/date/reason justification, not silent implementation convenience.",
+  "plannedFixtures": []
+}

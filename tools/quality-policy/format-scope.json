@@ -1,0 +1,1161 @@
+{
+  "rows": [
+    {
+      "path": ".codex",
+      "owner": "unsupported",
+      "reason": "empty editor/tool marker file",
+      "alternateValidation": "none needed"
+    },
+    {
+      "path": ".githooks/pre-push",
+      "owner": "unsupported",
+      "reason": "no maintained shell formatter in this inventory",
+      "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
+    },
+    {
+      "path": ".githooks/README.md",
+      "owner": "prettier"
+    },
+    {
+      "path": ".github/workflows/publish-release.yml",
+      "owner": "prettier"
+    },
+    {
+      "path": ".gitignore",
+      "owner": "unsupported",
+      "reason": "plain dotfile with no maintained formatter target",
+      "alternateValidation": "reviewed on change"
+    },
+    {
+      "path": ".markdownlint-cli2.jsonc",
+      "owner": "prettier"
+    },
+    {
+      "path": ".nvmrc",
+      "owner": "unsupported",
+      "reason": "plain dotfile with no maintained formatter target",
+      "alternateValidation": "reviewed on change"
+    },
+    {
+      "path": ".prettierignore",
+      "owner": "unsupported",
+      "reason": "plain dotfile with no maintained formatter target",
+      "alternateValidation": "reviewed on change"
+    },
+    {
+      "path": ".prettierrc.json",
+      "owner": "prettier"
+    },
+    {
+      "path": ".stylelintignore",
+      "owner": "unsupported",
+      "reason": "plain dotfile with no maintained formatter target",
+      "alternateValidation": "reviewed on change"
+    },
+    {
+      "path": ".stylelintrc.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "AGENTS.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "ARCHITECTURE.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "CLAUDE.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/api.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/data-pipeline.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/import-restore.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/persistence.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/plugin-lifecycle.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/polar-model.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/architecture/ui.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/avnav/editable-parameters.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/avnav/keys-and-units.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/avnav/plugin-lifecycle.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/avnav/request-routing-and-static-files.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/coding-standards.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/documentation-format.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/quality-gates.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/smell-fix-playbooks.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/smell-prevention.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/conventions/testing-infrastructure.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/core-principles.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/filters/poisoning-resistance.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/filters/rejection-rules.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/guides/documentation-maintenance.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/guides/exec-plan-authoring.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/guides/release-workflow.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/TABLEOFCONTENTS.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/user/configuration.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/user/export-import.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "documentation/user/troubleshooting.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "eslint.config.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "exec-plans/active/.gitkeep",
+      "owner": "unsupported",
+      "reason": "empty placeholder file",
+      "alternateValidation": "none needed"
+    },
+    {
+      "path": "exec-plans/active/.markdownlint-cli2.jsonc",
+      "owner": "prettier"
+    },
+    {
+      "path": "exec-plans/PLAN5Ledger.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "install.sh",
+      "owner": "unsupported",
+      "reason": "no maintained shell formatter in this inventory",
+      "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
+    },
+    {
+      "path": "jscpd.config.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "linkinator.config.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "package-lock.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "package.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "plugin.css",
+      "owner": "prettier"
+    },
+    {
+      "path": "plugin.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "plugin.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "plugin.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "plugin.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "pyproject.toml",
+      "owner": "unsupported",
+      "reason": "Prettier has no built-in TOML support and no TOML plugin is in this inventory",
+      "alternateValidation": "Ruff/mypy/pytest consume it directly every gate run"
+    },
+    {
+      "path": "README.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "requirements-dev.in",
+      "owner": "unsupported",
+      "reason": "pip requirements format; pip-compile is the sole generator of the hash-locked file, not a formatter",
+      "alternateValidation": "npm run requirements:lock regenerates requirements-dev.txt deterministically"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "owner": "unsupported",
+      "reason": "pip requirements format; pip-compile is the sole generator of the hash-locked file, not a formatter",
+      "alternateValidation": "npm run requirements:lock regenerates requirements-dev.txt deterministically"
+    },
+    {
+      "path": "ROADMAP.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "server/polarrecorder/__init__.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/api_config.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/api_dispatch.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/api_enhanced.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/api_handlers.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/bins.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/coerce.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/commit.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/config.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/counters.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/enhanced_status.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/export.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/histogram.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/import_common.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/logger.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/params.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/persistence.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/polar_model.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/preset_backup.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/projection.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/reader.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/restore.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/sample.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/timeline.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/units.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/__init__.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/angle_math.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/pipeline.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/rules_core.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/rules_enhanced.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/rules_heuristic.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/rules_stability.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "server/polarrecorder/validation/state.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/conftest.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/counting_dict.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/js/agents-pointer.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-patterns.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-publisher-workflow.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-schema.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/command-graph.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/complexity-budget.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/coverage-inventory.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/eslint-config.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/format-scope.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/hooks.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/hotspot-budgets.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/install-script.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/js-checkers.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/plugin-entrypoints.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/release-create.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/release-git.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/release-prepare.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/release-version.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/setup.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/test-focus.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/test-inventory.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/typecheck-source.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-advanced.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-enhanced.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-polar.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-smoke.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-theme.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/mock-data/config.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/export-json.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/export-windy.csv",
+      "owner": "unsupported",
+      "reason": "functional test fixture; Prettier has no CSV formatter and byte content is test-asserted",
+      "alternateValidation": "tests/test_export.py exercises the exact CSV bytes"
+    },
+    {
+      "path": "tests/mock-data/polar.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/presets.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/rejections.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/status.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/mock-data/timeline.json",
+      "owner": "unsupported",
+      "reason": "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
+      "alternateValidation": "tests/test_export.py and related fixture-sync tests exercise byte content"
+    },
+    {
+      "path": "tests/operation_count_evaluator.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/plugin_integration_support.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/scaling_contract_fixtures.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_angle_math.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_api_config.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_api_handlers_scaling_contract.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_api_handlers.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_avnav_registration_contract.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_baseline_captures.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_bins.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_check_release.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_coerce.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_commit.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_config.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_counters.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_enhanced_status.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_export.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_histogram.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_import_flow.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_logger.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_operation_count_evaluator.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_persistence.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_plugin_integration.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_poisoning_scenarios.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_polar_model.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_preset_backup.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_projection_scaling_contract.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_py_contracts_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_py_dependencies_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_python_compat_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_python_filesize_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_reader.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_release_manifest.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_restore.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_runtime_contracts_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_sample.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_smoke.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_test_focus_checker.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_timeline.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_units.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_validation_core.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_validation_enhanced.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_validation_heuristic.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_validation_pipeline.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/test_validation_stability.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tests/validation_helpers.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/actionlint.sh",
+      "owner": "unsupported",
+      "reason": "no maintained shell formatter in this inventory",
+      "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
+    },
+    {
+      "path": "tools/check-agents-pointer.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-all.sh",
+      "owner": "unsupported",
+      "reason": "no maintained shell formatter in this inventory",
+      "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
+    },
+    {
+      "path": "tools/check-dependencies.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-doc-format.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-doc-reachability.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-docs.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-duplication.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-file-size.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-headers.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-js-duplication.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-namespace.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-naming.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-publisher-workflow.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-py-contracts.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-py-dependencies.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-python-compat.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-python-filesize.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-release.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-runtime-contracts.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-schema.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-smell-catalog.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-smell-contracts.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-test-focus.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-test-focus.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/check-viewer-contracts.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/hooks-doctor.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/hooks-install.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/mock-server.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/baseline-complexity-capture.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/baseline-complexity-source-capture.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/quality-policy/baseline-coverage-capture.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/quality-policy/baseline-test-inventory.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/quality-policy/canonical_json.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/check-coverage-inventory.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/check-hotspot-budgets.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/command-graph.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/complexity-baseline.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/complexity-budget.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/complexity-findings-capture.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/complexity-scan.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/coverage-floor-baseline.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/coverage-floors.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/developer-python.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/format-scope.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/generate_baseline_complexity_source_capture.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/generate_baseline_coverage_capture.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/generate_baseline_test_inventory.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/generate_rule_parity_ledger.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/generate_verified_baseline.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/quality-policy/generate-format-scope.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/hotspot-budgets.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/planned-quality-fixtures.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/quality-policy/rule-parity-ledger.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/quality-policy/run-format.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/semver-corpus.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/test-exception-baseline.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/test-inventory.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/test-inventory.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/typecheck-source.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/verified-baseline.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/release_manifest.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/release-create.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/release-git.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/release-prepare.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/release-runtime.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/release-version.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/release-zip.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/setup.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/viewer-harness.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tsconfig.checkjs.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tsconfig.tests.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "types/polarrecorder-globals.d.ts",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/advanced-settings.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/dom.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/enhanced-settings.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/export-fields.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/export-presets.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/export-ui.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/grid-editor.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/icon.svg",
+      "owner": "unsupported",
+      "reason": "Prettier's SVG support is XML-as-HTML best-effort only; this repo's one icon is hand-authored and reviewed, not machine-formatted",
+      "alternateValidation": "manual review on change"
+    },
+    {
+      "path": "viewer/import-upload.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/placeholders.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/polar-chart-geometry.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/polar-chart.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/presets.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/settings-ui.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/status-ui.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/theme.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/timeline-chart.js",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer-nav-actions.css",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer-settings-and-responsive.css",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer-shell.css",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer-status-and-chart.css",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer.html",
+      "owner": "prettier"
+    },
+    {
+      "path": "viewer/viewer.js",
+      "owner": "prettier"
+    }
+  ],
+  "countByOwner": {
+    "unsupported": 28,
+    "prettier": 147,
+    "ruff": 99
+  }
+}

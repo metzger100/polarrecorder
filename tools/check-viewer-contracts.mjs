@@ -31,10 +31,14 @@ import {
 const VIEWER_MODULES = [
   "placeholders.js",
   "dom.js",
+  "status-ui.js",
   "presets.js",
   "grid-editor.js",
+  "polar-chart-geometry.js",
   "polar-chart.js",
   "timeline-chart.js",
+  "export-fields.js",
+  "export-presets.js",
   "export-ui.js",
   "enhanced-settings.js",
   "advanced-settings.js",
@@ -49,10 +53,38 @@ const TABS = ["polar", "status", "timeline", "export", "settings"];
 // instead of routed to a placeholder.
 const LEAK_PATTERNS = [/\bNaN\b/, /\bundefined\b/, /\bnull\b/];
 
+/**
+ * @typedef {{ data: unknown, status: string }} ApiResponseBody
+ */
+
+/**
+ * @typedef {(endpoint: string) => ApiResponseBody} ViewerResponder
+ */
+
+/**
+ * @typedef {Object} ViewerContractsOptions
+ * @property {string} [root]
+ * @property {boolean} [print]
+ */
+
+/**
+ * @typedef {Object} ViewerContractsResult
+ * @property {boolean} ok
+ * @property {string[]} failures
+ */
+
+/**
+ * @param {string} text
+ * @returns {string[]}
+ */
 export function findLeakTokens(text) {
   return LEAK_PATTERNS.filter((pattern) => pattern.test(text)).map((pattern) => pattern.source);
 }
 
+/**
+ * @param {Record<string, unknown>} statusOverrides
+ * @returns {ViewerResponder}
+ */
 function statusResponder(statusOverrides) {
   return function (endpoint) {
     if (endpoint.startsWith("status")) return ok(statusPayload(statusOverrides));
@@ -60,11 +92,17 @@ function statusResponder(statusOverrides) {
   };
 }
 
+/**
+ * @param {string} root
+ * @param {ViewerResponder | null} responder
+ * @returns {Promise<Record<string, string>>}
+ */
 async function renderAllPanels(root, responder) {
   const env = createEnvironment(responder ? { responder } : {});
   for (const name of VIEWER_MODULES) loadViewerFile(env, name, root);
   env.fireDOMContentLoaded();
   await flushViewer();
+  /** @type {Record<string, string>} */
   const panelText = {};
   for (const tab of TABS) {
     env.clickTab(tab);
@@ -74,53 +112,77 @@ async function renderAllPanels(root, responder) {
   return panelText;
 }
 
+/**
+ * @param {ViewerContractsOptions} [options]
+ * @returns {Promise<ViewerContractsResult>}
+ */
 export async function runViewerContracts({ root = process.cwd(), print = true } = {}) {
+  /** @type {string[]} */
   const failures = [];
 
   const healthy = await renderAllPanels(root, null);
   for (const [id, text] of Object.entries(healthy)) {
     for (const token of findLeakTokens(text)) {
-      failures.push(`viewer-render-no-sentinel: ${id} rendered a '${token}' token on a healthy payload`);
+      failures.push(
+        `viewer-render-no-sentinel: ${id} rendered a '${token}' token on a healthy payload`
+      );
     }
   }
 
-  const absent = await renderAllPanels(root, statusResponder({ current_values: null, warming_up: true }));
+  const absent = await renderAllPanels(
+    root,
+    statusResponder({ current_values: null, warming_up: true })
+  );
   const absentStatus = absent["status-panel"];
   if (!absentStatus.includes("No Data")) {
-    failures.push("viewer-absent-placeholder: absent current_values must render 'No Data', not a sentinel");
+    failures.push(
+      "viewer-absent-placeholder: absent current_values must render 'No Data', not a sentinel"
+    );
   }
   for (const token of findLeakTokens(absentStatus)) {
-    failures.push(`viewer-absent-placeholder: status-panel rendered a '${token}' token for absent current_values`);
+    failures.push(
+      `viewer-absent-placeholder: status-panel rendered a '${token}' token for absent current_values`
+    );
   }
 
-  const zeros = await renderAllPanels(root, statusResponder({
-    current_values: {
-      stw_age_s: 0,
-      stw_kt: 0,
-      stw_stale: false,
-      twa_age_s: 0,
-      twa_deg: 0,
-      twa_stale: false,
-      tws_age_s: 0,
-      tws_kt: 0,
-      tws_stale: false
-    }
-  }));
+  const zeros = await renderAllPanels(
+    root,
+    statusResponder({
+      current_values: {
+        stw_age_s: 0,
+        stw_kt: 0,
+        stw_stale: false,
+        twa_age_s: 0,
+        twa_deg: 0,
+        twa_stale: false,
+        tws_age_s: 0,
+        tws_kt: 0,
+        tws_stale: false
+      }
+    })
+  );
   const zeroStatus = zeros["status-panel"];
   if (!zeroStatus.includes("0.0")) {
-    failures.push("viewer-falsy-preservation: a zero reading must render '0.0', not be clobbered to a placeholder");
+    failures.push(
+      "viewer-falsy-preservation: a zero reading must render '0.0', not be clobbered to a placeholder"
+    );
   }
   if (zeroStatus.includes("No Data")) {
-    failures.push("viewer-falsy-preservation: a present zero reading must not fall back to 'No Data'");
+    failures.push(
+      "viewer-falsy-preservation: a present zero reading must not fall back to 'No Data'"
+    );
   }
   for (const token of findLeakTokens(zeroStatus)) {
-    failures.push(`viewer-falsy-preservation: status-panel rendered a '${token}' token for zero readings`);
+    failures.push(
+      `viewer-falsy-preservation: status-panel rendered a '${token}' token for zero readings`
+    );
   }
 
   if (print) reportViewerContracts(failures);
   return { ok: failures.length === 0, failures };
 }
 
+/** @param {string[]} failures */
 function reportViewerContracts(failures) {
   if (failures.length > 0) {
     for (const failure of failures) console.error(`[viewer-contracts] ${failure}`);
@@ -131,6 +193,7 @@ function reportViewerContracts(failures) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const result = await runViewerContracts();
-  process.exit(result.ok ? 0 : 1);
+  runViewerContracts().then(function (result) {
+    process.exit(result.ok ? 0 : 1);
+  });
 }

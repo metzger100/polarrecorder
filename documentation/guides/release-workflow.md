@@ -37,26 +37,26 @@ Step-by-step release flow:
 
 1. Prepare release context.
 
-```bash
-npm run release:prepare
-```
+   ```bash
+   npm run release:prepare
+   ```
 
 2. Review the JSON evidence and decide the next SemVer version from actual user and compatibility impact.
 3. Write concrete user-facing release notes directly in the canonical release notes file:
    `releases/polarrecorder-X.Y.Z[-prerelease][+build].md`.
 
-```bash
-$EDITOR releases/polarrecorder-X.Y.Z.md
-```
+   ```bash
+   $EDITOR releases/polarrecorder-X.Y.Z.md
+   ```
 
 4. Create the release artifacts, commit, and annotated tag.
 
-```bash
-npm run release:create -- --version=X.Y.Z
-```
+   ```bash
+   npm run release:create -- --version=X.Y.Z
+   ```
 
 `release:create` accepts full SemVer release versions, including prereleases
-such as `1.0.0-beta.1`. It runs the required gate (`tools/check-all.sh`), builds
+such as `1.0.0-beta.1`. It runs the required gate (`npm run check:all`), builds
 the runtime zip with `python tools/release-zip.py --version <version>`, validates
 it with `python tools/check-release.py`, commits the zip and notes, and creates
 an annotated `v<version>` tag.
@@ -87,10 +87,10 @@ GitHub release publishing:
 
 SemVer decision guide:
 
-| Bump | Use when |
-|---|---|
-| Major | Breaking user-facing behavior, incompatible data/config/runtime contracts, or required migration |
-| Minor | New user-facing capability or non-breaking runtime behavior that exposes new functionality |
+| Bump  | Use when                                                                                                   |
+| ----- | ---------------------------------------------------------------------------------------------------------- |
+| Major | Breaking user-facing behavior, incompatible data/config/runtime contracts, or required migration           |
+| Minor | New user-facing capability or non-breaking runtime behavior that exposes new functionality                 |
 | Patch | Bug fixes, stability fixes, documentation, tests, refactors, release tooling, and non-breaking maintenance |
 
 Release notes writing guide:
@@ -104,13 +104,13 @@ Release notes writing guide:
 
 Troubleshooting:
 
-| Symptom | Likely Cause | Fix |
-|---|---|---|
-| `release:create` fails on `tools/check-all.sh` | Lint, typing, test, docs, release, or viewer gate failure | Run `tools/check-all.sh`, fix all failures, rerun release |
-| `release:create` fails on notes | Missing or empty companion notes file | Create `releases/polarrecorder-X.Y.Z.md` and rerun |
-| `release:create` fails with duplicate tag | `vX.Y.Z` already exists | Choose next version or delete/retarget the tag intentionally |
-| Zip contains unexpected files | Runtime allowlist drift | Update `tools/release_manifest.py` deliberately and rerun the gate |
-| GitHub workflow fails on missing artifacts | Tag points at a commit without matching zip or notes | Commit both files, retag intentionally, and push the corrected tag |
+| Symptom                                       | Likely Cause                                              | Fix                                                                |
+| --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `release:create` fails on `npm run check:all` | Lint, typing, test, docs, release, or viewer gate failure | Run `npm run check:all`, fix all failures, rerun release           |
+| `release:create` fails on notes               | Missing or empty companion notes file                     | Create `releases/polarrecorder-X.Y.Z.md` and rerun                 |
+| `release:create` fails with duplicate tag     | `vX.Y.Z` already exists                                   | Choose next version or delete/retarget the tag intentionally       |
+| Zip contains unexpected files                 | Runtime allowlist drift                                   | Update `tools/release_manifest.py` deliberately and rerun the gate |
+| GitHub workflow fails on missing artifacts    | Tag points at a commit without matching zip or notes      | Commit both files, retag intentionally, and push the corrected tag |
 
 ## Related
 

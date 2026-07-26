@@ -10,3 +10,6 @@ htmlcov/
 *.egg-info/
 .ruff_cache/
 misc/
+venv/
+.hypothesis/
+coverage/

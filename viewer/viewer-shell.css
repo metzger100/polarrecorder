@@ -1,0 +1,222 @@
+:root {
+  --polarrecorder-fore-color: black;
+  --polarrecorder-back-color: white;
+  --polarrecorder-main-color: #546e7a;
+  --polarrecorder-second-color: #e6e6e6;
+  --polarrecorder-attention-color: #c62828;
+  --polarrecorder-active-color: #1de9b6;
+  --polarrecorder-border-color: #acacac;
+  --polarrecorder-widget-head-color: #e2dfdf;
+  --polarrecorder-accepted-color: #1de9b6;
+  --polarrecorder-rejected-color: #ff8a80;
+  --polarrecorder-quarantined-color: #ffd54f;
+  --polarrecorder-surface-color: #f8fafa;
+  --polarrecorder-surface-variant: #eef2f3;
+  --polarrecorder-shadow-color: rgb(31 43 48 / 18%);
+  --polarrecorder-radius-card: 1.1429rem;
+  --polarrecorder-radius-control: 999em;
+  --polarrecorder-font-stack: verdana, arial, sans-serif;
+}
+
+.nightMode {
+  --polarrecorder-fore-color: rgb(252 11 11 / 60%);
+  --polarrecorder-back-color: black;
+  --polarrecorder-main-color: rgb(84 110 122 / 60%);
+  --polarrecorder-second-color: #5a5a5a;
+  --polarrecorder-attention-color: rgb(198 40 40 / 60%);
+  --polarrecorder-active-color: rgb(252 11 11 / 60%);
+  --polarrecorder-border-color: rgb(252 11 11 / 60%);
+  --polarrecorder-widget-head-color: rgb(50 47 47 / 60%);
+  --polarrecorder-accepted-color: rgb(252 11 11 / 50%);
+  --polarrecorder-rejected-color: rgb(252 11 11 / 30%);
+  --polarrecorder-quarantined-color: rgb(255 213 79 / 70%);
+  --polarrecorder-surface-color: #090909;
+  --polarrecorder-surface-variant: #151515;
+  --polarrecorder-shadow-color: rgb(252 11 11 / 12%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: var(--polarrecorder-font-stack);
+  font-size: 87.5%;
+}
+
+body {
+  margin: 0;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select,
+input[type="number"],
+input[type="text"] {
+  font-size: 1.1429rem;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.polarrecorder-app {
+  padding-bottom: 6.1429rem;
+  background: var(--polarrecorder-back-color);
+  color: var(--polarrecorder-fore-color);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.1429rem;
+  padding: 0.8571rem 1.1429rem;
+  background: var(--polarrecorder-second-color);
+  color: var(--polarrecorder-fore-color);
+  box-shadow: 0 0.1429rem 0.5714rem var(--polarrecorder-shadow-color);
+}
+
+.nightMode .app-header {
+  color: var(--polarrecorder-fore-color);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin-bottom: 0.2143rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  opacity: 0.76;
+  text-transform: uppercase;
+}
+
+.tab-shell {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.1429rem;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.is-active {
+  display: block;
+}
+
+.connection-banner {
+  position: sticky;
+  top: 4.8571rem;
+  z-index: 19;
+  padding: 0.7143rem 1.1429rem;
+  background: var(--polarrecorder-attention-color);
+  color: white;
+  font-weight: 700;
+  text-align: center;
+}
+
+.card {
+  overflow: hidden;
+  border: 0.0714rem solid color-mix(in srgb, var(--polarrecorder-border-color) 65%, transparent);
+  border-radius: var(--polarrecorder-radius-card);
+  background: var(--polarrecorder-surface-color);
+  box-shadow: 0 0.1429rem 0.5714rem var(--polarrecorder-shadow-color);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.1429rem;
+  padding: 1rem;
+  background: var(--polarrecorder-widget-head-color);
+}
+
+.chart-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  height: calc(100svh - 12.5rem);
+}
+
+.chart-host {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  padding: 0.8571rem;
+}
+
+.loading-host {
+  display: grid;
+  place-items: center;
+  padding-block: 7.8571rem;
+  color: var(--polarrecorder-main-color);
+  font-weight: 700;
+}
+
+.loading-host::before {
+  width: 2.1429rem;
+  height: 2.1429rem;
+  margin-right: 0.7143rem;
+  border: 0.2143rem solid var(--polarrecorder-second-color);
+  border-top-color: var(--polarrecorder-active-color);
+  border-radius: 50%;
+  animation: polarrecorder-spin 900ms linear infinite;
+  content: "";
+}
+
+.loading-host.has-data::before {
+  display: none;
+}
+
+.loading-host.has-data {
+  padding-block: 0;
+}
+
+@keyframes polarrecorder-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

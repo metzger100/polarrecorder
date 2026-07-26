@@ -12,6 +12,36 @@ const LATE_WIRED_MODULES = new Set([
   "viewer/grid-editor.js"
 ]);
 
+/**
+ * @typedef {Object} ViewerJsFile
+ * @property {string} abs
+ * @property {string} rel
+ */
+
+/**
+ * @typedef {Object} DependencyCheckOptions
+ * @property {string} [root]
+ * @property {boolean} [print]
+ */
+
+/**
+ * @typedef {Object} DependencySummary
+ * @property {boolean} ok
+ * @property {number} checkedJsFiles
+ * @property {number} failures
+ */
+
+/**
+ * @typedef {Object} DependencyCheckResult
+ * @property {boolean} ok
+ * @property {string[]} failures
+ * @property {DependencySummary} summary
+ */
+
+/**
+ * @param {DependencyCheckOptions} [options]
+ * @returns {DependencyCheckResult}
+ */
 export function runDependencyCheck({ root = process.cwd(), print = true } = {}) {
   const viewerRoot = path.join(root, "viewer");
   const failures = [];
@@ -34,6 +64,10 @@ export function runDependencyCheck({ root = process.cwd(), print = true } = {}) 
   return { ok: summary.ok, failures, summary };
 }
 
+/**
+ * @param {string[]} failures
+ * @param {DependencySummary} summary
+ */
 function reportDependencies(failures, summary) {
   if (failures.length > 0) {
     for (const failure of failures) console.error(`[dependencies] ${failure}`);
@@ -44,15 +78,25 @@ function reportDependencies(failures, summary) {
   console.log("SUMMARY_JSON=" + JSON.stringify(summary));
 }
 
+/**
+ * @param {string} viewerRoot
+ * @returns {ViewerJsFile[]}
+ */
 function collectViewerJsFiles(viewerRoot) {
   if (!fs.existsSync(viewerRoot)) return [];
-  return fs.readdirSync(viewerRoot)
+  return fs
+    .readdirSync(viewerRoot)
     .filter((name) => name.endsWith(".js"))
     .sort()
     .map((name) => ({ abs: path.join(viewerRoot, name), rel: `viewer/${name}` }));
 }
 
+/**
+ * @param {ViewerJsFile[]} jsFiles
+ * @returns {Map<string, string>}
+ */
 function mapDefinitions(jsFiles) {
+  /** @type {Map<string, string>} */
   const out = new Map();
   for (const file of jsFiles) {
     const content = fs.readFileSync(file.abs, "utf8");
@@ -63,27 +107,45 @@ function mapDefinitions(jsFiles) {
   return out;
 }
 
+/**
+ * @param {ViewerJsFile[]} jsFiles
+ * @param {Map<string, string>} definitionMap
+ * @returns {Map<string, Set<string>>}
+ */
 function mapReferences(jsFiles, definitionMap) {
-  const out = new Map(jsFiles.map((file) => [file.rel, new Set()]));
+  /** @type {Map<string, Set<string>>} */
+  const out = new Map();
+  for (const file of jsFiles) out.set(file.rel, new Set());
   for (const file of jsFiles) {
     const content = fs.readFileSync(file.abs, "utf8");
     for (const match of content.matchAll(/Polarrecorder\.([A-Za-z_$][\w$]*)/g)) {
       const owner = definitionMap.get(match[1]);
-      if (owner && owner !== file.rel) out.get(file.rel).add(owner);
+      if (owner && owner !== file.rel) {
+        const bucket = out.get(file.rel);
+        if (!bucket) throw new Error(`missing reference bucket for ${file.rel}`);
+        bucket.add(owner);
+      }
     }
   }
   return out;
 }
 
+/**
+ * @param {Map<string, Set<string>>} referenceGraph
+ * @returns {string[][]}
+ */
 function findCycles(referenceGraph) {
+  /** @type {string[][]} */
   const cycles = [];
   const visiting = new Set();
   const visited = new Set();
+  /** @type {string[]} */
   const stack = [];
 
   for (const node of referenceGraph.keys()) visit(node);
   return cycles;
 
+  /** @param {string} node */
   function visit(node) {
     if (visiting.has(node)) {
       cycles.push(stack.slice(stack.indexOf(node)).concat(node));
@@ -99,6 +161,11 @@ function findCycles(referenceGraph) {
   }
 }
 
+/**
+ * @param {ViewerJsFile[]} jsFiles
+ * @param {Map<string, string>} definitionMap
+ * @param {string[]} failures
+ */
 function checkViewerModuleLoadReferences(jsFiles, definitionMap, failures) {
   const viewer = jsFiles.find((file) => file.rel === VIEWER_FILE);
   if (!viewer) return;

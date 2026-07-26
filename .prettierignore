@@ -1,0 +1,9 @@
+# tools/quality-policy/format-scope.json is the exact machine-readable disposition of
+# every maintained file; this file only excludes generated/historical trees that are
+# never Prettier's concern.
+node_modules/
+venv/
+coverage/
+.hypothesis/
+releases/
+exec-plans/completed/

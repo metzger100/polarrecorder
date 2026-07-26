@@ -10,6 +10,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const SHARED_TWS = [4, 6, 8, 10, 12, 14, 16, 20, 25];
   const WINDY_TWA = [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180];
+  /** @type {Record<string, string>} */
   const LABELS = {
     DefaultStarboard180: "Default (Starboard 180°)",
     DefaultPort180: "Default (Port 180°)",
@@ -17,6 +18,9 @@ window.Polarrecorder = window.Polarrecorder || {};
     windy: "Windy Passage Planner"
   };
 
+  /** @typedef {{name: string, builtin: boolean, twa: number[], tws: number[]}} Preset */
+
+  /** @returns {Preset[]} */
   function fallbackPresets() {
     return [
       {
@@ -36,7 +40,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     ];
   }
 
+  /**
+   * @param {number} min
+   * @param {number} max
+   * @returns {number[]}
+   */
   function range(min, max) {
+    /** @type {number[]} */
     const values = [];
     for (let angle = min; angle <= max; angle += 15) {
       values.push(angle);
@@ -44,10 +54,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     return values;
   }
 
+  /**
+   * @param {Preset} preset
+   * @returns {string}
+   */
   function presetLabel(preset) {
     if (!preset.builtin) return preset.name;
     return LABELS[preset.name] || preset.name;
   }
 
   Polarrecorder.Presets = { Fallback: fallbackPresets, Label: presetLabel };
-}());
+})();

@@ -17,7 +17,11 @@ line-length = 100
 # tools/ is dev-only CLI tooling (print()-based output, http.server, etc.) and is exempt
 # from ruff, consistent with its existing exemption from mypy, the file-size limit, and
 # header checks. extend-exclude (not per-file-ignores) so `ruff format --check` skips it too.
-extend-exclude = ["tools"]
+# "*.md" is excluded because Ruff's default file_resolver.include now contains "*.md" and
+# formats embedded Python fenced code blocks in Markdown; Markdown is Prettier's format
+# domain, not Ruff's, and this default once caused `ruff format --check .` to want to
+# reformat historical exec-plans/completed/PLAN1.md.
+extend-exclude = ["tools", "*.md"]
 
 [tool.ruff.lint]
 select = [
@@ -99,10 +103,11 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["polarrecorder"]
-# Coverage is gated on server/polarrecorder/ only. plugin.py is the AvNav integration boundary and is
-# exercised by test_plugin_integration.py but NOT included in the 90% gate; its ~70%
-# figure in "Coverage Targets" is an informational guideline, not an enforced threshold
-# (it cannot be unit-tested fully without a real AvNav server).
+# `[tool.coverage.run] source` only affects a bare `coverage run` invocation; the actual
+# gate (`npm run test:coverage:python`) passes explicit `--cov=polarrecorder --cov=plugin`
+# on the pytest-cov command line, so plugin.py is measured too. Its own combined
+# line+branch floor is enforced by tools/quality-policy/check-coverage-inventory.mjs,
+# not by this section.
 
 [tool.coverage.report]
 fail_under = 90

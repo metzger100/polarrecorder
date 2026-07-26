@@ -10,11 +10,11 @@ AvNav routes plugin API requests and static file requests under the plugin base 
 
 Base paths:
 
-| Path | Behavior |
-|---|---|
-| `/plugins/<runtime-plugin-name>/api/<endpoint>` | Routed to the request handler registered by `plugin.py`. |
+| Path                                                | Behavior                                                 |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| `/plugins/<runtime-plugin-name>/api/<endpoint>`     | Routed to the request handler registered by `plugin.py`. |
 | `/plugins/<runtime-plugin-name>/viewer/viewer.html` | Serves the static viewer HTML registered by `plugin.py`. |
-| `/plugins/<runtime-plugin-name>/viewer/*` | Serves viewer CSS, JavaScript, SVG, and icon files. |
+| `/plugins/<runtime-plugin-name>/viewer/*`           | Serves viewer CSS, JavaScript, SVG, and icon files.      |
 
 For user-plugin installs AvNav prefixes the runtime plugin name with `user-`,
 so the direct viewer URL is normally

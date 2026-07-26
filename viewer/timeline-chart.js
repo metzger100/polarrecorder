@@ -8,14 +8,22 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
+  /** @type {"http://www.w3.org/2000/svg"} */
   const SVG_NS = "http://www.w3.org/2000/svg";
   const HEIGHT = 150;
   const PAD = 18;
   const WIDTH = 684;
 
+  /** @typedef {{t: number, accepted: number, rejected: number, quarantined: number, reasons?: Record<string, number>}} TimelineBucket */
+  /** @typedef {{buckets: TimelineBucket[]}} TimelineData */
+
+  /**
+   * @param {TimelineData} data
+   * @param {number} minutes
+   */
   function render(data, minutes) {
     renderButtons(minutes);
-    const host = document.getElementById("timeline-chart");
+    const host = Polarrecorder.Dom.RequireById("timeline-chart");
     Polarrecorder.Dom.Clear(host);
     const buckets = (data && data.buckets) || [];
     const svg = svgNode("svg");
@@ -25,7 +33,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     svg.setAttribute("aria-label", "Decision timeline");
     addFrame(svg);
     if (buckets.length === 0) {
-      svg.appendChild(label(360, 95, "No timeline data yet"));
+      svg.appendChild(Polarrecorder.Dom.SvgText(360, 95, "No timeline data yet", "12", "middle"));
       host.appendChild(svg);
       return;
     }
@@ -35,10 +43,17 @@ window.Polarrecorder = window.Polarrecorder || {};
     host.appendChild(svg);
   }
 
+  /** @param {number} activeMinutes */
   function renderButtons(activeMinutes) {
-    const host = document.getElementById("timeline-ranges");
+    const host = Polarrecorder.Dom.RequireById("timeline-ranges");
     Polarrecorder.Dom.Clear(host);
-    [[30, "30 min"], [60, "1 h"], [240, "4 h"]].forEach(function (item) {
+    /** @type {Array<[number, string]>} */
+    const ranges = [
+      [30, "30 min"],
+      [60, "1 h"],
+      [240, "4 h"]
+    ];
+    ranges.forEach(function (item) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "state-layer" + (item[0] === activeMinutes ? " is-active" : "");
@@ -51,6 +66,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
+  /** @param {SVGSVGElement} svg */
   function addFrame(svg) {
     const bg = svgNode("rect");
     bg.setAttribute("x", String(PAD));
@@ -61,8 +77,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     svg.appendChild(bg);
   }
 
+  /** @param {SVGSVGElement} svg */
   function addLegend(svg) {
-    [["Accepted", "accepted"], ["Rejected", "rejected"], ["Quarantined", "quarantined"]].forEach(function (item, index) {
+    [
+      ["Accepted", "accepted"],
+      ["Rejected", "rejected"],
+      ["Quarantined", "quarantined"]
+    ].forEach(function (item, index) {
       const x = 26 + index * 145;
       const dot = svgNode("circle");
       dot.setAttribute("cx", String(x));
@@ -70,12 +91,17 @@ window.Polarrecorder = window.Polarrecorder || {};
       dot.setAttribute("r", "6");
       dot.setAttribute("fill", decisionColor(item[1]));
       svg.appendChild(dot);
-      const text = label(x + 12, 232, item[0]);
+      const text = Polarrecorder.Dom.SvgText(x + 12, 232, item[0], "12", "middle");
       text.setAttribute("text-anchor", "start");
       svg.appendChild(text);
     });
   }
 
+  /**
+   * @param {SVGSVGElement} svg
+   * @param {number} minutes
+   * @param {number} now
+   */
   function addScale(svg, minutes, now) {
     const marks = [0, 0.25, 0.5, 0.75, 1];
     marks.forEach(function (mark) {
@@ -87,15 +113,34 @@ window.Polarrecorder = window.Polarrecorder || {};
       line.setAttribute("y2", String(PAD + HEIGHT + 14));
       line.setAttribute("stroke", "var(--polarrecorder-border-color)");
       svg.appendChild(line);
-      svg.appendChild(label(x, PAD + HEIGHT + 32, scaleLabel(mark, minutes, now)));
+      svg.appendChild(
+        Polarrecorder.Dom.SvgText(
+          x,
+          PAD + HEIGHT + 32,
+          scaleLabel(mark, minutes, now),
+          "12",
+          "middle"
+        )
+      );
     });
   }
 
+  /**
+   * @param {number} mark
+   * @param {number} minutes
+   * @param {number} now
+   * @returns {string}
+   */
   function scaleLabel(mark, minutes, now) {
     const seconds = now - minutes * 60 * (1 - mark);
     return new Date(seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
+  /**
+   * @param {SVGSVGElement} svg
+   * @param {TimelineBucket[]} buckets
+   * @param {number} minutes
+   */
   function drawBuckets(svg, buckets, minutes) {
     const now = timelineNow(buckets);
     const start = now - minutes * 60;
@@ -108,23 +153,40 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
+  /**
+   * @param {TimelineBucket[]} buckets
+   * @returns {number}
+   */
   function timelineNow(buckets) {
-    return Math.max.apply(null, buckets.map(function (bucket) {
-      return bucket.t;
-    })) + 60;
+    return (
+      Math.max.apply(
+        null,
+        buckets.map(function (bucket) {
+          return bucket.t;
+        })
+      ) + 60
+    );
   }
 
+  /**
+   * @param {SVGSVGElement} svg
+   * @param {TimelineBucket} bucket
+   * @param {number} x
+   * @param {number} width
+   */
   function addBucket(svg, bucket, x, width) {
     const total = bucket.accepted + bucket.rejected + bucket.quarantined;
     if (total <= 0) return;
     let y = PAD;
-    [
+    /** @type {Array<[string, number]>} */
+    const parts = [
       ["accepted", bucket.accepted],
       ["rejected", bucket.rejected],
       ["quarantined", bucket.quarantined]
-    ].forEach(function (part) {
+    ];
+    parts.forEach(function (part) {
       if (part[1] <= 0) return;
-      const height = HEIGHT * part[1] / total;
+      const height = (HEIGHT * part[1]) / total;
       const rect = svgNode("rect");
       rect.setAttribute("x", x.toFixed(1));
       rect.setAttribute("y", y.toFixed(1));
@@ -139,45 +201,60 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
+  /**
+   * @param {TimelineBucket} bucket
+   * @returns {string}
+   */
   function bucketText(bucket) {
     const date = new Date(bucket.t * 1000);
     const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const reasons = Object.keys(bucket.reasons || {}).sort(function (a, b) {
-      return bucket.reasons[b] - bucket.reasons[a];
-    }).slice(0, 3).map(function (reason) {
-      return reason + " ×" + String(bucket.reasons[reason]);
-    }).join(", ");
-    const counts = String(bucket.accepted) + " accepted · "
-      + String(bucket.rejected) + " rejected · "
-      + String(bucket.quarantined) + " quarantined";
+    const reasonCounts = bucket.reasons || {};
+    const reasons = Object.keys(reasonCounts)
+      .sort(function (a, b) {
+        return reasonCounts[b] - reasonCounts[a];
+      })
+      .slice(0, 3)
+      .map(function (reason) {
+        return reason + " ×" + String(reasonCounts[reason]);
+      })
+      .join(", ");
+    const counts =
+      String(bucket.accepted) +
+      " accepted · " +
+      String(bucket.rejected) +
+      " rejected · " +
+      String(bucket.quarantined) +
+      " quarantined";
     return time + " · " + counts + (reasons ? " · " + reasons : "");
   }
 
+  /**
+   * @param {string} name
+   * @returns {string}
+   */
   function decisionColor(name) {
     if (name === "accepted") return "var(--polarrecorder-accepted-color)";
     if (name === "rejected") return "var(--polarrecorder-rejected-color)";
     return "var(--polarrecorder-quarantined-color)";
   }
 
+  /**
+   * @template {keyof SVGElementTagNameMap} K
+   * @param {K} tag
+   * @returns {SVGElementTagNameMap[K]}
+   */
   function svgNode(tag) {
     return document.createElementNS(SVG_NS, tag);
   }
 
-  function label(x, y, textValue) {
-    const text = svgNode("text");
-    text.setAttribute("x", String(x));
-    text.setAttribute("y", String(y));
-    text.setAttribute("fill", "var(--polarrecorder-fore-color)");
-    text.setAttribute("font-size", "12");
-    text.setAttribute("text-anchor", "middle");
-    text.textContent = textValue;
-    return text;
-  }
-
+  /**
+   * @param {string} text
+   * @param {number} x
+   * @param {number} y
+   */
   function showTooltip(text, x, y) {
-    const fn = Polarrecorder["ShowTooltip"];
-    if (fn) fn(text, x, y);
+    Polarrecorder.Dom.ShowTooltip(text, x, y);
   }
 
   Polarrecorder.TimelineChart = { Render: render };
-}());
+})();

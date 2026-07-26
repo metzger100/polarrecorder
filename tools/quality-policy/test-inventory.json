@@ -1,0 +1,117 @@
+{
+  "note": "Committed executable JS test/helper inventory. Regenerate with `node tools/quality-policy/test-inventory.mjs --write` whenever a test/helper file is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
+  "executableTestHelpers": [
+    {
+      "path": "tests/js/agents-pointer.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/check-patterns.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/check-publisher-workflow.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/check-schema.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/command-graph.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/complexity-budget.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/coverage-inventory.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/eslint-config.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/format-scope.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/hooks.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/hotspot-budgets.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/install-script.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/js-checkers.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/plugin-entrypoints.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/release-create.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/release-git.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/release-prepare.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/release-version.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/setup.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/test-focus.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/test-inventory.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/typecheck-source.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-advanced.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-enhanced.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-polar.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-smoke.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-theme.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tools/viewer-harness.mjs",
+      "classification": "strict"
+    }
+  ]
+}

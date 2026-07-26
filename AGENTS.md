@@ -1,8 +1,8 @@
 # AGENTS.md - Project Standards & Workflow
 
-This file is guidance for agents working in this repository.
+This file is guidance for agents working in this repository. It is the sole canonical instruction
+owner; `CLAUDE.md` is a short pointer to it, not a copy.
 
-<!-- BEGIN SHARED_INSTRUCTIONS -->
 **Critical:** AGENTS.md is a routing map. Use it to find focused docs, not to store full implementation details.
 
 ---
@@ -24,7 +24,7 @@ If guidance conflicts, precedence is:
 3. `documentation/conventions/smell-prevention.md`
 4. Task-specific documentation
 
-Repo rules and core principles always override execution-plan instructions. An exec-plan in `exec-plans/` is the source of truth for *what to build*, but it cannot waive a mechanically enforced repo rule. In particular, the 400-line limit, the `tools/check-all.sh` gate, coverage thresholds, and blocking smells bind every phase even when the plan does not mention them — for example, if a phase would push a file past 400 lines, split it within that same phase rather than deferring. When a plan conflicts with a repo rule, amend the plan; do not work around the rule.
+Repo rules and core principles always override execution-plan instructions. An exec-plan in `exec-plans/` is the source of truth for _what to build_, but it cannot waive a mechanically enforced repo rule. In particular, the 400-line limit, the `tools/check-all.sh` gate, coverage thresholds, and blocking smells bind every phase even when the plan does not mention them — for example, if a phase would push a file past 400 lines, split it within that same phase rather than deferring. When a plan conflicts with a repo rule, amend the plan; do not work around the rule.
 
 ---
 
@@ -70,7 +70,7 @@ Documentation must be complete when added or changed. Do not leave stub sections
 Python:
 
 - Every Python file in `plugin.py`, `server/polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
-- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `plugin.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
+- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `viewer/*.css`, `viewer/*.html`, `plugin.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
 - `server/polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
 - All functions are typed; public functions have Google-style docstrings.
 - Ruff formatting and `mypy --strict` are binding.
@@ -99,10 +99,10 @@ State and threading:
 - Feature and API lookups: [documentation/TABLEOFCONTENTS.md](documentation/TABLEOFCONTENTS.md)
 - Non-negotiable project rules: [documentation/core-principles.md](documentation/core-principles.md)
 - Root structural orientation map: [ARCHITECTURE.md](ARCHITECTURE.md)
-- AvNav host contracts: [documentation/avnav/](documentation/avnav/)
-- Runtime architecture docs: [documentation/architecture/](documentation/architecture/)
-- Validation and poisoning docs: [documentation/filters/](documentation/filters/)
-- Step-by-step maintenance workflows: [documentation/guides/](documentation/guides/)
+- AvNav host contracts: [documentation/avnav/](documentation/TABLEOFCONTENTS.md#avnav-integration)
+- Runtime architecture docs: [documentation/architecture/](documentation/TABLEOFCONTENTS.md#architecture)
+- Validation and poisoning docs: [documentation/filters/](documentation/TABLEOFCONTENTS.md#validation-and-poisoning-resistance)
+- Step-by-step maintenance workflows: [documentation/guides/](documentation/TABLEOFCONTENTS.md#maintenance-guides)
 - `plugin.py`: thin AvNav integration shell only.
 - `server/polarrecorder/`: domain logic, no AvNav dependency.
 - `tests/`: unit and integration tests with fakes.
@@ -121,7 +121,7 @@ State and threading:
 - [ ] Reused existing helpers instead of duplicating them, and avoided the forbidden anti-patterns in Section 8.
 - [ ] Synced fixtures and tests in the same task when validation, export/import, persistence, or API shapes changed (Section 10).
 - [ ] Updated `documentation/TABLEOFCONTENTS.md` when adding, moving, or deleting docs.
-- [ ] Preserved the shared instruction block in `AGENTS.md` and `CLAUDE.md`.
+- [ ] Kept `CLAUDE.md` a short pointer to `AGENTS.md` and the mandatory preflight files, never a re-expanded duplicate.
 - [ ] Ran `tools/check-all.sh` before handoff for normal development work.
 
 ---
@@ -129,9 +129,9 @@ State and threading:
 ## 6. Smell Prevention & Fail-Closed Rules
 
 - Mandatory on every task: follow `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md`.
-- Blocking smells include AvNav imports in `server/polarrecorder/`, reverse imports from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic thresholds outside named config/constants, unsafe browser patterns, and dead commented-out code.
+- Blocking smells include AvNav imports in `server/polarrecorder/`, reverse imports from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic thresholds outside named config/constants, unsafe browser patterns, dead commented-out code, and citing a plan or phase number outside `exec-plans/` (see `documentation/guides/exec-plan-authoring.md`).
 - Required completion gate: `tools/check-all.sh`.
-- Documentation reachability and AI instruction sync are enforced by `npm run check:docs`.
+- Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run check:docs`.
 
 ---
 
@@ -194,8 +194,6 @@ When changing behavior with fixture or test coverage, update the related fixture
 2. Export/import format changes: update `tests/mock-data/export-windy.csv`, `tests/mock-data/export-json.json`, `tests/mock-data/presets.json`, and `tests/test_export.py`.
 3. `polar.json` schema, recovery, or migration changes: update `tests/mock-data/polar.json` and `tests/test_persistence.py`.
 4. API response shape changes: update `tests/mock-data/status.json`, `tests/mock-data/timeline.json`, and `tests/test_api_handlers.py`.
-5. Viewer behavior changes covered by `tools/test-viewer-*.mjs`: keep those checks green and extend them when new visuals are added.
+5. Viewer behavior changes covered by `tests/js/viewer-*.test.mjs`: keep those checks green and extend them when new visuals are added.
 
 Silent truncation of coverage (skipping a fixture, leaving a stale snapshot) is a fail-closed violation, not a follow-up.
-
-<!-- END SHARED_INSTRUCTIONS -->
