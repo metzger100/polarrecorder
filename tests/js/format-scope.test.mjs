@@ -67,7 +67,10 @@ test("known families classify as expected", () => {
   assert.equal(ownerOf(byPath, "install.sh"), "unsupported");
   assert.equal(ownerOf(byPath, "tests/mock-data/status.json"), "unsupported");
   assert.equal(ownerOf(byPath, "tests/mock-data/export-windy.csv"), "unsupported");
-  assert.equal(ownerOf(byPath, "tools/quality-policy/verified-baseline.json"), "unsupported");
+  assert.equal(
+    ownerOf(byPath, "tools/quality-policy/baseline-coverage-capture.json"),
+    "unsupported"
+  );
 });
 
 test("historical artifacts are excluded, not unsupported", () => {

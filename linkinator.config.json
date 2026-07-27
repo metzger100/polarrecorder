@@ -1,5 +1,0 @@
-{
-  "recurse": true,
-  "linksToSkip": ["https?://.*"],
-  "skip": ["node_modules", "venv", "coverage", "releases", "exec-plans/completed"]
-}

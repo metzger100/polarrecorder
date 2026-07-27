@@ -58,8 +58,15 @@ def git_ls_tree_blobs(commit: str, *paths: str) -> dict[str, str]:
         A mapping of repository-relative path to Git blob SHA-1, covering every regular
         file reachable under the given paths at the given commit.
     """
-    output = subprocess.run(
-        ["git", "ls-tree", "-r", commit, "--", *paths],
+    output = subprocess.run(  # noqa: S603 -- fixed local git invocation, no untrusted input
+        [  # noqa: S607 -- git is expected on PATH
+            "git",
+            "ls-tree",
+            "-r",
+            commit,
+            "--",
+            *paths,
+        ],
         cwd=REPO_ROOT,
         check=True,
         capture_output=True,
@@ -86,8 +93,8 @@ def git_blob_content(commit: str, path: str) -> str:
     Returns:
         The file's UTF-8 text content as committed at `commit`.
     """
-    return subprocess.run(
-        ["git", "show", f"{commit}:{path}"],
+    return subprocess.run(  # noqa: S603 -- fixed local git invocation, no untrusted input
+        ["git", "show", f"{commit}:{path}"],  # noqa: S607 -- git is expected on PATH
         cwd=REPO_ROOT,
         check=True,
         capture_output=True,

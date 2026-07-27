@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "avnav-plugin-base.schema.json",
+  "title": "AvNav plugin.json (generic base)",
+  "description": "Upstream-verified minimum shape for an AvNav plugin's plugin.json: a JSON object. The AvNav host loader does not itself require any specific property; individual plugin profiles compose this base with their own required/forbidden fields.",
+  "type": "object"
+}

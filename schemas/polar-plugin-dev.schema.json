@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "polar-plugin-dev.schema.json",
+  "title": "Polar Recorder plugin.json (development form)",
+  "description": "Composes the generic avnav-plugin-base schema with the Polar server-plugin development-form profile: no stamped 'version' (the release form stamps it) and no duplicate declarative 'userApps' registration (owned by plugin.py's runtime registerUserApp call, not plugin.json).",
+  "allOf": [
+    { "$ref": "avnav-plugin-base.schema.json" },
+    {
+      "type": "object",
+      "not": {
+        "anyOf": [{ "required": ["version"] }, { "required": ["userApps"] }]
+      }
+    }
+  ]
+}

@@ -223,11 +223,14 @@ def _check_header(path: Path, module: str, tree: ast.AST, all_deps: set[str]) ->
     declared = _declared_depends(ast.get_docstring(tree, clean=False))
     if declared is None:
         return [f"{rel}: module header is missing a 'Depends:' line"]
-    findings: list[str] = []
-    for missing in sorted(all_deps - declared):
-        findings.append(f"{rel}: imports '{missing}' but the 'Depends:' header omits it")
-    for stale in sorted(declared - all_deps):
-        findings.append(f"{rel}: 'Depends:' header lists '{stale}' but it is not imported")
+    findings: list[str] = [
+        f"{rel}: imports '{missing}' but the 'Depends:' header omits it"
+        for missing in sorted(all_deps - declared)
+    ]
+    findings.extend(
+        f"{rel}: 'Depends:' header lists '{stale}' but it is not imported"
+        for stale in sorted(declared - all_deps)
+    )
     return findings
 
 
@@ -267,7 +270,7 @@ def _check_cycles(graph: dict[str, set[str]]) -> list[str]:
 
     def visit(node: str) -> None:
         if node in visiting:
-            cycle = stack[stack.index(node) :] + [node]
+            cycle = [*stack[stack.index(node) :], node]
             findings.append("runtime import cycle: " + " -> ".join(cycle))
             return
         if node in visited:
@@ -344,17 +347,16 @@ def validate_layer_map(
             continue
         real_modules.add(name)
 
-    findings: list[str] = []
-    for name in sorted(real_modules - set(layers)):
-        findings.append(
-            f"layer-map-stale: module '{name}' has no layer; "
-            "assign it in the _LAYER_RANK map in check-py-dependencies.py"
-        )
-    for name in sorted(set(layers) - real_modules):
-        findings.append(
-            f"layer-map-stale: '{name}' is mapped to a layer but no such module "
-            "exists; fix the _LAYER_RANK map in check-py-dependencies.py"
-        )
+    findings: list[str] = [
+        f"layer-map-stale: module '{name}' has no layer; "
+        "assign it in the _LAYER_RANK map in check-py-dependencies.py"
+        for name in sorted(real_modules - set(layers))
+    ]
+    findings.extend(
+        f"layer-map-stale: '{name}' is mapped to a layer but no such module "
+        "exists; fix the _LAYER_RANK map in check-py-dependencies.py"
+        for name in sorted(set(layers) - real_modules)
+    )
     return findings
 
 

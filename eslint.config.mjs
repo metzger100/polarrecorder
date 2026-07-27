@@ -1,6 +1,10 @@
-// Activated as part of `lint` (package.json) once ESLint adoption debt was zero. Owns the
-// generic JS rules retired from tools/check-patterns.mjs (see
-// tools/quality-policy/rule-parity-ledger.json for the full rule-ownership split).
+// Activated as part of `lint` (package.json) once ESLint adoption debt was zero. Layers
+// @eslint/js's recommended rules (including no-undef, the generic dead-code/parse-error
+// family, etc.) under the Polar-specific rules retired from tools/check-patterns.mjs
+// (console.log, var, eval, bare isFinite, loose equality, ES-module syntax by scope, empty
+// catch, and dead code) so every maintained JS/MJS file -- shipped runtime and tools/ alike
+// -- gets the recommended baseline plus the repo-specific rules on top.
+import js from "@eslint/js";
 import globals from "globals";
 
 const classicScriptGlobals = {
@@ -18,6 +22,7 @@ const SUPPRESSION_COMMENT_TERMS = [
 ];
 
 const GENERIC_JS_RULES = {
+  ...js.configs.recommended.rules,
   eqeqeq: "error",
   "no-var": "error",
   "no-eval": "error",

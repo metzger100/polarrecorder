@@ -58,6 +58,7 @@ Start here for project documentation. Use the questions below to open the smalle
 - **How do docs stay synchronized with behavior?** -> [guides/documentation-maintenance.md](guides/documentation-maintenance.md)
 - **How do I write a multi-session execution plan?** -> [guides/exec-plan-authoring.md](guides/exec-plan-authoring.md)
 - **How are local release artifacts prepared and checked?** -> [guides/release-workflow.md](guides/release-workflow.md)
+- **What must be manually verified against a real AvNav host before publishing?** -> [guides/live-avnav-checklist.md](guides/live-avnav-checklist.md)
 
 ## Feature-Specific Lookups
 

@@ -28,7 +28,7 @@ npm run check:all
 Useful targeted checks:
 
 ```bash
-npm run check:docs
+npm run docs:check
 npm run check:fast
 python -m pytest tests/ --tb=short
 python tools/check-release.py --dry-run
@@ -51,12 +51,21 @@ Touchpoint matrix:
 | Release packaging, versioning, or install flow             | `documentation/guides/release-workflow.md`, `README.md`, companion release notes under `releases/`                                                                                                                                                                                                      |
 | Development workflow, checks, or agent guidance            | `documentation/guides/documentation-maintenance.md`, `documentation/conventions/quality-gates.md`, `documentation/conventions/coding-standards.md`, `documentation/conventions/smell-prevention.md`, `documentation/conventions/testing-infrastructure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` |
 
-Documentation checks:
+Documentation checks (all reached through `npm run docs:check`, in this order):
 
+- `markdownlint-cli2` (config: `.markdownlint-cli2.jsonc`) lints every non-excluded Markdown file's style.
+- `tools/check-doc-links-proof.mjs` runs a clean/broken fixture pair through the real Linkinator-based link checker before it runs against the real repo, so a silently-broken checker cannot pass by finding nothing.
+- `tools/check-doc-links.mjs` root-seeds Linkinator (`linkinator`) over every Prettier-owned Markdown file and fails on a broken local link or fragment; it uses a host-aware skip predicate so Linkinator's own ephemeral local serving origin is never mistaken for an external link.
 - `tools/check-docs.mjs` verifies that every documentation file is linked from `TABLEOFCONTENTS.md`.
 - `tools/check-doc-format.mjs` verifies required sections.
 - `tools/check-doc-reachability.mjs` verifies docs are reachable from `AGENTS.md` or `CLAUDE.md` and that markdown links exist.
+- `tools/check-smell-catalog.mjs` verifies `documentation/conventions/smell-prevention.md` lists exactly the required smell rules, with no duplicates, and that every executable checker rule ID appears in the catalog text.
 - `tools/check-agents-pointer.mjs` verifies `CLAUDE.md` stays a short, valid pointer to `AGENTS.md` (the sole canonical instruction owner) plus the mandatory preflight files, never a re-expanded duplicate.
+
+Related non-Markdown documentation-adjacent checks:
+
+- `npm run schema:check` (Ajv, `tools/check-schema.mjs`) validates `plugin.json`'s dev and release forms against `schemas/polar-plugin-dev.schema.json`/`schemas/polar-plugin-release.schema.json`; update the schema (and the shared corpus in `tools/quality-policy/plugin-schema-corpus.json`) in the same change as any `plugin.json` shape change.
+- `npm run dependencies:audit` (`npm audit`) is a maintainer-only, networked advisory check, never part of `check:all`; a clean run only reflects the advisory database's current contents, not a guarantee.
 
 AvNav documentation rule:
 

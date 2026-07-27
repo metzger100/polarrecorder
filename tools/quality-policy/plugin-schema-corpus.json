@@ -1,0 +1,32 @@
+{
+  "note": "Generic AvNav plugin.json base cases (kept byte-identical to Dyninstruments' equivalent genericBase corpus so the two independent Ajv-driven implementations can never silently diverge on what counts as a valid AvNav plugin.json shape) plus Polar-specific server-plugin dev/release profile cases, which stay local to this repository.",
+  "genericBase": {
+    "valid": [{}, { "anyKey": "anyValue" }, { "version": "1.2.3" }],
+    "invalid": [[], "not-an-object", null, 42, true]
+  },
+  "polarServerProfile": {
+    "dev": {
+      "valid": [{}, { "anyKey": "anyValue" }],
+      "invalid": [
+        { "version": "1.2.3" },
+        { "userApps": [] },
+        { "version": "1.2.3", "userApps": [] },
+        [],
+        "not-an-object",
+        null
+      ]
+    },
+    "release": {
+      "valid": [{ "version": "1.2.3" }, { "version": "0.0.1", "anyKey": "x" }],
+      "invalid": [
+        {},
+        { "version": "" },
+        { "version": 1 },
+        { "version": "1.2.3", "userApps": [] },
+        [],
+        "not-an-object",
+        null
+      ]
+    }
+  }
+}

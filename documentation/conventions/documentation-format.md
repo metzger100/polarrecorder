@@ -49,7 +49,7 @@ Forbidden content:
 Validation:
 
 ```bash
-npm run check:docs
+npm run docs:check
 ```
 
 For normal development work, finish with the full gate:

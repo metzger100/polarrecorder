@@ -30,7 +30,8 @@ export function checkHooksDoctor(options = {}) {
   if (!fs.existsSync(path.join(root, ".git"))) {
     failures.push("Not a git repository root: .git directory is missing.");
   } else {
-    let configured = "";
+    /** @type {string} */
+    let configured;
     try {
       configured = String(
         execFileSync("git", ["config", "--get", "core.hooksPath"], {

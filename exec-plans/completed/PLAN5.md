@@ -18,7 +18,7 @@ scaling contracts, property tests, tracked pre-push enforcement, local release a
 workflow, and synchronized developer documentation.
 
 **Completed 2026-07-25.** All 10 phases implemented, verified, and ledgered (see
-`exec-plans/PLAN5Ledger.md` and the Phase Progress Log below). Two transparent deviations
+`exec-plans/completed/PLAN5Ledger.md` and the Phase Progress Log below). Two transparent deviations
 from the plan's literal text are recorded there and in the acceptance criteria: (1) the
 plan's own exit-condition blocks and `command-graph.json` prose name `npm run docs:check`,
 a script that was never introduced anywhere in the plan or repository — the actual,
@@ -1772,7 +1772,7 @@ notes are required because this plan does not create a release or change product
 ## Phase Progress Log
 
 All 10 phases (0-10) are implemented and verified; full per-phase evidence lives in
-`exec-plans/PLAN5Ledger.md`. Final Phase 10 evidence, recorded 2026-07-25:
+`exec-plans/completed/PLAN5Ledger.md`. Final Phase 10 evidence, recorded 2026-07-25:
 
 - **10A (clean, offline-capable setup):** A full working-tree copy (including `.git`, since
   no commit exists yet this session) was made in a disposable scratch directory with

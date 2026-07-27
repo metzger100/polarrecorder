@@ -22,22 +22,22 @@ npm run check:all
 check:core = check:standard && typecheck && package:check &&
              test:focus:check && check:smells &&
              check:python-contracts && test:split && check:complexity &&
-             check:scaling && check:docs && check:filesize
+             check:scaling && docs:check && check:filesize
 ```
 
-| Group                            | Composition                                                                                                                                |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run check:standard`         | `format:check && lint && actions:lint && duplication:check`                                                                                |
-| `npm run typecheck`              | `typecheck:source && typecheck:tests && typecheck:python` (strict no-emit JS typing plus `mypy --strict`)                                  |
-| `npm run package:check`          | Release dry-run build/validate plus dedicated package/release/installer tests                                                              |
-| `npm run test:focus:check`       | Blocks JS `.only`/`.skip`/`.todo`/focus and Python pytest/unittest skip/skipif/xfail markers                                               |
-| `npm run check:smells`           | JS/Python pattern checks plus viewer contract metadata checks                                                                              |
-| `npm run check:python-contracts` | Python 3.9 compatibility, contract-trust smells, architecture/dependency, and runtime finite-number contracts                              |
-| `npm run test:split`             | `test:python && test:node` (pytest, then `test:tools && test:contract && test:viewer && test:plugin`)                                      |
-| `npm run check:complexity`       | Immutable baseline complexity capture verification, then the active complexity budget over shipped JS                                      |
-| `npm run check:scaling`          | Deterministic counted-operation scaling contracts for `PolarModel.update_accepted`, `projection.project_grid`, `api_handlers.format_polar` |
-| `npm run check:docs`             | Documentation TOC, format, reachability, smell-catalog completeness, and the `CLAUDE.md` pointer contract                                  |
-| `npm run check:filesize`         | Combined viewer JS/CSS/HTML, plugin, and Markdown file-size checks plus the Python file-size/header/one-line-compression check             |
+| Group                            | Composition                                                                                                                                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check:standard`         | `format:check && lint && actions:lint && duplication:check`                                                                                                                                                                                                         |
+| `npm run typecheck`              | `typecheck:source && typecheck:tests && typecheck:tools && typecheck:python` (strict no-emit JS typing over viewer/plugin, tests, and `tools/**/*.mjs`, plus `mypy --strict`)                                                                                       |
+| `npm run package:check`          | `schema:check` plus release dry-run build/validate and dedicated package/release/installer tests                                                                                                                                                                    |
+| `npm run test:focus:check`       | Blocks JS `.only`/`.skip`/`.todo`/focus and Python pytest/unittest skip/skipif/xfail markers                                                                                                                                                                        |
+| `npm run check:smells`           | JS/Python pattern checks plus viewer contract metadata checks                                                                                                                                                                                                       |
+| `npm run check:python-contracts` | Python 3.9 compatibility, contract-trust smells, architecture/dependency, and runtime finite-number contracts                                                                                                                                                       |
+| `npm run test:split`             | `test:python && test:node` (pytest, then `test:tools && test:contract && test:viewer && test:plugin`)                                                                                                                                                               |
+| `npm run check:complexity`       | The active complexity budget over shipped JS, enforcing the strict 10/40/4/6 limits directly against the live tree (no historical exception path)                                                                                                                   |
+| `npm run check:scaling`          | Deterministic counted-operation scaling contracts for `PolarModel.update_accepted`, `projection.project_grid`, `api_handlers.format_polar`                                                                                                                          |
+| `npm run docs:check`             | `docs:lint` (markdownlint-cli2), `docs:links:proof`, `docs:links` (root-seeded Linkinator), TOC, format, reachability, smell-catalog completeness, and the `CLAUDE.md` pointer contract                                                                             |
+| `npm run check:filesize`         | Combined viewer JS/CSS/HTML, plugin, `tools/**/*.mjs`, and Markdown 400-line checks (oneliner-density rules apply to viewer/plugin JS only) plus the Python file-size/header/one-line-compression check over `server/polarrecorder/`, `tests/`, and `tools/**/*.py` |
 
 Convenience aliases:
 
@@ -74,7 +74,7 @@ Rule ownership:
 
 - [Smell prevention](smell-prevention.md) lists every blocking rule enforced by these commands.
 - [Coding standards](coding-standards.md) explains the implementation conventions behind the rules.
-- [Documentation format](documentation-format.md) defines the required documentation shape behind `npm run check:docs`.
+- [Documentation format](documentation-format.md) defines the required documentation shape behind `npm run docs:check`.
 - [Testing infrastructure](testing-infrastructure.md) explains the fake AvNav, coverage, and viewer-test setup.
 - [Release workflow](../guides/release-workflow.md) explains release artifact creation and publishing.
 

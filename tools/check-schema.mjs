@@ -1,46 +1,79 @@
 #!/usr/bin/env node
 
 /**
- * Approved schema-validation non-port: this behavior is deliberately folded into
- * `npm run package:check`'s command chain rather than exposed as its own `schema:check`
- * npm script -- the final command graph explicitly forbids a script by that exact name
- * (`tests/js/setup.test.mjs`'s "no accidental check:ci or pre-commit command" test asserts
- * `schema:check` is never a package.json script).
+ * `npm run schema:check` -- Ajv-driven `plugin.json` shape validator; `npm run
+ * package:check` composes it first, ahead of the release dry-run and package/release
+ * tests (`tests/js/command-graph.test.mjs` proves the composition).
  *
- * `plugin.json` is the only schema/layout artifact this repository currently ships that
- * needs an explicit shape contract in both its committed development form (no
- * `version` key; `release_manifest.py`'s `plugin_json_version()` treats an absent
+ * Composes the generic, upstream-verified `schemas/avnav-plugin-base.schema.json` with
+ * Polar's dev/release profile schemas (`schemas/polar-plugin-dev.schema.json` /
+ * `schemas/polar-plugin-release.schema.json`) via Ajv. `plugin.json` is the only
+ * schema/layout artifact this repository currently ships that needs an explicit shape
+ * contract in both its committed development form (no `version`, no duplicate
+ * declarative `userApps`; `release_manifest.plugin_json_version()` treats an absent
  * version as `None`) and its release form (version-stamped by
- * `release_manifest.stamp_plugin_json`, `version` first). `SCHEMA_OWNED_ARTIFACTS` is
- * the complete, reviewed inventory of such artifacts -- exactly one entry today. Adding
- * a new schema/layout artifact to the repository without adding a matching validator
- * here (and growing this inventory in the same change) fails `checkInventoryComplete`,
- * so `package:check` cannot silently go blind to a second unvalidated artifact.
+ * `release_manifest.stamp_plugin_json`). `SCHEMA_OWNED_ARTIFACTS` is the complete,
+ * reviewed inventory of such artifacts -- exactly one entry today. Adding a new
+ * schema/layout artifact to the repository without adding a matching validator here (and
+ * growing this inventory in the same change) fails `checkInventoryComplete`, so
+ * `package:check` cannot silently go blind to a second unvalidated artifact.
+ *
+ * `release_manifest.stamp_plugin_json` also writes `version` as plugin.json's first
+ * serialized key -- an internal ordering contract of this repo's own stamping function,
+ * not an AvNav upstream field, and not something JSON Schema can express. That one check
+ * stays a small supplementary function outside the schema.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import Ajv from "ajv";
+
+const SCHEMAS_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "schemas");
 
 /** @typedef {{name: string, validateDevForm: (data: unknown) => string[], validateReleaseForm: (data: unknown) => string[]}} SchemaOwnedArtifact */
+
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+function readSchema(name) {
+  return JSON.parse(fs.readFileSync(path.join(SCHEMAS_DIR, name), "utf8"));
+}
+
+/**
+ * @returns {{validateDev: import("ajv").ValidateFunction, validateRelease: import("ajv").ValidateFunction}}
+ */
+function compileValidators() {
+  const ajv = new Ajv({ allErrors: true });
+  ajv.addSchema(readSchema("avnav-plugin-base.schema.json"));
+  const validateDev = ajv.compile(readSchema("polar-plugin-dev.schema.json"));
+  const validateRelease = ajv.compile(readSchema("polar-plugin-release.schema.json"));
+  return { validateDev, validateRelease };
+}
+
+/**
+ * @param {import("ajv").ValidateFunction} validate
+ * @param {unknown} data
+ * @param {string} formLabel
+ * @returns {string[]}
+ */
+function runValidator(validate, data, formLabel) {
+  if (validate(data)) return [];
+  const errors = validate.errors || [];
+  return errors.map(
+    (error) => `plugin.json (${formLabel}) ${error.instancePath || "/"} ${error.message}`
+  );
+}
+
+const { validateDev, validateRelease } = compileValidators();
 
 /**
  * @param {unknown} data
  * @returns {string[]}
  */
 function validatePluginJsonDevForm(data) {
-  /** @type {string[]} */
-  const failures = [];
-  if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    failures.push("plugin.json (development form) must be a JSON object");
-    return failures;
-  }
-  if ("version" in data) {
-    failures.push(
-      "plugin.json (development form) must not carry a 'version' key; the release form stamps it"
-    );
-  }
-  return failures;
+  return runValidator(validateDev, data, "development form");
 }
 
 /**
@@ -48,18 +81,14 @@ function validatePluginJsonDevForm(data) {
  * @returns {string[]}
  */
 function validatePluginJsonReleaseForm(data) {
-  /** @type {string[]} */
-  const failures = [];
-  if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    failures.push("plugin.json (release form) must be a JSON object");
-    return failures;
-  }
+  const failures = runValidator(validateRelease, data, "release form");
+  if (failures.length > 0) return failures;
   const record = /** @type {Record<string, unknown>} */ (data);
-  if (typeof record.version !== "string" || record.version.trim() === "") {
-    failures.push("plugin.json (release form) must have a non-empty string 'version'");
-  }
   if (Object.keys(record)[0] !== "version") {
-    failures.push("plugin.json (release form) must have 'version' as its first key");
+    failures.push(
+      "plugin.json (release form) must have 'version' as its first serialized key " +
+        "(release_manifest.stamp_plugin_json's own ordering contract; not an Ajv-expressible shape rule)"
+    );
   }
   return failures;
 }

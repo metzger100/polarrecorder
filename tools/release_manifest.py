@@ -121,14 +121,21 @@ def expected_runtime_files() -> list[tuple[str, Path]]:
     if not viewer_root.is_dir():
         raise ReleaseError("Missing runtime viewer directory: viewer")
     for pattern in ("*.js", "*.css"):
-        for source in sorted(viewer_root.glob(pattern), key=lambda path: path.name):
-            entries.append((source.relative_to(ROOT).as_posix(), source))
+        entries.extend(
+            (source.relative_to(ROOT).as_posix(), source)
+            for source in sorted(viewer_root.glob(pattern), key=lambda path: path.name)
+        )
 
     package_root = ROOT / "server" / "polarrecorder"
     if not package_root.is_dir():
         raise ReleaseError("Missing runtime package directory: server/polarrecorder")
-    for source in sorted(package_root.rglob("*.py"), key=lambda path: path.as_posix()):
-        entries.append((source.relative_to(ROOT).as_posix(), source))
+    entries.extend(
+        (source.relative_to(ROOT).as_posix(), source)
+        for source in sorted(
+            package_root.rglob("*.py"),
+            key=lambda path: path.as_posix(),
+        )
+    )
 
     archive_names = [name for name, _source in entries]
     duplicates = sorted({name for name in archive_names if archive_names.count(name) > 1})
@@ -253,7 +260,7 @@ def runtime_name_from_archive(name: str) -> str:
 
 
 def validate_runtime_name(name: str) -> None:
-    if name.startswith("/") or name.startswith("../") or "/../" in name:
+    if name.startswith(("/", "../")) or "/../" in name:
         raise ReleaseError(f"Unsafe runtime path: {name}")
     if is_excluded(name):
         raise ReleaseError(f"Runtime allowlist contains excluded path: {name}")
@@ -266,8 +273,7 @@ def is_excluded(name: str) -> bool:
         or any(name.startswith(prefix) for prefix in EXCLUDED_PREFIXES)
         or name.endswith(".pyc")
         or "__pycache__" in path_parts
-        or name == "LICENSE"
-        or name == "LICENSE.md"
+        or name in {"LICENSE", "LICENSE.md"}
     )
 
 

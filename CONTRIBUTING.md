@@ -40,6 +40,9 @@ Verify the hook is active at any time with `npm run hooks:doctor`; it prints the
 command if the hook path is unset, points elsewhere, or the hook file is missing or not
 executable.
 
+Native setup on a matching host (see `tools/quality-policy/developer-python.json`'s `rationale`) is
+the only supported path.
+
 ## Key Details
 
 - Read `documentation/TABLEOFCONTENTS.md`, `documentation/conventions/coding-standards.md`, and `documentation/conventions/smell-prevention.md` before changing code or docs.
@@ -48,7 +51,8 @@ executable.
 - Do not add runtime dependencies, generated build artifacts, unrelated product logic, or raw reference-source copies.
 - Standard maintained tools (Ruff, mypy, ESLint, Stylelint, jscpd, markdownlint-cli2, Linkinator, actionlint, c8) own every rule they can express; a focused custom checker is added only when no maintained tool covers the rule, and it ships with its own self-test in the same change.
 - `npm run format`/`format:check` (write/check Prettier + Ruff formatting), `npm run check:standard` (formatting, lint, actionlint, duplication), `npm run check:fast` (a faster iteration subset: `check:standard`, `typecheck`, `test:split`, `check:python-contracts`), `npm run check:core` (the full literal non-coverage gate), `npm run test:split` (Python then Node tests), and `npm run check:all` (`check:core` plus coverage) are documented in full in [quality gates](documentation/conventions/quality-gates.md).
-- Releases are prepared, validated, and created locally (`npm run release:prepare`, manual notes/version review, `npm run release:create -- --version=X.Y.Z`, then `git push --tags`); see the [release workflow guide](documentation/guides/release-workflow.md).
+- Releases are prepared, validated, and created locally (`npm run release:prepare`, manual notes/version review, `npm run release:create -- --version=X.Y.Z`, then `git push --tags`); before pushing the tag, run the manual [live AvNav validation checklist](documentation/guides/live-avnav-checklist.md) against a real AvNav host and record the result. See the [release workflow guide](documentation/guides/release-workflow.md).
+- `npm run dependencies:audit` (`npm audit`) is a maintainer-only, networked advisory check; it is never part of `check:all` or any required gate, and a clean run is not evidence of anything beyond the advisory database's current contents.
 
 ## Change workflow
 
@@ -74,4 +78,5 @@ executable.
 - [Smell prevention](documentation/conventions/smell-prevention.md)
 - [Quality gates](documentation/conventions/quality-gates.md)
 - [Release workflow](documentation/guides/release-workflow.md)
+- [Live AvNav validation checklist](documentation/guides/live-avnav-checklist.md)
 - [Documentation maintenance](documentation/guides/documentation-maintenance.md)

@@ -55,6 +55,11 @@ Step-by-step release flow:
    npm run release:create -- --version=X.Y.Z
    ```
 
+5. Before pushing the tag, run the manual
+   [live AvNav validation checklist](live-avnav-checklist.md) against a real AvNav host and record
+   the filled-in result. `release:prepare` prints this checklist's location as a reminder; no
+   automated command runs it or claims it passed on your behalf.
+
 `release:create` accepts full SemVer release versions, including prereleases
 such as `1.0.0-beta.1`. It runs the required gate (`npm run check:all`), builds
 the runtime zip with `python tools/release-zip.py --version <version>`, validates
@@ -118,4 +123,5 @@ Troubleshooting:
 - [Documentation maintenance](documentation-maintenance.md)
 - [Quality gates](../conventions/quality-gates.md)
 - [Testing infrastructure](../conventions/testing-infrastructure.md)
+- [Live AvNav validation checklist](live-avnav-checklist.md)
 - [Contributing](../../CONTRIBUTING.md)

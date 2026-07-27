@@ -118,7 +118,7 @@ def _fingerprint_blocks(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[tu
         by_statement.append((stmt.lineno, tokens))
 
     blocks: list[tuple[int, int, str]] = []
-    for index in range(0, len(by_statement) - MIN_BLOCK_STATEMENTS + 1):
+    for index in range(len(by_statement) - MIN_BLOCK_STATEMENTS + 1):
         selected = by_statement[index : index + MIN_BLOCK_STATEMENTS]
         tokens = [token for _line, stmt_tokens in selected for token in stmt_tokens]
         if len(tokens) >= MIN_BLOCK_NODES:
