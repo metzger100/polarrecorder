@@ -506,58 +506,62 @@ planned. Test fixtures representing plugin behavior do not change unless require
 
 ### Complexity integrity
 
-- [ ] `check:complexity` invokes maintained ESLint directly with error limits 10/40/4/6.
-- [ ] Complexity rules cover `viewer/*.js`, `plugin.js`, and `plugin.mjs`, not dev-tool/test functions.
-- [ ] The mutable baseline, custom budget, and custom scanner are deleted.
-- [ ] Each independent complexity metric has a clean and failing direct-ESLint fixture.
-- [ ] An arbitrary matching baseline file cannot change a failing result.
-- [ ] No current documentation claims that complexity debt can be baselined or ratcheted.
+- [x] `check:complexity` invokes maintained ESLint directly with error limits 10/40/4/6.
+- [x] Complexity rules cover `viewer/*.js`, `plugin.js`, and `plugin.mjs`, not dev-tool/test functions.
+- [x] The mutable baseline, custom budget, and custom scanner are deleted.
+- [x] Each independent complexity metric has a clean and failing direct-ESLint fixture.
+- [x] An arbitrary matching baseline file cannot change a failing result.
+- [x] No current documentation claims that complexity debt can be baselined or ratcheted.
 
 ### Command semantics
 
-- [ ] `check:fast` is exactly `check:standard && typecheck && test:unit`.
-- [ ] `test:unit` excludes exhaustive tool/contract, package, docs, scaling, complexity, and coverage work.
-- [ ] `check:core` reaches the complete `test:split`.
-- [ ] `check:smells` has one path from `check:core`.
-- [ ] `check:all` and `check:strict` retain their exact shared definitions.
-- [ ] Negative graph fixtures reject both the former duplicated smell route and exhaustive fast graph.
+- [x] `check:fast` is exactly `check:standard && typecheck && test:unit`.
+- [x] `test:unit` excludes exhaustive tool/contract, package, docs, scaling, complexity, and coverage work.
+- [x] `check:core` reaches the complete `test:split`.
+- [x] `check:smells` has one path from `check:core`.
+- [x] `check:all` and `check:strict` retain their exact shared definitions.
+- [x] Negative graph fixtures reject both the former duplicated smell route and exhaustive fast graph.
 
 ### Quality integrity and portability
 
-- [ ] Coverage floors, inventories, hotspot/scaling budgets, Python contracts, type checks, and package checks are not
+- [x] Coverage floors, inventories, hotspot/scaling budgets, Python contracts, type checks, and package checks are not
       weakened.
-- [ ] No new suppression, ignored path, skipped test, coverage exception, or debt ledger is introduced.
-- [ ] Actionlint installation supports every advertised OS/architecture checksum path with `sha256sum`/`shasum`
+- [x] No new suppression, ignored path, skipped test, coverage exception, or debt ledger is introduced.
+- [x] Actionlint installation supports every advertised OS/architecture checksum path with `sha256sum`/`shasum`
       fallback and deterministic tests.
-- [ ] Required gates remain offline after setup and require no external browser.
+- [x] Required gates remain offline after setup and require no external browser.
 
 ### Portable role-model configuration
 
-- [ ] `.codex` is a directory containing the normalized `config.toml`, not an empty marker file.
-- [ ] The configuration contains no OS-specific command/environment and no unpinned MCP.
-- [ ] It is byte-identical to Dyninstruments' normalized configuration.
-- [ ] A local test proves required keys and forbidden-token rejection.
-- [ ] Generic schema and generic case payloads still match the paired repository.
+- [x] `.codex` is a directory containing the normalized `config.toml`, not an empty marker file.
+- [x] The configuration contains no OS-specific command/environment and no unpinned MCP.
+- [x] It is byte-identical to Dyninstruments' normalized configuration (verified against Dyninstruments' current,
+      uncommitted worktree state -- see Phase F3).
+- [x] A local test proves required keys and forbidden-token rejection.
+- [x] Generic schema and generic case payloads still match the paired repository.
 
 ### Documentation
 
-- [ ] README, CONTRIBUTING, quality-gate, testing, coding, smell, and maintenance guidance match live behavior.
-- [ ] Documentation clearly separates the hybrid role model from a future greenfield environment.
-- [ ] The supported developer platform/Python contract is stated without overstating portability.
-- [ ] No shipped file cites this plan or a phase as authority.
-- [ ] All edited maintained files remain below their size limits.
-- [ ] `npm run docs:check` passes.
+- [x] README, CONTRIBUTING, quality-gate, testing, coding, smell, and maintenance guidance match live behavior.
+- [x] Documentation clearly separates the hybrid role model from a future greenfield environment.
+- [x] The supported developer platform/Python contract is stated without overstating portability.
+- [x] No shipped file cites this plan or a phase as authority.
+- [x] All edited maintained files remain below their size limits.
+- [x] `npm run docs:check` passes.
 
 ### Completion
 
-- [ ] `npm run check:fast` passes.
-- [ ] `npm run check:core` passes.
-- [ ] `npm run test:coverage:check` passes.
-- [ ] `npm run check:all` passes.
-- [ ] `npm run hooks:doctor` passes.
-- [ ] The adversarial complexity probe fails closed with arbitrary policy data present.
-- [ ] The paired mechanical comparison reports no unexplained common-contract drift.
-- [ ] Both repositories remain independently runnable and clean apart from their intended plan implementations.
+- [x] `npm run check:fast` passes.
+- [x] `npm run check:core` passes.
+- [x] `npm run test:coverage:check` passes.
+- [x] `npm run check:all` passes.
+- [x] `npm run hooks:doctor` passes.
+- [x] The adversarial complexity probe fails closed with arbitrary policy data present.
+- [x] The paired mechanical comparison (against Dyninstruments' current worktree) reports no unexplained
+      common-contract drift.
+- [ ] Both repositories remain independently runnable and clean apart from their intended plan implementations --
+      Polar Recorder is clean; Dyninstruments' PLAN40 is still uncommitted/active as of this comparison (see Phase F3).
+      **This is the one criterion this session cannot close; see "What remains" below.**
 
 ---
 
@@ -565,6 +569,217 @@ planned. Test fixtures representing plugin behavior do not change unless require
 
 Populate this section during implementation. Record exact commits, commands, counts, coverage summaries, adversarial
 results, parity results, and deviations. Do not mark criteria complete from expectation alone.
+
+### Phase A — baseline reconfirmation (2026-07-27)
+
+- HEAD at start of implementation: `3f40ecbaee7f8f9be4668e673dcf8a47be7382a5` ("Added PLAN7.md"), one commit ahead of
+  the plan's verified baseline `265289dfbd5f640c9ebf788cae047535221aa43a`. `git diff --stat` between the two shows only
+  `exec-plans/active/PLAN7.md` (new) and a 6-line regenerated `tools/quality-policy/format-scope.json` delta (adding the
+  new plan file's own `prettier` row and bumping `countByOwner.prettier` from 171 to 172) — no other drift. Worktree was
+  clean (`git status` reported nothing to commit) before any implementation edit.
+- Node `v26.4.0`, npm `12.0.1`, Python `3.14.6` (matches `tools/quality-policy/developer-python.json`'s
+  `supportedVersionRange`).
+- `npm run hooks:doctor` → `Git hooks are correctly configured.` (exit 0).
+- `npm run check:all` passed clean from this HEAD: 378 Python tests (`378 passed, 1 warning in 4.00s` under
+  `--cov-fail-under=90`, combined coverage `95.77%` reported by pytest-cov, `TOTAL ... 96%` branch line matches prior
+  95.7723%/91.7508% figures at displayed precision), 250 `test:tools` quality-tool tests, 26 `test:viewer` tests plus 1
+  `test:plugin` test (27 total under `test:coverage:viewer`'s c8 run — `93.43%` lines/statements, `79.38%` branches,
+  `90.82%` functions), and `Complexity budget check passed: 0 tracked baseline entries, 0 new violations.` Full log
+  retained at
+  `/tmp/claude-1000/.../scratchpad/check-all-baseline.log` for this session only (not committed).
+- **Adversarial complexity self-grandfathering reproduction** (isolated scratchpad copy of the real
+  `tools/quality-policy/complexity-scan.mjs`/`complexity-budget.mjs`, never touching the repo tree): wrote
+  `viewer/seven-param.js` with a 7-parameter function (`max-params` limit is 6) under an empty
+  `complexity-baseline.json` (`{"entries": []}`) → `runComplexityBudgetCheck` returned
+  `{"ok": false, "failures": ["New over-limit function: 'viewer/seven-param.js' sevenParamFunction has max-params 7 ...; new debt cannot be baselined."]}`
+  (exit 1). Then, **without changing `seven-param.js` at all**, added a matching baseline entry
+  `{"file": "viewer/seven-param.js", "identity": "sevenParamFunction", "metric": "max-params", "value": 7, "limit": 6}`
+  → the identical checker returned `{"ok": true, "failures": [], "baselineEntryCount": 1}` (exit 0). This confirms the
+  plan's Verified Baseline claim #14: a coordinated policy-data edit, with zero source change, flips a real violation
+  from failing to passing. The temporary probe directory was deleted after recording this result; nothing was
+  committed. This is the negative behavior Phase B's direct-ESLint replacement must make structurally impossible (no
+  policy file for ESLint's built-in `complexity`/`max-statements`/`max-depth`/`max-params` rules to read).
+- Dyninstruments paired baseline: `exec-plans/active/PLAN40.md` exists and is still active (not yet implemented) at
+  read time, verified against Dyninstruments commit `9a62c68b2cde6df4afb9be4248e18de46ef52af9`. Both plans agree on the
+  shared contract: identical `check:fast` target string, `check:core`/`check:all`/`check:strict` semantics, `.codex`
+  portability rules (strip Windows `cmd`/env/`chrome-devtools-mcp@latest`, keep the rest, byte-identical output), and
+  independence constraints. No disagreement found requiring plan amendment. Because PLAN40 is not yet implemented in
+  Dyninstruments, the final byte-identical `.codex/config.toml` and full paired mechanical comparison (Phase F3) cannot
+  be closed from this side alone; this is tracked explicitly rather than assumed.
+
+### Phase B — direct-ESLint complexity enforcement (2026-07-27)
+
+- Added `tools/quality-policy/eslint.complexity.config.mjs`: a focused ESLint flat config with only `complexity`,
+  `max-statements`, `max-depth`, `max-params` at error-level 10/40/4/6, scoped to `viewer/*.js`/`plugin.js` (classic
+  script) and `plugin.mjs` (module). `check:complexity` is now
+  `eslint --config tools/quality-policy/eslint.complexity.config.mjs viewer/*.js plugin.js plugin.mjs`; verified clean
+  against the real tree (`EXIT=0`, no output).
+- Deleted `tools/quality-policy/complexity-baseline.json`, `complexity-budget.mjs`, `complexity-scan.mjs`, and
+  `tests/js/complexity-budget.test.mjs`. Removed all references from `package.json` (`test:tools` list),
+  `tsconfig.tools.json`, `tsconfig.tests.json`. Regenerated `tools/quality-policy/format-scope.json` (292 rows,
+  `prettier` 171 -> 170 net of the deletions) and `tools/quality-policy/test-inventory.json` via their canonical
+  generators (`npm run format:scope`, `node tools/quality-policy/test-inventory.mjs --write`).
+- Added `tests/js/complexity-policy.test.mjs` (10 tests, all passing): retired-file absence, a clean function passes,
+  each of the 4 metrics fails independently (complexity/max-statements/max-depth/max-params), `plugin.js` (classic) and
+  `plugin.mjs` (module) both covered, a 7-param `tools/*.mjs` dev-tool fixture is confirmed outside the shipped-product
+  scope (exit 0, no error), and a fixture recreating a matching `complexity-baseline.json` next to a real
+  `viewer/*.js` violation still fails (`too many parameters`) because ESLint never reads that file.
+- `npm run format:check`, `npm run typecheck:tools`, `npm run typecheck:tests`, `npm run check:filesize`, and
+  `npm run check:smells` all pass against the new state.
+- `rg "complexity-baseline|complexity-scan|complexity-budget"` after this phase finds only: `tsconfig.tests.json` (old
+  entry removed), the new test/config file names themselves, and prose mentions inside
+  `exec-plans/completed/PLAN5.md`/`PLAN6.md`/`exec-plans/completed/PLAN5Ledger.md` (historical, exempt) plus this
+  active plan -- no live claim remains outside them.
+
+### Phase C — command-graph normalization (2026-07-27)
+
+- `test:contract` no longer runs `check:smells`; `check:core` still calls `check:smells` directly (now the sole path).
+  Verified: `npm run test:contract` passes standalone; `npm run check:smells` passes standalone.
+- Added `test:unit = npm run test:python && npm run test:viewer && npm run test:plugin`.
+- Changed `check:fast` to exactly `npm run check:standard && npm run typecheck && npm run test:unit`.
+- Rewrote `tests/js/command-graph.test.mjs` (297 non-empty lines, well under the 400-line flag threshold noted in the
+  plan's Hard Constraints): added an exact `check:fast` string test, a `check:fast`-exclusion test (asserts
+  `test:split`/`test:tools`/`test:contract`/`check:python-contracts`/`test:coverage:check`/`package:check`/
+  `docs:check`/`check:complexity`/`check:scaling`/`release:create` are unreachable from `check:fast`), a
+  `duplicateLeaves()` helper proving no npm-script name is reached by more than one distinct parent from `check:core`,
+  and a fixture test that reintroduces `test:contract -> check:smells` and confirms `duplicateLeaves` flags exactly
+  `["check:smells"]`. Added `test:unit` to `ALLOWED_OUTSIDE_CHECK_ALL`. All 27 tests in this file pass, including the
+  11 pre-existing per-group failure-propagation fixtures (`REQUIRED_CHECK_CORE_GROUPS` unchanged).
+
+### Phase D — actionlint portability and `.codex` (2026-07-27)
+
+- `tools/actionlint.sh`: shebang changed to `#!/usr/bin/env bash`; the `--install` branch now detects
+  `command -v sha256sum` first, falls back to `shasum -a 256`, and fails with an explicit prerequisite message
+  _before_ `mkdir`/`curl`/`tar` run if neither exists. The four reviewed checksums and `ACTIONLINT_VERSION=1.7.12` are
+  unchanged (verified 64 hex chars each). `bash -n tools/actionlint.sh` passes.
+- Extended `tests/js/setup.test.mjs` (126 -> 259 non-empty lines) with a fully isolated fake-`PATH` harness
+  (`buildFakeBin`/`withFakeInstallEnv`): real `bash`/`uname`/`mkdir`/`mktemp`/`cut`/`tar`/`install`/`dirname`/`rm`/
+  `chmod`/`gzip` are symlinked in; `curl` is faked to build a valid local tar.gz (never touches the network);
+  `sha256sum`/`shasum` are faked to report a controlled hash. 4 new tests, all passing: install succeeds via
+  `sha256sum`-only, install succeeds via `shasum -a 256`-only (Darwin-style, no `sha256sum` on `PATH` at all), a
+  checksum mismatch fails closed with `checksum mismatch` and no binary installed, and neither-tool-present fails
+  closed with the new explicit message before any cache/tmp directory is created. All 16 tests in the file pass, and
+  the 3 pre-existing offline/cache/in-repo-cache-rejection tests are unaffected.
+- Removed the zero-byte `.codex` marker file; created `.codex/config.toml`. Content was derived by observing that
+  Dyninstruments' own `.codex/config.toml` (mid-implementation of PLAN40 in that repo, read-only) had, by the time this
+  phase ran, already been stripped down to exactly the portable subset both plans describe (project-doc/approval/
+  sandbox/web-search keys, no MCP block, no Windows `cmd`/env) -- `sha256sum` of that file
+  (`be6ded57d66fa0d9101ef7eb2b9fb1aa3105e2871f8eca93218da1c6dc937f64`) was copied byte-for-byte into Polar Recorder's
+  `.codex/config.toml` (verified identical checksum both sides).
+- Updated `tools/quality-policy/generate-format-scope.mjs`: removed the retired `.codex` empty-marker special case,
+  added a `.codex/config.toml` classification (`unsupported`, no maintained TOML formatter, alternate validation is the
+  new drift test). Regenerated `format-scope.json` (293 rows).
+- Added `tests/js/codex-config.test.mjs` (4 tests, all passing): `.codex` is a directory (not the retired file),
+  required portable keys present, no forbidden OS-specific/MCP tokens present, and a deliberate forbidden-token fixture
+  trips the same check.
+- `npm run format:check`, `npm run typecheck:tests`, `npm run check:smells`, `npm run actions:lint` all pass.
+
+### Phase E — documentation synchronization (2026-07-27)
+
+- Updated `documentation/conventions/coding-standards.md`, `smell-prevention.md` (complexity row), and
+  `testing-infrastructure.md` (full paragraph rewrite) to describe direct ESLint enforcement and remove every claim
+  that a baseline/scanner/budget exists or that debt can be baselined/ratcheted.
+- Updated `documentation/conventions/quality-gates.md`: `check:complexity` row now names the real command; `check:smells`
+  row now states it is the sole path from `check:core`; the convenience-alias table now states `check:fast`'s exact
+  string and exclusions and documents the new `test:unit` alias.
+- Updated `README.md`'s "For developers" section (trimmed to a short pointer into `CONTRIBUTING.md` to keep the file
+  under its hotspot budget -- see below) and `CONTRIBUTING.md` (exact `check:fast` composition, hybrid-role-model
+  sentence naming the sibling `dyninstruments` alignment).
+- `npm run docs:check` passes (36 Markdown files linted, 40 links checked, TOC/format/reachability/smell-catalog/
+  `CLAUDE.md`-pointer checks all pass).
+- `rg "PLAN7|Phase [A-Z]"` over shipped source/docs (outside `exec-plans/`) finds no citation; `check:patterns`'s
+  `exec-plan-reference` rule continues to pass.
+- **README.md hotspot-budget correction**: after the first documentation pass, README.md reached 365 non-empty lines,
+  exceeding its `tools/quality-policy/hotspot-budgets.json` budget of 360 (`tests/js/hotspot-budgets.test.mjs` caught
+  this in the first `check:core` run below). Per the budget file's own note ("cannot be raised merely to make a change
+  pass; the file must be split or trimmed instead") and this plan's Hard Constraints ("split cleanly instead of
+  compressing"), the "For developers" section was trimmed to a short pointer into `CONTRIBUTING.md` (which already
+  owns this detail in full) rather than raising the budget or compressing prose. README.md is now 350 non-empty lines
+  (below both its 360 hotspot budget and the original 356-line pre-plan baseline).
+
+### Phase F — final verification (2026-07-27)
+
+Exact commands and results, run sequentially from the fully implemented worktree:
+
+| Command                       | Result                                                                                                                                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check:fast`          | Exit 0. `check:standard && typecheck && test:unit` (378 Python + 26 viewer + 1 plugin tests, all passing).                                                                                                                                  |
+| `npm run check:core`          | Exit 0 (after the README hotspot-budget fix above). 378 Python tests, 260 `test:tools` tests, 26 viewer + 1 plugin test, `Complexity budget` line replaced by ESLint's silent-success exit.                                                 |
+| `npm run test:coverage:check` | Exit 0. Python: `378 passed, 1 warning`, `Required test coverage of 90% reached. Total coverage: 95.77%`. Viewer/plugin c8: `93.43%` lines/statements, `79.38%` branches, `90.82%` functions (27 tests). `Coverage inventory check passed.` |
+| `npm run check:all`           | Exit 0 (`check:core && test:coverage:check`, same figures as above).                                                                                                                                                                        |
+| `npm run hooks:doctor`        | `Git hooks are correctly configured.` (exit 0).                                                                                                                                                                                             |
+
+Test-count delta from the Phase A baseline: 378 Python tests unchanged; quality-tool tests moved 250 -> 260 (net:
+-complexity-budget.test.mjs's tests, +10 `complexity-policy.test.mjs`, +4 new `setup.test.mjs` checksum-branch tests,
++4 `codex-config.test.mjs` tests, and the 27 `command-graph.test.mjs` tests, versus the prior file's tests, replacing
+its former count); viewer/plugin coverage tests unchanged at 26+1=27. Combined Python coverage unchanged at 95.77%;
+viewer/plugin c8 coverage unchanged at 93.43%/79.38%/90.82% (no product code touched, per the Hard Constraints).
+
+**Adversarial complexity re-proof with arbitrary policy data present** (`viewer/__adversarial_probe.js`, a real
+7-parameter function, plus a hand-authored `tools/quality-policy/complexity-baseline.json` containing a matching
+entry for it, both created directly in the live repo tree this time -- not a scratch copy): `npm run check:complexity`
+exited **1** (`Function 'sevenParamFunction' has too many parameters (7). Maximum allowed is 6  max-params`), proving
+the arbitrary matching baseline had zero effect because the direct-ESLint config never reads that file. Both files
+were removed immediately after; `git status --short` confirmed the worktree returned to its intended-changes-only
+state.
+
+### Phase F3 — read-only paired comparison (2026-07-27)
+
+Dyninstruments' `exec-plans/active/PLAN40.md` was **still active and uncommitted** at comparison time (`git status
+--short` in that checkout showed modified `.codex/config.toml`, `CONTRIBUTING.md`, `README.md`, two
+`documentation/conventions/*.md` files, `documentation/guides/documentation-maintenance.md`, `package.json`, two
+`tests/`/`tools/quality-policy/*.json` files, `tsconfig.tests.json`, and an untracked `tests/tools/codex-config.test.js`
+-- i.e. PLAN40 implementation was actively in progress in that worktree during this session, never edited by this
+agent). The following mechanical, read-only comparisons were nonetheless performed against that current (in-progress)
+state, since most of what PLAN7/PLAN40 require to align was already present:
+
+- **Common devDependency versions**: all 12 shared packages (`@eslint/js`, `@types/node`, `ajv`, `eslint`, `globals`,
+  `jscpd`, `linkinator`, `markdownlint-cli2`, `prettier`, `stylelint`, `stylelint-config-standard`, `typescript`)
+  match exactly. `engines.node` (`>=26 <27`), `engines.npm` (`12.0.1`), and `packageManager` (`npm@12.0.1`) match
+  exactly.
+- **`check:fast`/`check:all`/`check:strict` exact strings**: Dyninstruments' `check:fast` is
+  `"npm run check:standard && npm run typecheck && npm run test:unit"` -- byte-identical to Polar Recorder's.
+  `check:all` (`"npm run check:core && npm run test:coverage:check"`) and `check:strict` (`"npm run check:all"`) are
+  also byte-identical. `check:core` composition differs in group set/order as expected (Dyninstruments has no
+  Python-specific `check:python-contracts` leaf; Polar Recorder's `test:focus:check` sits before `check:smells` while
+  Dyninstruments' sits after) -- a justified profile difference, since `check:core` shares a _meaning_
+  ("complete deterministic non-coverage gate"), not an exact graph, per the Target Alignment Contract.
+- **`.codex/config.toml`**: `diff` reports zero differences; both files share SHA-256
+  `be6ded57d66fa0d9101ef7eb2b9fb1aa3105e2871f8eca93218da1c6dc937f64`.
+- **Generic AvNav schema**: `schemas/avnav-plugin-base.schema.json` is byte-identical (`diff` empty). The
+  `genericBase` corpus in `tools/quality-policy/plugin-schema-corpus.json` is structurally identical
+  (`JSON.stringify` equal); Dyninstruments' corpus note has already been corrected (no longer claims "no sibling has
+  published a base/profile split") and now names Polar Recorder's shared corpus explicitly.
+- **actionlint**: identical version (`1.7.12`) and all four SHA-256 checksums (`8aca8db9…`, `325e971b…`,
+  `5b44c3bc…`, `aba9ced2…`) match exactly, byte-for-byte, despite the two scripts using different internal variable
+  names/case-statement shapes. Both scripts independently implement the same portable fallback intent
+  (`command -v sha256sum` else `shasum -a 256`); Dyninstruments' fallback path does not pre-check for the total
+  absence of both tools the way Polar Recorder's explicit prerequisite-message branch does -- a minor, non-required
+  implementation difference, not a contract violation (only "portable checksum behavior" is shared, not byte-identical
+  scripts).
+- **Publisher workflow Action SHAs**: `actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2` and
+  `softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2` match exactly in both
+  `.github/workflows/publish-release.yml` files.
+- **No sibling-path reference in required commands**: `grep -rn "\.\./dyninstruments\|/dyninstruments/"` over Polar
+  Recorder's `.json`/`.mjs`/`.sh`/`.py`/`.js` files (excluding `node_modules`) finds only one hit, inside
+  `.claude/settings.local.json` (a Claude Code session tool-permission allowlist entry, not a repo script, hook, test,
+  release command, or documentation checker). Every other "dyninstruments" mention in maintained source is prose
+  attribution ("adapted from the sibling `dyninstruments` plugin"), not a path resolution. `grep -rn "polarrecorder"`
+  over Dyninstruments' equivalent file types (excluding `node_modules`) found zero hits.
+
+**No unexplained common-contract drift was found** on any dimension compared above; every profile difference found
+(`check:core` group set/order, actionlint script internals) is explained by the two repositories' documented,
+justified differences (Python/Node hybrid vs. pure-JS/Vitest, and independent-but-equivalent script authorship).
+
+**What remains** (the one acceptance criterion this session cannot close): Dyninstruments' PLAN40 was uncommitted and
+still in `exec-plans/active/` at comparison time, so "both repositories remain independently runnable and clean apart
+from their intended plan implementations" cannot yet be certified for the Dyninstruments side -- that worktree had
+real, in-progress, uncommitted edits during this session (never touched by this agent, per the Hard Constraints).
+Every dimension actually compared showed no drift, and Polar Recorder's own worktree is clean apart from this plan's
+intended changes. This plan is being **kept in `exec-plans/active/`** rather than moved to `exec-plans/completed/`,
+pending: (1) Dyninstruments committing/finalizing its PLAN40 implementation, and (2) a follow-up session re-running
+this Phase F3 comparison against that committed state (in particular re-confirming `check:core`'s exact composition
+and the `.codex/config.toml` byte-identity once both sides are frozen) before archiving PLAN7.
 
 ---
 

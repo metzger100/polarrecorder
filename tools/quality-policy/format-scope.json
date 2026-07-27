@@ -1,10 +1,10 @@
 {
   "rows": [
     {
-      "path": ".codex",
+      "path": ".codex/config.toml",
       "owner": "unsupported",
-      "reason": "empty editor/tool marker file",
-      "alternateValidation": "none needed"
+      "reason": "Prettier has no built-in TOML support and no TOML plugin is in this inventory",
+      "alternateValidation": "tests/js/codex-config.test.mjs proves required portable keys and forbidden-token rejection"
     },
     {
       "path": ".githooks/pre-push",
@@ -435,11 +435,15 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/codex-config.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/command-graph.test.mjs",
       "owner": "prettier"
     },
     {
-      "path": "tests/js/complexity-budget.test.mjs",
+      "path": "tests/js/complexity-policy.test.mjs",
       "owner": "prettier"
     },
     {
@@ -977,18 +981,6 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/complexity-baseline.json",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/quality-policy/complexity-budget.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/quality-policy/complexity-scan.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/quality-policy/coverage-floor-baseline.json",
       "owner": "prettier"
     },
@@ -1014,6 +1006,10 @@
     },
     {
       "path": "tools/quality-policy/developer-python.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/eslint.complexity.config.mjs",
       "owner": "prettier"
     },
     {
@@ -1227,7 +1223,7 @@
   ],
   "countByOwner": {
     "unsupported": 24,
-    "prettier": 172,
+    "prettier": 171,
     "ruff": 98
   }
 }

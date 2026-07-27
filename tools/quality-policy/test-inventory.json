@@ -18,11 +18,15 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/codex-config.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/command-graph.test.mjs",
       "classification": "strict"
     },
     {
-      "path": "tests/js/complexity-budget.test.mjs",
+      "path": "tests/js/complexity-policy.test.mjs",
       "classification": "strict"
     },
     {

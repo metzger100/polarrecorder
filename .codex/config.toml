@@ -1,0 +1,10 @@
+# Make Codex pick up this repo's existing AI guidance
+project_doc_fallback_filenames = ["CLAUDE.md"]
+project_doc_max_bytes = 65536
+
+# Sensible execution defaults for local dev assistants
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+# Optional: keep web search safer (cached index)
+web_search = "cached"

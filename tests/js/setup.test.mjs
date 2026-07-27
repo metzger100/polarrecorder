@@ -106,6 +106,149 @@ test("actionlint cached run succeeds offline", () => {
   assert.ok(output.includes("1.7.12"));
 });
 
+const FAKE_BIN_REAL_UTILS = [
+  "bash",
+  "uname",
+  "mkdir",
+  "mktemp",
+  "cut",
+  "tar",
+  "install",
+  "dirname",
+  "rm",
+  "chmod",
+  "gzip"
+];
+
+/** @returns {string} the pinned expected_sha256 for this host's real OS/architecture */
+function realArchiveExpectedSha256() {
+  const unameS = execFileSync("uname", ["-s"], { encoding: "utf8" }).trim();
+  const unameM = execFileSync("uname", ["-m"], { encoding: "utf8" }).trim();
+  const platform = unameS === "Darwin" ? "darwin" : "linux";
+  const arch = unameM === "aarch64" || unameM === "arm64" ? "arm64" : "amd64";
+  const archiveName = `actionlint_1.7.12_${platform}_${arch}.tar.gz`;
+  const script = fs.readFileSync(path.join(ROOT, "tools", "actionlint.sh"), "utf8");
+  const match = script.match(
+    new RegExp(`${archiveName}\\)\\s*\\n\\s*expected_sha256="([0-9a-f]+)"`)
+  );
+  assert.ok(match, `no pinned expected_sha256 found for ${archiveName}`);
+  return match[1];
+}
+
+/**
+ * A fake curl that never touches the network: it writes a valid tar.gz containing a
+ * dummy "actionlint" file to whatever `-o <path>` was requested.
+ * @returns {string}
+ */
+function fakeCurlScript() {
+  return [
+    "#!/usr/bin/env bash",
+    "set -euo pipefail",
+    'out=""',
+    "while [ $# -gt 0 ]; do",
+    '  if [ "$1" = "-o" ]; then out="$2"; shift 2; else shift; fi',
+    "done",
+    'work="$(mktemp -d)"',
+    'printf "#!/bin/sh\\necho fake-actionlint\\n" > "$work/actionlint"',
+    'chmod +x "$work/actionlint"',
+    'tar -czf "$out" -C "$work" actionlint',
+    'rm -rf "$work"',
+    ""
+  ].join("\n");
+}
+
+/** @param {string} hash @returns {string} a fake sha256sum/shasum that always reports `hash` */
+function fakeChecksumScript(hash) {
+  return ["#!/usr/bin/env bash", `echo "${hash}  fake-archive"`, ""].join("\n");
+}
+
+/**
+ * @param {{sha256sum?: string, shasum?: string}} checksumTools
+ * @returns {string} an isolated PATH directory exposing only the named checksum tool(s)
+ */
+function buildFakeBin(checksumTools) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-actionlint-fakebin-"));
+  for (const name of FAKE_BIN_REAL_UTILS) {
+    const real = execFileSync("bash", ["-c", `command -v ${name}`], { encoding: "utf8" }).trim();
+    fs.symlinkSync(real, path.join(dir, name));
+  }
+  fs.writeFileSync(path.join(dir, "curl"), fakeCurlScript(), { mode: 0o755 });
+  if (checksumTools.sha256sum) {
+    fs.writeFileSync(path.join(dir, "sha256sum"), fakeChecksumScript(checksumTools.sha256sum), {
+      mode: 0o755
+    });
+  }
+  if (checksumTools.shasum) {
+    fs.writeFileSync(path.join(dir, "shasum"), fakeChecksumScript(checksumTools.shasum), {
+      mode: 0o755
+    });
+  }
+  return dir;
+}
+
+/**
+ * @param {{sha256sum?: string, shasum?: string}} checksumTools
+ * @param {(paths: {bin: string, cacheDir: string}) => void} run
+ */
+function withFakeInstallEnv(checksumTools, run) {
+  const bin = buildFakeBin(checksumTools);
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-actionlint-cache-"));
+  try {
+    run({ bin, cacheDir });
+  } finally {
+    fs.rmSync(bin, { recursive: true, force: true });
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+  }
+}
+
+test("actionlint install succeeds using sha256sum when only sha256sum is available", () => {
+  const hash = realArchiveExpectedSha256();
+  withFakeInstallEnv({ sha256sum: hash }, ({ bin, cacheDir }) => {
+    const output = execFileSync(path.join(ROOT, "tools", "actionlint.sh"), ["--install"], {
+      env: { PATH: bin, ACTIONLINT_CACHE_DIR: cacheDir },
+      encoding: "utf8"
+    });
+    assert.ok(output.includes("installed actionlint"), output);
+    assert.ok(fs.existsSync(path.join(cacheDir, "1.7.12", "actionlint")));
+  });
+});
+
+test("actionlint install succeeds using shasum -a 256 (Darwin-style) when sha256sum is absent", () => {
+  const hash = realArchiveExpectedSha256();
+  withFakeInstallEnv({ shasum: hash }, ({ bin, cacheDir }) => {
+    const output = execFileSync(path.join(ROOT, "tools", "actionlint.sh"), ["--install"], {
+      env: { PATH: bin, ACTIONLINT_CACHE_DIR: cacheDir },
+      encoding: "utf8"
+    });
+    assert.ok(output.includes("installed actionlint"), output);
+    assert.ok(fs.existsSync(path.join(cacheDir, "1.7.12", "actionlint")));
+  });
+});
+
+test("actionlint install fails on a checksum mismatch", () => {
+  withFakeInstallEnv({ sha256sum: "0".repeat(64) }, ({ bin, cacheDir }) => {
+    assert.throws(() => {
+      execFileSync(path.join(ROOT, "tools", "actionlint.sh"), ["--install"], {
+        env: { PATH: bin, ACTIONLINT_CACHE_DIR: cacheDir },
+        stdio: "pipe"
+      });
+    }, /checksum mismatch/);
+    assert.equal(fs.existsSync(path.join(cacheDir, "1.7.12", "actionlint")), false);
+  });
+});
+
+test("actionlint install fails closed before any network/filesystem work when neither checksum tool is available", () => {
+  withFakeInstallEnv({}, ({ bin, cacheDir }) => {
+    assert.throws(() => {
+      execFileSync(path.join(ROOT, "tools", "actionlint.sh"), ["--install"], {
+        env: { PATH: bin, ACTIONLINT_CACHE_DIR: cacheDir },
+        stdio: "pipe"
+      });
+    }, /neither sha256sum nor shasum is available/);
+    assert.equal(fs.existsSync(path.join(cacheDir, "1.7.12")), false);
+  });
+});
+
 test("gitignore covers generated tooling state", () => {
   const gitignore = fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8");
   for (const entry of ["venv/", ".hypothesis/", "coverage/", "node_modules/"]) {
