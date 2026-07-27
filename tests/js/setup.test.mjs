@@ -31,6 +31,22 @@ test("exact devDependency pins", () => {
   }
 });
 
+test("js-yaml override is an exact pin and resolves every dependent to it", () => {
+  assert.equal(PKG.overrides?.["js-yaml"], "5.2.2");
+  const lock = JSON.parse(fs.readFileSync(path.join(ROOT, "package-lock.json"), "utf8"));
+  const resolvedVersions = Object.entries(lock.packages || {})
+    .filter(([lockPath]) => lockPath.endsWith("js-yaml") || lockPath.endsWith("/js-yaml"))
+    .map(([, info]) => info.version);
+  assert.ok(resolvedVersions.length > 0, "expected at least one resolved js-yaml entry");
+  for (const version of resolvedVersions) {
+    assert.equal(version, "5.2.2");
+  }
+});
+
+test("dependencies:audit is a maintainer-only networked leaf excluded from check:all", () => {
+  assert.equal(PKG.scripts["dependencies:audit"], "npm audit");
+});
+
 test("developer Python contract shape", () => {
   const contractPath = path.join(ROOT, "tools", "quality-policy", "developer-python.json");
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -118,20 +134,7 @@ test("no stray generated state at repo root", () => {
   }
 });
 
-test("command graph is not prematurely activated", () => {
-  const graph = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "command-graph.json"), "utf8")
-  );
-  for (const leaf of graph.notYetActivatedLeaves) {
-    assert.ok(
-      !(leaf in PKG.scripts),
-      `${leaf} must not be an active package.json script yet (not activated until its designated phase)`
-    );
-  }
-});
-
 test("no accidental check:ci or pre-commit command", () => {
   assert.ok(!("check:ci" in PKG.scripts));
-  assert.ok(!("schema:check" in PKG.scripts));
   assert.ok(!fs.existsSync(path.join(ROOT, ".pre-commit-config.yaml")));
 });

@@ -377,6 +377,23 @@ test("a bare phase citation without a plan number fails", () => {
   assert.equal(result.summary.byRule["exec-plan-reference"], 1);
 });
 
+test("a literal NUL byte inside a comment fails even though it cannot break parsing", () => {
+  const result = runChecker({
+    "tools/example.mjs": "// note\u0000 with a stray NUL\nexport function helper() {}\n"
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.summary.byRule["no-nul-byte"], 1);
+});
+
+test("a clean tool file with no NUL byte passes", () => {
+  const result = runChecker({
+    "tools/example.mjs": "// note\nexport function helper() {}\n"
+  });
+
+  assert.equal(result.status, 0, result.failures.join("\n"));
+});
+
 /** @param {Record<string, string>} files */
 function runChecker(files) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-patterns-"));

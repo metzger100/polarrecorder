@@ -161,6 +161,10 @@
       "owner": "prettier"
     },
     {
+      "path": "documentation/guides/live-avnav-checklist.md",
+      "owner": "prettier"
+    },
+    {
       "path": "documentation/guides/release-workflow.md",
       "owner": "prettier"
     },
@@ -195,14 +199,6 @@
       "owner": "prettier"
     },
     {
-      "path": "exec-plans/active/PLAN6.md",
-      "owner": "prettier"
-    },
-    {
-      "path": "exec-plans/PLAN5Ledger.md",
-      "owner": "prettier"
-    },
-    {
       "path": "install.sh",
       "owner": "unsupported",
       "reason": "no maintained shell formatter in this inventory",
@@ -210,10 +206,6 @@
     },
     {
       "path": "jscpd.config.json",
-      "owner": "prettier"
-    },
-    {
-      "path": "linkinator.config.json",
       "owner": "prettier"
     },
     {
@@ -268,6 +260,18 @@
     },
     {
       "path": "ROADMAP.md",
+      "owner": "prettier"
+    },
+    {
+      "path": "schemas/avnav-plugin-base.schema.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "schemas/polar-plugin-dev.schema.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "schemas/polar-plugin-release.schema.json",
       "owner": "prettier"
     },
     {
@@ -439,6 +443,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/documentation-checkers.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/eslint-config.test.mjs",
       "owner": "prettier"
     },
@@ -499,11 +507,19 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/typecheck-tools.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/viewer-advanced.test.mjs",
       "owner": "prettier"
     },
     {
       "path": "tests/js/viewer-enhanced.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-export.test.mjs",
       "owner": "prettier"
     },
     {
@@ -775,6 +791,14 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-doc-links-proof.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-doc-links.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-doc-reachability.mjs",
       "owner": "prettier"
     },
@@ -791,11 +815,31 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-file-size/collapsed-literal-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-file-size/oneliner-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-file-size/scan-helpers.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-headers.mjs",
       "owner": "prettier"
     },
     {
       "path": "tools/check-js-duplication.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-js-duplication/clone-detection.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-js-duplication/parse.mjs",
       "owner": "prettier"
     },
     {
@@ -808,6 +852,30 @@
     },
     {
       "path": "tools/check-patterns.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/cross-file-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/discovery.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/js-rules-fallback.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/js-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/shared.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/source-scan.mjs",
       "owner": "prettier"
     },
     {
@@ -871,27 +939,23 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/mock_server/__init__.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/mock_server/handlers.py",
+      "owner": "ruff"
+    },
+    {
+      "path": "tools/mock_server/state.py",
+      "owner": "ruff"
+    },
+    {
       "path": "tools/mock-server.py",
       "owner": "ruff"
     },
     {
-      "path": "tools/quality-policy/baseline-complexity-capture.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/quality-policy/baseline-complexity-source-capture.json",
-      "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
-      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
-    },
-    {
       "path": "tools/quality-policy/baseline-coverage-capture.json",
-      "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
-      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
-    },
-    {
-      "path": "tools/quality-policy/baseline-test-inventory.json",
       "owner": "unsupported",
       "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
       "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
@@ -909,19 +973,11 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/command-graph.json",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/quality-policy/complexity-baseline.json",
       "owner": "prettier"
     },
     {
       "path": "tools/quality-policy/complexity-budget.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/quality-policy/complexity-findings-capture.json",
       "owner": "prettier"
     },
     {
@@ -937,6 +993,22 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/coverage-inventory/floor-baseline.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/coverage-inventory/python-coverage.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/coverage-inventory/shared.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/coverage-inventory/viewer-coverage.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/developer-python.json",
       "owner": "prettier"
     },
@@ -945,23 +1017,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/generate_baseline_complexity_source_capture.py",
-      "owner": "ruff"
-    },
-    {
       "path": "tools/quality-policy/generate_baseline_coverage_capture.py",
-      "owner": "ruff"
-    },
-    {
-      "path": "tools/quality-policy/generate_baseline_test_inventory.py",
-      "owner": "ruff"
-    },
-    {
-      "path": "tools/quality-policy/generate_rule_parity_ledger.py",
-      "owner": "ruff"
-    },
-    {
-      "path": "tools/quality-policy/generate_verified_baseline.py",
       "owner": "ruff"
     },
     {
@@ -979,10 +1035,8 @@
       "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
     },
     {
-      "path": "tools/quality-policy/rule-parity-ledger.json",
-      "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
-      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+      "path": "tools/quality-policy/plugin-schema-corpus.json",
+      "owner": "prettier"
     },
     {
       "path": "tools/quality-policy/run-format.mjs",
@@ -1009,10 +1063,8 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/verified-baseline.json",
-      "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
-      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+      "path": "tools/quality-policy/typecheck-tools.mjs",
+      "owner": "prettier"
     },
     {
       "path": "tools/release_manifest.py",
@@ -1051,11 +1103,23 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/viewer-harness/fake-dom.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/viewer-harness/fixtures.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tsconfig.checkjs.json",
       "owner": "prettier"
     },
     {
       "path": "tsconfig.tests.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tsconfig.tools.json",
       "owner": "prettier"
     },
     {
@@ -1158,8 +1222,8 @@
     }
   ],
   "countByOwner": {
-    "unsupported": 28,
-    "prettier": 148,
-    "ruff": 99
+    "unsupported": 24,
+    "prettier": 171,
+    "ruff": 98
   }
 }

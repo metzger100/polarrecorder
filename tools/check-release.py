@@ -22,7 +22,10 @@ def main() -> int:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Build and validate a temporary in-memory development-version artifact; never touches releases/.",
+        help=(
+            "Build and validate a temporary in-memory development-version artifact; "
+            "never touches releases/."
+        ),
     )
     parser.add_argument("--version", help="SemVer release version without v prefix.")
     parser.add_argument(
@@ -47,8 +50,7 @@ def main() -> int:
         manifest.validate_versions_match(release_version)
 
         notes_path = manifest.companion_notes_path(release_version)
-        if not notes_path.is_file():
-            raise manifest.ReleaseError(f"Companion release notes are missing: {notes_path}")
+        require_notes_file(notes_path)
 
         zip_path = (
             Path(args.zip_path) if args.zip_path else manifest.default_zip_path(release_version)
@@ -62,6 +64,12 @@ def main() -> int:
 
     print(f"Release check passed: {zip_path.relative_to(manifest.ROOT)}")
     return 0
+
+
+def require_notes_file(notes_path: Path) -> None:
+    """Raise a `ReleaseError` if the companion release-notes file is missing."""
+    if not notes_path.is_file():
+        raise manifest.ReleaseError(f"Companion release notes are missing: {notes_path}")
 
 
 def resolve_release_version(version: str | None, zip_path: str | None) -> str:
@@ -157,7 +165,7 @@ def validate_zip_contents(
 
 def normalize_zip_name(name: str) -> str:
     normalized = name.replace("\\", "/")
-    if normalized.startswith("/") or normalized.startswith("../") or "/../" in normalized:
+    if normalized.startswith(("/", "../")) or "/../" in normalized:
         raise manifest.ReleaseError(f"Release zip contains unsafe path: {name}")
     return normalized
 

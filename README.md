@@ -501,7 +501,9 @@ for the exact group composition).
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`);
 GitHub Releases only republishes an already-committed local artifact when a `v*` tag is pushed. See
-the [release workflow guide](documentation/guides/release-workflow.md) for the full flow.
+the [release workflow guide](documentation/guides/release-workflow.md) for the full flow. Before
+publishing, run the manual [live AvNav validation checklist](documentation/guides/live-avnav-checklist.md)
+against a real AvNav host; no automated gate can substitute for that.
 
 For local viewer/API work without AvNav, use the mock server:
 

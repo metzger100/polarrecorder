@@ -23,11 +23,7 @@ const OUTPUT_PATH = path.join(ROOT, "tools", "quality-policy", "format-scope.jso
 const HISTORICAL_EXCLUSION_PATTERNS = [/^releases\/.*\.(zip|md)$/, /^exec-plans\/completed\//];
 
 const IMMUTABLE_CAPTURE_JSON_FILES = new Set([
-  "tools/quality-policy/verified-baseline.json",
-  "tools/quality-policy/baseline-test-inventory.json",
   "tools/quality-policy/baseline-coverage-capture.json",
-  "tools/quality-policy/baseline-complexity-source-capture.json",
-  "tools/quality-policy/rule-parity-ledger.json",
   "tools/quality-policy/planned-quality-fixtures.json"
 ]);
 

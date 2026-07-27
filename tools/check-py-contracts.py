@@ -56,6 +56,10 @@ import ast
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 ROOT = Path(os.environ.get("POLARRECORDER_CHECK_ROOT", Path(__file__).resolve().parent.parent))
 SCAN_ROOT = ROOT / "server" / "polarrecorder"
@@ -64,7 +68,9 @@ SCAN_ROOT = ROOT / "server" / "polarrecorder"
 _MATH_SENTINEL_ATTRS = frozenset({"nan", "inf"})
 
 # Strings that turn ``float(...)`` into a non-finite sentinel.
-_FLOAT_SENTINEL_STRINGS = frozenset({"nan", "inf", "-inf", "+inf", "infinity", "-infinity"})
+_FLOAT_SENTINEL_STRINGS = frozenset(
+    {"nan", "inf", "-inf", "+inf", "infinity", "-infinity"},
+)
 
 # Name fragments that mark a declaration as a legacy/compat shim.
 _LEGACY_TOKENS = ("legacy", "compat", "deprecated")
@@ -251,24 +257,6 @@ def _declaration_names(tree: ast.Module) -> list[tuple[str, int]]:
     return declarations
 
 
-def _check_node(node: ast.AST, rel: str) -> list[str]:
-    """Return violations contributed by a single AST node."""
-    if isinstance(node, ast.BoolOp):
-        return _check_or_fallback(node, rel)
-    if isinstance(node, ast.Call):
-        return (
-            _check_getattr_fallback(node, rel)
-            + _check_float_sentinel(node, rel)
-            + _check_framework_method_guard(node, rel)
-            + _check_redundant_str_guard(node, rel)
-        )
-    if isinstance(node, ast.IfExp):
-        return _check_redundant_type_guard(node, rel)
-    if isinstance(node, ast.Attribute):
-        return _check_math_sentinel(node, rel)
-    return []
-
-
 def _check_or_fallback(node: ast.BoolOp, rel: str) -> list[str]:
     """Flag ``<expr> or <falsy-literal>`` masking defaults."""
     if not isinstance(node.op, ast.Or):
@@ -308,12 +296,15 @@ def _check_float_sentinel(node: ast.Call, rel: str) -> list[str]:
     if len(node.args) != 1:
         return []
     arg = node.args[0]
-    if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-        if arg.value.strip().lower() in _FLOAT_SENTINEL_STRINGS:
-            return [
-                f"{rel}:{node.lineno}: nan-sentinel: "
-                f"float({arg.value!r}) is an absent-value sentinel; use None"
-            ]
+    if (
+        isinstance(arg, ast.Constant)
+        and isinstance(arg.value, str)
+        and arg.value.strip().lower() in _FLOAT_SENTINEL_STRINGS
+    ):
+        return [
+            f"{rel}:{node.lineno}: nan-sentinel: "
+            f"float({arg.value!r}) is an absent-value sentinel; use None"
+        ]
     return []
 
 
@@ -348,9 +339,11 @@ def _check_framework_method_guard(node: ast.Call, rel: str) -> list[str]:
 
 def _check_redundant_str_guard(node: ast.Call, rel: str) -> list[str]:
     """Flag ``str(<x> if <y> is [not] None else <z>)`` re-sanitizing a value."""
-    if not (isinstance(node.func, ast.Name) and node.func.id == "str"):
-        return []
-    if len(node.args) != 1 or not isinstance(node.args[0], ast.IfExp):
+    if (
+        not (isinstance(node.func, ast.Name) and node.func.id == "str")
+        or len(node.args) != 1
+        or not isinstance(node.args[0], ast.IfExp)
+    ):
         return []
     test = node.args[0].test
     if not isinstance(test, ast.Compare):
@@ -358,13 +351,13 @@ def _check_redundant_str_guard(node: ast.Call, rel: str) -> list[str]:
     is_none_test = any(isinstance(op, (ast.Is, ast.IsNot)) for op in test.ops) and any(
         isinstance(value, ast.Constant) and value.value is None for value in test.comparators
     )
-    if is_none_test:
-        return [
-            f"{rel}:{node.lineno}: redundant-type-guard: "
-            f"'str(... if ... is None else ...)' re-sanitizes a producer-guaranteed "
-            f"value; trust the validated contract and stringify directly"
-        ]
-    return []
+    if not is_none_test:
+        return []
+    return [
+        f"{rel}:{node.lineno}: redundant-type-guard: "
+        f"'str(... if ... is None else ...)' re-sanitizes a producer-guaranteed "
+        f"value; trust the validated contract and stringify directly"
+    ]
 
 
 def _check_redundant_type_guard(node: ast.IfExp, rel: str) -> list[str]:
@@ -387,13 +380,42 @@ def _check_redundant_type_guard(node: ast.IfExp, rel: str) -> list[str]:
 
 def _check_math_sentinel(node: ast.Attribute, rel: str) -> list[str]:
     """Flag ``math.nan`` / ``math.inf`` used as a sentinel value."""
-    if isinstance(node.value, ast.Name) and node.value.id == "math":
-        if node.attr in _MATH_SENTINEL_ATTRS:
-            return [
-                f"{rel}:{node.lineno}: nan-sentinel: "
-                f"'math.{node.attr}' is an absent-value sentinel; use None"
-            ]
+    if (
+        isinstance(node.value, ast.Name)
+        and node.value.id == "math"
+        and node.attr in _MATH_SENTINEL_ATTRS
+    ):
+        return [
+            f"{rel}:{node.lineno}: nan-sentinel: "
+            f"'math.{node.attr}' is an absent-value sentinel; use None"
+        ]
     return []
+
+
+def _check_call_node(node: ast.Call, rel: str) -> list[str]:
+    """Run every Call-shaped contract rule against one node."""
+    return (
+        _check_getattr_fallback(node, rel)
+        + _check_float_sentinel(node, rel)
+        + _check_framework_method_guard(node, rel)
+        + _check_redundant_str_guard(node, rel)
+    )
+
+
+_NODE_TYPE_CHECKS: dict[type[ast.AST], Callable[[Any, str], list[str]]] = {
+    ast.BoolOp: _check_or_fallback,
+    ast.Call: _check_call_node,
+    ast.IfExp: _check_redundant_type_guard,
+    ast.Attribute: _check_math_sentinel,
+}
+
+
+def _check_node(node: ast.AST, rel: str) -> list[str]:
+    """Return violations contributed by a single AST node."""
+    check = _NODE_TYPE_CHECKS.get(type(node))
+    if check is None:
+        return []
+    return check(node, rel)
 
 
 def _is_self(node: ast.expr) -> bool:

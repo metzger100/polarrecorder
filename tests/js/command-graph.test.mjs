@@ -26,16 +26,25 @@ const REQUIRED_CHECK_CORE_GROUPS = [
   "test:split",
   "check:complexity",
   "check:scaling",
-  "check:docs",
+  "docs:check",
   "check:filesize"
 ];
 
-const FORBIDDEN_SCRIPTS = [
-  "check:migration",
-  "check:ci",
-  "schema:check",
-  "check:js:core",
-  "check:js:all"
+const FORBIDDEN_SCRIPTS = ["check:migration", "check:ci", "check:js:core", "check:js:all"];
+
+/** Scripts that are intentionally not reached by `check:all` (maintainer/dev entry points). */
+const ALLOWED_OUTSIDE_CHECK_ALL = [
+  "setup",
+  "hooks:install",
+  "hooks:doctor",
+  "format",
+  "format:scope",
+  "requirements:lock",
+  "release:prepare",
+  "release:create",
+  "check:fast",
+  "check:strict",
+  "dependencies:audit"
 ];
 
 /**
@@ -85,6 +94,57 @@ test("tools/check-all.sh is a pure root-scoped compatibility wrapper", () => {
 test("no forbidden script name is declared", () => {
   for (const name of FORBIDDEN_SCRIPTS) {
     assert.ok(!(name in PKG.scripts), `forbidden script present: ${name}`);
+  }
+});
+
+test("docs:check is reached by check:core", () => {
+  assert.ok("docs:check" in PKG.scripts, "docs:check must be defined");
+  assert.ok(
+    npmRunTokens(PKG.scripts["check:core"]).has("docs:check"),
+    "check:core must run docs:check"
+  );
+});
+
+test("schema:check is a real leaf reached by package:check", () => {
+  assert.ok("schema:check" in PKG.scripts, "schema:check must be defined");
+  assert.equal(PKG.scripts["schema:check"], "node tools/check-schema.mjs");
+  const packageCheckTokens = [...PKG.scripts["package:check"].matchAll(/npm run ([\w:-]+)/g)].map(
+    (m) => m[1]
+  );
+  assert.equal(
+    packageCheckTokens[0],
+    "schema:check",
+    "package:check must run schema:check as its first composed step"
+  );
+});
+
+test("every declared script is reachable from check:all or explicitly allowed outside it", () => {
+  const reachable = new Set();
+
+  /** @param {string} name */
+  function visit(name) {
+    if (reachable.has(name) || !(name in PKG.scripts)) return;
+    reachable.add(name);
+    for (const token of npmRunTokens(PKG.scripts[name])) {
+      visit(token);
+    }
+  }
+  visit("check:all");
+
+  for (const name of Object.keys(PKG.scripts)) {
+    if (reachable.has(name)) continue;
+    assert.ok(
+      ALLOWED_OUTSIDE_CHECK_ALL.includes(name),
+      `${name} is unreachable from check:all and not in ALLOWED_OUTSIDE_CHECK_ALL`
+    );
+  }
+
+  for (const name of ALLOWED_OUTSIDE_CHECK_ALL) {
+    assert.ok(name in PKG.scripts, `ALLOWED_OUTSIDE_CHECK_ALL names missing script '${name}'`);
+    assert.ok(
+      !reachable.has(name),
+      `${name} is reachable from check:all; remove it from the allowlist`
+    );
   }
 });
 

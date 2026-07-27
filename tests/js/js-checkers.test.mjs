@@ -280,6 +280,33 @@ test("file size check", () => {
   assert.ok(
     legacyPluginPacked.failures.some((/** @type {string} */ f) => f.includes("single-line-body"))
   );
+
+  const oversizedTool = runIn(
+    { "tools/example.mjs": "export const noop = 1;\n".repeat(401) },
+    (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
+  );
+  assert.equal(oversizedTool.ok, false);
+  assert.ok(
+    oversizedTool.failures.some((/** @type {string} */ f) =>
+      f.includes("non-empty lines (limit 400)")
+    )
+  );
+
+  const cleanTool = runIn(
+    { "tools/nested/example.mjs": "export function helper() {\n  return 1;\n}\n" },
+    (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
+  );
+  assert.equal(cleanTool.ok, true, cleanTool.failures.join("\n"));
+
+  const densePackedTool = runIn(
+    { "tools/example.mjs": "export function helper() { const a = 1; const b = 2; }\n" },
+    (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
+  );
+  assert.equal(
+    densePackedTool.ok,
+    true,
+    "tools/**/*.mjs is scoped to the line-count limit only, not oneliner density"
+  );
 });
 
 /**

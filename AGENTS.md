@@ -70,7 +70,7 @@ Documentation must be complete when added or changed. Do not leave stub sections
 Python:
 
 - Every Python file in `plugin.py`, `server/polarrecorder/`, and `tests/` uses `from __future__ import annotations`.
-- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `viewer/*.css`, `viewer/*.html`, `plugin.js`, `plugin.mjs`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `tools/` and `exec-plans/` are exempt.
+- `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `viewer/*.css`, `viewer/*.html`, `plugin.js`, `plugin.mjs`, `tools/**/*.mjs`, `tools/**/*.py`, project Markdown files, and `documentation/**/*.md` have a 400 non-empty-line hard limit; `exec-plans/` is exempt.
 - `server/polarrecorder/**/*.py` files, except `__init__.py`, must start with the mandatory module header.
 - All functions are typed; public functions have Google-style docstrings.
 - Ruff formatting and `mypy --strict` are binding.
@@ -131,7 +131,7 @@ State and threading:
 - Mandatory on every task: follow `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md`.
 - Blocking smells include AvNav imports in `server/polarrecorder/`, reverse imports from domain code to `plugin.py`, lock acquisition in domain modules, hidden real-time dependencies, magic thresholds outside named config/constants, unsafe browser patterns, dead commented-out code, and citing a plan or phase number outside `exec-plans/` (see `documentation/guides/exec-plan-authoring.md`).
 - Required completion gate: `tools/check-all.sh`.
-- Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run check:docs`.
+- Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run docs:check`.
 
 ---
 

@@ -27,6 +27,12 @@ function resolveVenvDir() {
   return process.env.POLARRECORDER_VENV || path.join(ROOT, "venv");
 }
 
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {import("node:child_process").ExecFileSyncOptions} [options]
+ * @returns {void}
+ */
 function run(command, args, options = {}) {
   console.log(`+ ${command} ${args.join(" ")}`);
   execFileSync(command, args, { stdio: "inherit", cwd: ROOT, ...options });

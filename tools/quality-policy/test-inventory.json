@@ -30,6 +30,10 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/documentation-checkers.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/eslint-config.test.mjs",
       "classification": "strict"
     },
@@ -90,11 +94,19 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/typecheck-tools.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/viewer-advanced.test.mjs",
       "classification": "strict"
     },
     {
       "path": "tests/js/viewer-enhanced.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-export.test.mjs",
       "classification": "strict"
     },
     {

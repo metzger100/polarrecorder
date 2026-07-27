@@ -3,67 +3,46 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = process.cwd();
-const DOC_ROOT = path.join(ROOT, "documentation");
-const TOC = path.join(DOC_ROOT, "TABLEOFCONTENTS.md");
-const failures = [];
-
-const docFiles = collectMarkdownFiles(DOC_ROOT);
-const tocLinks = parseTocLinks();
-const linkedDocs = new Set(tocLinks.map((link) => link.abs));
-
-for (const file of docFiles) {
-  if (file === TOC) continue;
-  if (!linkedDocs.has(file)) {
-    fail("missing-toc-link", file, "documentation file is not linked from TABLEOFCONTENTS.md");
-  }
+/**
+ * @param {string} root
+ * @returns {string}
+ */
+function docRoot(root) {
+  return path.join(root, "documentation");
 }
 
-for (const link of tocLinks) {
-  if (!fs.existsSync(link.abs)) {
-    fail(
-      "missing-toc-target",
-      TOC,
-      `TABLEOFCONTENTS.md links to missing documentation file '${link.target}'`
-    );
-  }
+/**
+ * @param {string} root
+ * @returns {string}
+ */
+function tocPath(root) {
+  return path.join(docRoot(root), "TABLEOFCONTENTS.md");
 }
 
-const summary = {
-  ok: failures.length === 0,
-  checkedDocumentationFiles: docFiles.length,
-  tocLinks: tocLinks.length,
-  failures: failures.length
-};
-
-if (failures.length > 0) {
-  console.error("Documentation table-of-contents check failed:\n");
-  for (const item of failures) {
-    console.error(`- [${item.type}] ${rel(item.file)}: ${item.message}`);
-  }
-  console.error("\nSUMMARY_JSON=" + JSON.stringify(summary));
-  process.exit(1);
-}
-
-console.log("Documentation table-of-contents check passed.");
-console.log("SUMMARY_JSON=" + JSON.stringify(summary));
-
-function parseTocLinks() {
-  if (!fs.existsSync(TOC)) {
-    fail("missing-toc", TOC, "documentation/TABLEOFCONTENTS.md does not exist");
+/**
+ * @param {{root: string, docRoot: string, toc: string, failures: {type: string, file: string, message: string}[]}} ctx
+ * @returns {{target: string, abs: string}[]}
+ */
+function parseTocLinks(ctx) {
+  if (!fs.existsSync(ctx.toc)) {
+    ctx.failures.push({
+      type: "missing-toc",
+      file: ctx.toc,
+      message: "documentation/TABLEOFCONTENTS.md does not exist"
+    });
     return [];
   }
 
   const links = [];
-  const content = stripCode(fs.readFileSync(TOC, "utf8"));
+  const content = stripCode(fs.readFileSync(ctx.toc, "utf8"));
   const re = /!?\[[^\]]*]\(([^)]+)\)/g;
   let match;
 
   while ((match = re.exec(content))) {
     const target = normalizeMarkdownTarget(match[1]);
     if (!target) continue;
-    const abs = path.resolve(path.dirname(TOC), target);
-    if (isInsideDocumentation(abs)) {
+    const abs = path.resolve(path.dirname(ctx.toc), target);
+    if (isInsideDocumentation(ctx.docRoot, abs)) {
       links.push({ target, abs: stripFragment(abs) });
     }
   }
@@ -71,13 +50,23 @@ function parseTocLinks() {
   return links;
 }
 
+/**
+ * @param {string} start
+ * @returns {string[]}
+ */
 function collectMarkdownFiles(start) {
   if (!fs.existsSync(start)) return [];
+  /** @type {string[]} */
   const out = [];
   walk(start, out);
-  return out.map((file) => path.resolve(file)).sort((a, b) => rel(a).localeCompare(rel(b)));
+  return out.map((file) => path.resolve(file)).sort();
 }
 
+/**
+ * @param {string} current
+ * @param {string[]} out
+ * @returns {void}
+ */
 function walk(current, out) {
   const stat = fs.statSync(current);
   if (stat.isFile()) {
@@ -89,6 +78,10 @@ function walk(current, out) {
   }
 }
 
+/**
+ * @param {string} raw
+ * @returns {string}
+ */
 function normalizeMarkdownTarget(raw) {
   let out = raw.trim();
   if (!out) return "";
@@ -100,18 +93,32 @@ function normalizeMarkdownTarget(raw) {
   return out;
 }
 
+/**
+ * @param {string} absPath
+ * @returns {string}
+ */
 function stripFragment(absPath) {
   const hashIndex = absPath.indexOf("#");
   return hashIndex >= 0 ? absPath.slice(0, hashIndex) : absPath;
 }
 
-function isInsideDocumentation(absPath) {
-  const relative = path.relative(DOC_ROOT, stripFragment(absPath));
-  return relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+/**
+ * @param {string} docRootPath
+ * @param {string} absPath
+ * @returns {boolean}
+ */
+function isInsideDocumentation(docRootPath, absPath) {
+  const relative = path.relative(docRootPath, stripFragment(absPath));
+  return Boolean(relative) && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+/**
+ * @param {string} markdown
+ * @returns {string}
+ */
 function stripCode(markdown) {
   const lines = markdown.split(/\r?\n/);
+  /** @type {string[]} */
   const out = [];
   let inFence = false;
 
@@ -127,10 +134,68 @@ function stripCode(markdown) {
   return out.join("\n");
 }
 
-function fail(type, file, message) {
-  failures.push({ type, file, message });
+/**
+ * Verify every `documentation/**\/*.md` file is linked from the TOC and every TOC link
+ * resolves to a real file.
+ *
+ * @param {{root?: string, print?: boolean}} [options]
+ * @returns {{ok: boolean, checkedDocumentationFiles: number, tocLinks: number, failures: number}}
+ */
+export function runDocsCheck(options = {}) {
+  const root = options.root || process.cwd();
+  const print = options.print !== false;
+  /** @type {{root: string, docRoot: string, toc: string, failures: {type: string, file: string, message: string}[]}} */
+  const ctx = { root, docRoot: docRoot(root), toc: tocPath(root), failures: [] };
+
+  const docFiles = collectMarkdownFiles(ctx.docRoot);
+  const tocLinks = parseTocLinks(ctx);
+  const linkedDocs = new Set(tocLinks.map((link) => link.abs));
+
+  for (const file of docFiles) {
+    if (file === ctx.toc) continue;
+    if (!linkedDocs.has(file)) {
+      ctx.failures.push({
+        type: "missing-toc-link",
+        file,
+        message: "documentation file is not linked from TABLEOFCONTENTS.md"
+      });
+    }
+  }
+
+  for (const link of tocLinks) {
+    if (!fs.existsSync(link.abs)) {
+      ctx.failures.push({
+        type: "missing-toc-target",
+        file: ctx.toc,
+        message: `TABLEOFCONTENTS.md links to missing documentation file '${link.target}'`
+      });
+    }
+  }
+
+  const summary = {
+    ok: ctx.failures.length === 0,
+    checkedDocumentationFiles: docFiles.length,
+    tocLinks: tocLinks.length,
+    failures: ctx.failures.length
+  };
+
+  if (print) {
+    if (!summary.ok) {
+      console.error("Documentation table-of-contents check failed:\n");
+      for (const item of ctx.failures) {
+        console.error(`- [${item.type}] ${path.relative(root, item.file) || "."}: ${item.message}`);
+      }
+      console.error("\nSUMMARY_JSON=" + JSON.stringify(summary));
+    } else {
+      console.log("Documentation table-of-contents check passed.");
+      console.log("SUMMARY_JSON=" + JSON.stringify(summary));
+    }
+  }
+
+  return summary;
 }
 
-function rel(file) {
-  return path.relative(ROOT, file).replace(/\\/g, "/") || ".";
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const result = runDocsCheck();
+  process.exitCode = result.ok ? 0 : 1;
 }

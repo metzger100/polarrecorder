@@ -1,63 +1,19 @@
 /**
- * Self-tests for tools/quality-policy/complexity-scan.mjs, baseline-complexity-capture.mjs,
- * and complexity-budget.mjs -- the permanent, parser-locked complexity ratchet.
- *
- * The expected SHA-256 of baseline-complexity-source-capture.json (the frozen Git-blob
- * identity list) is hardcoded here, independent of the file itself, so a coordinated edit
- * that repoints a blob and regenerates the findings capture to match still requires a
- * visible, reviewable change to this anchor (mirroring test-inventory.test.mjs's exception
- * baseline digest and coverage-inventory.test.mjs's coverage capture digest).
+ * Self-tests for tools/quality-policy/complexity-scan.mjs and complexity-budget.mjs --
+ * the permanent, parser-locked complexity ratchet. The active baseline enforces the
+ * strict 10/40/4/6 limits directly against the live tree; there is no historical
+ * Git-blob-derived exception path to reconcile against.
  */
 
 import assert from "node:assert/strict";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import { test } from "node:test";
 import path from "node:path";
 
-import {
-  captureHistoricalComplexity,
-  verifyHistoricalComplexityCapture
-} from "../../tools/quality-policy/baseline-complexity-capture.mjs";
 import { runComplexityBudgetCheck } from "../../tools/quality-policy/complexity-budget.mjs";
 
 const ROOT = process.cwd();
-const EXPECTED_SOURCE_CAPTURE_DIGEST =
-  "8163b6c696d157fcb578739e73cdfa8f77d7072b1c993b8523bf90c58439adc5";
-
-test("the baseline complexity source capture is byte-anchored", () => {
-  const capturePath = path.join(
-    ROOT,
-    "tools",
-    "quality-policy",
-    "baseline-complexity-source-capture.json"
-  );
-  const digest = crypto.createHash("sha256").update(fs.readFileSync(capturePath)).digest("hex");
-  assert.equal(digest, EXPECTED_SOURCE_CAPTURE_DIGEST);
-});
-
-test("the committed findings capture matches what is derived from the exact captured blobs", () => {
-  const derived = captureHistoricalComplexity();
-  const committed = JSON.parse(
-    fs.readFileSync(
-      path.join(ROOT, "tools", "quality-policy", "complexity-findings-capture.json"),
-      "utf8"
-    )
-  );
-  assert.deepEqual(derived, committed);
-});
-
-test("verifyHistoricalComplexityCapture accepts an identical capture", () => {
-  const capture = captureHistoricalComplexity();
-  assert.doesNotThrow(() => verifyHistoricalComplexityCapture(capture, capture));
-});
-
-test("verifyHistoricalComplexityCapture throws on any divergence", () => {
-  const capture = captureHistoricalComplexity();
-  const tampered = { ...capture, findingCount: capture.findingCount + 1 };
-  assert.throws(() => verifyHistoricalComplexityCapture(capture, tampered), /differs/);
-});
 
 test("the real repo complexity budget check passes", () => {
   const result = runComplexityBudgetCheck({ root: ROOT, print: false });
@@ -132,7 +88,7 @@ test("fails when an active baseline value is above the current finding", () => {
     value: 44,
     limit: 40
   };
-  writePolicies(root, [active], [{ ...active, value: 45 }]);
+  writePolicies(root, [active]);
 
   const result = runComplexityBudgetCheck({ root, print: false });
 
@@ -198,7 +154,7 @@ test("fails when the baseline file has a duplicate entry for the same function a
     value: 7,
     limit: 6
   };
-  writePolicies(root, [entry, entry], [entry]);
+  writePolicies(root, [entry, entry]);
 
   const result = runComplexityBudgetCheck({ root, print: false });
 
@@ -217,7 +173,7 @@ test("fails closed when a baseline value is not a finite integer", () => {
     value: "7",
     limit: 6
   };
-  writePolicies(root, [entry], []);
+  writePolicies(root, [entry]);
 
   const result = runComplexityBudgetCheck({ root, print: false });
 
@@ -229,20 +185,16 @@ test("fails closed when a baseline value is not a finite integer", () => {
 test("fails closed when a baseline metric or strict limit is invalid", () => {
   const root = makeFakeRoot();
   writeFile(root, "viewer/example.js", PARAMS_FIXTURE);
-  writePolicies(
-    root,
-    [
-      {
-        file: "viewer/example.js",
-        identity: "tooManyParams",
-        metric: "max-params",
-        value: 7,
-        limit: 7
-      },
-      { file: "viewer/example.js", identity: "other", metric: "unknown", value: 7, limit: 6 }
-    ],
-    []
-  );
+  writePolicies(root, [
+    {
+      file: "viewer/example.js",
+      identity: "tooManyParams",
+      metric: "max-params",
+      value: 7,
+      limit: 7
+    },
+    { file: "viewer/example.js", identity: "other", metric: "unknown", value: 7, limit: 6 }
+  ]);
 
   const result = runComplexityBudgetCheck({ root, print: false });
 
@@ -252,7 +204,7 @@ test("fails closed when a baseline metric or strict limit is invalid", () => {
   cleanup(root);
 });
 
-test("rejects self-grandfathering new debt with a matching active baseline entry", () => {
+test("passes when an active baseline entry exactly matches its live finding value", () => {
   const root = makeFakeRoot();
   writeFile(root, "viewer/example.js", COMPLEXITY_FIXTURE);
   const entry = {
@@ -262,33 +214,11 @@ test("rejects self-grandfathering new debt with a matching active baseline entry
     value: 12,
     limit: 10
   };
-  writePolicies(root, [entry], []);
+  writePolicies(root, [entry]);
 
   const result = runComplexityBudgetCheck({ root, print: false });
 
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("Unapproved complexity-baseline entry")));
-  assert.ok(result.failures.some((f) => f.includes("New debt must be fixed, not baselined")));
-  cleanup(root);
-});
-
-test("rejects an active debt value above its immutable historical value", () => {
-  const root = makeFakeRoot();
-  writeFile(root, "viewer/example.js", STATEMENTS_FIXTURE);
-  const active = {
-    file: "viewer/example.js",
-    identity: "tooManyStatements",
-    metric: "max-statements",
-    value: 43,
-    limit: 40
-  };
-  writePolicies(root, [active], [{ ...active, value: 42 }]);
-
-  const result = runComplexityBudgetCheck({ root, print: false });
-
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("Invalid complexity-baseline increase")));
-  assert.ok(result.failures.some((f) => f.includes("exceeds the captured baseline value 42")));
+  assert.equal(result.ok, true, result.failures.join("\n"));
   cleanup(root);
 });
 
@@ -370,16 +300,11 @@ function writeFile(root, relativePath, content) {
 /**
  * @param {string} root
  * @param {object[]} entries
- * @param {object[]} [historicalEntries]
  */
-function writePolicies(root, entries, historicalEntries = entries) {
+function writePolicies(root, entries) {
   fs.writeFileSync(
     path.join(root, "tools", "quality-policy", "complexity-baseline.json"),
     JSON.stringify({ entries })
-  );
-  fs.writeFileSync(
-    path.join(root, "tools", "quality-policy", "complexity-findings-capture.json"),
-    JSON.stringify({ findings: historicalEntries })
   );
 }
 

@@ -1,5 +1,6 @@
 /**
- * Self-tests for tools/check-schema.mjs, the approved `schema:check` non-port.
+ * Self-tests for tools/check-schema.mjs, the Ajv-driven `schema:check` plugin.json
+ * validator.
  */
 
 import assert from "node:assert/strict";
@@ -50,7 +51,16 @@ test("rejects a dev-form plugin.json that already carries a version", () => {
   fs.writeFileSync(path.join(root, "plugin.json"), '{"version": "1.0.0"}');
   const result = runSchemaCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("must not carry a 'version' key")));
+  assert.ok(result.failures.some((f) => f.includes("development form")));
+  cleanup(root);
+});
+
+test("rejects a dev-form plugin.json that declares userApps", () => {
+  const root = makeFakeRoot();
+  fs.writeFileSync(path.join(root, "plugin.json"), '{"userApps": []}');
+  const result = runSchemaCheck({ root, print: false });
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((f) => f.includes("development form")));
   cleanup(root);
 });
 
@@ -59,7 +69,7 @@ test("rejects a non-object dev-form plugin.json", () => {
   fs.writeFileSync(path.join(root, "plugin.json"), "[]");
   const result = runSchemaCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("development form) must be a JSON object")));
+  assert.ok(result.failures.some((f) => f.includes("development form")));
   cleanup(root);
 });
 
@@ -100,6 +110,65 @@ def stamp_plugin_json(version):
   fs.appendFileSync(path.join(root, "tools", "release_manifest.py"), "\n\n" + brokenManifest);
   const result = runSchemaCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("must have a non-empty string 'version'")));
+  assert.ok(result.failures.some((f) => f.includes("release form") && f.includes("version")));
   cleanup(root);
+});
+
+test("release form validation rejects version-not-first-key even when the schema shape is valid", () => {
+  const root = makeFakeRoot();
+  const reorderedManifest =
+    `
+def stamp_plugin_json(version):
+    return b'{"name": "polarrecorder", "version": "` +
+    "0.0.0" +
+    `"}'
+`;
+  fs.appendFileSync(path.join(root, "tools", "release_manifest.py"), "\n\n" + reorderedManifest);
+  const result = runSchemaCheck({ root, print: false });
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((f) => f.includes("first serialized key")));
+  cleanup(root);
+});
+
+test("every genericBase and polarServerProfile corpus row matches the real Ajv validators", async () => {
+  const corpus = JSON.parse(
+    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "plugin-schema-corpus.json"), "utf8")
+  );
+  const { default: Ajv } = await import("ajv");
+  const ajv = new Ajv({ allErrors: true });
+  ajv.addSchema(
+    JSON.parse(fs.readFileSync(path.join(ROOT, "schemas", "avnav-plugin-base.schema.json"), "utf8"))
+  );
+  for (const value of corpus.genericBase.valid) {
+    assert.equal(ajv.validate("avnav-plugin-base.schema.json", value), true, JSON.stringify(value));
+  }
+  for (const value of corpus.genericBase.invalid) {
+    assert.equal(
+      ajv.validate("avnav-plugin-base.schema.json", value),
+      false,
+      JSON.stringify(value)
+    );
+  }
+
+  const validateDev = ajv.compile(
+    JSON.parse(fs.readFileSync(path.join(ROOT, "schemas", "polar-plugin-dev.schema.json"), "utf8"))
+  );
+  for (const value of corpus.polarServerProfile.dev.valid) {
+    assert.equal(validateDev(value), true, JSON.stringify(value));
+  }
+  for (const value of corpus.polarServerProfile.dev.invalid) {
+    assert.equal(validateDev(value), false, JSON.stringify(value));
+  }
+
+  const validateRelease = ajv.compile(
+    JSON.parse(
+      fs.readFileSync(path.join(ROOT, "schemas", "polar-plugin-release.schema.json"), "utf8")
+    )
+  );
+  for (const value of corpus.polarServerProfile.release.valid) {
+    assert.equal(validateRelease(value), true, JSON.stringify(value));
+  }
+  for (const value of corpus.polarServerProfile.release.invalid) {
+    assert.equal(validateRelease(value), false, JSON.stringify(value));
+  }
 });

@@ -87,6 +87,7 @@ export const REQUIRED_SMELL_RULES = [
   "Machine-specific host citation",
   "Unowned TODO",
   "Exec-plan/phase citation",
+  "Maintained-source NUL byte",
   "Release artifact drift",
   "Hook installation drift",
   "Custom checker without tests",

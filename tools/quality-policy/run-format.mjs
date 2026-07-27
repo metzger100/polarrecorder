@@ -25,6 +25,9 @@ function resolveRuff() {
   return fs.existsSync(venvRuff) ? venvRuff : "ruff";
 }
 
+/**
+ * @returns {{rows: {path: string, owner: string}[]}}
+ */
 function loadScope() {
   const scopePath = path.join(ROOT, "tools", "quality-policy", "format-scope.json");
   return JSON.parse(fs.readFileSync(scopePath, "utf8"));

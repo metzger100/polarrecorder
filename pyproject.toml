@@ -14,14 +14,11 @@ pythonpath = [".", "server"]
 [tool.ruff]
 target-version = "py39"
 line-length = 100
-# tools/ is dev-only CLI tooling (print()-based output, http.server, etc.) and is exempt
-# from ruff, consistent with its existing exemption from mypy, the file-size limit, and
-# header checks. extend-exclude (not per-file-ignores) so `ruff format --check` skips it too.
 # "*.md" is excluded because Ruff's default file_resolver.include now contains "*.md" and
 # formats embedded Python fenced code blocks in Markdown; Markdown is Prettier's format
 # domain, not Ruff's, and this default once caused `ruff format --check .` to want to
 # reformat historical exec-plans/completed/PLAN1.md.
-extend-exclude = ["tools", "*.md"]
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = [
@@ -82,6 +79,16 @@ convention = "google"
 ]
 "server/polarrecorder/__init__.py" = ["D104"]  # __init__.py needs no docstring
 "plugin.py" = ["D100", "TID251", "E402", "N802", "BLE001"]  # module docstring covered by file header; AvNav imports are legitimate here; E402 for the mandatory sys.path import guard (imports follow the path-insertion); N802 for the AvNav-mandated classmethod name pluginInfo; BLE001 catches are AvNav boundary crash safety
+# Tool-appropriate rules (not the product-module ruleset): maintained CLI/checker scripts
+# under tools/ are not product-module Documentation/Depends-headered files, so D (docstrings)
+# is ceremony rather than a real contract; T20 legitimately prints CLI output/reports; TRY003/
+# EM101/EM102's exception-message style exists to keep shipped product exceptions clean for
+# logs/users, and does not carry the same weight for a one-off local dev-tool error string;
+# PLR2004's magic-value rule targets hardcoded model/validation thresholds in product code
+# (documentation/conventions/coding-standards.md), not fixture literals or CLI/report
+# thresholds in dev tooling. Correctness, security, complexity, and style rules outside this
+# list still apply to tools/ in full.
+"tools/**/*.py" = ["D", "T20", "TRY003", "EM101", "EM102", "PLR2004"]
 
 [tool.mypy]
 # Current mypy releases only support analyzing Python 3.10+. Runtime Python 3.9

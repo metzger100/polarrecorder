@@ -11,8 +11,12 @@ from pathlib import Path
 ROOT = Path(os.environ.get("POLARRECORDER_CHECK_ROOT", Path(__file__).resolve().parent.parent))
 PY39_FEATURE_VERSION = (3, 9)
 PY310_STDLIB_MODULES = frozenset({"tomllib"})
-PY310_TYPING_NAMES = frozenset({"Concatenate", "ParamSpec", "Self", "TypeAlias"})
-PY311_TYPING_NAMES = frozenset({"Never", "NotRequired", "Required", "TypeVarTuple", "Unpack"})
+PY310_TYPING_NAMES = frozenset(
+    {"Concatenate", "ParamSpec", "Self", "TypeAlias"},
+)
+PY311_TYPING_NAMES = frozenset(
+    {"Never", "NotRequired", "Required", "TypeVarTuple", "Unpack"},
+)
 
 
 def main() -> int:
@@ -81,11 +85,11 @@ def check_import_from(node: ast.ImportFrom, rel: str) -> list[str]:
         findings.append(f"{rel}:{node.lineno}: '{root_name}' is not available in Python 3.9")
     if module == "typing":
         blocked = PY310_TYPING_NAMES | PY311_TYPING_NAMES
-        for alias in node.names:
-            if alias.name in blocked:
-                findings.append(
-                    f"{rel}:{node.lineno}: typing.{alias.name} is not available in Python 3.9"
-                )
+        findings.extend(
+            f"{rel}:{node.lineno}: typing.{alias.name} is not available in Python 3.9"
+            for alias in node.names
+            if alias.name in blocked
+        )
     return findings
 
 

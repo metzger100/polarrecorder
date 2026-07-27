@@ -6,6 +6,10 @@ import os
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 ROOT = Path(os.environ.get("POLARRECORDER_CHECK_ROOT", Path(__file__).resolve().parent.parent))
 MAX_NON_EMPTY_LINES = 400
@@ -71,7 +75,7 @@ def iter_python_targets() -> list[Path]:
     plugin = ROOT / "plugin.py"
     if plugin.exists():
         paths.append(plugin)
-    for root_name in ("server/polarrecorder", "tests"):
+    for root_name in ("server/polarrecorder", "tests", "tools"):
         root = ROOT / root_name
         if root.exists():
             paths.extend(sorted(root.rglob("*.py")))
@@ -168,6 +172,82 @@ def mask_token_range(
             line[col] = " "
 
 
+_ONELINER_NODE_CHECKS: list[Callable[[ast.AST, str, int], str | None]] = []
+
+
+def _oneliner_check(
+    func: Callable[[ast.AST, str, int], str | None],
+) -> Callable[[ast.AST, str, int], str | None]:
+    """Register a one-liner node classifier, tried in registration order."""
+    _ONELINER_NODE_CHECKS.append(func)
+    return func
+
+
+@_oneliner_check
+def _check_chained_conditional(node: ast.AST, _line: str, _line_number: int) -> str | None:
+    if isinstance(node, ast.IfExp) and has_nested_if_expression(node):
+        return "chained-conditional"
+    return None
+
+
+@_oneliner_check
+def _check_lambda_packed(node: ast.AST, line: str, _line_number: int) -> str | None:
+    if (
+        isinstance(node, ast.Lambda)
+        and is_same_line_node(node)
+        and len(line) > LAMBDA_PACKED_LINE_THRESHOLD
+        and has_packed_expression_shape(line)
+    ):
+        return "lambda-packed"
+    return None
+
+
+@_oneliner_check
+def _check_crammed_comprehension(node: ast.AST, line: str, _line_number: int) -> str | None:
+    if isinstance(
+        node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+    ) and is_crammed_comprehension(node, line):
+        return "crammed-comprehension"
+    return None
+
+
+_LITERAL_NODE_TYPES = (ast.List, ast.Tuple, ast.Set, ast.Dict)
+_COMPOUND_BODY_NODE_TYPES = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.With,
+    ast.AsyncWith,
+    ast.Try,
+)
+
+
+@_oneliner_check
+def _check_collapsed_literal(node: ast.AST, line: str, _line_number: int) -> str | None:
+    if isinstance(node, _LITERAL_NODE_TYPES) and is_collapsed_literal(node, line):
+        return "collapsed-literal"
+    return None
+
+
+@_oneliner_check
+def _check_collapsed_compound_body(node: ast.AST, _line: str, line_number: int) -> str | None:
+    if isinstance(node, _COMPOUND_BODY_NODE_TYPES) and has_collapsed_body(node, line_number):
+        return "collapsed-compound-body"
+    return None
+
+
+@_oneliner_check
+def _check_collapsed_function_body(node: ast.AST, _line: str, line_number: int) -> str | None:
+    if (
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        and has_collapsed_body(node, line_number)
+        and not is_short_stub_body(node)
+    ):
+        return "collapsed-compound-body"
+    return None
+
+
 def ast_oneliner_kind(node: ast.AST, raw_lines: list[str]) -> str | None:
     line_number = getattr(node, "lineno", None)
     if not isinstance(line_number, int) or not 0 < line_number <= len(raw_lines):
@@ -178,26 +258,10 @@ def ast_oneliner_kind(node: ast.AST, raw_lines: list[str]) -> str | None:
         (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
     ):
         return None
-    if isinstance(node, ast.IfExp) and has_nested_if_expression(node):
-        return "chained-conditional"
-    if isinstance(node, ast.Lambda) and is_same_line_node(node):
-        if len(line) > LAMBDA_PACKED_LINE_THRESHOLD and has_packed_expression_shape(line):
-            return "lambda-packed"
-    if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
-        if is_crammed_comprehension(node, line):
-            return "crammed-comprehension"
-    if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict)) and is_collapsed_literal(
-        node, line
-    ):
-        return "collapsed-literal"
-    if isinstance(
-        node, (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try)
-    ):
-        if has_collapsed_body(node, line_number):
-            return "collapsed-compound-body"
-    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-        if has_collapsed_body(node, line_number) and not is_short_stub_body(node):
-            return "collapsed-compound-body"
+    for check in _ONELINER_NODE_CHECKS:
+        kind = check(node, line, line_number)
+        if kind is not None:
+            return kind
     return None
 
 
@@ -243,10 +307,7 @@ def has_collapsed_body(node: ast.AST, line_number: int) -> bool:
     ]
     if isinstance(node, ast.Try):
         bodies.extend(handler.body for handler in node.handlers)
-    for body in bodies:
-        if body and getattr(body[0], "lineno", None) == line_number:
-            return True
-    return False
+    return any(body and getattr(body[0], "lineno", None) == line_number for body in bodies)
 
 
 def is_short_stub_body(node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> bool:
@@ -272,18 +333,25 @@ def text_oneliner_kind(masked_trimmed_line: str) -> str | None:
     operator_count = count_characters(masked_trimmed_line, "+-*/%&|^?:<>!=")
     paren_count = count_characters(masked_trimmed_line, "()")
 
-    if line_length > LONG_PACKED_LINE_THRESHOLD and (
-        bracket_count >= LONG_PACKED_MIN_BRACKETS or comma_count >= LONG_PACKED_MIN_COMMAS
-    ):
-        return "long-packed"
-    if (
-        line_length > OPERATOR_DENSE_LINE_THRESHOLD
-        and operator_count >= OPERATOR_DENSE_MIN_OPERATORS
-    ):
-        return "operator-dense"
-    if line_length > NESTED_PARENS_LINE_THRESHOLD and paren_count >= NESTED_PARENS_MIN_COUNT:
-        return "nested-parens"
-    return None
+    candidates = (
+        (
+            line_length > LONG_PACKED_LINE_THRESHOLD
+            and (
+                bracket_count >= LONG_PACKED_MIN_BRACKETS or comma_count >= LONG_PACKED_MIN_COMMAS
+            ),
+            "long-packed",
+        ),
+        (
+            line_length > OPERATOR_DENSE_LINE_THRESHOLD
+            and operator_count >= OPERATOR_DENSE_MIN_OPERATORS,
+            "operator-dense",
+        ),
+        (
+            line_length > NESTED_PARENS_LINE_THRESHOLD and paren_count >= NESTED_PARENS_MIN_COUNT,
+            "nested-parens",
+        ),
+    )
+    return next((kind for matched, kind in candidates if matched), None)
 
 
 def is_import_line(masked_trimmed_line: str) -> bool:

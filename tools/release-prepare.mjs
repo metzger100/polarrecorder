@@ -19,11 +19,17 @@ import { parsePorcelainStatusZ } from "./release-git.mjs";
  * }} ReleasePreparePayload
  */
 
+const LIVE_CHECKLIST_PATH = "documentation/guides/live-avnav-checklist.md";
+
 const HELP_TEXT = `Usage: npm run release:prepare
 
 Reports manual SemVer review evidence for the changes since the last release tag.
 Requires a completely clean working tree (git status --porcelain=v1 -z) and takes no
 other arguments.
+
+Before publishing, run the manual live-AvNav validation checklist at
+${LIVE_CHECKLIST_PATH} against a real AvNav host and record the filled-in result;
+this tool only prints its location and never claims that checklist passed.
 
 Options:
   -h, --help  Print this help and exit (side-effect free).
@@ -135,6 +141,11 @@ export function main(argv = process.argv.slice(2)) {
     requireCleanTree(defaultRunGit);
     const payload = buildReleasePreparePayload();
     process.stdout.write(JSON.stringify(payload, null, 2) + "\n");
+    console.error(
+      `\nBefore publishing, run the live-AvNav validation checklist at ${LIVE_CHECKLIST_PATH} ` +
+        "against a real AvNav host and record the filled-in result. This command does not run " +
+        "that checklist and does not claim it passed."
+    );
   } catch (error) {
     console.error(/** @type {Error} */ (error).message || String(error));
     process.exit(1);

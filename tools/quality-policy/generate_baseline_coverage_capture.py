@@ -45,7 +45,7 @@ def _round2(value: float) -> float:
 def _measure_python_package_coverage() -> dict[str, float]:
     with tempfile.TemporaryDirectory() as tmp:
         report_path = Path(tmp) / "coverage.json"
-        subprocess.run(
+        subprocess.run(  # noqa: S603 -- fixed local pytest invocation, no untrusted input
             [
                 sys.executable,
                 "-m",
@@ -75,7 +75,7 @@ def _measure_python_package_coverage() -> dict[str, float]:
 def _measure_plugin_py_coverage() -> dict[str, float]:
     with tempfile.TemporaryDirectory() as tmp:
         report_path = Path(tmp) / "coverage.json"
-        subprocess.run(
+        subprocess.run(  # noqa: S603 -- fixed local pytest invocation, no untrusted input
             [
                 sys.executable,
                 "-m",
@@ -106,7 +106,12 @@ def _measure_plugin_py_coverage() -> dict[str, float]:
 
 def _measure_viewer_coverage() -> dict[str, float]:
     result = subprocess.run(
-        ["npm", "run", "--silent", "check:js-coverage"],
+        [  # noqa: S607 -- npm is expected on PATH
+            "npm",
+            "run",
+            "--silent",
+            "check:js-coverage",
+        ],
         cwd=REPO_ROOT,
         check=True,
         capture_output=True,

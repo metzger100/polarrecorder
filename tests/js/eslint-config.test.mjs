@@ -121,6 +121,24 @@ test("plugin.js rejects ES-module syntax", () => {
   }
 });
 
+test("tools/**/*.mjs rejects an undefined global via the layered @eslint/js recommended config", () => {
+  const source = ["export function probe() {", "  return missingGlobal();", "}", ""].join("\n");
+  const result = runEslintOnFixture("tools/__eslint_test_probe.mjs", source);
+  assert.equal(result.ok, false, "expected a reference to an undefined global to fail lint");
+  assert.ok(result.output.includes("no-undef"), result.output);
+});
+
+test("a clean tools/**/*.mjs file stays clean under the layered recommended config", () => {
+  const source = [
+    "export function probe() {",
+    '  return process.cwd().length > 0 ? "ok" : "";',
+    "}",
+    ""
+  ].join("\n");
+  const result = runEslintOnFixture("tools/__eslint_test_probe.mjs", source);
+  assert.equal(result.ok, true, result.output);
+});
+
 test("plugin.mjs allows ES-module syntax but not console.log", () => {
   const absolutePath = path.join(ROOT, "plugin.mjs");
   const original = fs.readFileSync(absolutePath, "utf8");
