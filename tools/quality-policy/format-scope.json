@@ -195,6 +195,10 @@
       "owner": "prettier"
     },
     {
+      "path": "exec-plans/active/PLAN6.md",
+      "owner": "prettier"
+    },
+    {
       "path": "exec-plans/PLAN5Ledger.md",
       "owner": "prettier"
     },
@@ -1155,7 +1159,7 @@
   ],
   "countByOwner": {
     "unsupported": 28,
-    "prettier": 147,
+    "prettier": 148,
     "ruff": 99
   }
 }
