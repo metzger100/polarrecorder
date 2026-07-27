@@ -79,5 +79,5 @@ test("historical artifacts are excluded, not unsupported", () => {
   assert.ok(!paths.has("releases/polarrecorder-1.0.0-beta.1.zip"));
   assert.ok(!paths.has("exec-plans/completed/PLAN1.md"));
   assert.ok(!paths.has("exec-plans/completed/PLAN5.md"));
-  assert.ok(paths.has("exec-plans/active/.markdownlint-cli2.jsonc"));
+  assert.ok(!paths.has("exec-plans/completed/PLAN7.md"));
 });
