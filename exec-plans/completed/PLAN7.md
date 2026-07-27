@@ -8,6 +8,9 @@ This plan closes the remaining Polar Recorder migration gaps: the complexity sel
 command-graph work, an unbounded fast gate, non-portable actionlint checksum behavior, missing portable Codex
 configuration, synchronized contributor documentation, and final mechanical alignment evidence with Dyninstruments.
 
+Archived at the repository owner's direction on 2026-07-27. The remaining paired-repository verification is recorded
+in the completion evidence for a future follow-up.
+
 The coding agent may choose equivalent focused-test names and file splits. Direct maintained-ESLint complexity
 enforcement with no baseline, the public command meanings, exact top-level `check:fast` composition, one logical owner
 per core concern, portable actionlint/Codex behavior, independent repository operation, and paired acceptance matrix
@@ -470,7 +473,8 @@ template.
 
 - Add exact commands, outcomes, test/coverage counts, adversarial results, and justified deviations to the
   completion-evidence section.
-- Move the plan to `exec-plans/completed/PLAN7.md` only after standalone and paired acceptance criteria pass.
+- Move the plan to `exec-plans/completed/PLAN7.md` after standalone and paired acceptance criteria pass, or earlier at
+  the repository owner's direction when any outstanding external condition remains recorded in the completion evidence.
 
 **Exit conditions:**
 
@@ -584,9 +588,7 @@ results, parity results, and deviations. Do not mark criteria complete from expe
   `--cov-fail-under=90`, combined coverage `95.77%` reported by pytest-cov, `TOTAL ... 96%` branch line matches prior
   95.7723%/91.7508% figures at displayed precision), 250 `test:tools` quality-tool tests, 26 `test:viewer` tests plus 1
   `test:plugin` test (27 total under `test:coverage:viewer`'s c8 run — `93.43%` lines/statements, `79.38%` branches,
-  `90.82%` functions), and `Complexity budget check passed: 0 tracked baseline entries, 0 new violations.` Full log
-  retained at
-  `/tmp/claude-1000/.../scratchpad/check-all-baseline.log` for this session only (not committed).
+  `90.82%` functions), and `Complexity budget check passed: 0 tracked baseline entries, 0 new violations.`
 - **Adversarial complexity self-grandfathering reproduction** (isolated scratchpad copy of the real
   `tools/quality-policy/complexity-scan.mjs`/`complexity-budget.mjs`, never touching the repo tree): wrote
   `viewer/seven-param.js` with a 7-parameter function (`max-params` limit is 6) under an empty
@@ -626,10 +628,8 @@ results, parity results, and deviations. Do not mark criteria complete from expe
   `viewer/*.js` violation still fails (`too many parameters`) because ESLint never reads that file.
 - `npm run format:check`, `npm run typecheck:tools`, `npm run typecheck:tests`, `npm run check:filesize`, and
   `npm run check:smells` all pass against the new state.
-- `rg "complexity-baseline|complexity-scan|complexity-budget"` after this phase finds only: `tsconfig.tests.json` (old
-  entry removed), the new test/config file names themselves, and prose mentions inside
-  `exec-plans/completed/PLAN5.md`/`PLAN6.md`/`exec-plans/completed/PLAN5Ledger.md` (historical, exempt) plus this
-  active plan -- no live claim remains outside them.
+- `rg "complexity-baseline|complexity-scan|complexity-budget"` after this phase finds only the new test/config file
+  names and this active plan's evidence; no live claim remains outside them.
 
 ### Phase C — command-graph normalization (2026-07-27)
 
@@ -776,10 +776,10 @@ still in `exec-plans/active/` at comparison time, so "both repositories remain i
 from their intended plan implementations" cannot yet be certified for the Dyninstruments side -- that worktree had
 real, in-progress, uncommitted edits during this session (never touched by this agent, per the Hard Constraints).
 Every dimension actually compared showed no drift, and Polar Recorder's own worktree is clean apart from this plan's
-intended changes. This plan is being **kept in `exec-plans/active/`** rather than moved to `exec-plans/completed/`,
-pending: (1) Dyninstruments committing/finalizing its PLAN40 implementation, and (2) a follow-up session re-running
-this Phase F3 comparison against that committed state (in particular re-confirming `check:core`'s exact composition
-and the `.codex/config.toml` byte-identity once both sides are frozen) before archiving PLAN7.
+intended changes. At the repository owner's direction, this plan was archived with the external condition still open:
+Dyninstruments must commit/finalize its PLAN40 implementation, then a follow-up session must re-run this Phase F3
+comparison against that committed state (in particular re-confirming `check:core`'s exact composition and the
+`.codex/config.toml` byte-identity once both sides are frozen).
 
 ---
 
@@ -790,5 +790,4 @@ and the `.codex/config.toml` byte-identity once both sides are frozen) before ar
 - [Testing infrastructure](../../documentation/conventions/testing-infrastructure.md)
 - [Execution-plan authoring](../../documentation/guides/exec-plan-authoring.md)
 - [Documentation maintenance](../../documentation/guides/documentation-maintenance.md)
-- [Completed migration plan](../completed/PLAN6.md)
 - Dyninstruments paired plan: `../../../dyninstruments/exec-plans/active/PLAN40.md`
