@@ -39,11 +39,12 @@ function classify(relativePath) {
       alternateValidation: "none needed"
     };
   }
-  if (relativePath === ".codex") {
+  if (relativePath === ".codex/config.toml") {
     return {
       owner: "unsupported",
-      reason: "empty editor/tool marker file",
-      alternateValidation: "none needed"
+      reason: "Prettier has no built-in TOML support and no TOML plugin is in this inventory",
+      alternateValidation:
+        "tests/js/codex-config.test.mjs proves required portable keys and forbidden-token rejection"
     };
   }
   if (relativePath.endsWith(".py")) {

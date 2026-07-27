@@ -484,20 +484,11 @@ If the AvNav computer corrects its clock after boot, timeline buckets can briefl
 
 ## For developers
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development setup: `npm run setup` provisions the
-locked npm and Python dev tools, and `npm run hooks:install`/`npm run hooks:doctor` install and verify
-the pre-push hook.
-
-Runtime code must remain dependency-free on target devices. Development tooling is allowed and is
-checked by the canonical local gate:
-
-```sh
-npm run check:all
-```
-
-`tools/check-all.sh` is a compatibility wrapper around the same command. Targeted Node.js viewer and
-documentation checks run through `npm run check:core` (see [quality gates](documentation/conventions/quality-gates.md)
-for the exact group composition).
+Runtime code must remain dependency-free on target devices; development tooling is allowed and is
+checked by the canonical local gate (`npm run check:all`, required before handoff/push/release).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the bounded `check:fast` iteration gate, and
+this repository's role as a finished hybrid-profile role model aligned with the sibling
+`dyninstruments` plugin.
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`);
 GitHub Releases only republishes an already-committed local artifact when a `v*` tag is pushed. See

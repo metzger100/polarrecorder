@@ -1,9 +1,10 @@
 /**
  * Final command-authority contract: `check:core` is exactly the literal
- * target command graph, `check:all`/`check:strict` are exact aliases, `tools/check-all.sh` is a
- * pure root-scoped wrapper, no forbidden/duplicate/undeclared/cyclic script remains, and a
- * deliberate failing fixture proves both `check:core` and the wrapper propagate failure for
- * every required group.
+ * target command graph, `check:all`/`check:strict` are exact aliases, `check:fast` is
+ * exactly the bounded static/typing/unit graph, `tools/check-all.sh` is a pure root-scoped
+ * wrapper, no forbidden/duplicate/undeclared/cyclic script remains, and deliberate failing
+ * fixtures prove both `check:core`'s duplicate-leaf rejection and its per-group failure
+ * propagation.
  */
 
 import assert from "node:assert/strict";
@@ -43,8 +44,23 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "release:prepare",
   "release:create",
   "check:fast",
+  "test:unit",
   "check:strict",
   "dependencies:audit"
+];
+
+/** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */
+const CHECK_FAST_EXCLUDED_GROUPS = [
+  "test:split",
+  "test:tools",
+  "test:contract",
+  "check:python-contracts",
+  "test:coverage:check",
+  "package:check",
+  "docs:check",
+  "check:complexity",
+  "check:scaling",
+  "release:create"
 ];
 
 /**
@@ -61,6 +77,43 @@ function npmRunTokens(scriptBody) {
   return tokens;
 }
 
+/**
+ * @param {Record<string, string>} scripts
+ * @param {string} rootName
+ * @returns {{reachable: Set<string>, parents: Map<string, Set<string>>}}
+ */
+function walkFrom(scripts, rootName) {
+  const reachable = new Set();
+  /** @type {Map<string, Set<string>>} */
+  const parents = new Map();
+
+  /** @param {string} name */
+  function visit(name) {
+    if (reachable.has(name) || !(name in scripts)) return;
+    reachable.add(name);
+    for (const token of npmRunTokens(scripts[name])) {
+      if (!parents.has(token)) parents.set(token, new Set());
+      parents.get(token)?.add(name);
+      visit(token);
+    }
+  }
+  visit(rootName);
+  return { reachable, parents };
+}
+
+/**
+ * @param {Record<string, string>} scripts
+ * @param {string} rootName
+ * @returns {string[]} script names reached by more than one distinct parent from rootName
+ */
+function duplicateLeaves(scripts, rootName) {
+  const { parents } = walkFrom(scripts, rootName);
+  return [...parents.entries()]
+    .filter(([, parentSet]) => parentSet.size > 1)
+    .map(([name]) => name)
+    .sort();
+}
+
 test("check:core is exactly the literal target ordered graph", () => {
   const body = PKG.scripts["check:core"];
   assert.ok(body, "check:core must be defined");
@@ -74,6 +127,32 @@ test("check:all is exactly check:core && test:coverage:check", () => {
 
 test("check:strict is an exact alias of check:all", () => {
   assert.equal(PKG.scripts["check:strict"], "npm run check:all");
+});
+
+test("check:fast is exactly check:standard && typecheck && test:unit", () => {
+  assert.equal(
+    PKG.scripts["check:fast"],
+    "npm run check:standard && npm run typecheck && npm run test:unit"
+  );
+});
+
+test("check:fast never reaches an exhaustive, package, docs, complexity, or scaling group", () => {
+  const { reachable } = walkFrom(PKG.scripts, "check:fast");
+  for (const excluded of CHECK_FAST_EXCLUDED_GROUPS) {
+    assert.ok(!reachable.has(excluded), `check:fast must not reach ${excluded}`);
+  }
+});
+
+test("no npm-script leaf is reachable more than once from check:core", () => {
+  assert.deepEqual(duplicateLeaves(PKG.scripts, "check:core"), []);
+});
+
+test("a fixture restoring test:contract -> check:smells fails duplicate-leaf validation", () => {
+  const fixtureScripts = {
+    ...PKG.scripts,
+    "test:contract": `${PKG.scripts["test:contract"]} && npm run check:smells`
+  };
+  assert.deepEqual(duplicateLeaves(fixtureScripts, "check:core"), ["check:smells"]);
 });
 
 test("tools/check-all.sh is a pure root-scoped compatibility wrapper", () => {
@@ -119,17 +198,7 @@ test("schema:check is a real leaf reached by package:check", () => {
 });
 
 test("every declared script is reachable from check:all or explicitly allowed outside it", () => {
-  const reachable = new Set();
-
-  /** @param {string} name */
-  function visit(name) {
-    if (reachable.has(name) || !(name in PKG.scripts)) return;
-    reachable.add(name);
-    for (const token of npmRunTokens(PKG.scripts[name])) {
-      visit(token);
-    }
-  }
-  visit("check:all");
+  const { reachable } = walkFrom(PKG.scripts, "check:all");
 
   for (const name of Object.keys(PKG.scripts)) {
     if (reachable.has(name)) continue;
