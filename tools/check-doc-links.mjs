@@ -5,25 +5,17 @@
  * External `http(s)://` targets are skipped (never fetched); local file links and local
  * Markdown-heading fragments are checked for real. A naive single-file or repo-root
  * Linkinator invocation either checks only its one seed file or, without a host-aware skip
- * predicate, marks every locally-served page `SKIPPED` (Linkinator serves local Markdown
+ * pattern, marks every locally-served page `SKIPPED` (Linkinator serves local Markdown
  * through its own ephemeral `http://localhost:<port>` origin, which a bare `/^https?:\/\//`
  * skip pattern also matches) -- both were verified live before this file was written.
- * Fragment/link parsing itself stays fully owned by Linkinator; this file only selects seeds.
+ * Fragment/link parsing itself stays fully owned by Linkinator; static options (including the
+ * host-aware skip pattern) live in `linkinator.config.json`, the converged owner; this file
+ * only selects seeds and merges them into that config at call time.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { check } from "linkinator";
-
-const LOCAL_LINKINATOR_HOST_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)([:/]|$)/i;
-
-/**
- * @param {string} link
- * @returns {Promise<boolean>}
- */
-async function isExternalLink(link) {
-  return /^https?:\/\//i.test(link) && !LOCAL_LINKINATOR_HOST_PATTERN.test(link);
-}
 
 /**
  * Every maintained Markdown file that Prettier owns, sourced directly from the single
@@ -39,10 +31,7 @@ export function discoverSeedMarkdownFiles(root) {
   const scopePath = path.join(root, "tools", "quality-policy", "format-scope.json");
   const scope = JSON.parse(fs.readFileSync(scopePath, "utf8"));
   return scope.rows
-    .filter(
-      (/** @type {{owner: string, path: string}} */ row) =>
-        row.owner === "prettier" && row.path.endsWith(".md")
-    )
+    .filter((/** @type {{owner: string, path: string}} */ row) => row.owner === "prettier" && row.path.endsWith(".md"))
     .map((/** @type {{path: string}} */ row) => row.path)
     .sort();
 }
@@ -55,14 +44,14 @@ export async function runDocLinksCheck(options = {}) {
   const root = options.root || process.cwd();
   const print = options.print !== false;
   const seeds = discoverSeedMarkdownFiles(root);
+  // linkinator.config.json is a fixed project config, not part of the (possibly fake) scan
+  // root under test, so it is always read from the real repository root.
+  const config = JSON.parse(fs.readFileSync(path.join(process.cwd(), "linkinator.config.json"), "utf8"));
 
   const result = await check({
+    ...config,
     path: seeds,
-    serverRoot: root,
-    recurse: true,
-    markdown: true,
-    checkFragments: true,
-    linksToSkip: isExternalLink
+    serverRoot: root
   });
 
   const broken = result.links

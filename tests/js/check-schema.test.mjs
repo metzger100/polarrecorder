@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import { SCHEMA_OWNED_ARTIFACTS, runSchemaCheck } from "../../tools/check-schema.mjs";
@@ -19,10 +19,7 @@ function makeFakeRoot() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-schema-check-"));
   fs.mkdirSync(path.join(root, "venv", "bin"), { recursive: true });
   fs.mkdirSync(path.join(root, "tools"), { recursive: true });
-  fs.copyFileSync(
-    path.join(ROOT, "tools", "release_manifest.py"),
-    path.join(root, "tools", "release_manifest.py")
-  );
+  fs.copyFileSync(path.join(ROOT, "tools", "release_manifest.py"), path.join(root, "tools", "release_manifest.py"));
   fs.writeFileSync(path.join(root, "plugin.json"), "{}");
   const realPython = execFileSync("which", ["python3"], { encoding: "utf8" }).trim();
   fs.symlinkSync(realPython, path.join(root, "venv", "bin", "python3"));
@@ -136,18 +133,12 @@ test("every genericBase and polarServerProfile corpus row matches the real Ajv v
   );
   const { default: Ajv } = await import("ajv");
   const ajv = new Ajv({ allErrors: true });
-  ajv.addSchema(
-    JSON.parse(fs.readFileSync(path.join(ROOT, "schemas", "avnav-plugin-base.schema.json"), "utf8"))
-  );
+  ajv.addSchema(JSON.parse(fs.readFileSync(path.join(ROOT, "schemas", "avnav-plugin-base.schema.json"), "utf8")));
   for (const value of corpus.genericBase.valid) {
     assert.equal(ajv.validate("avnav-plugin-base.schema.json", value), true, JSON.stringify(value));
   }
   for (const value of corpus.genericBase.invalid) {
-    assert.equal(
-      ajv.validate("avnav-plugin-base.schema.json", value),
-      false,
-      JSON.stringify(value)
-    );
+    assert.equal(ajv.validate("avnav-plugin-base.schema.json", value), false, JSON.stringify(value));
   }
 
   const validateDev = ajv.compile(
@@ -161,9 +152,7 @@ test("every genericBase and polarServerProfile corpus row matches the real Ajv v
   }
 
   const validateRelease = ajv.compile(
-    JSON.parse(
-      fs.readFileSync(path.join(ROOT, "schemas", "polar-plugin-release.schema.json"), "utf8")
-    )
+    JSON.parse(fs.readFileSync(path.join(ROOT, "schemas", "polar-plugin-release.schema.json"), "utf8"))
   );
   for (const value of corpus.polarServerProfile.release.valid) {
     assert.equal(validateRelease(value), true, JSON.stringify(value));

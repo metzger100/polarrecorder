@@ -4,23 +4,27 @@
 
 ## Overview
 
-Use this guide when complex work spans files, sessions, or architectural boundaries. Routine changes do not need a plan; they follow the normal development workflow in `AGENTS.md`.
+Use this guide when complex work spans files, sessions, or architectural boundaries. Routine changes do not need a plan;
+they follow the normal development workflow in `AGENTS.md`.
 
 ## Key Details
 
 - Store active plans in `exec-plans/active/` only while the work is active.
-- Move completed plans to `exec-plans/completed/`, or remove them when their historical detail no longer helps normal development.
+- Move completed plans to `exec-plans/completed/`, or remove them when their historical detail no longer helps normal
+  development.
 - Use sequential names such as `PLAN2.md` when multiple plans exist.
-- For complex tasks, the current plan is the implementation source of truth for _what to build_ until completion. It never overrides core principles or mechanically enforced repo rules (the 400-line limit, the quality gate, coverage thresholds, blocking smells); when they conflict, the repo rule wins and the plan must be amended.
+- For complex tasks, the current plan is the implementation source of truth for _what to build_ until completion. It
+  never overrides core principles or mechanically enforced repo rules (the 400-line limit, the quality gate, coverage
+  thresholds, blocking smells); when they conflict, the repo rule wins and the plan must be amended.
 - Surface plan defects explicitly and amend the plan instead of silently improvising around contradictions.
-- Keep every phase small enough to leave `tools/check-all.sh` green after completion.
-- Never name a shipped deliverable (a file, function, JSON field value, or test) after the plan or phase that
-  created it, and never cite a plan number or phase (`PLANn`, `Phase N`) in a comment, docstring, error message, or
-  doc paragraph outside `exec-plans/`. The plan is scaffolding for executing the work; once a phase ships, its
-  artifacts must explain themselves to a reader who has never seen the plan. Naming deliverables after the
-  freezing-phase prefix, or citing "plan N, phase M's ..." directly in permanent docstrings, is exactly the failure
-  this rule prevents — it happened across dozens of files during a real migration and had to be swept out
-  afterward. `check-patterns.mjs` (`exec-plan-reference`) enforces this outside `exec-plans/`.
+- Keep every phase small enough to leave `npm run check:all` green after completion.
+- Never name a shipped deliverable (a file, function, JSON field value, or test) after the plan or phase that created
+  it, and never cite a plan number or phase (`PLANn`, `Phase N`) in a comment, docstring, error message, or doc
+  paragraph outside `exec-plans/`. The plan is scaffolding for executing the work; once a phase ships, its artifacts
+  must explain themselves to a reader who has never seen the plan. Naming deliverables after the freezing-phase prefix,
+  or citing "plan N, phase M's ..." directly in permanent docstrings, is exactly the failure this rule prevents — it
+  happened across dozens of files during a real migration and had to be swept out afterward. `check-patterns.mjs`
+  (`exec-plan-reference`) enforces this outside `exec-plans/`.
 
 Required plan sections:
 
@@ -48,7 +52,8 @@ Phase rules:
 - Declare dependencies on earlier phases explicitly.
 - Keep deliverables concrete: file paths, section names, command gates, and test names.
 - Keep exit conditions executable.
-- Include `README.md` updates when installation, configuration, viewer behavior, export/import, or release workflow changes.
+- Include `README.md` updates when installation, configuration, viewer behavior, export/import, or release workflow
+  changes.
 
 Anti-patterns:
 

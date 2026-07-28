@@ -1,6 +1,26 @@
 {
   "rows": [
     {
+      "path": ".agents/skills/create-plan/SKILL.md",
+      "owner": "prettier"
+    },
+    {
+      "path": ".agents/skills/doc-sync/SKILL.md",
+      "owner": "prettier"
+    },
+    {
+      "path": ".agents/skills/grill-me-repo/SKILL.md",
+      "owner": "prettier"
+    },
+    {
+      "path": ".agents/skills/preflight/SKILL.md",
+      "owner": "prettier"
+    },
+    {
+      "path": ".agents/skills/scan-smells/SKILL.md",
+      "owner": "prettier"
+    },
+    {
       "path": ".codex/config.toml",
       "owner": "unsupported",
       "reason": "Prettier has no built-in TOML support and no TOML plugin is in this inventory",
@@ -18,6 +38,10 @@
     },
     {
       "path": ".github/workflows/publish-release.yml",
+      "owner": "prettier"
+    },
+    {
+      "path": ".github/workflows/quality.yml",
       "owner": "prettier"
     },
     {
@@ -161,7 +185,7 @@
       "owner": "prettier"
     },
     {
-      "path": "documentation/guides/live-avnav-checklist.md",
+      "path": "documentation/guides/manual-avnav-validation.md",
       "owner": "prettier"
     },
     {
@@ -202,6 +226,10 @@
     },
     {
       "path": "jscpd.config.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "linkinator.config.json",
       "owner": "prettier"
     },
     {
@@ -403,6 +431,10 @@
       "owner": "ruff"
     },
     {
+      "path": "skills-lock.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/conftest.py",
       "owner": "ruff"
     },
@@ -412,6 +444,10 @@
     },
     {
       "path": "tests/js/agents-pointer.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-patterns-registry.test.mjs",
       "owner": "prettier"
     },
     {
@@ -443,6 +479,18 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/doc-format-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/doc-reachability-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/doc-toc-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/documentation-checkers.test.mjs",
       "owner": "prettier"
     },
@@ -452,6 +500,10 @@
     },
     {
       "path": "tests/js/format-scope.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/header-contract.test.mjs",
       "owner": "prettier"
     },
     {
@@ -475,6 +527,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/prettier-config.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/release-create.test.mjs",
       "owner": "prettier"
     },
@@ -492,6 +548,18 @@
     },
     {
       "path": "tests/js/setup.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/shared-instructions.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/skills-lock.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/smell-catalog-contract.test.mjs",
       "owner": "prettier"
     },
     {
@@ -523,6 +591,14 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/viewer-grid-editor.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-polar-bands.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/viewer-polar.test.mjs",
       "owner": "prettier"
     },
@@ -532,6 +608,10 @@
     },
     {
       "path": "tests/js/viewer-theme.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/vitest-projects.test.mjs",
       "owner": "prettier"
     },
     {
@@ -773,10 +853,6 @@
       "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
     },
     {
-      "path": "tools/check-agents-pointer.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-all.sh",
       "owner": "unsupported",
       "reason": "no maintained shell formatter in this inventory",
@@ -787,23 +863,11 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-doc-format.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-doc-links-proof.mjs",
       "owner": "prettier"
     },
     {
       "path": "tools/check-doc-links.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-doc-reachability.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-docs.mjs",
       "owner": "prettier"
     },
     {
@@ -827,10 +891,6 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-headers.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-js-duplication.mjs",
       "owner": "prettier"
     },
@@ -843,19 +903,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-namespace.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-naming.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-patterns.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/cross-file-rules.mjs",
       "owner": "prettier"
     },
     {
@@ -863,11 +911,39 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/js-rules-fallback.mjs",
+      "path": "tools/check-patterns/file-cache.mjs",
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/js-rules.mjs",
+      "path": "tools/check-patterns/generic/line-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/generic/namespace-policy.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/generic/structural-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/generic/todo-without-owner.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/project/js-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/project/namespace-token-consistency.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/project/python-rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/rules.mjs",
       "owner": "prettier"
     },
     {
@@ -908,10 +984,6 @@
     },
     {
       "path": "tools/check-schema.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-smell-catalog.mjs",
       "owner": "prettier"
     },
     {
@@ -969,10 +1041,6 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/check-hotspot-budgets.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/quality-policy/coverage-floor-baseline.json",
       "owner": "prettier"
     },
@@ -1001,6 +1069,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/eslint-complexity-config.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/eslint.complexity.config.mjs",
       "owner": "prettier"
     },
@@ -1014,6 +1086,10 @@
     },
     {
       "path": "tools/quality-policy/generate-format-scope.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/hotspot-budgets-baseline.json",
       "owner": "prettier"
     },
     {
@@ -1211,11 +1287,15 @@
     {
       "path": "viewer/viewer.js",
       "owner": "prettier"
+    },
+    {
+      "path": "vitest.config.mjs",
+      "owner": "prettier"
     }
   ],
   "countByOwner": {
+    "prettier": 189,
     "unsupported": 24,
-    "prettier": 169,
     "ruff": 98
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Module: Settings UI
+ * @file Settings UI
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js, import-upload.js, enhanced-settings.js, advanced-settings.js
  */
@@ -45,11 +45,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     card.appendChild(
       downloadGroup(
         "Download all learned data as a JSON file for backup and inspection.",
-        [
-          "learned bins and histograms",
-          "counters and rejection summaries",
-          "metadata and configuration snapshot"
-        ],
+        ["learned bins and histograms", "counters and rejection summaries", "metadata and configuration snapshot"],
         "Download Learned Data",
         downloadJson
       )
@@ -99,11 +95,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     if (bullets) {
       group.appendChild(bulletList(bullets));
     }
-    group.appendChild(
-      Polarrecorder.Dom.ActionRow([
-        Polarrecorder.Dom.Button(buttonLabel, handler, "primary-action")
-      ])
-    );
+    group.appendChild(Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button(buttonLabel, handler, "primary-action")]));
     return group;
   }
 
@@ -299,11 +291,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function downloadJson() {
     fetchJson("export/json")
       .then(function (data) {
-        Polarrecorder.Dom.Download(
-          "polarrecorder-backup.json",
-          JSON.stringify(data, null, 2),
-          "application/json"
-        );
+        Polarrecorder.Dom.Download("polarrecorder-backup.json", JSON.stringify(data, null, 2), "application/json");
         setMessage("Backup downloaded.", "info");
       })
       .catch(function (error) {
@@ -314,11 +302,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function downloadPresets() {
     fetchJson("export/presets")
       .then(function (data) {
-        Polarrecorder.Dom.Download(
-          "polarrecorder-presets.json",
-          JSON.stringify(data, null, 2),
-          "application/json"
-        );
+        Polarrecorder.Dom.Download("polarrecorder-presets.json", JSON.stringify(data, null, 2), "application/json");
         setMessage("Presets downloaded.", "info");
       })
       .catch(function (error) {

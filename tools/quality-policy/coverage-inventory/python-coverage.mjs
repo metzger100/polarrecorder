@@ -100,13 +100,9 @@ function verifyPythonContractOwner(root, ownerTest, targetFile) {
   ].join("\n");
   const venvPython = path.join(root, "venv", "bin", "python3");
   const python = fs.existsSync(venvPython) ? venvPython : "python3";
-  const result = spawnSync(
-    python,
-    ["-c", script, absoluteTestFile, dottedModuleName(targetFile), testName],
-    {
-      encoding: "utf8"
-    }
-  );
+  const result = spawnSync(python, ["-c", script, absoluteTestFile, dottedModuleName(targetFile), testName], {
+    encoding: "utf8"
+  });
   const [hasTest, importsTarget] = (result.stdout || "").trim().split(" ");
   /** @type {string[]} */
   const failures = [];
@@ -139,16 +135,12 @@ export function checkPythonCoverage(root, floors, pythonReport) {
       failures.push(...verifyPythonContractOwner(root, owned.ownerTest, file));
       const summary = pythonReport.files[file]?.summary;
       if (summary && summary.num_statements > 0) {
-        failures.push(
-          `${file}: classified contract-owned but has measured executable coverage data`
-        );
+        failures.push(`${file}: classified contract-owned but has measured executable coverage data`);
       }
       continue;
     }
     if (!reportedFiles.has(file)) {
-      failures.push(
-        `${file}: not measured and not contract-owned; run test:coverage:python or classify it`
-      );
+      failures.push(`${file}: not measured and not contract-owned; run test:coverage:python or classify it`);
     }
   }
   for (const file of Object.keys(contractOwned)) {
@@ -172,12 +164,7 @@ export function checkPythonCoverage(root, floors, pythonReport) {
   );
 
   const histogram = aggregatePythonFamily(pythonReport, { exact: [HISTOGRAM_EXACT] });
-  requireAtLeast(
-    failures,
-    "histogram core lines",
-    histogram.linePercent,
-    floors.families.histogramCoreLinePercent
-  );
+  requireAtLeast(failures, "histogram core lines", histogram.linePercent, floors.families.histogramCoreLinePercent);
   requireAtLeast(
     failures,
     "histogram core branches",

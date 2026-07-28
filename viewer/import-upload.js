@@ -1,5 +1,5 @@
 /**
- * Module: Import Upload
+ * @file Import Upload
  * Documentation: documentation/architecture/import-restore.md
  * Depends: viewer.js
  */

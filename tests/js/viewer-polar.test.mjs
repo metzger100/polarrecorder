@@ -1,16 +1,13 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 import vm from "node:vm";
 
 const ROOT = process.cwd();
 const DOM_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "dom.js"), "utf8");
 const PLACEHOLDERS_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "placeholders.js"), "utf8");
-const GEOMETRY_SOURCE = fs.readFileSync(
-  path.join(ROOT, "viewer", "polar-chart-geometry.js"),
-  "utf8"
-);
+const GEOMETRY_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart-geometry.js"), "utf8");
 const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js"), "utf8");
 
 /**
@@ -40,10 +37,7 @@ const POLAR_SOURCE = fs.readFileSync(path.join(ROOT, "viewer", "polar-chart.js")
 test("empty polar shows a centered overlay", () => {
   const env = loadPolarChart();
 
-  env.chart.Render(
-    { format: "windy", generation: 1, percentile: 65, tws_bands: [], curves: {} },
-    { force: true }
-  );
+  env.chart.Render({ format: "windy", generation: 1, percentile: 65, tws_bands: [], curves: {} }, { force: true });
 
   assert.equal(env.host.children.length, 2);
   assert.equal(env.host.children[0].tagName, "svg");

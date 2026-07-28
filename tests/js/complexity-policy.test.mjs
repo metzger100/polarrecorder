@@ -9,17 +9,12 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 const ROOT = process.cwd();
 const ESLINT_BIN = path.join(ROOT, "node_modules", ".bin", "eslint");
-const COMPLEXITY_CONFIG = path.join(
-  ROOT,
-  "tools",
-  "quality-policy",
-  "eslint.complexity.config.mjs"
-);
+const COMPLEXITY_CONFIG = path.join(ROOT, "tools", "quality-policy", "eslint.complexity.config.mjs");
 const BASELINE_PATH = path.join(ROOT, "tools", "quality-policy", "complexity-baseline.json");
 
 /** @param {number} count @returns {string} */
@@ -118,6 +113,81 @@ function runComplexityEslintOnFixture(relativePath, content) {
     fs.rmSync(absolutePath, { force: true });
   }
 }
+
+const OWNER_RELATIVE_PATH = "tools/quality-policy/eslint-complexity-config.mjs";
+const LIMIT_PATTERNS = {
+  complexity: /\bcomplexity["']?\s*:\s*(?:\[[^,]*,\s*)?10\b/,
+  "max-statements": /["']?max-statements["']?\s*:\s*(?:\[[^,]*,\s*)?40\b/,
+  "max-depth": /["']?max-depth["']?\s*:\s*(?:\[[^,]*,\s*)?4\b/,
+  "max-params": /["']?max-params["']?\s*:\s*(?:\[[^,]*,\s*)?6\b/
+};
+
+/** @param {string} content @returns {boolean} */
+function declaresAllFourLimitsInText(content) {
+  return Object.values(LIMIT_PATTERNS).every((pattern) => pattern.test(content));
+}
+
+/** @param {string} directory @param {string[]} out @returns {void} */
+function collectMjsFiles(directory, out) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      collectMjsFiles(absolutePath, out);
+      continue;
+    }
+    if (entry.isFile() && entry.name.endsWith(".mjs")) out.push(absolutePath);
+  }
+}
+
+test("exactly one file declares all four strict complexity limits together", () => {
+  /** @type {string[]} */
+  const files = [];
+  collectMjsFiles(path.join(ROOT, "tools"), files);
+  const owningFiles = files
+    .map((absolutePath) => path.relative(ROOT, absolutePath).replace(/\\/g, "/"))
+    .filter((relativePath) => relativePath !== OWNER_RELATIVE_PATH)
+    .filter((relativePath) => declaresAllFourLimitsInText(fs.readFileSync(path.join(ROOT, relativePath), "utf8")));
+  assert.deepEqual(owningFiles, [], `unexpected second owner of all four limits: ${owningFiles.join(", ")}`);
+});
+
+test("the shared owner module itself declares all four limits", () => {
+  const content = fs.readFileSync(path.join(ROOT, OWNER_RELATIVE_PATH), "utf8");
+  assert.equal(declaresAllFourLimitsInText(content), true);
+});
+
+test("a seeded second copy of all four limit values is detected as drift", () => {
+  const seeded = [
+    "export const DUPLICATE_LIMITS = {",
+    "  complexity: 10,",
+    '  "max-statements": 40,',
+    '  "max-depth": 4,',
+    '  "max-params": 6',
+    "};"
+  ].join("\n");
+  assert.equal(declaresAllFourLimitsInText(seeded), true);
+});
+
+test("no complexity baseline, ledger, or exception file exists anywhere in the repo", () => {
+  /** @type {string[]} */
+  const suspicious = [];
+  const skip = new Set(["node_modules", ".git", "venv", "coverage", "releases", "__pycache__"]);
+  /** @param {string} directory */
+  const walk = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (skip.has(entry.name)) continue;
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolutePath);
+        continue;
+      }
+      if (/complexity.*(baseline|ledger|exception)|(baseline|ledger|exception).*complexity/i.test(entry.name)) {
+        suspicious.push(path.relative(ROOT, absolutePath).replace(/\\/g, "/"));
+      }
+    }
+  };
+  walk(ROOT);
+  assert.deepEqual(suspicious, []);
+});
 
 test("the retired baseline/scanner/budget files are absent", () => {
   for (const relative of [

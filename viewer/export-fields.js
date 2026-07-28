@@ -1,5 +1,5 @@
 /**
- * Module: Export Fields
+ * @file Export Fields
  * Documentation: documentation/architecture/ui.md
  * Depends: none
  */

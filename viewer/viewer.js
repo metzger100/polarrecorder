@@ -1,5 +1,5 @@
 /**
- * Module: Viewer Shell
+ * @file Viewer Shell
  * Documentation: documentation/architecture/ui.md
  * Depends: none
  */
@@ -94,9 +94,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function wireTabs() {
-    const buttons = /** @type {NodeListOf<HTMLElement>} */ (
-      document.querySelectorAll("[data-tab]")
-    );
+    const buttons = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("[data-tab]"));
     buttons.forEach(function (button) {
       button.addEventListener("click", function () {
         activateTab(button.dataset.tab || "polar");
@@ -107,15 +105,11 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @param {string} tab */
   function activateTab(tab) {
     state.activeTab = tab;
-    const buttons = /** @type {NodeListOf<HTMLElement>} */ (
-      document.querySelectorAll("[data-tab]")
-    );
+    const buttons = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("[data-tab]"));
     buttons.forEach(function (button) {
       button.classList.toggle("is-active", button.dataset.tab === tab);
     });
-    const panels = /** @type {NodeListOf<HTMLElement>} */ (
-      document.querySelectorAll("[data-tab-panel]")
-    );
+    const panels = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("[data-tab-panel]"));
     panels.forEach(function (panel) {
       panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
     });
@@ -249,8 +243,7 @@ window.Polarrecorder = window.Polarrecorder || {};
           });
         }
         if (state.activeTab === "polar" && data.generation !== state.polarGen) fetchPolar();
-        if (state.activeTab === "export" && data.generation !== state.csvGen)
-          refreshPreview(data.generation);
+        if (state.activeTab === "export" && data.generation !== state.csvGen) refreshPreview(data.generation);
       })
       .catch(showBanner);
   }

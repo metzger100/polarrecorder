@@ -122,9 +122,7 @@ function isDenseOneliner(line) {
   if (isCommaAssignmentSequence(line)) return true;
   if (hasMultipleStatementLeaders(line)) return true;
   if (hasCommaCallChain(line)) return true;
-  return /(?:\)|\})\s*(?:if|for|while|switch|try|function|class|const|let|var|return|throw|do)\b/.test(
-    line
-  );
+  return /(?:\)|\})\s*(?:if|for|while|switch|try|function|class|const|let|var|return|throw|do)\b/.test(line);
 }
 
 /**
@@ -234,9 +232,7 @@ function hasMultipleStatementLeaders(line) {
  * @returns {boolean}
  */
 function hasCommaCallChain(line) {
-  return /(?:^|[;{]\s*)(?:[A-Za-z_$][\w$]*\s*\([^()]*\)\s*,\s*){2,}[A-Za-z_$][\w$]*\s*\([^()]*\)/.test(
-    line
-  );
+  return /(?:^|[;{]\s*)(?:[A-Za-z_$][\w$]*\s*\([^()]*\)\s*,\s*){2,}[A-Za-z_$][\w$]*\s*\([^()]*\)/.test(line);
 }
 
 // Semicolons that separate statements: those at paren depth 0 (a for-header's

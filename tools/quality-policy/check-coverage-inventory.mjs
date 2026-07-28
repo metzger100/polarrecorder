@@ -28,16 +28,8 @@ import path from "node:path";
 
 import { checkPythonCoverage } from "./coverage-inventory/python-coverage.mjs";
 import { checkViewerCoverage } from "./coverage-inventory/viewer-coverage.mjs";
-import {
-  checkFloorRatchet,
-  diffCoverageFloorBaseline
-} from "./coverage-inventory/floor-baseline.mjs";
-import {
-  floorsPath,
-  pythonReportPath,
-  readJson,
-  viewerReportPath
-} from "./coverage-inventory/shared.mjs";
+import { checkFloorRatchet, diffCoverageFloorBaseline } from "./coverage-inventory/floor-baseline.mjs";
+import { floorsPath, pythonReportPath, readJson, viewerReportPath } from "./coverage-inventory/shared.mjs";
 
 export {
   deriveCoverageFloorBaseline,
@@ -46,12 +38,7 @@ export {
 } from "./coverage-inventory/floor-baseline.mjs";
 export { listPythonPackageFiles } from "./coverage-inventory/python-coverage.mjs";
 export { listViewerJsFiles } from "./coverage-inventory/viewer-coverage.mjs";
-export {
-  pythonReportPath,
-  viewerReportPath,
-  floorsPath,
-  baselinePath
-} from "./coverage-inventory/shared.mjs";
+export { pythonReportPath, viewerReportPath, floorsPath, baselinePath } from "./coverage-inventory/shared.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
 

@@ -293,14 +293,10 @@ export function runTypecheckTests({ root = ROOT, print = true } = {}) {
 
   const checkedFiles = discoverExecutableTestHelpers(root).length;
   try {
-    execFileSync(
-      path.join(ROOT, "node_modules", ".bin", "tsc"),
-      ["--noEmit", "-p", TSCONFIG_PATH],
-      {
-        cwd: ROOT,
-        stdio: print ? "inherit" : "pipe"
-      }
-    );
+    execFileSync(path.join(ROOT, "node_modules", ".bin", "tsc"), ["--noEmit", "-p", TSCONFIG_PATH], {
+      cwd: ROOT,
+      stdio: print ? "inherit" : "pipe"
+    });
     return { ok: true, failures: [], checkedFiles };
   } catch {
     return {

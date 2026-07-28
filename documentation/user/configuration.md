@@ -4,37 +4,34 @@
 
 ## Overview
 
-Polar Recorder stores persistent runtime configuration in AvNav plugin configuration values.
-It registers no AvNav editable parameters of its own; AvNav still shows its built-in `enabled`
-start/stop switch because the plugin registers a restart handler. Runtime tuning values are
-managed from the viewer Settings tab and parsed into the `Config` object by `polarrecorder.config`.
+Polar Recorder stores persistent runtime configuration in AvNav plugin configuration values. It registers no AvNav
+editable parameters of its own; AvNav still shows its built-in `enabled` start/stop switch because the plugin registers
+a restart handler. Runtime tuning values are managed from the viewer Settings tab and parsed into the `Config` object by
+`polarrecorder.config`.
 
 ## Key Details
 
-`plugin.py` calls `api.registerEditableParameters(paramList, changeCallback)` with an empty
-`paramList` during construction, so the AvNav plugin configuration dialog shows only AvNav's
-built-in enable switch. The runtime settings listed below live in
-`polarrecorder.params.CONFIG_PARAMETERS`; viewer Settings endpoints self-apply validated changes
+`plugin.py` calls `api.registerEditableParameters(paramList, changeCallback)` with an empty `paramList` during
+construction, so the AvNav plugin configuration dialog shows only AvNav's built-in enable switch. The runtime settings
+listed below live in `polarrecorder.params.CONFIG_PARAMETERS`; viewer Settings endpoints self-apply validated changes
 and then persist them with `api.saveConfigValues`.
 
-Each runtime parameter dict includes `name` and may include `default`, `type`, `rangeOrList`, and
-`description`. Polar Recorder supports the `STRING`, `NUMBER`, `FLOAT`, and `BOOLEAN` parameter
-types. `rangeOrList` supplies numeric min/max bounds for `NUMBER` and `FLOAT`.
+Each runtime parameter dict includes `name` and may include `default`, `type`, `rangeOrList`, and `description`. Polar
+Recorder supports the `STRING`, `NUMBER`, `FLOAT`, and `BOOLEAN` parameter types. `rangeOrList` supplies numeric min/max
+bounds for `NUMBER` and `FLOAT`.
 
 AvNav persists plugin configuration outside `polar.json`. Polar Recorder reads initial values with
-`api.getConfigValue(name, default)` for every runtime config parameter, using the string defaults
-from `polarrecorder.params`. It does not load active runtime configuration from the learned-polar
-persistence file; the persistence `config` block is metadata about the saved dataset.
+`api.getConfigValue(name, default)` for every runtime config parameter, using the string defaults from
+`polarrecorder.params`. It does not load active runtime configuration from the learned-polar persistence file; the
+persistence `config` block is metadata about the saved dataset.
 
-AvNav stores and forwards editable values as strings. Polar Recorder follows AvNav's boolean
-convention: a boolean string is true when `value.strip().upper() == "TRUE"` and false otherwise.
-Numeric settings are parsed as `int` or `float`, clamped to their `rangeOrList`, and invalid
-values fall back to the previous value or default.
+AvNav stores and forwards editable values as strings. Polar Recorder follows AvNav's boolean convention: a boolean
+string is true when `value.strip().upper() == "TRUE"` and false otherwise. Numeric settings are parsed as `int` or
+`float`, clamped to their `rangeOrList`, and invalid values fall back to the previous value or default.
 
-AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole
-plugin. Polar Recorder does not register or own that switch. Within a running plugin, recording is
-paused and resumed from the viewer (the Pause/Resume control), tracked by the transient `_paused`
-flag rather than a persisted setting.
+AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole plugin. Polar Recorder
+does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
+Pause/Resume control), tracked by the transient `_paused` flag rather than a persisted setting.
 
 | Name                       |    Type | Default |    Range | Behavior                                                                           |
 | -------------------------- | ------: | ------: | -------: | ---------------------------------------------------------------------------------- |
@@ -61,26 +58,23 @@ flag rather than a persisted setting.
 | `min_samples_for_export`   |  NUMBER |    `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
 | `debug_logging`            | BOOLEAN | `false` |        - | Enables one debug log line per pipeline iteration with decision and reason codes.  |
 
-The Settings tab's **Advanced Settings** card exposes the safe runtime-tuning subset from this
-table: sampling cadence, flush cadence, sensor freshness, core filters, stability/maneuver
-thresholds, `max_tws`, `max_stw`, the engine heuristic, and debug logging. Export percentile and
-high-confidence export floors remain in the Export tab; plugin enablement stays on AvNav's
-built-in switch and pause/resume stays in the viewer.
+The Settings tab's **Advanced Settings** card exposes the safe runtime-tuning subset from this table: sampling cadence,
+flush cadence, sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_stw`, the engine
+heuristic, and debug logging. Export percentile and high-confidence export floors remain in the Export tab; plugin
+enablement stays on AvNav's built-in switch and pause/resume stays in the viewer.
 
 ### Enhanced (optional-signal) rule settings
 
-Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and
-uses them to reject samples those signals prove unrepresentative. Each rule fires only when its
-switch is on, its store key(s) are configured, and the value is present and fresh; otherwise the
-rule is a no-op (fail-open per signal). Every switch defaults on.
+Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and uses them to reject
+samples those signals prove unrepresentative. Each rule fires only when its switch is on, its store key(s) are
+configured, and the value is present and fresh; otherwise the rule is a no-op (fail-open per signal). Every switch
+defaults on.
 
-The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store
-keys, so those rules (R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the
-heading/COG turn confirmation) **activate automatically on upgrade** for any boat that already
-publishes those keys. To opt out, toggle the rule off or clear its key in the Settings tab's
-Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine_state_key`,
-`enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no
-standard key for them.
+The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, so those rules
+(R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the heading/COG turn confirmation) **activate
+automatically on upgrade** for any boat that already publishes those keys. To opt out, toggle the rule off or clear its
+key in the Settings tab's Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine_state_key`,
+`enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no standard key for them.
 
 | Name                            |    Type |                Default |       Range | Behavior                                                                             |
 | ------------------------------- | ------: | ---------------------: | ----------: | ------------------------------------------------------------------------------------ |
@@ -112,21 +106,18 @@ standard key for them.
 | `enh_cog_key`                   |  STRING |          `"gps.track"` |           - | Store key for course over ground.                                                    |
 | `enh_turn_min_roc`              |   FLOAT |                  `3.0` |    0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.              |
 
-Config changes are hot-swapped. Viewer Settings endpoints validate changed string values, acquire
-the single `plugin.py` lock, parse and clamp the new values, and replace the `Config` object before
-persisting the raw values through AvNav. The sampling loop snapshots the current config once per
-iteration, so a change takes effect on the next sample cycle rather than halfway through a
-read/validate/update sequence.
+Config changes are hot-swapped. Viewer Settings endpoints validate changed string values, acquire the single `plugin.py`
+lock, parse and clamp the new values, and replace the `Config` object before persisting the raw values through AvNav.
+The sampling loop snapshots the current config once per iteration, so a change takes effect on the next sample cycle
+rather than halfway through a read/validate/update sequence.
 
-Validation state is not reset on config changes. The rolling stability window, cooldown timer, and
-previous sample continue from their current contents. If `stability_window_seconds` is increased,
-R15 naturally warms up until the retained buffer spans the new window; if it is decreased, older
-entries simply fall outside the new window.
+Validation state is not reset on config changes. The rolling stability window, cooldown timer, and previous sample
+continue from their current contents. If `stability_window_seconds` is increased, R15 naturally warms up until the
+retained buffer spans the new window; if it is decreased, older entries simply fall outside the new window.
 
-Known limitation: keep `cooldown_seconds >= stability_window_seconds` if you want the post-maneuver
-stability guarantee. The plugin does not cross-validate these two settings. If cooldown is shorter
-than the stability window, the first accepted sample after a maneuver can still have maneuver-era
-values inside its stability window.
+Known limitation: keep `cooldown_seconds >= stability_window_seconds` if you want the post-maneuver stability guarantee.
+The plugin does not cross-validate these two settings. If cooldown is shorter than the stability window, the first
+accepted sample after a maneuver can still have maneuver-era values inside its stability window.
 
 ## Related
 

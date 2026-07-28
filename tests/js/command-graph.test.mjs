@@ -12,7 +12,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { test } from "node:test";
+import { test } from "vitest";
 
 const ROOT = process.cwd();
 const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
@@ -130,10 +130,7 @@ test("check:strict is an exact alias of check:all", () => {
 });
 
 test("check:fast is exactly check:standard && typecheck && test:unit", () => {
-  assert.equal(
-    PKG.scripts["check:fast"],
-    "npm run check:standard && npm run typecheck && npm run test:unit"
-  );
+  assert.equal(PKG.scripts["check:fast"], "npm run check:standard && npm run typecheck && npm run test:unit");
 });
 
 test("check:fast never reaches an exhaustive, package, docs, complexity, or scaling group", () => {
@@ -178,23 +175,14 @@ test("no forbidden script name is declared", () => {
 
 test("docs:check is reached by check:core", () => {
   assert.ok("docs:check" in PKG.scripts, "docs:check must be defined");
-  assert.ok(
-    npmRunTokens(PKG.scripts["check:core"]).has("docs:check"),
-    "check:core must run docs:check"
-  );
+  assert.ok(npmRunTokens(PKG.scripts["check:core"]).has("docs:check"), "check:core must run docs:check");
 });
 
 test("schema:check is a real leaf reached by package:check", () => {
   assert.ok("schema:check" in PKG.scripts, "schema:check must be defined");
   assert.equal(PKG.scripts["schema:check"], "node tools/check-schema.mjs");
-  const packageCheckTokens = [...PKG.scripts["package:check"].matchAll(/npm run ([\w:-]+)/g)].map(
-    (m) => m[1]
-  );
-  assert.equal(
-    packageCheckTokens[0],
-    "schema:check",
-    "package:check must run schema:check as its first composed step"
-  );
+  const packageCheckTokens = [...PKG.scripts["package:check"].matchAll(/npm run ([\w:-]+)/g)].map((m) => m[1]);
+  assert.equal(packageCheckTokens[0], "schema:check", "package:check must run schema:check as its first composed step");
 });
 
 test("every declared script is reachable from check:all or explicitly allowed outside it", () => {
@@ -210,10 +198,7 @@ test("every declared script is reachable from check:all or explicitly allowed ou
 
   for (const name of ALLOWED_OUTSIDE_CHECK_ALL) {
     assert.ok(name in PKG.scripts, `ALLOWED_OUTSIDE_CHECK_ALL names missing script '${name}'`);
-    assert.ok(
-      !reachable.has(name),
-      `${name} is reachable from check:all; remove it from the allowlist`
-    );
+    assert.ok(!reachable.has(name), `${name} is reachable from check:all; remove it from the allowlist`);
   }
 });
 
@@ -258,21 +243,14 @@ test("hook and release automation each invoke exactly one npm run check:all", ()
 
   const releaseCreate = fs.readFileSync(path.join(ROOT, "tools", "release-create.mjs"), "utf8");
   const releaseMatches = releaseCreate.match(/"check:all"/g) || [];
-  assert.equal(
-    releaseMatches.length,
-    1,
-    "release-create.mjs must reference check:all exactly once"
-  );
+  assert.equal(releaseMatches.length, 1, "release-create.mjs must reference check:all exactly once");
 });
 
 /** @returns {string} */
 function makeGraphFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-command-graph-"));
   fs.mkdirSync(path.join(root, "tools"), { recursive: true });
-  fs.copyFileSync(
-    path.join(ROOT, "tools", "check-all.sh"),
-    path.join(root, "tools", "check-all.sh")
-  );
+  fs.copyFileSync(path.join(ROOT, "tools", "check-all.sh"), path.join(root, "tools", "check-all.sh"));
   fs.chmodSync(path.join(root, "tools", "check-all.sh"), 0o755);
 
   fs.writeFileSync(
@@ -289,9 +267,7 @@ function makeGraphFixture() {
     ].join("\n")
   );
 
-  const leafScripts = Object.fromEntries(
-    REQUIRED_CHECK_CORE_GROUPS.map((group) => [group, `node leaf.mjs ${group}`])
-  );
+  const leafScripts = Object.fromEntries(REQUIRED_CHECK_CORE_GROUPS.map((group) => [group, `node leaf.mjs ${group}`]));
   const pkg = {
     name: "command-graph-fixture",
     private: true,

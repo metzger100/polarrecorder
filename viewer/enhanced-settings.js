@@ -1,5 +1,5 @@
 /**
- * Module: Enhanced Settings
+ * @file Enhanced Settings
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js
  */
@@ -103,9 +103,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.body = Polarrecorder.Dom.Node("div", "enhanced-rules");
     card.appendChild(state.body);
     card.appendChild(
-      Polarrecorder.Dom.ActionRow([
-        Polarrecorder.Dom.Button("Save Enhanced Settings", save, "primary-action")
-      ])
+      Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button("Save Enhanced Settings", save, "primary-action")])
     );
     state.messageNode = Polarrecorder.Dom.Node("p", "helper");
     card.appendChild(state.messageNode);
@@ -130,9 +128,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.keySelects = [];
     Polarrecorder.Dom.Clear(state.body);
     if (!rules.length) {
-      state.body.appendChild(
-        Polarrecorder.Dom.Node("p", "helper", "Enhanced status is unavailable.")
-      );
+      state.body.appendChild(Polarrecorder.Dom.Node("p", "helper", "Enhanced status is unavailable."));
       return;
     }
     rules.forEach(function (rule) {
@@ -147,9 +143,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function ruleBlock(rule) {
     const wrap = Polarrecorder.Dom.Node("div", "enhanced-rule");
     const header = Polarrecorder.Dom.Node("div", "enhanced-rule-head");
-    header.appendChild(
-      Polarrecorder.Dom.Node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule)
-    );
+    header.appendChild(Polarrecorder.Dom.Node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule));
     header.appendChild(badge(String(rule.status)));
     wrap.appendChild(header);
     wrap.appendChild(toggleField(rule));

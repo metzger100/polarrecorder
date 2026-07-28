@@ -70,14 +70,10 @@ export function runSourceTypecheck({ root = ROOT, print = true } = {}) {
   if (missingFromInventory.length > 0 || extraInInventory.length > 0) {
     if (print) {
       if (missingFromInventory.length > 0) {
-        console.error(
-          `Shipped source file(s) missing from tsconfig.checkjs.json: ${missingFromInventory.join(", ")}`
-        );
+        console.error(`Shipped source file(s) missing from tsconfig.checkjs.json: ${missingFromInventory.join(", ")}`);
       }
       if (extraInInventory.length > 0) {
-        console.error(
-          `tsconfig.checkjs.json lists stale/removed source file(s): ${extraInInventory.join(", ")}`
-        );
+        console.error(`tsconfig.checkjs.json lists stale/removed source file(s): ${extraInInventory.join(", ")}`);
       }
     }
     return { ok: false, missingFromInventory, extraInInventory, checkedFiles: 0 };
@@ -85,14 +81,10 @@ export function runSourceTypecheck({ root = ROOT, print = true } = {}) {
 
   const checkedFiles = configuredSourcePaths(root).length;
   try {
-    execFileSync(
-      path.join(ROOT, "node_modules", ".bin", "tsc"),
-      ["--noEmit", "-p", TSCONFIG_PATH],
-      {
-        cwd: ROOT,
-        stdio: print ? "inherit" : "pipe"
-      }
-    );
+    execFileSync(path.join(ROOT, "node_modules", ".bin", "tsc"), ["--noEmit", "-p", TSCONFIG_PATH], {
+      cwd: ROOT,
+      stdio: print ? "inherit" : "pipe"
+    });
     return { ok: true, missingFromInventory, extraInInventory, checkedFiles };
   } catch {
     return { ok: false, missingFromInventory, extraInInventory, checkedFiles };

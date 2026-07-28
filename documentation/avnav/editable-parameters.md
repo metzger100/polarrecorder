@@ -4,10 +4,9 @@
 
 ## Overview
 
-AvNav editable parameters are settings exposed in AvNav's plugin configuration dialog. Polar
-Recorder registers none of its own; AvNav still shows its built-in `enabled` start/stop switch
-because the plugin registers a restart handler. The 49 runtime tuning values are stored as AvNav
-plugin configuration values and edited from the viewer Settings tab.
+AvNav editable parameters are settings exposed in AvNav's plugin configuration dialog. Polar Recorder registers none of
+its own; AvNav still shows its built-in `enabled` start/stop switch because the plugin registers a restart handler. The
+49 runtime tuning values are stored as AvNav plugin configuration values and edited from the viewer Settings tab.
 
 ## Key Details
 
@@ -42,12 +41,12 @@ Parsing rules:
 - `STRING` values pass through unchanged; they hold optional store keys for the enhanced rules.
 - Invalid changed values keep the previous runtime value; invalid initial values fall back to defaults.
 - Polar Recorder registers no editable parameters of its own (`EDITABLE_PARAMETERS` is empty).
-- AvNav still surfaces its built-in `enabled` start/stop switch because the plugin registers a
-  restart handler; that switch is owned by AvNav, not by Polar Recorder.
+- AvNav still surfaces its built-in `enabled` start/stop switch because the plugin registers a restart handler; that
+  switch is owned by AvNav, not by Polar Recorder.
 - `polar.json` stores learned-model metadata, not active AvNav plugin configuration settings.
 
-The only switch in the AvNav plugin configuration dialog is the AvNav-provided plugin enable
-control (Polar Recorder registers no editable parameters):
+The only switch in the AvNav plugin configuration dialog is the AvNav-provided plugin enable control (Polar Recorder
+registers no editable parameters):
 
 | Group             | Parameter | Owner                                                            |
 | ----------------- | --------- | ---------------------------------------------------------------- |

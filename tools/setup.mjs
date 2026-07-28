@@ -63,14 +63,7 @@ function provisionPython() {
   }
   const venvPython = path.join(venvDir, "bin", "python");
   run(venvPython, ["-m", "pip", "install", `pip==${DEV_PYTHON_CONTRACT.pipBootstrapVersion}`]);
-  run(venvPython, [
-    "-m",
-    "pip",
-    "install",
-    "--require-hashes",
-    "-r",
-    path.join(ROOT, "requirements-dev.txt")
-  ]);
+  run(venvPython, ["-m", "pip", "install", "--require-hashes", "-r", path.join(ROOT, "requirements-dev.txt")]);
 }
 
 function provisionActionlint() {

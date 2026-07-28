@@ -11,13 +11,10 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
-import {
-  diffSourceInventory,
-  runSourceTypecheck
-} from "../../tools/quality-policy/typecheck-source.mjs";
+import { diffSourceInventory, runSourceTypecheck } from "../../tools/quality-policy/typecheck-source.mjs";
 
 const ROOT = process.cwd();
 const TSC_BIN = path.join(ROOT, "node_modules", ".bin", "tsc");
@@ -29,10 +26,7 @@ test("inventory matches on the real repo", () => {
 });
 
 test("detects a file missing from the inventory", () => {
-  const root = makeFakeRepoRoot(
-    ["plugin.js", "viewer/a.js"],
-    ["plugin.js", "viewer/a.js", "viewer/b.js"]
-  );
+  const root = makeFakeRepoRoot(["plugin.js", "viewer/a.js"], ["plugin.js", "viewer/a.js", "viewer/b.js"]);
   const { missingFromInventory, extraInInventory } = diffSourceInventory(root);
   assert.deepEqual(missingFromInventory, ["viewer/b.js"]);
   assert.deepEqual(extraInInventory, []);
@@ -40,10 +34,7 @@ test("detects a file missing from the inventory", () => {
 });
 
 test("detects a stale inventory entry", () => {
-  const root = makeFakeRepoRoot(
-    ["plugin.js", "viewer/a.js", "viewer/removed.js"],
-    ["plugin.js", "viewer/a.js"]
-  );
+  const root = makeFakeRepoRoot(["plugin.js", "viewer/a.js", "viewer/removed.js"], ["plugin.js", "viewer/a.js"]);
   const { missingFromInventory, extraInInventory } = diffSourceInventory(root);
   assert.deepEqual(missingFromInventory, []);
   assert.deepEqual(extraInInventory, ["viewer/removed.js"]);
@@ -184,25 +175,17 @@ test("a nullable DOM value used without narrowing is rejected", () => {
   const unnarrowed = 'document.getElementById("csv-preview").textContent = "value";\n';
   assert.equal(typechecksCleanly(unnarrowed), false);
 
-  const narrowed =
-    'const node = document.getElementById("csv-preview");\n' +
-    'if (node) node.textContent = "value";\n';
+  const narrowed = 'const node = document.getElementById("csv-preview");\n' + 'if (node) node.textContent = "value";\n';
   assert.equal(typechecksCleanly(narrowed), true);
 });
 
 test("runtime import/export drift is rejected", () => {
   const moduleSource = "export function realExport() {\n  return 1;\n}\n";
   const driftedConsumer = 'import { missingExport } from "./module.mjs";\nmissingExport();\n';
-  assert.equal(
-    pairTypechecksCleanly({ "module.mjs": moduleSource, "consumer.mjs": driftedConsumer }),
-    false
-  );
+  assert.equal(pairTypechecksCleanly({ "module.mjs": moduleSource, "consumer.mjs": driftedConsumer }), false);
 
   const fixedConsumer = 'import { realExport } from "./module.mjs";\nrealExport();\n';
-  assert.equal(
-    pairTypechecksCleanly({ "module.mjs": moduleSource, "consumer.mjs": fixedConsumer }),
-    true
-  );
+  assert.equal(pairTypechecksCleanly({ "module.mjs": moduleSource, "consumer.mjs": fixedConsumer }), true);
 });
 
 test("an incompatible mock payload is rejected", () => {

@@ -10,19 +10,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
-import { runNamespaceCheck } from "../../tools/check-namespace.mjs";
-import { runNamingCheck } from "../../tools/check-naming.mjs";
-import { runHeadersCheck } from "../../tools/check-headers.mjs";
 import { runDependencyCheck } from "../../tools/check-dependencies.mjs";
 import { runSmellContracts } from "../../tools/check-smell-contracts.mjs";
-import {
-  EXECUTABLE_SMELL_RULE_IDS,
-  REQUIRED_SMELL_RULES,
-  runSmellCatalogCheck
-} from "../../tools/check-smell-catalog.mjs";
 import { runJsDuplicationCheck } from "../../tools/check-js-duplication.mjs";
 import { runFileSizeCheck } from "../../tools/check-file-size.mjs";
 import { findLeakTokens } from "../../tools/check-viewer-contracts.mjs";
@@ -38,60 +30,11 @@ test("viewer contract leak scan", () => {
   assert.ok(findLeakTokens("value: null").length === 1);
 });
 
-test("namespace check", () => {
-  const clean = runIn({ "viewer/good.js": header() + namespaced("Good") }, runNamespaceCheck);
-  assert.equal(clean.ok, true, clean.failures.join("\n"));
-
-  const bad = runIn({ "viewer/bad.js": header() + "window.Rogue = {};\n" }, runNamespaceCheck);
-  assert.equal(bad.ok, false);
-  assert.ok(
-    bad.failures.some((/** @type {string} */ f) => f.includes("illegal global window.Rogue"))
-  );
-});
-
-test("naming check", () => {
-  const clean = runIn({ "viewer/good.js": header() + namespaced("Good") }, runNamingCheck);
-  assert.equal(clean.ok, true, clean.failures.join("\n"));
-
-  const lowerMember = runIn(
-    {
-      "viewer/bad.js":
-        header() +
-        "window.Polarrecorder = window.Polarrecorder || {};\nwindow.Polarrecorder.bad = {};\n"
-    },
-    runNamingCheck
-  );
-  assert.equal(lowerMember.ok, false);
-  assert.ok(
-    lowerMember.failures.some((/** @type {string} */ f) => f.includes("must be PascalCase"))
-  );
-
-  const badFile = runIn({ "viewer/BadName.js": header() + namespaced("Good") }, runNamingCheck);
-  assert.equal(badFile.ok, false);
-  assert.ok(badFile.failures.some((/** @type {string} */ f) => f.includes("must be kebab-case")));
-});
-
-test("headers check", () => {
-  const clean = runIn(
-    {
-      "viewer/good.js": header() + namespaced("Good"),
-      "documentation/architecture/ui.md": "# UI\n"
-    },
-    runHeadersCheck
-  );
-  assert.equal(clean.ok, true, clean.failures.join("\n"));
-
-  const missing = runIn({ "viewer/bad.js": namespaced("Good") }, runHeadersCheck);
-  assert.equal(missing.ok, false);
-  assert.ok(missing.failures.some((/** @type {string} */ f) => f.includes("missing top")));
-});
-
 test("dependency check", () => {
   const clean = runIn(
     {
       "viewer/theme.js":
-        header() +
-        "window.Polarrecorder = window.Polarrecorder || {};\nwindow.Polarrecorder.Theme = {};\n",
+        header() + "window.Polarrecorder = window.Polarrecorder || {};\nwindow.Polarrecorder.Theme = {};\n",
       "viewer/viewer.js":
         header() +
         "window.Polarrecorder = window.Polarrecorder || {};\nwindow.Polarrecorder.Boot = Polarrecorder.Theme;\n"
@@ -102,17 +45,13 @@ test("dependency check", () => {
 
   const cycle = runIn(
     {
-      "viewer/a.js":
-        header() + "window.Polarrecorder.A = function () { return Polarrecorder.B; };\n",
-      "viewer/b.js":
-        header() + "window.Polarrecorder.B = function () { return Polarrecorder.A; };\n"
+      "viewer/a.js": header() + "window.Polarrecorder.A = function () { return Polarrecorder.B; };\n",
+      "viewer/b.js": header() + "window.Polarrecorder.B = function () { return Polarrecorder.A; };\n"
     },
     runDependencyCheck
   );
   assert.equal(cycle.ok, false);
-  assert.ok(
-    cycle.failures.some((/** @type {string} */ f) => f.includes("circular JS namespace reference"))
-  );
+  assert.ok(cycle.failures.some((/** @type {string} */ f) => f.includes("circular JS namespace reference")));
 });
 
 test("smell contracts", () => {
@@ -124,57 +63,14 @@ test("smell contracts", () => {
   rogue["viewer/rogue.js"] = header() + namespaced("Rogue");
   const rogueResult = runIn(rogue, runSmellContracts);
   assert.equal(rogueResult.ok, false);
-  assert.ok(
-    rogueResult.failures.some((/** @type {string} */ f) =>
-      f.includes("viewer-script-contract: rogue.js")
-    )
-  );
+  assert.ok(rogueResult.failures.some((/** @type {string} */ f) => f.includes("viewer-script-contract: rogue.js")));
 
   const drift = smellContractsWorkspace();
   drift["viewer/presets.js"] =
-    headerDepends("none") +
-    "window.Polarrecorder.Presets = function () { return Polarrecorder.Theme; };\n";
+    headerDepends("none") + "window.Polarrecorder.Presets = function () { return Polarrecorder.Theme; };\n";
   const driftResult = runIn(drift, runSmellContracts);
   assert.equal(driftResult.ok, false);
-  assert.ok(
-    driftResult.failures.some((/** @type {string} */ f) =>
-      f.includes("viewer-dependency-header-contract")
-    )
-  );
-});
-
-test("smell catalog check", () => {
-  const clean = runIn(
-    { "documentation/conventions/smell-prevention.md": smellCatalogDocument(REQUIRED_SMELL_RULES) },
-    runSmellCatalogCheck
-  );
-  assert.equal(clean.ok, true, clean.failures.join("\n"));
-
-  const missing = runIn(
-    {
-      "documentation/conventions/smell-prevention.md": smellCatalogDocument(
-        REQUIRED_SMELL_RULES.filter((rule) => rule !== "Ruff format")
-      )
-    },
-    runSmellCatalogCheck
-  );
-  assert.equal(missing.ok, false);
-  assert.ok(
-    missing.failures.some((/** @type {string} */ f) => f.includes("missing smell catalog row"))
-  );
-
-  const unknown = runIn(
-    {
-      "documentation/conventions/smell-prevention.md": smellCatalogDocument(
-        REQUIRED_SMELL_RULES.concat("Mystery rule")
-      )
-    },
-    runSmellCatalogCheck
-  );
-  assert.equal(unknown.ok, false);
-  assert.ok(
-    unknown.failures.some((/** @type {string} */ f) => f.includes("unknown smell catalog row"))
-  );
+  assert.ok(driftResult.failures.some((/** @type {string} */ f) => f.includes("viewer-dependency-header-contract")));
 });
 
 test("JS duplication check", () => {
@@ -195,17 +91,12 @@ test("JS duplication check", () => {
     runJsDuplicationCheck
   );
   assert.equal(dup.ok, false);
-  assert.ok(
-    dup.failures.some((/** @type {string} */ f) =>
-      f.includes("duplicate function body across files")
-    )
-  );
+  assert.ok(dup.failures.some((/** @type {string} */ f) => f.includes("duplicate function body across files")));
 });
 
 test("file size check", () => {
-  const clean = runIn(
-    { "viewer/good.js": header() + namespaced("Good") },
-    (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
+  const clean = runIn({ "viewer/good.js": header() + namespaced("Good") }, (/** @type {CheckOptions} */ opts) =>
+    runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
   assert.equal(clean.ok, true, clean.failures.join("\n"));
 
@@ -259,38 +150,28 @@ test("file size check", () => {
     (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
   assert.equal(oversized.ok, false);
-  assert.ok(
-    oversized.failures.some((/** @type {string} */ f) => f.includes("non-empty lines (limit 400)"))
-  );
+  assert.ok(oversized.failures.some((/** @type {string} */ f) => f.includes("non-empty lines (limit 400)")));
 
   const pluginPacked = runIn(
     { "plugin.mjs": "export default function plugin() { const a = 1; const b = 2; }\n" },
     (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
   assert.equal(pluginPacked.ok, false);
-  assert.ok(
-    pluginPacked.failures.some((/** @type {string} */ f) => f.includes("single-line-body"))
-  );
+  assert.ok(pluginPacked.failures.some((/** @type {string} */ f) => f.includes("single-line-body")));
 
   const legacyPluginPacked = runIn(
     { "plugin.js": "function plugin() { const a = 1; const b = 2; }\n" },
     (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
   assert.equal(legacyPluginPacked.ok, false);
-  assert.ok(
-    legacyPluginPacked.failures.some((/** @type {string} */ f) => f.includes("single-line-body"))
-  );
+  assert.ok(legacyPluginPacked.failures.some((/** @type {string} */ f) => f.includes("single-line-body")));
 
   const oversizedTool = runIn(
     { "tools/example.mjs": "export const noop = 1;\n".repeat(401) },
     (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
   assert.equal(oversizedTool.ok, false);
-  assert.ok(
-    oversizedTool.failures.some((/** @type {string} */ f) =>
-      f.includes("non-empty lines (limit 400)")
-    )
-  );
+  assert.ok(oversizedTool.failures.some((/** @type {string} */ f) => f.includes("non-empty lines (limit 400)")));
 
   const cleanTool = runIn(
     { "tools/nested/example.mjs": "export function helper() {\n  return 1;\n}\n" },
@@ -302,11 +183,7 @@ test("file size check", () => {
     { "tools/example.mjs": "export function helper() { const a = 1; const b = 2; }\n" },
     (/** @type {CheckOptions} */ opts) => runFileSizeCheck({ ...opts, onelinerMode: "block" })
   );
-  assert.equal(
-    densePackedTool.ok,
-    true,
-    "tools/**/*.mjs is scoped to the line-count limit only, not oneliner density"
-  );
+  assert.equal(densePackedTool.ok, true, "tools/**/*.mjs is scoped to the line-count limit only, not oneliner density");
 });
 
 /**
@@ -352,41 +229,11 @@ function smellContractsWorkspace() {
   for (const name of scripts) {
     const member = pascal(name);
     files[`viewer/${name}`] =
-      name === "viewer.js"
-        ? header() + namespaced(member)
-        : headerDepends("none") + namespaced(member);
+      name === "viewer.js" ? header() + namespaced(member) : headerDepends("none") + namespaced(member);
   }
   const order = scripts.map((name) => `    <script src="${name}"></script>`).join("\n");
   files["viewer/viewer.html"] = `<!doctype html><html><body>\n${order}\n</body></html>\n`;
   return files;
-}
-
-/**
- * @param {string[]} rules
- * @returns {string}
- */
-function smellCatalogDocument(rules) {
-  const executableIds = EXECUTABLE_SMELL_RULE_IDS.map(
-    (/** @type {{id: string}} */ rule) => "`" + rule.id + "`"
-  ).join(", ");
-  const rows = rules
-    .map((/** @type {string} */ rule, /** @type {number} */ index) => {
-      const enforcement = index === 0 ? `checker (${executableIds})` : "checker";
-      return `| ${rule} | forbidden | required | ${enforcement} |`;
-    })
-    .join("\n");
-  return (
-    "# Smell Prevention\n\n" +
-    "**Status:** Current.\n\n" +
-    "## Overview\n\n" +
-    "Catalog.\n\n" +
-    "## Key Details\n\n" +
-    "| Rule | Forbidden or Required | Replacement or Required Pattern | Enforcement |\n" +
-    "|---|---|---|---|\n" +
-    rows +
-    "\n\n## Related\n\n" +
-    "- [Quality gates](quality-gates.md)\n"
-  );
 }
 
 /**
@@ -423,10 +270,7 @@ function pascal(fileName) {
  * @returns {string}
  */
 function namespaced(member) {
-  return (
-    "window.Polarrecorder = window.Polarrecorder || {};\n" +
-    `window.Polarrecorder.${member} = {};\n`
-  );
+  return "window.Polarrecorder = window.Polarrecorder || {};\n" + `window.Polarrecorder.${member} = {};\n`;
 }
 
 /** @returns {string} */

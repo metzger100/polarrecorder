@@ -92,9 +92,7 @@ export function checkFloorRatchet(root) {
     const active = floors.families?.[key];
     const min = baseline.minimumFloors.families[key];
     if (typeof active !== "number" || active < min) {
-      failures.push(
-        `coverage-floors.json families.${key} (${active}) is below its baseline floor ${min}`
-      );
+      failures.push(`coverage-floors.json families.${key} (${active}) is below its baseline floor ${min}`);
     }
   }
   const pluginMin = baseline.minimumFloors.pluginPy.combinedLineAndBranchPercent;

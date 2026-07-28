@@ -11,7 +11,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { test } from "node:test";
+import { test } from "vitest";
 
 const ROOT = process.cwd();
 const INSTALL_SH = path.join(ROOT, "install.sh");
@@ -129,10 +129,9 @@ test("dry-run with --plugin-dir uses the explicit target and skips detection", (
 });
 
 test("--version skips latest-release resolution entirely (fake curl/wget never invoked)", () => {
-  const { result, workRoot } = runInstall(
-    ["--version", "3.1.4", "--plugin-dir", "/tmp/x", "--dry-run"],
-    { fakeBin: FAILING_NETWORK_BIN }
-  );
+  const { result, workRoot } = runInstall(["--version", "3.1.4", "--plugin-dir", "/tmp/x", "--dry-run"], {
+    fakeBin: FAILING_NETWORK_BIN
+  });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /polarrecorder-3\.1\.4\.zip/);
   cleanup(workRoot);
@@ -144,21 +143,13 @@ test("explicit prerelease+build version is preserved verbatim in the constructed
     { fakeBin: FAILING_NETWORK_BIN }
   );
   assert.equal(result.status, 0, result.stderr);
-  assert.match(
-    result.stdout,
-    /source: .*\/v1\.0\.0-beta\.1\+build\.5\/polarrecorder-1\.0\.0-beta\.1\+build\.5\.zip/
-  );
+  assert.match(result.stdout, /source: .*\/v1\.0\.0-beta\.1\+build\.5\/polarrecorder-1\.0\.0-beta\.1\+build\.5\.zip/);
   cleanup(workRoot);
 });
 
 test("a download failure aborts before any target mutation", () => {
   const { result, workRoot } = runInstall(
-    [
-      "--version",
-      "9.9.9",
-      "--plugin-dir",
-      path.join(os.tmpdir(), "should-not-exist-install-target")
-    ],
+    ["--version", "9.9.9", "--plugin-dir", path.join(os.tmpdir(), "should-not-exist-install-target")],
     {
       fakeBin: { curl: "exit 22" }
     }
@@ -180,11 +171,10 @@ test("a ZIP with two top-level directories is rejected and the target is untouch
     "extra-dir/marker": ""
   });
   const targetDir = path.join(workRoot, "target", "polarrecorder");
-  const result = spawnSync(
-    "bash",
-    [INSTALL_SH, "--zip", zipPath, "--plugin-dir", targetDir, "--no-restart"],
-    { encoding: "utf8", env: { PATH: "/usr/bin:/bin", HOME: workRoot } }
-  );
+  const result = spawnSync("bash", [INSTALL_SH, "--zip", zipPath, "--plugin-dir", targetDir, "--no-restart"], {
+    encoding: "utf8",
+    env: { PATH: "/usr/bin:/bin", HOME: workRoot }
+  });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /exactly one top-level directory/);
   assert.ok(!fs.existsSync(targetDir));
@@ -198,11 +188,10 @@ test("a ZIP missing plugin.json is rejected and the target is untouched", () => 
     "polarrecorder/plugin.js": ""
   });
   const targetDir = path.join(workRoot, "target", "polarrecorder");
-  const result = spawnSync(
-    "bash",
-    [INSTALL_SH, "--zip", zipPath, "--plugin-dir", targetDir, "--no-restart"],
-    { encoding: "utf8", env: { PATH: "/usr/bin:/bin", HOME: workRoot } }
-  );
+  const result = spawnSync("bash", [INSTALL_SH, "--zip", zipPath, "--plugin-dir", targetDir, "--no-restart"], {
+    encoding: "utf8",
+    env: { PATH: "/usr/bin:/bin", HOME: workRoot }
+  });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /missing polarrecorder\/plugin\.json/);
   assert.ok(!fs.existsSync(targetDir));
@@ -229,10 +218,7 @@ test("a full install from a local ZIP replaces the target with no real network o
   });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Installed Polar Recorder to /);
-  assert.equal(
-    fs.readFileSync(path.join(targetDir, "plugin.json"), "utf8"),
-    '{"name": "polarrecorder"}'
-  );
+  assert.equal(fs.readFileSync(path.join(targetDir, "plugin.json"), "utf8"), '{"name": "polarrecorder"}');
   assert.ok(fs.existsSync(restartMarker), "the fake systemctl, not a real one, must be invoked");
   cleanup(workRoot);
 });

@@ -4,10 +4,9 @@
 
 ## Overview
 
-The validation pipeline classifies each core TWA/TWS/STW read as accepted, rejected, or
-quarantined. R1 and R2 run before `Sample` construction. R3 through R22 run on a built
-`Sample`, with R11 through R15 reading `ValidationState`. R17 through R22 are optional
-enhanced rules that read additional signals from `Sample.enhanced`.
+The validation pipeline classifies each core TWA/TWS/STW read as accepted, rejected, or quarantined. R1 and R2 run
+before `Sample` construction. R3 through R22 run on a built `Sample`, with R11 through R15 reading `ValidationState`.
+R17 through R22 are optional enhanced rules that read additional signals from `Sample.enhanced`.
 
 ## Key Details
 
@@ -36,51 +35,43 @@ enhanced rules that read additional signals from `Sample.enhanced`.
 | R21  | `reject_true_wind_crosscheck` | reject     | `reject_true_wind_crosscheck`                                             | Optional: true wind recomputed from `awa_deg`/`aws_kt`/STW disagrees with reports beyond `enh_tw_twa_tol_deg` (15) or `enh_tw_tws_tol_kt` (3). Quality-gate (wind sensor/calibration). | Enhanced: AWA + AWS           |
 | R22  | `reject_heel_out_of_band`     | reject     | `reject_heel_out_of_band`                                                 | Optional `abs(heel_deg) > enh_heel_max_deg` (35) or `< enh_heel_min_deg` (0, off by default). Quality-gate (over/underpowered).                                                        | Enhanced: heel                |
 
-R1, R2, and R3 report every offending core value in one result. R4 through R22 emit one
-reason code. Individual rules return `pass`, `reject`, or `quarantine`; only the runner
-emits the final `accepted` decision.
+R1, R2, and R3 report every offending core value in one result. R4 through R22 emit one reason code. Individual rules
+return `pass`, `reject`, or `quarantine`; only the runner emits the final `accepted` decision.
 
-Enhanced rules (R17-R22) are optional. Each fires only when its rule is enabled, its store
-key(s) are configured, and a fresh value is present in `Sample.enhanced`; an absent or stale
-signal leaves the rule a no-op (`pass`). R17-R19 are pre-candidate
-(`is_sailing_candidate=False`, counted via `record_non_candidate`) because motoring and
-shallow-water squat are non-representative conditions, like `reject_head_to_wind`. R20-R22 are
-quality-gate rejects (`is_sailing_candidate=True`, counted via `record_rejected`): the boat was
-sailing in a clean condition but the specific sample or sensor is unrepresentative. R20-R22 run
-in `_run_candidate_rules` after `stability_window` and before R16, so a definitive enhanced
-reject wins over the R16 quarantine.
+Enhanced rules (R17-R22) are optional. Each fires only when its rule is enabled, its store key(s) are configured, and a
+fresh value is present in `Sample.enhanced`; an absent or stale signal leaves the rule a no-op (`pass`). R17-R19 are
+pre-candidate (`is_sailing_candidate=False`, counted via `record_non_candidate`) because motoring and shallow-water
+squat are non-representative conditions, like `reject_head_to_wind`. R20-R22 are quality-gate rejects
+(`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean condition but the specific
+sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after `stability_window` and before R16, so
+a definitive enhanced reject wins over the R16 quarantine.
 
-R16 enhancement: when a definitive engine signal is configured, R16 defers to it. Engine-on is
-already a pre-candidate R17/R18 reject and never reaches R16. When the signal reads **off**
-(`engine_signal < enh_engine_state_on_threshold`, or `rpm <= RPM_OFF_CEILING`, a named
-stopped-engine constant of 50 rpm) the R16 quarantine is suppressed. A present-but-idling RPM in
-the band `RPM_OFF_CEILING < rpm <= enh_rpm_idle_max` does **not** settle the motoring question,
-so R16's low-wind/moving heuristic still applies there. With no engine signal, R16 is unchanged.
+R16 enhancement: when a definitive engine signal is configured, R16 defers to it. Engine-on is already a pre-candidate
+R17/R18 reject and never reaches R16. When the signal reads **off** (`engine_signal < enh_engine_state_on_threshold`, or
+`rpm <= RPM_OFF_CEILING`, a named stopped-engine constant of 50 rpm) the R16 quarantine is suppressed. A
+present-but-idling RPM in the band `RPM_OFF_CEILING < rpm <= enh_rpm_idle_max` does **not** settle the motoring
+question, so R16's low-wind/moving heuristic still applies there. With no engine signal, R16 is unchanged.
 
-R11/R14 enhancement (turn confirmation): when `enh_turnconfirm_enabled` and a prior+current
-heading and/or COG (`enh_heading_key`/`enh_cog_key`) is available, R11 computes each available
-signal's circular rate and concludes "not turning" only when the **maximum** of the available
-rates is below `enh_turn_min_roc` (default 3 deg/s). A high TWA rate while not turning is treated
-as a wind shift: R11 passes and starts no cooldown, so R14 does not reject the following samples.
-A single available signal at/above the threshold is treated as a real turn (reject + cooldown, as
-before), so a swinging COG over a steady heading fails safe toward the original R11. With no
-heading or COG available, R11/R14 behave exactly as before.
+R11/R14 enhancement (turn confirmation): when `enh_turnconfirm_enabled` and a prior+current heading and/or COG
+(`enh_heading_key`/`enh_cog_key`) is available, R11 computes each available signal's circular rate and concludes "not
+turning" only when the **maximum** of the available rates is below `enh_turn_min_roc` (default 3 deg/s). A high TWA rate
+while not turning is treated as a wind shift: R11 passes and starts no cooldown, so R14 does not reject the following
+samples. A single available signal at/above the threshold is treated as a real turn (reject + cooldown, as before), so a
+swinging COG over a steady heading fails safe toward the original R11. With no heading or COG available, R11/R14 behave
+exactly as before.
 
-R11 through R13 use the actual elapsed monotonic time since `state.previous_sample`. If
-there is no previous sample, or elapsed time is zero or negative, no rate is computable and
-the rule passes.
+R11 through R13 use the actual elapsed monotonic time since `state.previous_sample`. If there is no previous sample, or
+elapsed time is zero or negative, no rate is computable and the rule passes.
 
-R15 evaluates the rolling buffer before the current sample is appended. A warming-up result
-is not a sailing candidate; `reject_unstable` is a quality-gate rejection and is a sailing
-candidate.
+R15 evaluates the rolling buffer before the current sample is appended. A warming-up result is not a sailing candidate;
+`reject_unstable` is a quality-gate rejection and is a sailing candidate.
 
-The rolling buffer keeps one boundary anchor sample just outside the active window when a newer
-sample is present. This lets normal sampling jitter, such as a one-second loop running slightly
-late, prove that the prior data spans the configured window while still resetting warm-up after a
-gap longer than the window.
+The rolling buffer keeps one boundary anchor sample just outside the active window when a newer sample is present. This
+lets normal sampling jitter, such as a one-second loop running slightly late, prove that the prior data spans the
+configured window while still resetting warm-up after a gap longer than the window.
 
-One pre-pipeline reason code is emitted by plugin integration: `reject_user_paused`. It is not
-emitted by the pure validation runner.
+One pre-pipeline reason code is emitted by plugin integration: `reject_user_paused`. It is not emitted by the pure
+validation runner.
 
 ## Related
 

@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Actionlint-backed parsed-workflow contract for
- * `.github/workflows/publish-release.yml`.
+ * Actionlint-backed parsed-workflow contract for `.github/workflows/`.
  *
- * actionlint (`npm run actions:lint`) proves the workflow is syntactically valid
- * GitHub Actions YAML; this proves it is *exactly* the reviewed, minimal publisher
- * boundary -- the sole job, its complete ordered step list, every `uses` identity
- * (pinned to a full commit SHA with a readable version comment), the checkout/release
- * step fields, and the two normalized `run` lines must equal this file's allowlist
- * byte-for-byte. Any extra workflow, job, step, `uses`, `run` line, permission,
- * trigger, or artifact fails closed instead of silently passing forbidden-string
- * checks alone.
+ * actionlint (`npm run actions:lint`) proves each workflow is syntactically valid GitHub
+ * Actions YAML; this proves the directory contains *exactly* the two reviewed, minimal
+ * workflows -- the transport-only tag publisher and the read-only quality gate -- each
+ * matching its own per-file shape contract byte-for-byte: job ids, ordered step lists,
+ * every `uses` identity (pinned to a full commit SHA with a readable version comment),
+ * step fields, and normalized `run` lines. An unknown third workflow file, an unexpected
+ * job id, or an unexpected permission on either file fails closed instead of silently
+ * passing forbidden-string checks alone. This is stricter than the retired "exactly one
+ * file" contract, never more permissive: any file not named in `ALLOWED_WORKFLOWS` is
+ * rejected, and both known files are individually shape-checked when present.
  */
 
 import fs from "node:fs";
@@ -19,11 +20,10 @@ import path from "node:path";
 import { load as loadYaml } from "js-yaml";
 
 const WORKFLOWS_DIR = ".github/workflows";
-const EXPECTED_FILE = "publish-release.yml";
 
 const FULL_SHA_WITH_COMMENT = /^([\w./-]+)@([0-9a-f]{40})\s*#\s*v[\w.-]+\s*$/;
 
-const EXPECTED_STEPS = [
+const PUBLISH_RELEASE_STEPS = [
   {
     name: "Checkout repository at tag ref",
     usesRepo: "actions/checkout",
@@ -52,6 +52,46 @@ const EXPECTED_STEPS = [
   }
 ];
 
+const QUALITY_STEPS = [
+  { name: "Checkout repository", usesRepo: "actions/checkout" },
+  { name: "Read Node version", id: "node_version", run: 'echo "version=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"' },
+  {
+    name: "Set up Node.js",
+    usesRepo: "actions/setup-node",
+    with: { "node-version": "${{ steps.node_version.outputs.version }}" }
+  },
+  { name: "Install dependencies", run: "npm ci" },
+  { name: "Provision toolchain", run: "npm run setup" },
+  { name: "Run quality gate", run: "npm run check:all" }
+];
+
+/**
+ * @typedef {object} WorkflowContract
+ * @property {(doc: any, failures: string[]) => void} checkTriggerAndPermissions
+ * @property {string} jobId
+ * @property {Record<string, string> | null} jobPermissions
+ * @property {number} timeoutMinutes
+ * @property {any[]} steps
+ */
+
+/** @type {Record<string, WorkflowContract>} */
+const ALLOWED_WORKFLOWS = {
+  "publish-release.yml": {
+    checkTriggerAndPermissions: checkPublishReleaseTriggerAndPermissions,
+    jobId: "publish-release",
+    jobPermissions: { contents: "write" },
+    timeoutMinutes: 10,
+    steps: PUBLISH_RELEASE_STEPS
+  },
+  "quality.yml": {
+    checkTriggerAndPermissions: checkQualityTriggerAndPermissions,
+    jobId: "quality",
+    jobPermissions: null,
+    timeoutMinutes: 30,
+    steps: QUALITY_STEPS
+  }
+};
+
 /**
  * @param {{root?: string, print?: boolean}} [options]
  * @returns {{ok: boolean, failures: string[]}}
@@ -64,21 +104,35 @@ export function runPublisherWorkflowCheck(options = {}) {
 
   const workflowsPath = path.join(root, WORKFLOWS_DIR);
   const files = fs.existsSync(workflowsPath) ? fs.readdirSync(workflowsPath).sort() : [];
-  if (files.length !== 1 || files[0] !== EXPECTED_FILE) {
-    failures.push(
-      `${WORKFLOWS_DIR} must contain exactly one file, '${EXPECTED_FILE}'; found: ${files.join(", ") || "(none)"}`
-    );
-    return finish(failures, print);
+  const allowedNames = Object.keys(ALLOWED_WORKFLOWS);
+  const unknown = files.filter((name) => !allowedNames.includes(name));
+  if (unknown.length > 0) {
+    failures.push(`${WORKFLOWS_DIR} contains unknown workflow file(s): ${unknown.join(", ")}`);
+  }
+  if (!files.includes("publish-release.yml")) {
+    failures.push(`${WORKFLOWS_DIR} must contain 'publish-release.yml'`);
   }
 
-  const filePath = path.join(workflowsPath, EXPECTED_FILE);
+  for (const name of allowedNames) {
+    if (!files.includes(name)) continue;
+    checkWorkflowFile(path.join(workflowsPath, name), ALLOWED_WORKFLOWS[name], failures);
+  }
+
+  return finish(failures, print);
+}
+
+/**
+ * @param {string} filePath
+ * @param {WorkflowContract} contract
+ * @param {string[]} failures
+ * @returns {void}
+ */
+function checkWorkflowFile(filePath, contract, failures) {
   const text = fs.readFileSync(filePath, "utf8");
   const doc = /** @type {any} */ (loadYaml(text));
 
-  checkTriggerAndPermissions(doc, failures);
-  checkSingleJob(doc, text, failures);
-
-  return finish(failures, print);
+  contract.checkTriggerAndPermissions(doc, failures);
+  checkSingleJob(doc, text, contract, failures);
 }
 
 /**
@@ -86,61 +140,95 @@ export function runPublisherWorkflowCheck(options = {}) {
  * @param {string[]} failures
  * @returns {void}
  */
-function checkTriggerAndPermissions(doc, failures) {
+function checkPublishReleaseTriggerAndPermissions(doc, failures) {
   const tags = doc?.on?.push?.tags;
   if (!Array.isArray(tags) || tags.length !== 1 || tags[0] !== "v*") {
-    failures.push('trigger must be exactly `on.push.tags: ["v*"]`');
+    failures.push('publish-release.yml: trigger must be exactly `on.push.tags: ["v*"]`');
   }
   if (Object.keys(doc?.on || {}).length !== 1 || !("push" in (doc?.on || {}))) {
-    failures.push("trigger must have no event besides `push`");
+    failures.push("publish-release.yml: trigger must have no event besides `push`");
   }
   if (doc?.permissions?.contents !== "read" || Object.keys(doc.permissions).length !== 1) {
-    failures.push("top-level permissions must be exactly `contents: read`");
+    failures.push("publish-release.yml: top-level permissions must be exactly `contents: read`");
   }
   if (!doc?.concurrency?.group?.includes("${{ github.ref }}")) {
-    failures.push("concurrency group must be ref-scoped");
+    failures.push("publish-release.yml: concurrency group must be ref-scoped");
   }
   if (doc?.concurrency?.["cancel-in-progress"] !== false) {
-    failures.push("concurrency must be non-canceling (`cancel-in-progress: false`)");
+    failures.push("publish-release.yml: concurrency must be non-canceling (`cancel-in-progress: false`)");
+  }
+}
+
+/**
+ * @param {any} doc
+ * @param {string[]} failures
+ * @returns {void}
+ */
+function checkQualityTriggerAndPermissions(doc, failures) {
+  if (!("pull_request" in (doc?.on || {}))) {
+    failures.push("quality.yml: trigger must include `pull_request`");
+  }
+  const branches = doc?.on?.push?.branches;
+  if (!Array.isArray(branches) || branches.length !== 1 || branches[0] !== "main") {
+    failures.push("quality.yml: trigger must push-trigger on exactly `branches: [main]`");
+  }
+  if (Object.keys(doc?.on || {}).length !== 2) {
+    failures.push("quality.yml: trigger must have no event besides `pull_request` and `push`");
+  }
+  if (doc?.permissions?.contents !== "read" || Object.keys(doc.permissions).length !== 1) {
+    failures.push("quality.yml: top-level permissions must be exactly `contents: read`");
+  }
+  if (!doc?.concurrency?.group?.includes("${{ github.ref }}")) {
+    failures.push("quality.yml: concurrency group must be ref-scoped");
+  }
+  if (doc?.concurrency?.["cancel-in-progress"] !== true) {
+    failures.push("quality.yml: concurrency must cancel superseded runs (`cancel-in-progress: true`)");
   }
 }
 
 /**
  * @param {any} doc
  * @param {string} rawText
+ * @param {Pick<WorkflowContract, "jobId" | "jobPermissions" | "timeoutMinutes" | "steps">} contract
  * @param {string[]} failures
  * @returns {void}
  */
-function checkSingleJob(doc, rawText, failures) {
+function checkSingleJob(doc, rawText, contract, failures) {
   const jobs = doc?.jobs || {};
   const jobIds = Object.keys(jobs);
-  if (jobIds.length !== 1 || jobIds[0] !== "publish-release") {
-    failures.push(
-      `jobs must contain exactly one job, 'publish-release'; found: ${jobIds.join(", ")}`
-    );
+  if (jobIds.length !== 1 || jobIds[0] !== contract.jobId) {
+    failures.push(`jobs must contain exactly one job, '${contract.jobId}'; found: ${jobIds.join(", ")}`);
     return;
   }
-  const job = jobs["publish-release"];
+  const job = jobs[contract.jobId];
   if ("needs" in job) {
-    failures.push("the job must not declare `needs`");
+    failures.push(`${contract.jobId}: the job must not declare 'needs'`);
   }
-  if (job["timeout-minutes"] !== 10) {
-    failures.push("the job must set `timeout-minutes: 10`");
+  if (job["timeout-minutes"] !== contract.timeoutMinutes) {
+    failures.push(`${contract.jobId}: the job must set 'timeout-minutes: ${contract.timeoutMinutes}'`);
   }
-  if (job.permissions?.contents !== "write" || Object.keys(job.permissions || {}).length !== 1) {
-    failures.push("the job must set exactly `permissions.contents: write`");
+  if (contract.jobPermissions) {
+    const expectedKeys = Object.keys(contract.jobPermissions);
+    const actualKeys = Object.keys(job.permissions || {});
+    const mismatched = expectedKeys.some((key) => job.permissions?.[key] !== contract.jobPermissions?.[key]);
+    if (mismatched || actualKeys.length !== expectedKeys.length) {
+      failures.push(`${contract.jobId}: the job must set exactly ${JSON.stringify(contract.jobPermissions)}`);
+    }
+  } else if (job.permissions) {
+    failures.push(`${contract.jobId}: the job must not declare its own 'permissions' (it inherits read-only)`);
   }
 
   const steps = job.steps || [];
-  if (steps.length !== EXPECTED_STEPS.length) {
-    failures.push(`expected exactly ${EXPECTED_STEPS.length} steps; found ${steps.length}`);
+  if (steps.length !== contract.steps.length) {
+    failures.push(`${contract.jobId}: expected exactly ${contract.steps.length} steps; found ${steps.length}`);
   }
-  EXPECTED_STEPS.forEach((expected, index) => {
-    checkStep(expected, steps[index], index, rawText, failures);
+  contract.steps.forEach((expected, index) => {
+    checkStep(contract.jobId, expected, steps[index], index, rawText, failures);
   });
 }
 
 /**
+ * @param {string} jobId
  * @param {any} expected
  * @param {any} actual
  * @param {number} index
@@ -148,66 +236,65 @@ function checkSingleJob(doc, rawText, failures) {
  * @param {string[]} failures
  * @returns {void}
  */
-function checkStep(expected, actual, index, rawText, failures) {
+function checkStep(jobId, expected, actual, index, rawText, failures) {
   if (!actual) {
-    failures.push(`step ${index + 1} ('${expected.name}') is missing`);
+    failures.push(`${jobId}: step ${index + 1} ('${expected.name}') is missing`);
     return;
   }
   if (actual.name !== expected.name) {
-    failures.push(`step ${index + 1}: expected name '${expected.name}', got '${actual.name}'`);
+    failures.push(`${jobId}: step ${index + 1}: expected name '${expected.name}', got '${actual.name}'`);
   }
   if (expected.id && actual.id !== expected.id) {
-    failures.push(`step '${expected.name}': expected id '${expected.id}', got '${actual.id}'`);
+    failures.push(`${jobId}: step '${expected.name}': expected id '${expected.id}', got '${actual.id}'`);
   }
   if (expected.usesRepo) {
-    checkUses(expected, actual, rawText, failures);
+    checkUses(jobId, expected, actual, rawText, failures);
   }
   if (expected.with) {
     for (const [key, value] of Object.entries(expected.with)) {
       if (actual.with?.[key] !== value) {
-        failures.push(`step '${expected.name}': with.${key} must be exactly '${value}'`);
+        failures.push(`${jobId}: step '${expected.name}': with.${key} must be exactly '${value}'`);
       }
     }
     const extraKeys = Object.keys(actual.with || {}).filter((key) => !(key in expected.with));
     if (extraKeys.length > 0) {
-      failures.push(`step '${expected.name}': unexpected 'with' keys: ${extraKeys.join(", ")}`);
+      failures.push(`${jobId}: step '${expected.name}': unexpected 'with' keys: ${extraKeys.join(", ")}`);
     }
   }
   if (expected.run) {
     const normalized = String(actual.run || "").trim();
     if (normalized !== expected.run) {
-      failures.push(`step '${expected.name}': run line must be exactly '${expected.run}'`);
+      failures.push(`${jobId}: step '${expected.name}': run line must be exactly '${expected.run}'`);
     }
   }
   if (expected.runStartsWith) {
     const normalized = String(actual.run || "").trim();
     if (!normalized.startsWith(expected.runStartsWith)) {
-      failures.push(`step '${expected.name}': run must start with '${expected.runStartsWith}'`);
+      failures.push(`${jobId}: step '${expected.name}': run must start with '${expected.runStartsWith}'`);
     }
   }
 }
 
 /**
+ * @param {string} jobId
  * @param {any} expected
  * @param {any} actual
  * @param {string} rawText
  * @param {string[]} failures
  * @returns {void}
  */
-function checkUses(expected, actual, rawText, failures) {
+function checkUses(jobId, expected, actual, rawText, failures) {
   const uses = String(actual.uses || "");
   const [repoWithSha] = uses.split("@");
   if (repoWithSha !== expected.usesRepo) {
-    failures.push(`step '${expected.name}': uses must be '${expected.usesRepo}@<full SHA>'`);
+    failures.push(`${jobId}: step '${expected.name}': uses must be '${expected.usesRepo}@<full SHA>'`);
     return;
   }
-  const line = rawText
-    .split(/\r?\n/)
-    .find((candidate) => candidate.includes(`uses: ${expected.usesRepo}@`));
+  const line = rawText.split(/\r?\n/).find((candidate) => candidate.includes(`uses: ${expected.usesRepo}@`));
   const usesValue = line ? line.trim().replace(/^uses:\s*/, "") : "";
   if (!line || !FULL_SHA_WITH_COMMENT.test(usesValue)) {
     failures.push(
-      `step '${expected.name}': uses must be pinned to a full 40-character commit SHA with a '# vX.Y.Z' comment`
+      `${jobId}: step '${expected.name}': uses must be pinned to a full 40-character commit SHA with a '# vX.Y.Z' comment`
     );
   }
 }

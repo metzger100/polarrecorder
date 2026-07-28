@@ -5,6 +5,7 @@
 // catch, and dead code) so every maintained JS/MJS file -- shipped runtime and tools/ alike
 // -- gets the recommended baseline plus the repo-specific rules on top.
 import js from "@eslint/js";
+import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 
 const classicScriptGlobals = {
@@ -28,10 +29,7 @@ const GENERIC_JS_RULES = {
   "no-eval": "error",
   "no-implied-eval": "error",
   "no-new-func": "error",
-  "no-unused-vars": [
-    "error",
-    { args: "none", vars: "all", caughtErrors: "all", caughtErrorsIgnorePattern: "^_" }
-  ],
+  "no-unused-vars": ["error", { args: "none", vars: "all", caughtErrors: "all", caughtErrorsIgnorePattern: "^_" }],
   "no-warning-comments": ["error", { terms: SUPPRESSION_COMMENT_TERMS, location: "anywhere" }]
 };
 
@@ -70,6 +68,13 @@ export default [
     },
     linterOptions: { noInlineConfig: true },
     rules: SHIPPED_RUNTIME_RULES
+  },
+  {
+    // Single maintained owner of the mandatory file-overview header: every viewer/*.js file
+    // must carry a `@file` tag at the top, in place of the retired tools/check-headers.mjs.
+    files: ["viewer/*.js"],
+    plugins: { jsdoc },
+    rules: { "jsdoc/require-file-overview": "error" }
   },
   {
     // Dev-only tooling: quality-gate scripts, tool config files, and Node tests. These

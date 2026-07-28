@@ -43,18 +43,13 @@ function classify(relativePath) {
     return {
       owner: "unsupported",
       reason: "Prettier has no built-in TOML support and no TOML plugin is in this inventory",
-      alternateValidation:
-        "tests/js/codex-config.test.mjs proves required portable keys and forbidden-token rejection"
+      alternateValidation: "tests/js/codex-config.test.mjs proves required portable keys and forbidden-token rejection"
     };
   }
   if (relativePath.endsWith(".py")) {
     return { owner: "ruff" };
   }
-  if (
-    relativePath.endsWith(".mjs") ||
-    relativePath.endsWith(".js") ||
-    relativePath.endsWith(".d.ts")
-  ) {
+  if (relativePath.endsWith(".mjs") || relativePath.endsWith(".js") || relativePath.endsWith(".d.ts")) {
     return { owner: "prettier" };
   }
   if (relativePath.endsWith(".html") || relativePath.endsWith(".css")) {
@@ -63,18 +58,13 @@ function classify(relativePath) {
   if (relativePath.endsWith(".yml") || relativePath.endsWith(".yaml")) {
     return { owner: "prettier" };
   }
-  if (
-    relativePath === "package-lock.json" ||
-    relativePath.endsWith(".json") ||
-    relativePath.endsWith(".jsonc")
-  ) {
+  if (relativePath === "package-lock.json" || relativePath.endsWith(".json") || relativePath.endsWith(".jsonc")) {
     if (relativePath.startsWith("tests/mock-data/")) {
       return {
         owner: "unsupported",
         reason:
           "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
-        alternateValidation:
-          "tests/test_export.py and related fixture-sync tests exercise byte content"
+        alternateValidation: "tests/test_export.py and related fixture-sync tests exercise byte content"
       };
     }
     if (IMMUTABLE_CAPTURE_JSON_FILES.has(relativePath)) {
@@ -82,8 +72,7 @@ function classify(relativePath) {
         owner: "unsupported",
         reason:
           "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
-        alternateValidation:
-          "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+        alternateValidation: "tests/test_baseline_captures.py digest anchors and regeneration proofs"
       };
     }
     return { owner: "prettier" };
@@ -117,18 +106,15 @@ function classify(relativePath) {
   if (relativePath === "requirements-dev.in" || relativePath === "requirements-dev.txt") {
     return {
       owner: "unsupported",
-      reason:
-        "pip requirements format; pip-compile is the sole generator of the hash-locked file, not a formatter",
-      alternateValidation:
-        "npm run requirements:lock regenerates requirements-dev.txt deterministically"
+      reason: "pip requirements format; pip-compile is the sole generator of the hash-locked file, not a formatter",
+      alternateValidation: "npm run requirements:lock regenerates requirements-dev.txt deterministically"
     };
   }
   if (relativePath.endsWith(".zip")) return null;
   if (relativePath.endsWith(".csv")) {
     return {
       owner: "unsupported",
-      reason:
-        "functional test fixture; Prettier has no CSV formatter and byte content is test-asserted",
+      reason: "functional test fixture; Prettier has no CSV formatter and byte content is test-asserted",
       alternateValidation: "tests/test_export.py exercises the exact CSV bytes"
     };
   }
@@ -158,11 +144,10 @@ export function buildFormatScope() {
   // Tracked plus untracked-but-not-ignored files: mid-migration, several genuinely
   // maintained files (a fresh package-lock.json, newly authored tools) are not yet
   // staged/committed, and `git ls-files` alone would silently miss them.
-  const discovered = execFileSync(
-    "git",
-    ["ls-files", "--cached", "--others", "--exclude-standard"],
-    { cwd: ROOT, encoding: "utf8" }
-  )
+  const discovered = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
+    cwd: ROOT,
+    encoding: "utf8"
+  })
     .split("\n")
     .filter(Boolean);
   const tracked = [...new Set(discovered)].sort();
@@ -190,9 +175,7 @@ function main() {
   const byOwner = {};
   for (const row of rows) byOwner[row.owner] = (byOwner[row.owner] || 0) + 1;
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify({ rows, countByOwner: byOwner }, null, 2) + "\n");
-  console.log(
-    `format-scope: wrote ${rows.length} rows (${JSON.stringify(byOwner)}) to ${OUTPUT_PATH}`
-  );
+  console.log(`format-scope: wrote ${rows.length} rows (${JSON.stringify(byOwner)}) to ${OUTPUT_PATH}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

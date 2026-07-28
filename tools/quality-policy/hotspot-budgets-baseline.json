@@ -1,0 +1,15 @@
+{
+  "note": "Frozen ceiling snapshot for hotspot-budgets.json. A budget is a ceiling, not a floor, so its ratchet direction is the opposite of a coverage floor's: a live budget may only stay the same or tighten (decrease); it may never loosen (increase) past its frozen value here. Raise this baseline only by deliberately re-capturing it from a reviewed hotspot-budgets.json change, never to wave through a value that grew merely to make a change pass.",
+  "capturedDate": "2026-07-27",
+  "ceilings": {
+    "README.md": 380,
+    "plugin.py": 379,
+    "server/polarrecorder/api_dispatch.py": 338,
+    "server/polarrecorder/export.py": 395,
+    "server/polarrecorder/params.py": 343,
+    "server/polarrecorder/persistence.py": 341,
+    "tests/test_plugin_integration.py": 398,
+    "viewer/export-ui.js": 369,
+    "viewer/polar-chart.js": 393
+  }
+}

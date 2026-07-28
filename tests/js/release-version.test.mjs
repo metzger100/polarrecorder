@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import {
@@ -21,18 +21,12 @@ import {
 } from "../../tools/release-version.mjs";
 
 const ROOT = process.cwd();
-const CORPUS = JSON.parse(
-  fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "semver-corpus.json"), "utf8")
-);
+const CORPUS = JSON.parse(fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "semver-corpus.json"), "utf8"));
 
 test("every corpus valid version is accepted with the expected prerelease classification", () => {
   for (const entry of CORPUS.valid) {
     assert.equal(isValidSemver(entry.version), true, `expected valid: ${entry.version}`);
-    assert.equal(
-      isPrerelease(entry.version),
-      entry.prerelease,
-      `prerelease mismatch for ${entry.version}`
-    );
+    assert.equal(isPrerelease(entry.version), entry.prerelease, `prerelease mismatch for ${entry.version}`);
   }
 });
 

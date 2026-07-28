@@ -1,19 +1,19 @@
-# Live AvNav Validation Checklist
+# Manual AvNav Validation Checklist
 
 **Status:** Current.
 
 ## Overview
 
-Every automated gate (`npm run check:all`) proves the code is internally consistent: it does not prove the
-plugin actually installs, loads, and behaves correctly inside a real running AvNav instance. Run this
-checklist once per release candidate against a real AvNav host before publishing, and record the filled-in
-result as completion evidence. Filling in this checklist is a manual step; no tool in this repository can
-complete it automatically, and none claims to.
+Every automated gate (`npm run check:all`) proves the code is internally consistent: it does not prove the plugin
+actually installs, loads, and behaves correctly inside a real running AvNav instance. Run this checklist once per
+release candidate against a real AvNav host before publishing, and record the filled-in result as completion evidence.
+Filling in this checklist is a manual step; no tool in this repository can complete it automatically, and none claims
+to.
 
 ## Key Details
 
-Record one filled copy per validation run (copy the table below into the release notes draft or an
-execution-plan evidence section; do not edit this template in place).
+Record one filled copy per validation run (copy the table below into the release notes draft or an execution-plan
+evidence section; do not edit this template in place).
 
 Run metadata:
 
@@ -43,12 +43,12 @@ Checklist:
 | 11  | Upgrade from the previously installed release to this one in place          | Upgrade completes with no manual data migration required                                |           |       |
 | 12  | Roll back to the previously installed release                               | Rollback completes; previously recorded data remains readable                           |           |       |
 
-If any step fails, treat the release candidate as not ready: fix the underlying issue, then re-run the full
-checklist from step 1 rather than only re-running the failed step.
+If any step fails, treat the release candidate as not ready: fix the underlying issue, then re-run the full checklist
+from step 1 rather than only re-running the failed step.
 
-`npm run release:prepare` prints the path to this checklist as a reminder; it does not run the checklist and
-does not claim it passed. A release is only evidence-complete once a real filled-in copy of this checklist,
-covering an actual AvNav host, is attached to its release notes or execution-plan evidence.
+`npm run release:prepare` prints the path to this checklist as a reminder; it does not run the checklist and does not
+claim it passed. A release is only evidence-complete once a real filled-in copy of this checklist, covering an actual
+AvNav host, is attached to its release notes or execution-plan evidence.
 
 ## Related
 

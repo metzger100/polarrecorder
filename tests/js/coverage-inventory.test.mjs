@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import {
@@ -24,8 +24,7 @@ import {
 } from "../../tools/quality-policy/check-coverage-inventory.mjs";
 
 const ROOT = process.cwd();
-const EXPECTED_BASELINE_CAPTURE_DIGEST =
-  "a3af7e341a4dda51616808e2df14c034c130c0b5df1260ace8dee5f037addf62";
+const EXPECTED_BASELINE_CAPTURE_DIGEST = "a3af7e341a4dda51616808e2df14c034c130c0b5df1260ace8dee5f037addf62";
 
 test("the baseline coverage capture is byte-anchored", () => {
   const capturePath = path.join(ROOT, "tools", "quality-policy", "baseline-coverage-capture.json");
@@ -38,10 +37,7 @@ test("the committed baseline matches the value derived from the real capture", (
   assert.equal(result.ok, true, result.failures.join("\n"));
   const derived = deriveCoverageFloorBaseline(ROOT);
   const committed = JSON.parse(
-    fs.readFileSync(
-      path.join(ROOT, "tools", "quality-policy", "coverage-floor-baseline.json"),
-      "utf8"
-    )
+    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "coverage-floor-baseline.json"), "utf8")
   );
   assert.deepEqual(derived, committed);
 });
@@ -93,11 +89,7 @@ test("fails when a shipped python file is neither measured nor contract-owned", 
   fs.writeFileSync(reportPath, JSON.stringify(report));
   const result = runCoverageInventoryCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(
-    result.failures.some(
-      (f) => f.includes("server/polarrecorder/histogram.py") && f.includes("not measured")
-    )
-  );
+  assert.ok(result.failures.some((f) => f.includes("server/polarrecorder/histogram.py") && f.includes("not measured")));
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -121,9 +113,7 @@ test("fails when a viewer file drops below its per-file line floor", () => {
   fs.writeFileSync(reportPath, JSON.stringify(report));
   const result = runCoverageInventoryCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(
-    result.failures.some((f) => f.includes("viewer/a.js") && f.includes("below the 80% floor"))
-  );
+  assert.ok(result.failures.some((f) => f.includes("viewer/a.js") && f.includes("below the 80% floor")));
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -197,10 +187,7 @@ test("rejects a contract-owned python entry whose owner test does not import the
   fs.writeFileSync(reportPath, JSON.stringify(report));
 
   fs.mkdirSync(path.join(root, "tests"), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, "tests", "test_histogram.py"),
-    "def test_speed_key() -> None:\n    assert 1 == 1\n"
-  );
+  fs.writeFileSync(path.join(root, "tests", "test_histogram.py"), "def test_speed_key() -> None:\n    assert 1 == 1\n");
   const floorsPath = path.join(root, "tools", "quality-policy", "coverage-floors.json");
   const floors = JSON.parse(fs.readFileSync(floorsPath, "utf8"));
   floors.contractOwned.python["server/polarrecorder/histogram.py"] = {
@@ -233,9 +220,7 @@ test("rejects a contract-owned entry whose target file is actually measured", ()
   const result = runCoverageInventoryCheck({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(
-    result.failures.some(
-      (f) => f.includes("histogram.py") && f.includes("has measured executable coverage data")
-    )
+    result.failures.some((f) => f.includes("histogram.py") && f.includes("has measured executable coverage data"))
   );
   fs.rmSync(root, { recursive: true, force: true });
 });
@@ -251,9 +236,7 @@ test("rejects a contract-owned entry pointing at a file that no longer exists", 
   fs.writeFileSync(floorsPath, JSON.stringify(floors));
   const result = runCoverageInventoryCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(
-    result.failures.some((f) => f.includes("deleted.py") && f.includes("no longer exists"))
-  );
+  assert.ok(result.failures.some((f) => f.includes("deleted.py") && f.includes("no longer exists")));
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -318,15 +301,9 @@ function makeFakeRoot() {
   // above baseline) and add this fake root's own one real viewer file on top.
   floors.viewerPerFileLinePercent["viewer/a.js"] = 80.0;
   floors.contractOwned = { javascript: {}, python: {} };
-  fs.writeFileSync(
-    path.join(root, "tools", "quality-policy", "coverage-floors.json"),
-    JSON.stringify(floors)
-  );
+  fs.writeFileSync(path.join(root, "tools", "quality-policy", "coverage-floors.json"), JSON.stringify(floors));
 
-  fs.writeFileSync(
-    path.join(root, "coverage", "python", "coverage.json"),
-    JSON.stringify(fakePythonReport())
-  );
+  fs.writeFileSync(path.join(root, "coverage", "python", "coverage.json"), JSON.stringify(fakePythonReport()));
   fs.writeFileSync(
     path.join(root, "coverage", "viewer", "coverage-summary.json"),
     JSON.stringify(fakeViewerReport(root))

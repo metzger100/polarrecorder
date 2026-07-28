@@ -4,36 +4,27 @@
 
 ## Overview
 
-The polar model stores accepted sailing samples in sparse TWA/TWS bins. Each
-bin keeps a speed histogram in 0.1-knot units, so changing the requested
-percentile recalculates the learned speed without relearning from raw samples.
+The polar model stores accepted sailing samples in sparse TWA/TWS bins. Each bin keeps a speed histogram in 0.1-knot
+units, so changing the requested percentile recalculates the learned speed without relearning from raw samples.
 
 ## Key Details
 
-- AvNav speed values arrive in meters per second and are converted immediately
-  with `1 m/s = 1.94384 kt`.
-- The model is the source of true full-circle TWA data. Bins are keyed on the
-  raw 0-359 value, so port and starboard are stored separately. The `Sample`
-  type still exposes folded 0-180 and signed -180..+180 forms for validation,
-  but the model write path consumes only the raw value.
-- Bin addresses use Python `round()` directly: TWA wraps with modulo 360 and
-  TWS clamps to the fixed 0-60 kt grid.
-- Projection (`projection.py`) never folds and picks one of three modes from the
-  TWA grid. A `starboard` grid (no column above 180 deg) keeps linear interval
-  merging over 0-180 deg and excludes port bins. A `port` grid (no column below
-  180 deg) is its mirror: linear interval merging over 180-360 deg that excludes
-  starboard bins. A `full` grid (columns on both sides of 180 deg) assigns each
-  raw bin to its nearest grid point on the circle. No 0-180 fold occurs at or
-  after projection, so a 360 deg grid preserves true port/starboard asymmetry end
-  to end.
-- Percentiles use a nearest-rank crossing algorithm over deciknot
-  histogram keys. There is no interpolation or midpoint averaging.
-- `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh
-  nested histogram copies so API formatting can run outside the plugin
-  lock without sharing mutable state.
-- Accepted samples update speed histograms. Quality-gate rejections and
-  quarantines update per-bin diagnostics. Candidacy-gate rejections do not
-  touch bins.
+- AvNav speed values arrive in meters per second and are converted immediately with `1 m/s = 1.94384 kt`.
+- The model is the source of true full-circle TWA data. Bins are keyed on the raw 0-359 value, so port and starboard are
+  stored separately. The `Sample` type still exposes folded 0-180 and signed -180..+180 forms for validation, but the
+  model write path consumes only the raw value.
+- Bin addresses use Python `round()` directly: TWA wraps with modulo 360 and TWS clamps to the fixed 0-60 kt grid.
+- Projection (`projection.py`) never folds and picks one of three modes from the TWA grid. A `starboard` grid (no column
+  above 180 deg) keeps linear interval merging over 0-180 deg and excludes port bins. A `port` grid (no column below 180
+  deg) is its mirror: linear interval merging over 180-360 deg that excludes starboard bins. A `full` grid (columns on
+  both sides of 180 deg) assigns each raw bin to its nearest grid point on the circle. No 0-180 fold occurs at or after
+  projection, so a 360 deg grid preserves true port/starboard asymmetry end to end.
+- Percentiles use a nearest-rank crossing algorithm over deciknot histogram keys. There is no interpolation or midpoint
+  averaging.
+- `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh nested histogram copies so API
+  formatting can run outside the plugin lock without sharing mutable state.
+- Accepted samples update speed histograms. Quality-gate rejections and quarantines update per-bin diagnostics.
+  Candidacy-gate rejections do not touch bins.
 
 ## Related
 

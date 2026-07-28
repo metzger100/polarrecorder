@@ -1,5 +1,5 @@
 /**
- * Module: Grid Editor
+ * @file Grid Editor
  * Documentation: documentation/architecture/ui.md
  * Depends: dom.js
  */

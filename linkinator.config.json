@@ -1,0 +1,6 @@
+{
+  "markdown": true,
+  "checkFragments": true,
+  "recurse": true,
+  "linksToSkip": ["^https?://(?!(localhost|127\\.0\\.0\\.1)([:/]|$))"]
+}

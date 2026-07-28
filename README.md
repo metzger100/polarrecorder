@@ -1,8 +1,10 @@
 # Polar Recorder
 
-Polar Recorder is an AvNav plugin that learns how fast your own boat usually sails at different wind angles and wind speeds.
+Polar Recorder is an AvNav plugin that learns how fast your own boat usually sails at different wind angles and wind
+speeds.
 
-In plain sailor language: it watches your instruments while you sail, throws away readings that look unusable, and slowly builds a polar diagram and CSV table from your real boat instead of from a brochure.
+In plain sailor language: it watches your instruments while you sail, throws away readings that look unusable, and
+slowly builds a polar diagram and CSV table from your real boat instead of from a brochure.
 
 <img width="1920" height="937" alt="image" src="https://github.com/user-attachments/assets/e4276264-305d-48bd-9ac3-df27538e51f0" />
 
@@ -21,7 +23,8 @@ That is useful when you want to:
 - see whether your instruments and sailing data look believable
 - build a better polar over time without manually writing down numbers
 
-Polar Recorder is not a sail-trim teacher and not a weather router. It records and filters data. The better your instruments and sailing habits, the better the learned polar becomes.
+Polar Recorder is not a sail-trim teacher and not a weather router. It records and filters data. The better your
+instruments and sailing habits, the better the learned polar becomes.
 
 ## What does it need?
 
@@ -35,7 +38,9 @@ Polar Recorder uses three AvNav values:
 
 TWS and STW are shown and stored in knots. TWA is shown in degrees.
 
-For core learning the plugin uses only true wind angle/speed and speed through water. Speed over ground, apparent wind, engine RPM, and depth are read only by the optional Enhanced Rules (see [Enhanced Rules (optional signals)](#enhanced-rules-optional-signals)); waves and sail configuration are not used.
+For core learning the plugin uses only true wind angle/speed and speed through water. Speed over ground, apparent wind,
+engine RPM, and depth are read only by the optional Enhanced Rules (see
+[Enhanced Rules (optional signals)](#enhanced-rules-optional-signals)); waves and sail configuration are not used.
 
 ## Quick Start
 
@@ -43,7 +48,8 @@ For core learning the plugin uses only true wind angle/speed and speed through w
 2. Make sure AvNav receives TWA, TWS, and STW from your instruments.
 3. Open the Polar Recorder User App from AvNav.
 4. Leave recording enabled while you are sailing normally.
-5. Pause recording when motoring, motor-sailing, maneuvering for a long time, or sailing in conditions you do not want in your polar.
+5. Pause recording when motoring, motor-sailing, maneuvering for a long time, or sailing in conditions you do not want
+   in your polar.
 6. After enough sailing, open the Polar tab to view the learned polar.
 7. Open the Export tab to download a CSV.
 
@@ -57,7 +63,9 @@ Linux AvNav servers can install or update from the latest GitHub Release with:
 bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh)
 ```
 
-The installer targets AvNav user plugins by default. It detects existing user plugin installs, AvNav service data directories, and documented Linux defaults before writing files. For custom setups, pass the AvNav data directory or the final plugin directory:
+The installer targets AvNav user plugins by default. It detects existing user plugin installs, AvNav service data
+directories, and documented Linux defaults before writing files. For custom setups, pass the AvNav data directory or the
+final plugin directory:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/metzger100/polarrecorder/main/install.sh) --data-dir <AVNAV_DATA_DIR>
@@ -87,22 +95,19 @@ Manual install:
 
 When using AvNav's plugin upload page, upload the release zip and let AvNav extract it.
 
-AvNav documents user plugins under the data directory's `plugins` folder and system plugins under `/usr/lib/avnav/plugins`. Use the installer `--system` option only when you intentionally want a system plugin install.
+AvNav documents user plugins under the data directory's `plugins` folder and system plugins under
+`/usr/lib/avnav/plugins`. Use the installer `--system` option only when you intentionally want a system plugin install.
 
 For a user-plugin install, AvNav serves the viewer under its runtime plugin name:
-`/plugins/user-polarrecorder/viewer/viewer.html`. If that direct URL opens but
-Polar Recorder is missing from AvNav's User Apps/AddOn selection, the plugin and
-viewer are installed; restart AvNav or hard-refresh the AvNav client. Polar
-Recorder registers its AddOn entry from a single place so it appears on every
-AvNav variant without showing a duplicate. The plugin backend (`plugin.py`)
-registers the viewer through AvNav's `registerUserApp` API when it starts; this
-is the path every core with a Python plugin API honors, and each core surfaces
-the resulting AddOn in its addon list. Because only the backend knows the real
-install prefix, it builds the viewer URL from `getBaseUrl()`, so the same
-package works whether it is installed as a user or system plugin. The frontend
-adapters (`plugin.js`, `plugin.mjs`) and `plugin.json` do not register the app —
-cores that read those paths would register a second identical AddOn alongside
-`plugin.py`. `plugin.json` carries only the release version.
+`/plugins/user-polarrecorder/viewer/viewer.html`. If that direct URL opens but Polar Recorder is missing from AvNav's
+User Apps/AddOn selection, the plugin and viewer are installed; restart AvNav or hard-refresh the AvNav client. Polar
+Recorder registers its AddOn entry from a single place so it appears on every AvNav variant without showing a duplicate.
+The plugin backend (`plugin.py`) registers the viewer through AvNav's `registerUserApp` API when it starts; this is the
+path every core with a Python plugin API honors, and each core surfaces the resulting AddOn in its addon list. Because
+only the backend knows the real install prefix, it builds the viewer URL from `getBaseUrl()`, so the same package works
+whether it is installed as a user or system plugin. The frontend adapters (`plugin.js`, `plugin.mjs`) and `plugin.json`
+do not register the app — cores that read those paths would register a second identical AddOn alongside `plugin.py`.
+`plugin.json` carries only the release version.
 
 ## How recording works
 
@@ -139,7 +144,11 @@ The Polar tab shows the learned polar diagram.
 
 The Preset selector changes the TWA and TWS grid used for viewing. It does not delete or change the learned data.
 
-With the `Default (Starboard 180°)` preset (the default), the diagram shows the starboard half only, exactly as a classic symmetric polar. The `Default (Port 180°)` preset is its mirror image, showing only the port (left) half from `180°` to `360°`. With a `360°` preset, the diagram draws both halves with absolute-degree labels (`210°`, `240°`, `270°`, `300°`, `330°`) and closes the curve around the full circle, so genuine port/starboard differences are visible instead of being averaged together.
+With the `Default (Starboard 180°)` preset (the default), the diagram shows the starboard half only, exactly as a
+classic symmetric polar. The `Default (Port 180°)` preset is its mirror image, showing only the port (left) half from
+`180°` to `360°`. With a `360°` preset, the diagram draws both halves with absolute-degree labels (`210°`, `240°`,
+`270°`, `300°`, `330°`) and closes the curve around the full circle, so genuine port/starboard differences are visible
+instead of being averaged together.
 
 ### Status
 
@@ -155,7 +164,8 @@ It shows:
 - the most common rejection reasons
 - when the learned file was last written into the save file
 
-The small colored strip is a quick recent-history view. Green means accepted, red means rejected, and the quarantine color means suspicious data was kept out. Tap or click a small block to see the reason.
+The small colored strip is a quick recent-history view. Green means accepted, red means rejected, and the quarantine
+color means suspicious data was kept out. Tap or click a small block to see the reason.
 
 ### Timeline
 
@@ -191,7 +201,9 @@ You can:
 
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
-A `360°` preset (or any custom grid with angles above `180°`) exports true port/starboard asymmetry, emitting TWA rows above `180°`. Note that a `360°` CSV is not Windy.com-importable by design; use the `Windy Passage Planner` preset for Windy import.
+A `360°` preset (or any custom grid with angles above `180°`) exports true port/starboard asymmetry, emitting TWA rows
+above `180°`. Note that a `360°` CSV is not Windy.com-importable by design; use the `Windy Passage Planner` preset for
+Windy import.
 
 ### Settings
 
@@ -214,17 +226,14 @@ Reset is destructive. Download the learned data first if you may want to inspect
 
 You can restore either backup from the Settings tab:
 
-1. Click **Choose Backup File** in the matching restore card and pick a file you
-   downloaded earlier.
+1. Click **Choose Backup File** in the matching restore card and pick a file you downloaded earlier.
 2. Type `RESTORE` in the confirmation field.
 3. Click **Restore Learned Data** or **Restore Presets**.
 
-Both restores **replace** their target: a learned-data restore overwrites all
-learned data and counters; a presets restore replaces all of your saved presets
-(built-in presets are never touched). They are fail-closed — a wrong file, corrupted
-JSON, a backup from a different bin grid (learned data), a too-new backup, a reserved
-preset name, or an out-of-range value is rejected with a clear message and nothing
-changes.
+Both restores **replace** their target: a learned-data restore overwrites all learned data and counters; a presets
+restore replaces all of your saved presets (built-in presets are never touched). They are fail-closed — a wrong file,
+corrupted JSON, a backup from a different bin grid (learned data), a too-new backup, a reserved preset name, or an
+out-of-range value is rejected with a clear message and nothing changes.
 
 Limitations:
 
@@ -235,46 +244,43 @@ Limitations:
 
 ### Enhanced Rules (optional signals)
 
-The **Enhanced Rules** card lets you use optional boat signals beyond the three
-core signals (true wind angle/speed and speed through water) to reject samples those signals prove
-are unrepresentative. Each rule fires only when its switch is on, its store key(s) are set, and a
-fresh value is present; otherwise it does nothing.
+The **Enhanced Rules** card lets you use optional boat signals beyond the three core signals (true wind angle/speed and
+speed through water) to reject samples those signals prove are unrepresentative. Each rule fires only when its switch is
+on, its store key(s) are set, and a fresh value is present; otherwise it does nothing.
 
 The six rules are:
 
 - **Engine RPM** — rejects when RPM is above an idle ceiling (you are motoring).
-- **Engine state** — rejects when an engine-state signal reads "on". The source can be a boolean,
-  an RPM, or an alternator voltage; one threshold interprets all three.
+- **Engine state** — rejects when an engine-state signal reads "on". The source can be a boolean, an RPM, or an
+  alternator voltage; one threshold interprets all three.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
-- **SOG / STW paddlewheel** — rejects when speed through water reads implausibly low versus speed
-  over ground _and_ the reported current drift is too small to explain the gap (a failing
-  paddlewheel). Honest strong following current is never rejected.
-- **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects
-  when it disagrees with the reported true wind (a miscalibrated wind sensor).
-- **Heel band** — rejects when heel is outside a configured range (over/underpowered). The lower
-  bound defaults to 0, so multihulls are unaffected by default.
+- **SOG / STW paddlewheel** — rejects when speed through water reads implausibly low versus speed over ground _and_ the
+  reported current drift is too small to explain the gap (a failing paddlewheel). Honest strong following current is
+  never rejected.
+- **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects when it disagrees with
+  the reported true wind (a miscalibrated wind sensor).
+- **Heel band** — rejects when heel is outside a configured range (over/underpowered). The lower bound defaults to 0, so
+  multihulls are unaffected by default.
 
-There is **no** current-strength reject: a uniform current shifts true wind speed and boat speed
-together in the water frame and does not distort a polar point, so current drift is only used to
-corroborate the paddlewheel check. Heading and COG are also read to harden maneuver detection — a
-true-wind shift with a steady heading/COG is no longer mistaken for a turn.
+There is **no** current-strength reject: a uniform current shifts true wind speed and boat speed together in the water
+frame and does not distort a polar point, so current drift is only used to corroborate the paddlewheel check. Heading
+and COG are also read to harden maneuver detection — a true-wind shift with a steady heading/COG is no longer mistaken
+for a turn.
 
-All switches default **on**. The depth, SOG, current-drift, apparent-wind, heading, and COG keys
-are prefilled with standard AvNav store keys, so those rules **activate automatically on upgrade**
-for any boat that already publishes them — no setup needed. To opt out, switch a rule off or clear
-its key in the Enhanced Rules card. The genuinely custom signals (engine RPM, engine state, heel)
-stay inactive until you map a key, because AvNav core has no standard key for them. Each key field
-is a dropdown of the store keys currently available; SignalK keys appear here as `gps.signalk.*`
-(for example `gps.signalk.propulsion.0.revolutions` for RPM or `gps.signalk.navigation.attitude.roll`
-for heel), and a key that is already configured stays selected even when it is not publishing right
-now. Each rule's switch matches the toggle used on the Export tab. A live status badge shows whether
-each rule is `active`, `disabled`, or inactive (no key set, key not in the store, or value stale).
-Settings are saved from the card and persist in AvNav plugin configuration.
+All switches default **on**. The depth, SOG, current-drift, apparent-wind, heading, and COG keys are prefilled with
+standard AvNav store keys, so those rules **activate automatically on upgrade** for any boat that already publishes them
+— no setup needed. To opt out, switch a rule off or clear its key in the Enhanced Rules card. The genuinely custom
+signals (engine RPM, engine state, heel) stay inactive until you map a key, because AvNav core has no standard key for
+them. Each key field is a dropdown of the store keys currently available; SignalK keys appear here as `gps.signalk.*`
+(for example `gps.signalk.propulsion.0.revolutions` for RPM or `gps.signalk.navigation.attitude.roll` for heel), and a
+key that is already configured stays selected even when it is not publishing right now. Each rule's switch matches the
+toggle used on the Export tab. A live status badge shows whether each rule is `active`, `disabled`, or inactive (no key
+set, key not in the store, or value stale). Settings are saved from the card and persist in AvNav plugin configuration.
 
 ### Advanced Settings
 
-The **Advanced Settings** card sits below Enhanced Rules and exposes safe runtime and
-recording-filter settings that most often need boat-specific tuning. They are grouped as:
+The **Advanced Settings** card sits below Enhanced Rules and exposes safe runtime and recording-filter settings that
+most often need boat-specific tuning. They are grouped as:
 
 - **Sampling and Persistence** — sample cadence, flush cadence, and debug logging.
 - **Sensor Freshness** — stale-value and timestamp-skew limits.
@@ -282,9 +288,9 @@ recording-filter settings that most often need boat-specific tuning. They are gr
 - **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
 - **Engine Heuristic** — low-wind movement checks used when no engine signal is configured.
 
-Each field uses a readable label and a short description. Values are checked against their allowed
-range before saving and persist in AvNav plugin configuration. Export percentile and high-confidence
-sample floors remain in the Export tab instead of being duplicated here.
+Each field uses a readable label and a short description. Values are checked against their allowed range before saving
+and persist in AvNav plugin configuration. Export percentile and high-confidence sample floors remain in the Export tab
+instead of being duplicated here.
 
 ## What are presets?
 
@@ -300,14 +306,20 @@ Example of a simple custom grid:
 - TWA: `0, 30, 60, 90, 120, 150, 180`
 - TWS: `4, 6, 8, 10, 12, 14, 16, 20, 25`
 
-There are four built-in presets. They cannot be deleted or overwritten, and all four share the same TWS bands (`4, 6, 8, 10, 12, 14, 16, 20, 25`):
+There are four built-in presets. They cannot be deleted or overwritten, and all four share the same TWS bands
+(`4, 6, 8, 10, 12, 14, 16, 20, 25`):
 
-- `Default (Starboard 180°)` is the default view and export grid. It covers the starboard half only, `0°` to `180°` in `15°` steps (`0, 15, 30, ... , 180`). This behaves like a classic symmetric polar: only starboard samples are shown.
-- `Default (Port 180°)` is the mirror image, covering only the port half, `180°` to `345°` in `15°` steps (`180, 195, ... , 345`). Only port samples are shown; starboard data is excluded rather than mirrored in.
-- `Default (360°)` covers the full circle, `0°` to `345°` in `15°` steps (`0, 15, 30, ... , 345`, wrapping at `360°` back to `0°`). It draws and exports true port/starboard asymmetry so you can compare both tacks directly.
-- `Windy Passage Planner` (internal name `windy`) keeps the irregular Windy.com angles `0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180` for importing into Windy. It is no longer the default.
+- `Default (Starboard 180°)` is the default view and export grid. It covers the starboard half only, `0°` to `180°` in
+  `15°` steps (`0, 15, 30, ... , 180`). This behaves like a classic symmetric polar: only starboard samples are shown.
+- `Default (Port 180°)` is the mirror image, covering only the port half, `180°` to `345°` in `15°` steps
+  (`180, 195, ... , 345`). Only port samples are shown; starboard data is excluded rather than mirrored in.
+- `Default (360°)` covers the full circle, `0°` to `345°` in `15°` steps (`0, 15, 30, ... , 345`, wrapping at `360°`
+  back to `0°`). It draws and exports true port/starboard asymmetry so you can compare both tacks directly.
+- `Windy Passage Planner` (internal name `windy`) keeps the irregular Windy.com angles
+  `0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180` for importing into Windy. It is no longer the default.
 
-You can create your own presets if another program or your own habits need different angles or wind speeds. Custom and saved presets may use TWA angles above `180°` (up to `359°`) to capture port-side data.
+You can create your own presets if another program or your own habits need different angles or wind speeds. Custom and
+saved presets may use TWA angles above `180°` (up to `359°`) to capture port-side data.
 
 Presets do not change what the plugin has learned. They only change how the learned data is displayed or exported.
 
@@ -315,9 +327,8 @@ Presets do not change what the plugin has learned. They only change how the lear
 
 Rejected counts are diagnostic counters. They tell you why samples were not used for learning.
 
-The names look technical because they are also used internally and in API data.
-Here is the plain-language version. The thresholds shown are the defaults; many
-of them can be changed in AvNav plugin settings.
+The names look technical because they are also used internally and in API data. Here is the plain-language version. The
+thresholds shown are the defaults; many of them can be changed in AvNav plugin settings.
 
 | Reason                        | Plain meaning                                                         | Default rule                                                                            |
 | ----------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -346,17 +357,20 @@ of them can be changed in AvNav plugin settings.
 | `reject_user_paused`          | Recording was paused in the Polar Recorder viewer.                    | Pause/Resume button is set to paused.                                                   |
 | `quarantine_engine_suspected` | Low wind plus high boat speed looked like possible engine use.        | TWS below 5.0 kt and STW above 3.0 kt is quarantined.                                   |
 
-If you see many rejected samples, it does not automatically mean something is wrong. Sailing data is messy. The important question is whether accepted samples appear while you are sailing steadily with good instruments.
+If you see many rejected samples, it does not automatically mean something is wrong. Sailing data is messy. The
+important question is whether accepted samples appear while you are sailing steadily with good instruments.
 
 ## What does accepted mean?
 
 Accepted means the sample passed the checks and was added to the learned model.
 
-The plugin stores accepted samples in small TWA/TWS bins. One bin means one small area of the polar, for example "about 90 deg TWA in about 12 kt TWS". For each bin it keeps the accepted boat-speed readings.
+The plugin stores accepted samples in small TWA/TWS bins. One bin means one small area of the polar, for example "about
+90 deg TWA in about 12 kt TWS". For each bin it keeps the accepted boat-speed readings.
 
 ## What does percentile mean?
 
-When Polar Recorder draws the polar or exports a CSV, it must choose one boat speed for each TWA/TWS cell. But after a few sails, one cell may contain many accepted speeds: some slower, some normal, some faster.
+When Polar Recorder draws the polar or exports a CSV, it must choose one boat speed for each TWA/TWS cell. But after a
+few sails, one cell may contain many accepted speeds: some slower, some normal, some faster.
 
 The percentile setting says which speed to choose after sorting those accepted speeds from slow to fast.
 
@@ -369,7 +383,9 @@ Accepted STW values: 1.5, 2.6, 5.4, 5.6, 5.7, 5.9, 6.1, 6.3, 6.4, 6.6, 6.8, 7.0 
 
 That means about 65% of the accepted samples in that cell were at or below 6.4 kt, and about 35% were faster.
 
-So the default 65th percentile is deliberately a bit above the middle. It tries to represent "good normal sailing" rather than "average including every slow moment" or "the single best lucky speed". Lower percentiles create a more conservative, slower polar. Higher percentiles create a more optimistic, faster polar.
+So the default 65th percentile is deliberately a bit above the middle. It tries to represent "good normal sailing"
+rather than "average including every slow moment" or "the single best lucky speed". Lower percentiles create a more
+conservative, slower polar. Higher percentiles create a more optimistic, faster polar.
 
 The percentile is applied separately to each polar cell. It is not calculated over the whole trip.
 
@@ -395,7 +411,8 @@ Good times to record:
 
 ## Known limitations
 
-Polar Recorder only sees TWA, TWS, and STW. Some real sailing situations can look like normal data from those three numbers alone.
+Polar Recorder only sees TWA, TWS, and STW. Some real sailing situations can look like normal data from those three
+numbers alone.
 
 It cannot reliably detect:
 
@@ -408,9 +425,13 @@ It cannot reliably detect:
 - bad sail trim
 - wrong instrument calibration
 
-Because of that, the learned polar is best understood as "how my boat usually performed in the data I allowed it to record", not a perfect manufacturer-style target polar.
+Because of that, the learned polar is best understood as "how my boat usually performed in the data I allowed it to
+record", not a perfect manufacturer-style target polar.
 
-Port and starboard are no longer folded together. A single-side `180°` view (starboard or port) counts only that side's samples for each cell, so per-bin sample counts are lower than in older versions that mirrored port data onto starboard. Confidence therefore builds more slowly per side, and a `360°` view splits the data across twice as many cells. This is intentional: it keeps genuine port/starboard differences honest instead of averaging them away.
+Port and starboard are no longer folded together. A single-side `180°` view (starboard or port) counts only that side's
+samples for each cell, so per-bin sample counts are lower than in older versions that mirrored port data onto starboard.
+Confidence therefore builds more slowly per side, and a `360°` view splits the data across twice as many cells. This is
+intentional: it keeps genuine port/starboard differences honest instead of averaging them away.
 
 ## Where is the data stored?
 
@@ -432,8 +453,7 @@ AvNav plugin settings are stored by AvNav, not inside `polar.json`.
 
 Most users only need AvNav's plugin enable switch and the Pause/Resume button.
 
-Advanced settings are managed through the Settings tab and AvNav plugin configuration. They
-control things such as:
+Advanced settings are managed through the Settings tab and AvNav plugin configuration. They control things such as:
 
 - sampling interval
 - minimum wind speed
@@ -441,11 +461,11 @@ control things such as:
 - maneuver cooldown
 - stability window
 - debug logging
-- the optional **Enhanced Rules** signals and their store keys/thresholds (also editable from the
-  Settings tab; several activate automatically on upgrade — see [Enhanced Rules](#enhanced-rules-optional-signals))
+- the optional **Enhanced Rules** signals and their store keys/thresholds (also editable from the Settings tab; several
+  activate automatically on upgrade — see [Enhanced Rules](#enhanced-rules-optional-signals))
 
-These remain Python 3.9 standard-library only with no target-device `pip install`: the enhanced
-rules add no new runtime dependency.
+These remain Python 3.9 standard-library only with no target-device `pip install`: the enhanced rules add no new runtime
+dependency.
 
 See [Configuration](documentation/user/configuration.md) for the full parameter list.
 
@@ -465,15 +485,18 @@ Open the Status tab and look at the current decision and top rejection reasons.
 
 ### I see many rejected samples
 
-That can be normal. The plugin samples often, and it is intentionally picky. Look for accepted samples during steady sailing. If accepted stays at zero, check instrument data first.
+That can be normal. The plugin samples often, and it is intentionally picky. Look for accepted samples during steady
+sailing. If accepted stays at zero, check instrument data first.
 
 ### Export has blank cells
 
-Blank cells mean not enough accepted data exists for that TWA/TWS cell. Sail more in those conditions, or turn off high-confidence export if you only need a rough table.
+Blank cells mean not enough accepted data exists for that TWA/TWS cell. Sail more in those conditions, or turn off
+high-confidence export if you only need a rough table.
 
 ### Timeline times look odd after startup
 
-If the AvNav computer corrects its clock after boot, timeline buckets can briefly look strange. They age out automatically.
+If the AvNav computer corrects its clock after boot, timeline buckets can briefly look strange. They age out
+automatically.
 
 ## More documentation
 
@@ -484,17 +507,17 @@ If the AvNav computer corrects its clock after boot, timeline buckets can briefl
 
 ## For developers
 
-Runtime code must remain dependency-free on target devices; development tooling is allowed and is
-checked by the canonical local gate (`npm run check:all`, required before handoff/push/release).
-See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the bounded `check:fast` iteration gate, and
-this repository's role as a finished hybrid-profile role model aligned with the sibling
-`dyninstruments` plugin.
+Runtime code must remain dependency-free on target devices; development tooling is allowed and is checked by the
+canonical local gate (`npm run check:all`, required before handoff/push/release). Python tests run under pytest and
+JavaScript tests under Vitest (`npm run test:python`, `npm run test:viewer`, `npm run test:tools`,
+`npm run test:plugin`). See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the bounded `check:fast` iteration gate,
+and this repository's role as a finished hybrid-profile role model aligned with the sibling `dyninstruments` plugin.
 
-Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`);
-GitHub Releases only republishes an already-committed local artifact when a `v*` tag is pushed. See
-the [release workflow guide](documentation/guides/release-workflow.md) for the full flow. Before
-publishing, run the manual [live AvNav validation checklist](documentation/guides/live-avnav-checklist.md)
-against a real AvNav host; no automated gate can substitute for that.
+Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
+republishes an already-committed local artifact when a `v*` tag is pushed. See the
+[release workflow guide](documentation/guides/release-workflow.md) for the full flow. Before publishing, run the manual
+[manual AvNav validation checklist](documentation/guides/manual-avnav-validation.md) against a real AvNav host; no
+automated gate can substitute for that.
 
 For local viewer/API work without AvNav, use the mock server:
 

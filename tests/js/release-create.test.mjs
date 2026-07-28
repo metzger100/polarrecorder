@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import { createRelease, parseReleaseCreateArgs } from "../../tools/release-create.mjs";
@@ -56,8 +56,7 @@ function fakeRunCommand(overrides = {}) {
       }
       if (command === "python" && args[0] === "tools/release-zip.py") {
         const summary = overrides.zipSummaryJson ?? '{"filesIncluded":1,"totalSizeBytes":42}';
-        const stdout =
-          overrides.zipStdout ?? `Wrote releases/x.zip with 1 files.\nSUMMARY_JSON=${summary}\n`;
+        const stdout = overrides.zipStdout ?? `Wrote releases/x.zip with 1 files.\nSUMMARY_JSON=${summary}\n`;
         return { status: overrides.zipStatus ?? 0, stdout, stderr: "" };
       }
       if (command === "python" && args[0] === "tools/check-release.py") {
@@ -139,20 +138,13 @@ test("aborts on a failing gate with zero further side effects (no zip/commit/tag
     () => createRelease({ rootDir: root, version: "1.0.0", runCommand: fake.runCommand }),
     /required gate failed \(npm run check:all\)/
   );
-  const gateCallIndex = fake.calls.findIndex(
-    (c) => c.command === "npm" && c.args.join(" ") === "run check:all"
-  );
+  const gateCallIndex = fake.calls.findIndex((c) => c.command === "npm" && c.args.join(" ") === "run check:all");
   assert.ok(gateCallIndex >= 0, "expected the gate to have been invoked exactly once");
-  assert.equal(
-    fake.calls.filter((c) => c.command === "npm" && c.args.join(" ") === "run check:all").length,
-    1
-  );
+  assert.equal(fake.calls.filter((c) => c.command === "npm" && c.args.join(" ") === "run check:all").length, 1);
   assert.ok(!fake.calls.some((c) => c.command === "python"));
   assert.ok(!fake.calls.some((c) => c.command === "git" && c.args[0] === "add"));
   assert.ok(!fake.calls.some((c) => c.command === "git" && c.args[0] === "commit"));
-  assert.ok(
-    !fake.calls.some((c) => c.command === "git" && c.args[0] === "tag" && c.args[1] === "-a")
-  );
+  assert.ok(!fake.calls.some((c) => c.command === "git" && c.args[0] === "tag" && c.args[1] === "-a"));
   cleanup(root);
 });
 

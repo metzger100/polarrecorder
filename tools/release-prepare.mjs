@@ -79,9 +79,7 @@ export function buildReleasePreparePayload(options = {}) {
     if (entry.status === "D") deletedFiles += 1;
   }
 
-  const uniqueRuntimePaths = Array.from(new Set(runtimeChangedPaths)).sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const uniqueRuntimePaths = Array.from(new Set(runtimeChangedPaths)).sort((a, b) => a.localeCompare(b));
   const uniqueChangedPaths = Array.from(new Set(changedPaths)).sort((a, b) => a.localeCompare(b));
 
   return {
@@ -121,9 +119,7 @@ export function parseReleasePrepareArgs(argv) {
 export function requireCleanTree(runGit) {
   const statusOutput = runGit(["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
   if (parsePorcelainStatusZ(statusOutput).length > 0) {
-    throw new Error(
-      "release:prepare aborted: working tree must be completely clean (commit or stash first)."
-    );
+    throw new Error("release:prepare aborted: working tree must be completely clean (commit or stash first).");
   }
 }
 

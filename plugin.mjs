@@ -1,5 +1,5 @@
 /**
- * Module: plugin.mjs - Modern AvNav loader entry point (no-op).
+ * @file plugin.mjs - Modern AvNav loader entry point (no-op).
  * Documentation: documentation/avnav/plugin-lifecycle.md
  * Depends: none
  */

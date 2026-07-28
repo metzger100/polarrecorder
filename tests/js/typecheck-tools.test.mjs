@@ -6,13 +6,10 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
-import {
-  diffToolSourceInventory,
-  runToolsTypecheck
-} from "../../tools/quality-policy/typecheck-tools.mjs";
+import { diffToolSourceInventory, runToolsTypecheck } from "../../tools/quality-policy/typecheck-tools.mjs";
 
 const ROOT = process.cwd();
 
@@ -43,7 +40,7 @@ test("the real repo tool source typechecks clean", () => {
   assert.equal(result.ok, true);
   assert.deepEqual(result.missingFromInventory, []);
   assert.deepEqual(result.extraInInventory, []);
-  assert.ok(result.checkedFiles >= 50);
+  assert.ok(result.checkedFiles >= 40);
 });
 
 /**

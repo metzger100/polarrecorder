@@ -4,7 +4,8 @@
 
 ## Overview
 
-Use this contract for every new or updated file under `documentation/`. Documentation should be short, routed from the table of contents, and complete enough for maintainers and agents to act without reading the whole tree.
+Use this contract for every new or updated file under `documentation/`. Documentation should be short, routed from the
+table of contents, and complete enough for maintainers and agents to act without reading the whole tree.
 
 ## Key Details
 
@@ -33,8 +34,10 @@ Content rules:
 - Start from [the documentation index](../TABLEOFCONTENTS.md) and add every new documentation file there.
 - Keep docs focused on contracts, workflows, data shapes, configuration keys, and implementation touchpoints.
 - Prefer bullets and small tables over long narrative sections.
-- Include concrete names for APIs, parameters, files, reason codes, fixtures, commands, and checker rule IDs when they are part of the contract.
-- Keep user-facing behavior changes synchronized with `README.md` when the change affects installation, configuration, export/import, requirements, or visible viewer behavior.
+- Include concrete names for APIs, parameters, files, reason codes, fixtures, commands, and checker rule IDs when they
+  are part of the contract.
+- Keep user-facing behavior changes synchronized with `README.md` when the change affects installation, configuration,
+  export/import, requirements, or visible viewer behavior.
 - Keep AvNav behavior docs self-contained; state the host contract instead of citing machine-local paths.
 - Keep every Markdown file below the 400 non-empty-line limit.
 
@@ -55,7 +58,7 @@ npm run docs:check
 For normal development work, finish with the full gate:
 
 ```bash
-tools/check-all.sh
+npm run check:all
 ```
 
 ## Related

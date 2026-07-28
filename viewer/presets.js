@@ -1,5 +1,5 @@
 /**
- * Module: Presets
+ * @file Presets
  * Documentation: documentation/architecture/ui.md
  * Depends: none
  */

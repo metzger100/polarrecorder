@@ -4,7 +4,9 @@
 
 ## Overview
 
-Polar Recorder releases are created locally as runtime-only AvNav plugin artifacts under `releases/`. The release zip is the installable artifact; release notes describe the user-visible changes for that exact version. GitHub Releases is a secondary publishing target that copies the already-created zip and notes when a release tag is pushed.
+Polar Recorder releases are created locally as runtime-only AvNav plugin artifacts under `releases/`. The release zip is
+the installable artifact; release notes describe the user-visible changes for that exact version. GitHub Releases is a
+secondary publishing target that copies the already-created zip and notes when a release tag is pushed.
 
 ## Key Details
 
@@ -15,23 +17,22 @@ Release artifact names:
 
 Version authority:
 
-- The release version is supplied to local release tooling with `--version` and
-  becomes the `vX.Y.Z[-prerelease][+build]` git tag.
+- The release version is supplied to local release tooling with `--version` and becomes the
+  `vX.Y.Z[-prerelease][+build]` git tag.
 - The development checkout does not carry a release version in `plugin.json`.
 - `pyproject.toml` declares the project version as dynamic.
-- `tools/release-zip.py --version <version>` stamps that version into the
-  packaged copy of `plugin.json`, which is what runtime `pluginInfo()` reads
-  from an installed release zip.
-- A development checkout without a stamped `plugin.json` reports the benign
-  development fallback defined in release tooling.
+- `tools/release-zip.py --version <version>` stamps that version into the packaged copy of `plugin.json`, which is what
+  runtime `pluginInfo()` reads from an installed release zip.
+- A development checkout without a stamped `plugin.json` reports the benign development fallback defined in release
+  tooling.
 
 Prerequisites:
 
 - Python dev tools available in the project virtual environment or on `PATH`.
 - Node.js available for documentation and viewer checks.
 - No runtime dependency that requires `pip install` on target AvNav devices.
-- GitHub publishing requires the committed release zip, committed release notes,
-  and an annotated tag named `vX.Y.Z` or `vX.Y.Z-prerelease`.
+- GitHub publishing requires the committed release zip, committed release notes, and an annotated tag named `vX.Y.Z` or
+  `vX.Y.Z-prerelease`.
 
 Step-by-step release flow:
 
@@ -55,23 +56,18 @@ Step-by-step release flow:
    npm run release:create -- --version=X.Y.Z
    ```
 
-5. Before pushing the tag, run the manual
-   [live AvNav validation checklist](live-avnav-checklist.md) against a real AvNav host and record
-   the filled-in result. `release:prepare` prints this checklist's location as a reminder; no
-   automated command runs it or claims it passed on your behalf.
+5. Before pushing the tag, run the [manual AvNav validation checklist](manual-avnav-validation.md) against a real AvNav
+   host and record the filled-in result. `release:prepare` prints this checklist's location as a reminder; no automated
+   command runs it or claims it passed on your behalf.
 
-`release:create` accepts full SemVer release versions, including prereleases
-such as `1.0.0-beta.1`. It runs the required gate (`npm run check:all`), builds
-the runtime zip with `python tools/release-zip.py --version <version>`, validates
-it with `python tools/check-release.py`, commits the zip and notes, and creates
-an annotated `v<version>` tag.
+`release:create` accepts full SemVer release versions, including prereleases such as `1.0.0-beta.1`. It runs the
+required gate (`npm run check:all`), builds the runtime zip with `python tools/release-zip.py --version <version>`,
+validates it with `python tools/check-release.py`, commits the zip and notes, and creates an annotated `v<version>` tag.
 
-The zip must contain a single top-level `polarrecorder/` directory. Inside that
-directory, it must contain only runtime files: `plugin.py`, `plugin.js`, `plugin.mjs`,
-`plugin.css`, stamped `plugin.json`, `viewer/`, and
-`server/polarrecorder/**/*.py`. It must not contain README, tests, tools,
-documentation, release sources, data files, caches, licenses, or development
-configuration.
+The zip must contain a single top-level `polarrecorder/` directory. Inside that directory, it must contain only runtime
+files: `plugin.py`, `plugin.js`, `plugin.mjs`, `plugin.css`, stamped `plugin.json`, `viewer/`, and
+`server/polarrecorder/**/*.py`. It must not contain README, tests, tools, documentation, release sources, data files,
+caches, licenses, or development configuration.
 
 Manual inspection commands remain useful before publishing:
 
@@ -83,12 +79,11 @@ python tools/check-release.py releases/polarrecorder-X.Y.Z.zip
 GitHub release publishing:
 
 - `.github/workflows/publish-release.yml` runs when a `v*` tag is pushed.
-- The workflow checks out the tag ref, verifies the matching committed zip and
-  notes exist, then creates the GitHub Release from those artifacts.
+- The workflow checks out the tag ref, verifies the matching committed zip and notes exist, then creates the GitHub
+  Release from those artifacts.
 - Build and commit release artifacts locally before pushing the tag. The workflow does not build artifacts on GitHub.
 - If the artifacts are not present at the tagged commit, the workflow fails closed.
-- Tags with a SemVer prerelease suffix publish GitHub prereleases. Plain
-  `vX.Y.Z` tags publish normal releases.
+- Tags with a SemVer prerelease suffix publish GitHub prereleases. Plain `vX.Y.Z` tags publish normal releases.
 
 SemVer decision guide:
 
@@ -105,7 +100,9 @@ Release notes writing guide:
 - Prefer concrete wording over broad phrases.
 - Mention user action only when the upgrade requires it.
 - Keep each bullet understandable without reading the diff.
-- `release:prepare` intentionally does not infer SemVer from Conventional Commit prefixes. Decide the next version by reviewing commit messages, diffs, and the touched runtime, viewer, configuration, export/import, documentation, and release code paths.
+- `release:prepare` intentionally does not infer SemVer from Conventional Commit prefixes. Decide the next version by
+  reviewing commit messages, diffs, and the touched runtime, viewer, configuration, export/import, documentation, and
+  release code paths.
 
 Troubleshooting:
 
@@ -123,5 +120,5 @@ Troubleshooting:
 - [Documentation maintenance](documentation-maintenance.md)
 - [Quality gates](../conventions/quality-gates.md)
 - [Testing infrastructure](../conventions/testing-infrastructure.md)
-- [Live AvNav validation checklist](live-avnav-checklist.md)
+- [Manual AvNav validation checklist](manual-avnav-validation.md)
 - [Contributing](../../CONTRIBUTING.md)

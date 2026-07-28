@@ -4,58 +4,48 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { byRule, failures, setRoot, PATTERN_RULE_IDS } from "./check-patterns/shared.mjs";
-import {
-  collectAbsolutePathTargets,
-  collectExecPlanReferenceTargets,
-  collectJavaScriptPatternFiles,
-  collectMarkdownTodoTargets,
-  collectPythonFiles
-} from "./check-patterns/discovery.mjs";
-import { checkJavaScript } from "./check-patterns/js-rules.mjs";
-import {
-  checkAbsolutePath,
-  checkExecPlanReference,
-  checkMarkdownTodos,
-  checkNoNulByte,
-  checkPython
-} from "./check-patterns/cross-file-rules.mjs";
+import { resetFileCache } from "./check-patterns/file-cache.mjs";
+import { RULES } from "./check-patterns/rules.mjs";
+import { collectJavaScriptPatternFiles, collectPythonFiles } from "./check-patterns/discovery.mjs";
 
-export { PATTERN_RULE_IDS };
+export { PATTERN_RULE_IDS, RULES };
 
 /**
  * @typedef {import("./check-patterns/shared.mjs").PatternCheckOptions} PatternCheckOptions
  * @typedef {import("./check-patterns/shared.mjs").PatternSummary} PatternSummary
  * @typedef {import("./check-patterns/shared.mjs").PatternCheckResult} PatternCheckResult
+ * @typedef {import("./check-patterns/shared.mjs").PatternFile} PatternFile
  */
 
 /**
- * Run every pattern rule against the repository (or a fake workspace root)
- * and return the aggregated result.
+ * Run every declarative rule in `RULES` against the repository (or a fake
+ * workspace root) and return the aggregated result. Each rule's `scope.key`
+ * is resolved to a file list at most once per run and shared by every rule
+ * registered against that scope.
  * @param {PatternCheckOptions} [options] Root override and print toggle.
  * @returns {PatternCheckResult} Aggregated summary plus raw failure messages.
  */
 export function runPatternCheck(options = {}) {
   setRoot(options.root || process.cwd());
+  resetFileCache();
+
+  /** @type {Map<string, PatternFile[]>} */
+  const scopeFiles = new Map();
+  /**
+   * @param {import("./check-patterns/shared.mjs").RuleScope} scope
+   * @returns {PatternFile[]}
+   */
+  function filesForScope(scope) {
+    if (!scopeFiles.has(scope.key)) scopeFiles.set(scope.key, scope.collect());
+    return /** @type {PatternFile[]} */ (scopeFiles.get(scope.key));
+  }
+
+  for (const rule of RULES) {
+    rule.run(rule, filesForScope(rule.scope));
+  }
 
   const viewerFiles = collectJavaScriptPatternFiles();
   const pythonFiles = collectPythonFiles();
-  for (const file of viewerFiles) {
-    checkJavaScript(file);
-  }
-  for (const file of pythonFiles) {
-    checkPython(file);
-  }
-  for (const file of collectAbsolutePathTargets()) {
-    checkAbsolutePath(file);
-  }
-  for (const file of collectMarkdownTodoTargets()) {
-    checkMarkdownTodos(file);
-  }
-  for (const file of collectExecPlanReferenceTargets()) {
-    checkExecPlanReference(file);
-    checkNoNulByte(file);
-  }
-
   const summary = {
     ok: failures.length === 0,
     checkedJsFiles: viewerFiles.length,

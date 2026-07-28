@@ -123,26 +123,17 @@ export async function runViewerContracts({ root = process.cwd(), print = true } 
   const healthy = await renderAllPanels(root, null);
   for (const [id, text] of Object.entries(healthy)) {
     for (const token of findLeakTokens(text)) {
-      failures.push(
-        `viewer-render-no-sentinel: ${id} rendered a '${token}' token on a healthy payload`
-      );
+      failures.push(`viewer-render-no-sentinel: ${id} rendered a '${token}' token on a healthy payload`);
     }
   }
 
-  const absent = await renderAllPanels(
-    root,
-    statusResponder({ current_values: null, warming_up: true })
-  );
+  const absent = await renderAllPanels(root, statusResponder({ current_values: null, warming_up: true }));
   const absentStatus = absent["status-panel"];
   if (!absentStatus.includes("No Data")) {
-    failures.push(
-      "viewer-absent-placeholder: absent current_values must render 'No Data', not a sentinel"
-    );
+    failures.push("viewer-absent-placeholder: absent current_values must render 'No Data', not a sentinel");
   }
   for (const token of findLeakTokens(absentStatus)) {
-    failures.push(
-      `viewer-absent-placeholder: status-panel rendered a '${token}' token for absent current_values`
-    );
+    failures.push(`viewer-absent-placeholder: status-panel rendered a '${token}' token for absent current_values`);
   }
 
   const zeros = await renderAllPanels(
@@ -163,19 +154,13 @@ export async function runViewerContracts({ root = process.cwd(), print = true } 
   );
   const zeroStatus = zeros["status-panel"];
   if (!zeroStatus.includes("0.0")) {
-    failures.push(
-      "viewer-falsy-preservation: a zero reading must render '0.0', not be clobbered to a placeholder"
-    );
+    failures.push("viewer-falsy-preservation: a zero reading must render '0.0', not be clobbered to a placeholder");
   }
   if (zeroStatus.includes("No Data")) {
-    failures.push(
-      "viewer-falsy-preservation: a present zero reading must not fall back to 'No Data'"
-    );
+    failures.push("viewer-falsy-preservation: a present zero reading must not fall back to 'No Data'");
   }
   for (const token of findLeakTokens(zeroStatus)) {
-    failures.push(
-      `viewer-falsy-preservation: status-panel rendered a '${token}' token for zero readings`
-    );
+    failures.push(`viewer-falsy-preservation: status-panel rendered a '${token}' token for zero readings`);
   }
 
   if (print) reportViewerContracts(failures);

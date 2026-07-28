@@ -1,5 +1,5 @@
 /**
- * Module: Polar Chart
+ * @file Polar Chart
  * Documentation: documentation/architecture/ui.md
  * Depends: placeholders.js, dom.js, polar-chart-geometry.js
  */

@@ -9,14 +9,10 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
-import {
-  entryPaths,
-  isDirtyOutsidePrefix,
-  parsePorcelainStatusZ
-} from "../../tools/release-git.mjs";
+import { entryPaths, isDirtyOutsidePrefix, parsePorcelainStatusZ } from "../../tools/release-git.mjs";
 
 /** @returns {string} */
 function makeFakeRepo() {

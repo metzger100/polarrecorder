@@ -11,7 +11,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 const ROOT = process.cwd();
@@ -91,7 +91,7 @@ test("catches every retired rule in one multi-violation fixture", () => {
 
 test("a clean file stays clean", () => {
   const source = [
-    "/** Module: Probe */",
+    "/** @file Probe */",
     "window.Polarrecorder = window.Polarrecorder || {};",
     "(function () {",
     '  "use strict";',
@@ -129,12 +129,7 @@ test("tools/**/*.mjs rejects an undefined global via the layered @eslint/js reco
 });
 
 test("a clean tools/**/*.mjs file stays clean under the layered recommended config", () => {
-  const source = [
-    "export function probe() {",
-    '  return process.cwd().length > 0 ? "ok" : "";',
-    "}",
-    ""
-  ].join("\n");
+  const source = ["export function probe() {", '  return process.cwd().length > 0 ? "ok" : "";', "}", ""].join("\n");
   const result = runEslintOnFixture("tools/__eslint_test_probe.mjs", source);
   assert.equal(result.ok, true, result.output);
 });
@@ -142,10 +137,7 @@ test("a clean tools/**/*.mjs file stays clean under the layered recommended conf
 test("plugin.mjs allows ES-module syntax but not console.log", () => {
   const absolutePath = path.join(ROOT, "plugin.mjs");
   const original = fs.readFileSync(absolutePath, "utf8");
-  fs.writeFileSync(
-    absolutePath,
-    'console.log("debug");\nexport default function plugin(_api) {}\n'
-  );
+  fs.writeFileSync(absolutePath, 'console.log("debug");\nexport default function plugin(_api) {}\n');
   try {
     execFileSync(ESLINT_BIN, ["plugin.mjs"], { cwd: ROOT, stdio: "pipe" });
     assert.fail("expected plugin.mjs console.log to fail lint");

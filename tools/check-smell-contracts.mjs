@@ -4,10 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const SMELL_CONTRACT_RULE_IDS = [
-  "viewer-script-contract",
-  "viewer-dependency-header-contract"
-];
+export const SMELL_CONTRACT_RULE_IDS = ["viewer-script-contract", "viewer-dependency-header-contract"];
 
 /**
  * @typedef {Object} SmellContractContext
@@ -131,9 +128,7 @@ function checkViewerDependencyHeaders(ctx) {
       );
     }
     for (const stale of difference(declared, actual)) {
-      ctx.failures.push(
-        `viewer-dependency-header-contract: ${file.name} lists ${stale} but does not reference it`
-      );
+      ctx.failures.push(`viewer-dependency-header-contract: ${file.name} lists ${stale} but does not reference it`);
     }
   }
 }

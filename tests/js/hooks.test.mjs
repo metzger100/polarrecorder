@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import { installHooks } from "../../tools/hooks-install.mjs";
@@ -166,16 +166,12 @@ test("pre-push resolves and cds to the repository root even from a nested direct
 
 test("pre-push tolerates git's push hook arguments and stdin without hanging or erroring", () => {
   const root = makeFakeRepoWithPackage("exit 0");
-  const result = spawnSync(
-    "bash",
-    [path.join(root, ".githooks", "pre-push"), "origin", "git@example.com:x/y.git"],
-    {
-      cwd: root,
-      input: "refs/heads/main abc123 refs/heads/main def456\n",
-      encoding: "utf8",
-      timeout: 10000
-    }
-  );
+  const result = spawnSync("bash", [path.join(root, ".githooks", "pre-push"), "origin", "git@example.com:x/y.git"], {
+    cwd: root,
+    input: "refs/heads/main abc123 refs/heads/main def456\n",
+    encoding: "utf8",
+    timeout: 10000
+  });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.signal, null);
   cleanup(root);

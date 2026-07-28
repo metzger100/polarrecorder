@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import {
@@ -25,8 +25,7 @@ import {
 } from "../../tools/quality-policy/test-inventory.mjs";
 
 const ROOT = process.cwd();
-const EXPECTED_EXCEPTION_BASELINE_DIGEST =
-  "8badbd89598135ab6fdec4f59e7cf645941599c931a38330bba0054fae26243a";
+const EXPECTED_EXCEPTION_BASELINE_DIGEST = "8badbd89598135ab6fdec4f59e7cf645941599c931a38330bba0054fae26243a";
 
 test("the exception baseline is byte-anchored and empty", () => {
   const baselinePath = path.join(ROOT, "tools", "quality-policy", "test-exception-baseline.json");
@@ -68,10 +67,7 @@ test("detects a live file missing from tsconfig.tests.json", () => {
 test("detects a stale tsconfig.tests.json include entry", () => {
   const root = makeFakeRoot({ inventory: [], live: ["tests/js/a.test.mjs"] });
   const tsconfigPath = path.join(root, "tsconfig.tests.json");
-  fs.writeFileSync(
-    tsconfigPath,
-    JSON.stringify({ include: ["tests/js/a.test.mjs", "tests/js/removed.test.mjs"] })
-  );
+  fs.writeFileSync(tsconfigPath, JSON.stringify({ include: ["tests/js/a.test.mjs", "tests/js/removed.test.mjs"] }));
   const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory(root, tsconfigPath);
   assert.deepEqual(missingFromTsconfig, []);
   assert.deepEqual(extraInTsconfig, ["tests/js/removed.test.mjs"]);
@@ -247,7 +243,7 @@ function makeFakeRoot({ inventory, live }) {
   fs.mkdirSync(path.join(root, "tests", "js"), { recursive: true });
   fs.mkdirSync(path.join(root, "tools"), { recursive: true });
   for (const rel of live) {
-    fs.writeFileSync(path.join(root, rel), 'import { test } from "node:test";\n');
+    fs.writeFileSync(path.join(root, rel), 'import { test } from "vitest";\n');
   }
   fs.mkdirSync(path.join(root, "tools", "quality-policy"), { recursive: true });
   fs.writeFileSync(

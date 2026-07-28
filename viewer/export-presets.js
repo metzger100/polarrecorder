@@ -1,5 +1,5 @@
 /**
- * Module: Export Presets
+ * @file Export Presets
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, grid-editor.js
  */

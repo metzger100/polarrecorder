@@ -1,5 +1,5 @@
 /**
- * Module: Timeline Chart
+ * @file Timeline Chart
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js
  */
@@ -113,15 +113,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       line.setAttribute("y2", String(PAD + HEIGHT + 14));
       line.setAttribute("stroke", "var(--polarrecorder-border-color)");
       svg.appendChild(line);
-      svg.appendChild(
-        Polarrecorder.Dom.SvgText(
-          x,
-          PAD + HEIGHT + 32,
-          scaleLabel(mark, minutes, now),
-          "12",
-          "middle"
-        )
-      );
+      svg.appendChild(Polarrecorder.Dom.SvgText(x, PAD + HEIGHT + 32, scaleLabel(mark, minutes, now), "12", "middle"));
     });
   }
 
