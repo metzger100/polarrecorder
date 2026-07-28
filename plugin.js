@@ -1,5 +1,5 @@
 /**
- * Module: plugin.js - Legacy AvNav plugin bootstrap stub.
+ * @file plugin.js - Legacy AvNav plugin bootstrap stub.
  * Documentation: documentation/avnav/plugin-lifecycle.md
  * Depends: none
  */

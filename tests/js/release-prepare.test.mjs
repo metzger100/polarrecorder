@@ -4,13 +4,9 @@
  */
 
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 
-import {
-  buildReleasePreparePayload,
-  parseReleasePrepareArgs,
-  requireCleanTree
-} from "../../tools/release-prepare.mjs";
+import { buildReleasePreparePayload, parseReleasePrepareArgs, requireCleanTree } from "../../tools/release-prepare.mjs";
 
 /** @param {Record<string, string>} responses keyed by the joined argv */
 function fakeRunGit(responses) {
@@ -71,8 +67,7 @@ test("buildReleasePreparePayload summarizes changes since the last tag", () => {
     "describe --tags --abbrev=0 --match v*": "v1.0.0\n",
     "log -1 --format=%cs v1.0.0": "2026-01-01\n",
     "log --reverse --oneline v1.0.0..HEAD": "abc123 Fix bug\ndef456 Add feature",
-    "diff --name-status --find-renames v1.0.0..HEAD":
-      "A\tviewer/new-file.js\nM\tREADME.md\nD\told.py"
+    "diff --name-status --find-renames v1.0.0..HEAD": "A\tviewer/new-file.js\nM\tREADME.md\nD\told.py"
   });
 
   const payload = buildReleasePreparePayload({ runGit, pluginName: "polarrecorder" });

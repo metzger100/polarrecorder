@@ -1,5 +1,5 @@
 /**
- * Module: Status UI
+ * @file Status UI
  * Documentation: documentation/architecture/ui.md
  * Depends: dom.js, placeholders.js
  */
@@ -74,11 +74,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const title = el("div", "state-title");
     title.appendChild(el("span", "dot " + label.className));
     title.appendChild(el("span", "", label.text));
-    const meta = el(
-      "p",
-      "helper",
-      label.helper + " · Uptime " + formatDuration(data.uptime_seconds || 0)
-    );
+    const meta = el("p", "helper", label.helper + " · Uptime " + formatDuration(data.uptime_seconds || 0));
     const action = el("button", "primary-action state-layer", data.recording ? "Pause" : "Resume");
     action.addEventListener("click", function () {
       const endpoint = data.recording ? "pause" : "resume";
@@ -132,8 +128,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       grid.appendChild(valueTile(item, values));
     });
     card.appendChild(grid);
-    if (data.recording && data.current_decision)
-      card.appendChild(decisionBadge(data.current_decision));
+    if (data.recording && data.current_decision) card.appendChild(decisionBadge(data.current_decision));
     card.appendChild(renderDecisionStrip());
     return card;
   }
@@ -145,9 +140,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
   function valueTile(item, values) {
     const tile = el("div", "value-tile");
-    const value = values
-      ? Number(values[item[1]]).toFixed(1) + item[2]
-      : Polarrecorder.Placeholders.NoData;
+    const value = values ? Number(values[item[1]]).toFixed(1) + item[2] : Polarrecorder.Placeholders.NoData;
     tile.appendChild(el("span", "helper", item[0]));
     tile.appendChild(el("span", "value-number", value));
     const stale = values && values[item[3] + "_stale"];
@@ -219,13 +212,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       grid.appendChild(tile);
     });
     card.appendChild(grid);
-    card.appendChild(
-      el(
-        "p",
-        "helper",
-        "Acceptance rate " + Math.round((counters.acceptance_rate || 0) * 100) + "%"
-      )
-    );
+    card.appendChild(el("p", "helper", "Acceptance rate " + Math.round((counters.acceptance_rate || 0) * 100) + "%"));
     (data.top_rejections || []).forEach(
       /** @param {{reason: string, count: number}} entry */
       function (entry) {
@@ -245,18 +232,9 @@ window.Polarrecorder = window.Polarrecorder || {};
     const persistence = data.persistence || {};
     box.appendChild(el("h2", "", "Persistence"));
     box.appendChild(el("p", "helper", "Last flush " + lastFlushText(persistence.last_flush_wall)));
+    box.appendChild(el("p", "helper", "File size " + String(persistence.file_size_bytes || 0) + " bytes"));
     box.appendChild(
-      el("p", "helper", "File size " + String(persistence.file_size_bytes || 0) + " bytes")
-    );
-    box.appendChild(
-      el(
-        "p",
-        "helper",
-        "Bins " +
-          String(persistence.bins_with_data || 0) +
-          " / " +
-          String(persistence.bins_total || 0)
-      )
+      el("p", "helper", "Bins " + String(persistence.bins_with_data || 0) + " / " + String(persistence.bins_total || 0))
     );
     card.appendChild(box);
     return card;

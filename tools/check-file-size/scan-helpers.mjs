@@ -66,15 +66,7 @@ export function countStandaloneAssignments(text) {
     if (text[index] !== "=") continue;
     const prev = text[index - 1] || "";
     const next = text[index + 1] || "";
-    if (
-      next === "=" ||
-      next === ">" ||
-      prev === "=" ||
-      prev === "!" ||
-      prev === "<" ||
-      prev === ">"
-    )
-      continue;
+    if (next === "=" || next === ">" || prev === "=" || prev === "!" || prev === "<" || prev === ">") continue;
     count += 1;
   }
   return count;

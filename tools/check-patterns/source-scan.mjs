@@ -184,15 +184,17 @@ export function countRefs(masked, name) {
  * @param {RegExp} regex Global regex to iterate matches of.
  * @param {(match: RegExpExecArray) => (string | null)} build Builds a failure
  *   message for a match, or returns null to skip it.
+ * @param {string[]} [lines] File split into lines, to honor the generic
+ *   `pattern-ignore:` suppression convention. Omit to skip the check.
  * @returns {void}
  */
-export function scanJs(masked, file, regex, build) {
+export function scanJs(masked, file, regex, build, lines) {
   /** @type {RegExpExecArray | null} */
   let match;
   while ((match = regex.exec(masked)) !== null) {
     const message = build(match);
     if (message === null) continue;
     const index = masked.slice(0, match.index).split(/\r?\n/).length - 1;
-    fail(file.rel, index, message, ruleNameFromMessage(message));
+    fail(file.rel, index, message, ruleNameFromMessage(message), lines);
   }
 }

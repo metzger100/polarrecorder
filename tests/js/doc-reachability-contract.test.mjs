@@ -1,7 +1,15 @@
-#!/usr/bin/env node
+/**
+ * Contract test for the documentation reachability rule: every discovered doc must be
+ * reachable from AGENTS.md/CLAUDE.md via a link chain, and every discovered doc's links
+ * must resolve to real files. This is the Vitest contract replacement for the retired
+ * tools/check-doc-reachability.mjs; every assertion it made is preserved below.
+ */
 
+import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { test } from "vitest";
 
 /**
  * @param {Map<string, {target: string, abs: string}[]>} linkCache
@@ -9,8 +17,7 @@ import path from "node:path";
  * @returns {{target: string, abs: string}[]}
  */
 function getLinks(linkCache, file) {
-  if (linkCache.has(file))
-    return /** @type {{target: string, abs: string}[]} */ (linkCache.get(file));
+  if (linkCache.has(file)) return /** @type {{target: string, abs: string}[]} */ (linkCache.get(file));
   if (!fs.existsSync(file) || !file.endsWith(".md")) {
     linkCache.set(file, []);
     return [];
@@ -78,19 +85,13 @@ function walk(current, out) {
 }
 
 /**
- * Verify every discovered doc is reachable from `AGENTS.md`/`CLAUDE.md` and every discovered
- * doc's links resolve to real files.
- *
- * @param {{root?: string, print?: boolean}} [options]
+ * @param {{root?: string}} [options]
  * @returns {{ok: boolean, discovered: number, reachable: number, orphans: number, brokenLinks: number}}
  */
-export function runDocReachabilityCheck(options = {}) {
+function runDocReachabilityCheck(options = {}) {
   const root = options.root || process.cwd();
-  const print = options.print !== false;
 
-  const entryFiles = ["AGENTS.md", "CLAUDE.md"]
-    .map((p) => path.join(root, p))
-    .filter((p) => fs.existsSync(p));
+  const entryFiles = ["AGENTS.md", "CLAUDE.md"].map((p) => path.join(root, p)).filter((p) => fs.existsSync(p));
   const rootDocs = ["AGENTS.md", "CLAUDE.md", "ARCHITECTURE.md"]
     .map((p) => path.join(root, p))
     .filter((p) => fs.existsSync(p));
@@ -128,54 +129,113 @@ export function runDocReachabilityCheck(options = {}) {
   }
 
   const orphans = discoveredDocs.filter((file) => !reachable.has(file));
-
-  broken.sort((a, b) => {
-    const byFile = toRel(root, a.file).localeCompare(toRel(root, b.file));
-    return byFile !== 0 ? byFile : a.target.localeCompare(b.target);
-  });
-  orphans.sort((a, b) => toRel(root, a).localeCompare(toRel(root, b)));
-
   const reachableInScope = discoveredDocs.filter((file) => reachable.has(file)).length;
-  const summary = {
+
+  return {
     ok: broken.length === 0 && orphans.length === 0,
     discovered: discoveredDocs.length,
     reachable: reachableInScope,
     orphans: orphans.length,
     brokenLinks: broken.length
   };
+}
 
-  if (print) {
-    for (const item of broken) {
-      console.error(
-        `[doc-broken-link] ${toRel(root, item.file)} contains a link to '${item.target}' which does not exist. Fix or remove the link.`
-      );
-    }
-    for (const file of orphans) {
-      console.error(
-        `[doc-orphan] ${toRel(root, file)} is not reachable from AGENTS.md or CLAUDE.md via any link chain. Add a link to this file from the appropriate parent document (usually TABLEOFCONTENTS.md or a relevant guide/index). The agent cannot find docs it cannot navigate to.`
-      );
-    }
-    if (!summary.ok) {
-      console.error("SUMMARY_JSON=" + JSON.stringify(summary));
-    } else {
-      console.log("Documentation reachability check passed.");
-      console.log("SUMMARY_JSON=" + JSON.stringify(summary));
-    }
-  }
+const ROOT = process.cwd();
 
-  return summary;
+/** @returns {string} */
+function makeTempRoot() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-doc-reach-"));
+}
+
+/** @param {string} root */
+function cleanup(root) {
+  fs.rmSync(root, { recursive: true, force: true });
 }
 
 /**
+ * A minimal, fully valid doc tree: one doc, linked from a TOC, reachable from AGENTS.md.
  * @param {string} root
- * @param {string} file
- * @returns {string}
+ * @returns {void}
  */
-function toRel(root, file) {
-  return path.relative(root, file).replace(/\\/g, "/") || ".";
+function writeValidDocTree(root) {
+  fs.mkdirSync(path.join(root, "documentation"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "AGENTS.md"),
+    ["# Agents", "", "See [TOC](documentation/TABLEOFCONTENTS.md).", ""].join("\n")
+  );
+  fs.writeFileSync(
+    path.join(root, "documentation", "TABLEOFCONTENTS.md"),
+    [
+      "# TOC",
+      "",
+      "**Status:** Current.",
+      "",
+      "## Overview",
+      "",
+      "## Key Details",
+      "",
+      "## Related",
+      "",
+      "- [Guide](guide.md)",
+      ""
+    ].join("\n")
+  );
+  fs.writeFileSync(
+    path.join(root, "documentation", "guide.md"),
+    ["# Guide", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join("\n")
+  );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const result = runDocReachabilityCheck();
-  process.exitCode = result.ok ? 0 : 1;
-}
+test("real repo passes", () => {
+  const result = runDocReachabilityCheck({ root: ROOT });
+  assert.equal(result.ok, true);
+});
+
+test("a valid temp doc tree passes", () => {
+  const root = makeTempRoot();
+  writeValidDocTree(root);
+  const result = runDocReachabilityCheck({ root });
+  assert.equal(result.ok, true);
+  cleanup(root);
+});
+
+test("a broken file link fails", () => {
+  const root = makeTempRoot();
+  writeValidDocTree(root);
+  fs.writeFileSync(
+    path.join(root, "documentation", "guide.md"),
+    [
+      "# Guide",
+      "",
+      "**Status:** Current.",
+      "",
+      "## Overview",
+      "",
+      "See [missing](missing.md).",
+      "",
+      "## Key Details",
+      "",
+      "## Related",
+      ""
+    ].join("\n")
+  );
+  const result = runDocReachabilityCheck({ root });
+  assert.equal(result.ok, false);
+  assert.ok(result.brokenLinks >= 1);
+  cleanup(root);
+});
+
+test("an unreachable document fails", () => {
+  const root = makeTempRoot();
+  writeValidDocTree(root);
+  fs.writeFileSync(
+    path.join(root, "documentation", "unreachable.md"),
+    ["# Unreachable", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join(
+      "\n"
+    )
+  );
+  const result = runDocReachabilityCheck({ root });
+  assert.equal(result.ok, false);
+  assert.ok(result.orphans >= 1);
+  cleanup(root);
+});

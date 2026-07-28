@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 import { runPatternCheck } from "../../tools/check-patterns.mjs";
@@ -333,6 +333,45 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.summary.byRule["internal-namespace-fallback"], 1);
 });
 
+test("an illegal global assignment fails namespace-token-consistency", () => {
+  const result = runChecker({
+    "viewer/bad.js": viewerHeader() + "window.Rogue = {};\n"
+  });
+
+  assert.equal(result.status, 1);
+  assert.ok(result.summary.byRule["namespace-token-consistency"] >= 1);
+  assert.ok(result.failures.some((f) => f.includes("illegal global window.Rogue")));
+});
+
+test("a lowercase namespace member fails namespace-token-consistency", () => {
+  const result = runChecker({
+    "viewer/bad.js":
+      viewerHeader() + "window.Polarrecorder = window.Polarrecorder || {};\nwindow.Polarrecorder.bad = {};\n"
+  });
+
+  assert.equal(result.status, 1);
+  assert.ok(result.summary.byRule["namespace-token-consistency"] >= 1);
+  assert.ok(result.failures.some((f) => f.includes("must be PascalCase")));
+});
+
+test("a non-kebab-case viewer filename fails namespace-token-consistency", () => {
+  const result = runChecker({
+    "viewer/BadName.js":
+      viewerHeader() +
+      `
+window.Polarrecorder = window.Polarrecorder || {};
+(function () {
+  "use strict";
+  window.Polarrecorder.Good = {};
+}());
+`
+  });
+
+  assert.equal(result.status, 1);
+  assert.ok(result.summary.byRule["namespace-token-consistency"] >= 1);
+  assert.ok(result.failures.some((f) => f.includes("must be kebab-case")));
+});
+
 test("an absolute home path in a workflow file fails", () => {
   const result = runChecker({
     ".github/workflows/release.yml": "path: /home/leobareth/project\n"
@@ -348,7 +387,7 @@ test("a Markdown TODO without an owner fails", () => {
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule["unowned-todo"], 1);
+  assert.equal(result.summary.byRule["todo-without-owner"], 1);
 });
 
 test("a real historical exec-plan filename reference passes", () => {

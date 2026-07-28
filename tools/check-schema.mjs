@@ -61,9 +61,7 @@ function compileValidators() {
 function runValidator(validate, data, formLabel) {
   if (validate(data)) return [];
   const errors = validate.errors || [];
-  return errors.map(
-    (error) => `plugin.json (${formLabel}) ${error.instancePath || "/"} ${error.message}`
-  );
+  return errors.map((error) => `plugin.json (${formLabel}) ${error.instancePath || "/"} ${error.message}`);
 }
 
 const { validateDev, validateRelease } = compileValidators();
@@ -174,9 +172,7 @@ export function runSchemaCheck(options = {}) {
       try {
         failures.push(...artifact.validateReleaseForm(buildPluginJsonReleaseForm(root)));
       } catch (error) {
-        failures.push(
-          `${artifact.name}: could not build the release form: ${/** @type {Error} */ (error).message}`
-        );
+        failures.push(`${artifact.name}: could not build the release form: ${/** @type {Error} */ (error).message}`);
       }
     }
   }

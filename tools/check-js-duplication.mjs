@@ -21,10 +21,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { collectFunctions } from "./check-js-duplication/parse.mjs";
-import {
-  MIN_FINGERPRINT_TOKENS,
-  duplicateBlockFailures
-} from "./check-js-duplication/clone-detection.mjs";
+import { MIN_FINGERPRINT_TOKENS, duplicateBlockFailures } from "./check-js-duplication/clone-detection.mjs";
 
 /**
  * @typedef {import("./check-js-duplication/clone-detection.mjs").FunctionEntry} FunctionEntry

@@ -170,11 +170,7 @@
   padding: 1.1429rem 1.4286rem;
   border: 0.0714rem solid var(--polarrecorder-border-color);
   border-radius: 0.8571rem;
-  background: color-mix(
-    in srgb,
-    var(--polarrecorder-surface-color) 94%,
-    var(--polarrecorder-back-color)
-  );
+  background: color-mix(in srgb, var(--polarrecorder-surface-color) 94%, var(--polarrecorder-back-color));
   box-shadow: 0 0.4286rem 1.4286rem var(--polarrecorder-shadow-color);
   color: var(--polarrecorder-fore-color);
   font-size: 1.45rem;

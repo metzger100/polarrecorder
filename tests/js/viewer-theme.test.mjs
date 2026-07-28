@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 import vm from "node:vm";
 
@@ -52,29 +52,14 @@ test("copies AvNav tokens and font", () => {
   assert.equal(env.style.get("--polarrecorder-back-color"), AVNAV_TOKENS["--avnav-back-color"]);
   assert.equal(env.style.get("--polarrecorder-main-color"), AVNAV_TOKENS["--avnav-main-color"]);
   assert.equal(env.style.get("--polarrecorder-second-color"), AVNAV_TOKENS["--avnav-second-color"]);
-  assert.equal(
-    env.style.get("--polarrecorder-attention-color"),
-    AVNAV_TOKENS["--avnav-attention-color"]
-  );
+  assert.equal(env.style.get("--polarrecorder-attention-color"), AVNAV_TOKENS["--avnav-attention-color"]);
   assert.equal(env.style.get("--polarrecorder-active-color"), AVNAV_TOKENS["--avnav-active-color"]);
   assert.equal(env.style.get("--polarrecorder-border-color"), AVNAV_TOKENS["--avnav-border-color"]);
-  assert.equal(
-    env.style.get("--polarrecorder-widget-head-color"),
-    AVNAV_TOKENS["--avnav-widget-head-color"]
-  );
+  assert.equal(env.style.get("--polarrecorder-widget-head-color"), AVNAV_TOKENS["--avnav-widget-head-color"]);
   assert.equal(env.style.get("--polarrecorder-surface-color"), AVNAV_TOKENS["--avnav-back-color"]);
-  assert.equal(
-    env.style.get("--polarrecorder-surface-variant"),
-    AVNAV_TOKENS["--avnav-second-color"]
-  );
-  assert.equal(
-    env.style.get("--polarrecorder-accepted-color"),
-    AVNAV_TOKENS["--avnav-active-color"]
-  );
-  assert.equal(
-    env.style.get("--polarrecorder-rejected-color"),
-    AVNAV_TOKENS["--avnav-attention-color"]
-  );
+  assert.equal(env.style.get("--polarrecorder-surface-variant"), AVNAV_TOKENS["--avnav-second-color"]);
+  assert.equal(env.style.get("--polarrecorder-accepted-color"), AVNAV_TOKENS["--avnav-active-color"]);
+  assert.equal(env.style.get("--polarrecorder-rejected-color"), AVNAV_TOKENS["--avnav-attention-color"]);
   assert.equal(env.style.has("--polarrecorder-quarantined-color"), false);
   assert.equal(env.style.get("--polarrecorder-font-stack"), "Verdana, Arial, sans-serif");
 });

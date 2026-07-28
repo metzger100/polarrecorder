@@ -142,7 +142,7 @@ export function collectJavaScriptPatternFiles() {
  * @returns {import("./shared.mjs").PatternFile[]} Every `viewer/*.js` file, or an empty array
  *   if the viewer directory does not exist.
  */
-function collectViewerJsFiles() {
+export function collectViewerJsFiles() {
   if (!fs.existsSync(VIEWER_ROOT)) return [];
   return fs
     .readdirSync(VIEWER_ROOT)

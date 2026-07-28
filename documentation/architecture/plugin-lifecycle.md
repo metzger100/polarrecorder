@@ -4,7 +4,8 @@
 
 ## Overview
 
-`plugin.py` is the thin AvNav integration shell. It registers AvNav callbacks, owns threading and locking, and delegates learning, persistence, validation, and response formatting to `server/polarrecorder/`.
+`plugin.py` is the thin AvNav integration shell. It registers AvNav callbacks, owns threading and locking, and delegates
+learning, persistence, validation, and response formatting to `server/polarrecorder/`.
 
 ## Key Details
 
@@ -23,13 +24,16 @@ AvNav boundary rules:
 - `plugin.py` is the only module that touches the runtime AvNav API.
 - `avnav_api` is imported only under `TYPE_CHECKING`.
 - `server/polarrecorder/` receives AvNav-like behavior through protocols or plain data, never through AvNav imports.
-- `StoreReader` is constructed in `plugin.py` with the AvNav API object but only depends on the `getSingleValue(..., includeInfo=True)` protocol.
-- Request dispatch receives the plugin shell object because lock ownership and live state reside in `plugin.py`; API handlers format snapshots and avoid AvNav access.
+- `StoreReader` is constructed in `plugin.py` with the AvNav API object but only depends on the
+  `getSingleValue(..., includeInfo=True)` protocol.
+- Request dispatch receives the plugin shell object because lock ownership and live state reside in `plugin.py`; API
+  handlers format snapshots and avoid AvNav access.
 
 Single-lock discipline:
 
 - `plugin.py` creates exactly one `threading.Lock`.
-- The sampling loop holds the lock only while committing samples, counters, timeline entries, status scalars, config swaps, or persistence snapshots.
+- The sampling loop holds the lock only while committing samples, counters, timeline entries, status scalars, config
+  swaps, or persistence snapshots.
 - API dispatch holds the same lock while snapshotting model/config/status data.
 - Formatting, CSV generation, and JSON response shaping should use detached snapshots whenever possible.
 - Domain modules must not acquire locks or assume thread identity.
@@ -45,7 +49,8 @@ Runtime state ownership:
 | `Timeline`        | `plugin.py`      | Uses injected wall clock for minute buckets.                                  |
 | `polar.json`      | `persistence.py` | Serialized from locked snapshots and written by the plugin thread.            |
 
-Version authority lives in release tooling. Development checkouts can run without a stamped version in `plugin.json`; packaged releases stamp the runtime version during zip creation.
+Version authority lives in release tooling. Development checkouts can run without a stamped version in `plugin.json`;
+packaged releases stamp the runtime version during zip creation.
 
 ## Related
 

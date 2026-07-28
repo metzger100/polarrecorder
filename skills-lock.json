@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "preflight": {
+      "source": "dyninstruments/.agents/skills/preflight/SKILL.md",
+      "sourceType": "sibling-repository",
+      "computedHash": "dedbc2e39ebf5666375bbf7102de12aa607958f8c0262f527dd045a0db1b0d38"
+    },
+    "create-plan": {
+      "source": "dyninstruments/.agents/skills/create-plan/SKILL.md",
+      "sourceType": "sibling-repository",
+      "computedHash": "c3cf7b0db0b8a1d3f7263a3ba27411c42ef75fc2d66b82c39901feacd353532b"
+    },
+    "doc-sync": {
+      "source": "dyninstruments/.agents/skills/doc-sync/SKILL.md",
+      "sourceType": "sibling-repository",
+      "computedHash": "4ede0215683577cfc7455778f5c61fb7fcb8a2e37a9dd817c63a71c644f94a6a"
+    },
+    "scan-smells": {
+      "source": "dyninstruments/.agents/skills/scan-smells/SKILL.md",
+      "sourceType": "sibling-repository",
+      "computedHash": "1018a5eb45d74a5663c4af391727609f63cec3d211d6e80f8b64c57f0f07fa64"
+    },
+    "grill-me-repo": {
+      "source": "dyninstruments/.agents/skills/grill-me-repo/SKILL.md",
+      "sourceType": "sibling-repository",
+      "computedHash": "e41c265493848319359739c0874497f0915aaa40306211b14f4a322d7558726d"
+    }
+  }
+}

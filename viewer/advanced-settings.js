@@ -1,5 +1,5 @@
 /**
- * Module: Advanced Settings
+ * @file Advanced Settings
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js
  */
@@ -65,9 +65,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     state.body = Polarrecorder.Dom.Node("div", "advanced-settings");
     card.appendChild(state.body);
     card.appendChild(
-      Polarrecorder.Dom.ActionRow([
-        Polarrecorder.Dom.Button("Save Advanced Settings", save, "primary-action")
-      ])
+      Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button("Save Advanced Settings", save, "primary-action")])
     );
     state.messageNode = Polarrecorder.Dom.Node("p", "helper");
     card.appendChild(state.messageNode);

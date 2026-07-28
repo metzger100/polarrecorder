@@ -1,5 +1,5 @@
 /**
- * Module: Viewer Theme Bridge
+ * @file Viewer Theme Bridge
  * Documentation: documentation/architecture/ui.md
  * Depends: none
  */

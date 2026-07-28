@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
-import { test } from "node:test";
+import { test } from "vitest";
 import path from "node:path";
 
 const ROOT = process.cwd();
@@ -90,9 +90,7 @@ test("actionlint rejects an in-repo cache dir", () => {
 });
 
 test("actionlint cached run succeeds offline", () => {
-  const cacheDir =
-    process.env.ACTIONLINT_CACHE_DIR ||
-    path.join(os.homedir(), ".cache", "polarrecorder", "actionlint");
+  const cacheDir = process.env.ACTIONLINT_CACHE_DIR || path.join(os.homedir(), ".cache", "polarrecorder", "actionlint");
   const versionDir = path.join(cacheDir, "1.7.12");
   if (!fs.existsSync(path.join(versionDir, "actionlint"))) {
     // No pre-populated cache in this environment: skip the offline-reuse assertion rather
@@ -128,9 +126,7 @@ function realArchiveExpectedSha256() {
   const arch = unameM === "aarch64" || unameM === "arm64" ? "arm64" : "amd64";
   const archiveName = `actionlint_1.7.12_${platform}_${arch}.tar.gz`;
   const script = fs.readFileSync(path.join(ROOT, "tools", "actionlint.sh"), "utf8");
-  const match = script.match(
-    new RegExp(`${archiveName}\\)\\s*\\n\\s*expected_sha256="([0-9a-f]+)"`)
-  );
+  const match = script.match(new RegExp(`${archiveName}\\)\\s*\\n\\s*expected_sha256="([0-9a-f]+)"`));
   assert.ok(match, `no pinned expected_sha256 found for ${archiveName}`);
   return match[1];
 }

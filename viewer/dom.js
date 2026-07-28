@@ -1,5 +1,5 @@
 /**
- * Module: DOM Helpers
+ * @file DOM Helpers
  * Documentation: documentation/architecture/ui.md
  * Depends: (none)
  */

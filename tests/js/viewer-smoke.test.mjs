@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 
-import {
-  createEnvironment,
-  flushViewer,
-  loadViewerFile,
-  textTree
-} from "../../tools/viewer-harness.mjs";
+import { createEnvironment, flushViewer, loadViewerFile, textTree } from "../../tools/viewer-harness.mjs";
 
 /** @typedef {import("../../tools/viewer-harness.mjs").Environment} Environment */
 

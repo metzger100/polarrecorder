@@ -65,9 +65,7 @@ export async function runDocLinksProof(options = {}) {
   const brokenRoot = makeFixtureRoot({ broken: true });
   const brokenResult = await runDocLinksCheck({ root: brokenRoot, print: false });
   if (brokenResult.ok) {
-    failures.push(
-      "a fixture with a missing file link and a missing fragment was not reported as broken"
-    );
+    failures.push("a fixture with a missing file link and a missing fragment was not reported as broken");
   } else if (brokenResult.broken.length < 2) {
     failures.push(
       `expected both the missing file and missing fragment to be reported broken; got ${brokenResult.broken.length}`
@@ -78,9 +76,7 @@ export async function runDocLinksProof(options = {}) {
   const ok = failures.length === 0;
   if (print) {
     if (ok) {
-      console.log(
-        "Documentation link fixture proof passed: clean fixture ok, broken fixture caught."
-      );
+      console.log("Documentation link fixture proof passed: clean fixture ok, broken fixture caught.");
     } else {
       console.error("Documentation link fixture proof failed:\n");
       for (const failure of failures) console.error(`- ${failure}`);

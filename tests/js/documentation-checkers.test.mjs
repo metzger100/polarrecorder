@@ -1,33 +1,26 @@
 /**
- * Self-tests for the exported `run*` entry points of `tools/check-docs.mjs`,
- * `tools/check-doc-format.mjs`, and `tools/check-doc-reachability.mjs`: real-repo clean
- * cases plus temporary-root failures for a missing TOC registration, a missing required
- * section, a broken file link, a broken fragment (via `check-doc-links.mjs`), and an
- * unreachable document.
+ * Self-tests for the exported `run*` entry points of `tools/check-doc-links.mjs`, the one
+ * bespoke documentation checker not yet migrated into a Vitest contract test (Phase F3
+ * externalizes its Linkinator options but keeps the seed-selection logic here). The
+ * doc-format, doc-TOC, and doc-reachability concerns now live in their own contract
+ * tests: doc-format-contract.test.mjs, doc-toc-contract.test.mjs, and
+ * doc-reachability-contract.test.mjs.
  */
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 
-import { runDocsCheck } from "../../tools/check-docs.mjs";
-import { runDocFormatCheck } from "../../tools/check-doc-format.mjs";
-import { runDocReachabilityCheck } from "../../tools/check-doc-reachability.mjs";
 import { discoverSeedMarkdownFiles, runDocLinksCheck } from "../../tools/check-doc-links.mjs";
 
 const ROOT = process.cwd();
 
 test("every Prettier-owned Markdown file is a Linkinator seed", () => {
-  const scope = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "format-scope.json"), "utf8")
-  );
+  const scope = JSON.parse(fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "format-scope.json"), "utf8"));
   const prettierMarkdown = scope.rows
-    .filter(
-      (/** @type {{owner: string, path: string}} */ row) =>
-        row.owner === "prettier" && row.path.endsWith(".md")
-    )
+    .filter((/** @type {{owner: string, path: string}} */ row) => row.owner === "prettier" && row.path.endsWith(".md"))
     .map((/** @type {{path: string}} */ row) => row.path)
     .sort();
   assert.deepEqual(discoverSeedMarkdownFiles(ROOT), prettierMarkdown);
@@ -78,18 +71,7 @@ function writeValidDocTree(root) {
   );
   fs.writeFileSync(
     path.join(root, "documentation", "guide.md"),
-    [
-      "# Guide",
-      "",
-      "**Status:** Current.",
-      "",
-      "## Overview",
-      "",
-      "## Key Details",
-      "",
-      "## Related",
-      ""
-    ].join("\n")
+    ["# Guide", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join("\n")
   );
   fs.writeFileSync(
     path.join(root, "tools", "quality-policy", "format-scope.json"),
@@ -102,130 +84,6 @@ function writeValidDocTree(root) {
     })
   );
 }
-
-test("check-docs: real repo passes", () => {
-  const result = runDocsCheck({ root: ROOT, print: false });
-  assert.equal(result.ok, true);
-});
-
-test("check-docs: a valid temp doc tree passes", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  const result = runDocsCheck({ root, print: false });
-  assert.equal(result.ok, true);
-  cleanup(root);
-});
-
-test("check-docs: a doc missing from the TOC fails", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  fs.writeFileSync(
-    path.join(root, "documentation", "orphan.md"),
-    [
-      "# Orphan",
-      "",
-      "**Status:** Current.",
-      "",
-      "## Overview",
-      "",
-      "## Key Details",
-      "",
-      "## Related",
-      ""
-    ].join("\n")
-  );
-  const result = runDocsCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  cleanup(root);
-});
-
-test("check-doc-format: real repo passes", () => {
-  const result = runDocFormatCheck({ root: ROOT, print: false });
-  assert.equal(result.ok, true);
-});
-
-test("check-doc-format: a valid temp doc tree passes", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  const result = runDocFormatCheck({ root, print: false });
-  assert.equal(result.ok, true);
-  cleanup(root);
-});
-
-test("check-doc-format: a doc missing a required section fails", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  fs.writeFileSync(
-    path.join(root, "documentation", "guide.md"),
-    ["# Guide", "", "**Status:** Current.", "", "## Overview", ""].join("\n")
-  );
-  const result = runDocFormatCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  cleanup(root);
-});
-
-test("check-doc-reachability: real repo passes", () => {
-  const result = runDocReachabilityCheck({ root: ROOT, print: false });
-  assert.equal(result.ok, true);
-});
-
-test("check-doc-reachability: a valid temp doc tree passes", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  const result = runDocReachabilityCheck({ root, print: false });
-  assert.equal(result.ok, true);
-  cleanup(root);
-});
-
-test("check-doc-reachability: a broken file link fails", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  fs.writeFileSync(
-    path.join(root, "documentation", "guide.md"),
-    [
-      "# Guide",
-      "",
-      "**Status:** Current.",
-      "",
-      "## Overview",
-      "",
-      "See [missing](missing.md).",
-      "",
-      "## Key Details",
-      "",
-      "## Related",
-      ""
-    ].join("\n")
-  );
-  const result = runDocReachabilityCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  assert.ok(result.brokenLinks >= 1);
-  cleanup(root);
-});
-
-test("check-doc-reachability: an unreachable document fails", () => {
-  const root = makeTempRoot();
-  writeValidDocTree(root);
-  fs.writeFileSync(
-    path.join(root, "documentation", "unreachable.md"),
-    [
-      "# Unreachable",
-      "",
-      "**Status:** Current.",
-      "",
-      "## Overview",
-      "",
-      "## Key Details",
-      "",
-      "## Related",
-      ""
-    ].join("\n")
-  );
-  const result = runDocReachabilityCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  assert.ok(result.orphans >= 1);
-  cleanup(root);
-});
 
 test("check-doc-links: a broken fragment fails", () => {
   const root = makeTempRoot();

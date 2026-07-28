@@ -26,10 +26,11 @@
  * A fake DOM node produced by element(). Every node produced by the harness
  * carries all of these members; classList and firstChild are populated by
  * element() itself before the node is ever handed to a caller. id, onclick,
- * onfocus, and checked are genuinely absent until the harness (or the
- * vm-loaded viewer script) sets them -- checked stands in for a
- * checkbox-role <input>'s real DOM `.checked` property, and onfocus is
- * addEventListener("focus", ...)'s storage slot, mirroring onclick.
+ * onfocus, onblur, ondblclick, and checked are genuinely absent until the
+ * harness (or the vm-loaded viewer script) sets them -- checked stands in for a
+ * checkbox-role <input>'s real DOM `.checked` property, and onfocus, onblur,
+ * and ondblclick are the addEventListener("focus"/"blur"/"dblclick", ...)
+ * storage slots, mirroring onclick.
  *
  * @typedef {{
  *   attributes: Map<string, string>,
@@ -42,7 +43,9 @@
  *   firstChild: FakeElement | null,
  *   hidden: boolean,
  *   id?: string,
+ *   onblur?: () => void,
  *   onclick?: (event: FakeClickEvent) => void,
+ *   ondblclick?: () => void,
  *   onfocus?: () => void,
  *   parentNode: FakeElement | null,
  *   style: FakeStyle,

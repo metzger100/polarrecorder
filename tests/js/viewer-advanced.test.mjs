@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 
 import {
   createEnvironment,
@@ -86,14 +86,10 @@ test("advanced settings render and save", async () => {
   assert.ok(!tree.includes("head_to_wind_threshold"), tree);
   assert.ok(!tree.includes("debug_logging"), tree);
 
-  const input = panel
-    .querySelectorAll(".advanced-setting")[0]
-    .children.find((child) => child.tagName === "input");
+  const input = panel.querySelectorAll(".advanced-setting")[0].children.find((child) => child.tagName === "input");
   assert.ok(input, "expected the low_wind_threshold input");
   input.value = "4.2";
-  const checkbox = panel
-    .querySelectorAll(".advanced-setting")[2]
-    .children.find((child) => child.tagName === "input");
+  const checkbox = panel.querySelectorAll(".advanced-setting")[2].children.find((child) => child.tagName === "input");
   assert.ok(checkbox, "expected the debug_logging checkbox");
   checkbox.checked = true;
   const saveButton = advancedSaveButton(panel);
@@ -118,9 +114,7 @@ test("advanced settings validates range", async () => {
   await flushViewer();
 
   const panel = env.elements["settings-panel"];
-  const input = panel
-    .querySelectorAll(".advanced-setting")[0]
-    .children.find((child) => child.tagName === "input");
+  const input = panel.querySelectorAll(".advanced-setting")[0].children.find((child) => child.tagName === "input");
   assert.ok(input, "expected the low_wind_threshold input");
   input.value = "99";
 
@@ -131,10 +125,7 @@ test("advanced settings validates range", async () => {
   await flushViewer();
 
   assert.equal(saveRequests.length, before, "out-of-range value blocks save");
-  assert.ok(
-    textTree(panel).includes("Minimum true wind must be between 0.5 and 10."),
-    textTree(panel)
-  );
+  assert.ok(textTree(panel).includes("Minimum true wind must be between 0.5 and 10."), textTree(panel));
 });
 
 /** @param {Environment} env */

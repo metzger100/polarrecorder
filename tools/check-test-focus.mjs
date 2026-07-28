@@ -4,8 +4,9 @@
  * JavaScript half of `test:focus:check`: a real-AST (via `acorn`, a dependency-free
  * parser) scanner that fails on
  * `.only(`/`.skip(`/`.todo(` test-focus calls, Jasmine/Jest-style bare aliases
- * (`fdescribe`/`fit`/`xdescribe`/`xit`/`xtest`), and Node `node:test`'s options-object
- * form (`test(name, { skip: true }, fn)`), across every executable JS test/helper file
+ * (`fdescribe`/`fit`/`xdescribe`/`xit`/`xtest`), Vitest's chained conditional modifiers
+ * (`test.skipIf(cond)("name", fn)` / `describe.runIf(...)`), and the options-object form
+ * (`test(name, { skip: true }, fn)`), across every executable JS test/helper file
  * (`tests/js/**\/*.test.mjs` plus `tools/*-harness.mjs`, reusing
  * `test-inventory.mjs`'s own discovery so the file set can never drift between the two
  * checkers). Real AST parsing means string and comment content can never trigger a false
@@ -27,6 +28,7 @@ import { discoverExecutableTestHelpers } from "./quality-policy/test-inventory.m
 const ROOT = process.cwd();
 const FOCUS_PROPERTY_NAMES = new Set(["only", "skip", "todo"]);
 const BARE_FOCUS_ALIASES = new Set(["fdescribe", "fit", "xdescribe", "xit", "xtest"]);
+const CONDITIONAL_SKIP_NAMES = new Set(["skipIf", "runIf"]);
 const TEST_CALL_NAMES = new Set(["test", "describe", "it", "suite"]);
 const OPTION_KEYS = new Set(["only", "skip", "todo"]);
 const SKIPPED_KEYS = new Set(["type", "start", "end", "loc", "range"]);
@@ -65,6 +67,36 @@ function isMemberFocusCall(node) {
   }
   const firstArg = node.arguments[0];
   return Boolean(firstArg && firstArg.type === "Literal" && typeof firstArg.value === "string");
+}
+
+/**
+ * @param {AstNode} node
+ * @returns {boolean}
+ */
+function isTestEntryPoint(node) {
+  if (node.type === "Identifier") return TEST_CALL_NAMES.has(node.name);
+  if (node.type === "MemberExpression" && !node.computed && node.property.type === "Identifier") {
+    return isTestEntryPoint(node.object) || TEST_CALL_NAMES.has(node.property.name);
+  }
+  return false;
+}
+
+/**
+ * Vitest's conditional modifiers read `test.skipIf(cond)("name", fn)`, so the test name
+ * is an argument of the *outer* call and the modifier takes the condition instead. The
+ * string-literal shape `isMemberFocusCall` relies on therefore never matches them.
+ * @param {AstNode} node
+ * @returns {string | null}
+ */
+function conditionalSkipName(node) {
+  if (node.type !== "CallExpression") return null;
+  const callee = node.callee;
+  if (callee.type !== "MemberExpression" || callee.computed) return null;
+  if (callee.property.type !== "Identifier" || !CONDITIONAL_SKIP_NAMES.has(callee.property.name)) {
+    return null;
+  }
+  if (!isTestEntryPoint(callee.object)) return null;
+  return callee.property.name;
 }
 
 /**
@@ -147,19 +179,15 @@ function scanFile(source, rel) {
   function visit(node) {
     if (isMemberFocusCall(node)) {
       const callee = /** @type {AstNode} */ (node.callee);
-      failures.push(
-        `${rel}:${node.loc.start.line}: focused/disabled test call '.${callee.property.name}(...)'`
-      );
+      failures.push(`${rel}:${node.loc.start.line}: focused/disabled test call '.${callee.property.name}(...)'`);
     } else if (isBareFocusAliasCall(node)) {
-      failures.push(
-        `${rel}:${node.loc.start.line}: focused/disabled test alias '${node.callee.name}(...)'`
-      );
+      failures.push(`${rel}:${node.loc.start.line}: focused/disabled test alias '${node.callee.name}(...)'`);
+    } else if (conditionalSkipName(node)) {
+      failures.push(`${rel}:${node.loc.start.line}: conditionally disabled test '.${conditionalSkipName(node)}(...)'`);
     } else {
       const optionKey = optionsObjectFocusKey(node);
       if (optionKey) {
-        failures.push(
-          `${rel}:${node.loc.start.line}: focused/disabled test options object '{ ${optionKey}: true }'`
-        );
+        failures.push(`${rel}:${node.loc.start.line}: focused/disabled test options object '{ ${optionKey}: true }'`);
       }
     }
     forEachChildNode(node, visit);

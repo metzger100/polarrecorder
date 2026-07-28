@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 
 import {
   createEnvironment,
@@ -149,10 +149,7 @@ test("enhanced settings validates thresholds", async () => {
   await flushViewer();
 
   assert.equal(saveRequests.length, before, "invalid threshold blocks the save request");
-  assert.ok(
-    textTree(panel).includes("Enter a valid number for every threshold before saving."),
-    textTree(panel)
-  );
+  assert.ok(textTree(panel).includes("Enter a valid number for every threshold before saving."), textTree(panel));
 });
 
 /**

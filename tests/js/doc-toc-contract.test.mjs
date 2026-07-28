@@ -1,7 +1,15 @@
-#!/usr/bin/env node
+/**
+ * Contract test for the documentation table-of-contents rule: every documentation file
+ * must be linked from documentation/TABLEOFCONTENTS.md, and every TOC link must resolve
+ * to a real file. This is the Vitest contract replacement for the retired
+ * tools/check-docs.mjs; every assertion it made is preserved below.
+ */
 
+import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { test } from "vitest";
 
 /**
  * @param {string} root
@@ -135,15 +143,11 @@ function stripCode(markdown) {
 }
 
 /**
- * Verify every `documentation/**\/*.md` file is linked from the TOC and every TOC link
- * resolves to a real file.
- *
- * @param {{root?: string, print?: boolean}} [options]
+ * @param {{root?: string}} [options]
  * @returns {{ok: boolean, checkedDocumentationFiles: number, tocLinks: number, failures: number}}
  */
-export function runDocsCheck(options = {}) {
+function runDocsCheck(options = {}) {
   const root = options.root || process.cwd();
-  const print = options.print !== false;
   /** @type {{root: string, docRoot: string, toc: string, failures: {type: string, file: string, message: string}[]}} */
   const ctx = { root, docRoot: docRoot(root), toc: tocPath(root), failures: [] };
 
@@ -172,30 +176,77 @@ export function runDocsCheck(options = {}) {
     }
   }
 
-  const summary = {
+  return {
     ok: ctx.failures.length === 0,
     checkedDocumentationFiles: docFiles.length,
     tocLinks: tocLinks.length,
     failures: ctx.failures.length
   };
-
-  if (print) {
-    if (!summary.ok) {
-      console.error("Documentation table-of-contents check failed:\n");
-      for (const item of ctx.failures) {
-        console.error(`- [${item.type}] ${path.relative(root, item.file) || "."}: ${item.message}`);
-      }
-      console.error("\nSUMMARY_JSON=" + JSON.stringify(summary));
-    } else {
-      console.log("Documentation table-of-contents check passed.");
-      console.log("SUMMARY_JSON=" + JSON.stringify(summary));
-    }
-  }
-
-  return summary;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const result = runDocsCheck();
-  process.exitCode = result.ok ? 0 : 1;
+const ROOT = process.cwd();
+
+/** @returns {string} */
+function makeTempRoot() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-doc-toc-"));
 }
+
+/** @param {string} root */
+function cleanup(root) {
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+/**
+ * A minimal, fully valid doc tree: one doc, linked from a TOC.
+ * @param {string} root
+ * @returns {void}
+ */
+function writeValidDocTree(root) {
+  fs.mkdirSync(path.join(root, "documentation"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "documentation", "TABLEOFCONTENTS.md"),
+    [
+      "# TOC",
+      "",
+      "**Status:** Current.",
+      "",
+      "## Overview",
+      "",
+      "## Key Details",
+      "",
+      "## Related",
+      "",
+      "- [Guide](guide.md)",
+      ""
+    ].join("\n")
+  );
+  fs.writeFileSync(
+    path.join(root, "documentation", "guide.md"),
+    ["# Guide", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join("\n")
+  );
+}
+
+test("real repo passes", () => {
+  const result = runDocsCheck({ root: ROOT });
+  assert.equal(result.ok, true);
+});
+
+test("a valid temp doc tree passes", () => {
+  const root = makeTempRoot();
+  writeValidDocTree(root);
+  const result = runDocsCheck({ root });
+  assert.equal(result.ok, true);
+  cleanup(root);
+});
+
+test("a doc missing from the TOC fails", () => {
+  const root = makeTempRoot();
+  writeValidDocTree(root);
+  fs.writeFileSync(
+    path.join(root, "documentation", "orphan.md"),
+    ["# Orphan", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join("\n")
+  );
+  const result = runDocsCheck({ root });
+  assert.equal(result.ok, false);
+  cleanup(root);
+});

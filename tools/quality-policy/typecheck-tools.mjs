@@ -81,14 +81,10 @@ export function runToolsTypecheck({ root = ROOT, print = true } = {}) {
   if (missingFromInventory.length > 0 || extraInInventory.length > 0) {
     if (print) {
       if (missingFromInventory.length > 0) {
-        console.error(
-          `Tool source file(s) missing from tsconfig.tools.json: ${missingFromInventory.join(", ")}`
-        );
+        console.error(`Tool source file(s) missing from tsconfig.tools.json: ${missingFromInventory.join(", ")}`);
       }
       if (extraInInventory.length > 0) {
-        console.error(
-          `tsconfig.tools.json lists stale/removed tool file(s): ${extraInInventory.join(", ")}`
-        );
+        console.error(`tsconfig.tools.json lists stale/removed tool file(s): ${extraInInventory.join(", ")}`);
       }
     }
     return { ok: false, missingFromInventory, extraInInventory, checkedFiles: 0 };
@@ -96,14 +92,10 @@ export function runToolsTypecheck({ root = ROOT, print = true } = {}) {
 
   const checkedFiles = configuredToolSourcePaths(root).length;
   try {
-    execFileSync(
-      path.join(ROOT, "node_modules", ".bin", "tsc"),
-      ["--noEmit", "-p", TSCONFIG_PATH],
-      {
-        cwd: ROOT,
-        stdio: print ? "inherit" : "pipe"
-      }
-    );
+    execFileSync(path.join(ROOT, "node_modules", ".bin", "tsc"), ["--noEmit", "-p", TSCONFIG_PATH], {
+      cwd: ROOT,
+      stdio: print ? "inherit" : "pipe"
+    });
     return { ok: true, missingFromInventory, extraInInventory, checkedFiles };
   } catch {
     return { ok: false, missingFromInventory, extraInInventory, checkedFiles };

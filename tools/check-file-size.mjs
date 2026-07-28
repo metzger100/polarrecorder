@@ -4,21 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import {
-  countFindingsByKind,
-  detectOneliners,
-  ONELINER_MESSAGE_BY_KIND
-} from "./check-file-size/oneliner-rules.mjs";
+import { countFindingsByKind, detectOneliners, ONELINER_MESSAGE_BY_KIND } from "./check-file-size/oneliner-rules.mjs";
 
 const MAX_ALLOWED_LINES = 400;
-const ROOT_MARKDOWN_FILES = [
-  "AGENTS.md",
-  "ARCHITECTURE.md",
-  "CLAUDE.md",
-  "CONTRIBUTING.md",
-  "README.md",
-  "ROADMAP.md"
-];
+const ROOT_MARKDOWN_FILES = ["AGENTS.md", "ARCHITECTURE.md", "CLAUDE.md", "CONTRIBUTING.md", "README.md", "ROADMAP.md"];
 const ROOT_JS_FILES = ["plugin.js", "plugin.mjs"];
 
 /**
@@ -62,11 +51,7 @@ const ROOT_JS_FILES = ["plugin.js", "plugin.mjs"];
  * @param {FileSizeOptions} [options]
  * @returns {FileSizeResult}
  */
-export function runFileSizeCheck({
-  root = process.cwd(),
-  onelinerMode = "warn",
-  print = true
-} = {}) {
+export function runFileSizeCheck({ root = process.cwd(), onelinerMode = "warn", print = true } = {}) {
   /** @type {string[]} */
   const failures = [];
   /** @type {OnelinerFinding[]} */

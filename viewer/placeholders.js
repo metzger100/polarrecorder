@@ -1,5 +1,5 @@
 /**
- * Module: Placeholder Text
+ * @file Placeholder Text
  * Documentation: documentation/architecture/ui.md
  * Depends: (none)
  */

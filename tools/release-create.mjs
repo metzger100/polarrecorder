@@ -150,9 +150,7 @@ export function main(argv = process.argv.slice(2)) {
  */
 function validateInputs({ rootDir, version, runCommand }) {
   if (!isValidSemver(version)) {
-    throw new Error(
-      "release:create aborted: --version must be a valid SemVer string without 'v' prefix"
-    );
+    throw new Error("release:create aborted: --version must be a valid SemVer string without 'v' prefix");
   }
 
   const notesAbs = getCanonicalReleaseNotesPath(rootDir, version);
@@ -184,18 +182,11 @@ function validateInputs({ rootDir, version, runCommand }) {
  * @returns {void}
  */
 function ensureCleanWorktreeOutsideReleases(runCommand, rootDir) {
-  const statusOutput = runGit(runCommand, rootDir, [
-    "status",
-    "--porcelain=v1",
-    "-z",
-    "--untracked-files=all"
-  ]);
+  const statusOutput = runGit(runCommand, rootDir, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
   const entries = parsePorcelainStatusZ(statusOutput);
 
   if (isDirtyOutsidePrefix(entries, "releases/")) {
-    throw new Error(
-      "release:create aborted: working tree has uncommitted changes outside releases/"
-    );
+    throw new Error("release:create aborted: working tree has uncommitted changes outside releases/");
   }
 }
 
@@ -228,9 +219,7 @@ function runGit(runCommand, rootDir, args) {
       .filter((value) => typeof value === "string" && value.trim() !== "")
       .join("\n")
       .trim();
-    throw new Error(
-      `release:create aborted: git ${args.join(" ")} failed${detail ? `\n${detail}` : ""}`
-    );
+    throw new Error(`release:create aborted: git ${args.join(" ")} failed${detail ? `\n${detail}` : ""}`);
   }
   return result.stdout || "";
 }

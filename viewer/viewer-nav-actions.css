@@ -10,11 +10,7 @@
   padding: 0.5714rem 0.5714rem calc(0.5714rem + env(safe-area-inset-bottom));
   padding-right: calc(0.5714rem + env(safe-area-inset-right));
   padding-left: calc(0.5714rem + env(safe-area-inset-left));
-  background: color-mix(
-    in srgb,
-    var(--polarrecorder-second-color) 92%,
-    var(--polarrecorder-back-color)
-  );
+  background: color-mix(in srgb, var(--polarrecorder-second-color) 92%, var(--polarrecorder-back-color));
   border-top: 0.0714rem solid var(--polarrecorder-border-color);
 }
 

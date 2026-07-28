@@ -123,9 +123,7 @@ function addPairSegment(pairs, leftMatch, rightMatch) {
  * @returns {PairSegment[]}
  */
 function mergeSegments(segments) {
-  const sorted = segments
-    .slice()
-    .sort((a, b) => a.leftStart - b.leftStart || a.rightStart - b.rightStart);
+  const sorted = segments.slice().sort((a, b) => a.leftStart - b.leftStart || a.rightStart - b.rightStart);
   const merged = [];
   for (const segment of sorted) {
     const last = merged[merged.length - 1];

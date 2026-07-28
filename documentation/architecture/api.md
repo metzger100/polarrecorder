@@ -4,37 +4,31 @@
 
 ## Overview
 
-Polar Recorder exposes one AvNav plugin request handler below
-`/plugins/polarrecorder/api/<endpoint>`. `plugin.py` normalizes AvNav's
-list-valued query args to scalar strings, snapshots live state under its lock,
-and formats read responses outside the lock through pure helpers.
+Polar Recorder exposes one AvNav plugin request handler below `/plugins/polarrecorder/api/<endpoint>`. `plugin.py`
+normalizes AvNav's list-valued query args to scalar strings, snapshots live state under its lock, and formats read
+responses outside the lock through pure helpers.
 
 ## Key Details
 
 AvNav request-handler contract:
 
-- `AVNApi.getBaseUrl()` documents that appending `/api` reaches plugin API
-  requests. For Polar Recorder the design URL is
-  `/plugins/polarrecorder/api/<endpoint>`.
-- A plugin registers one callback with `api.registerRequestHandler(callback)`;
-  registering again replaces the previous handler.
-- AvNav routes paths beginning with `api` to the plugin callback and invokes it
-  with `(url, handler, args)`, where `url` is the path after `/api/`.
-- AvNav builds query parameters with `urllib.parse.parse_qs(query, True)`, so
-  values are lists and blank values are preserved.
-- When a plugin request handler returns a `dict`, AvNav serializes it with
-  `json.dumps()` and returns JSON.
-- Polar Recorder's OK/ERROR envelopes are a project convention layered on top
-  of AvNav's dict-to-JSON behavior.
+- `AVNApi.getBaseUrl()` documents that appending `/api` reaches plugin API requests. For Polar Recorder the design URL
+  is `/plugins/polarrecorder/api/<endpoint>`.
+- A plugin registers one callback with `api.registerRequestHandler(callback)`; registering again replaces the previous
+  handler.
+- AvNav routes paths beginning with `api` to the plugin callback and invokes it with `(url, handler, args)`, where `url`
+  is the path after `/api/`.
+- AvNav builds query parameters with `urllib.parse.parse_qs(query, True)`, so values are lists and blank values are
+  preserved.
+- When a plugin request handler returns a `dict`, AvNav serializes it with `json.dumps()` and returns JSON.
+- Polar Recorder's OK/ERROR envelopes are a project convention layered on top of AvNav's dict-to-JSON behavior.
 
-All endpoints return dictionaries for AvNav to serialize as JSON. Success
-responses use `{"status": "OK", "data": ...}`. Application errors use
-`{"status": "ERROR", "error": "..."}`. Unexpected exceptions are caught at the
-`plugin.py` request boundary and returned as `Internal error`.
+All endpoints return dictionaries for AvNav to serialize as JSON. Success responses use `{"status": "OK", "data": ...}`.
+Application errors use `{"status": "ERROR", "error": "..."}`. Unexpected exceptions are caught at the `plugin.py`
+request boundary and returned as `Internal error`.
 
-AvNav supplies request parameters from `parse_qs(..., keep_blank_values=True)`,
-so raw values are lists. `plugin.py` takes the first value per key before
-dispatch. Blank values remain blank strings and fail normal validation, such as
+AvNav supplies request parameters from `parse_qs(..., keep_blank_values=True)`, so raw values are lists. `plugin.py`
+takes the first value per key before dispatch. Blank values remain blank strings and fail normal validation, such as
 `confirm=yes`.
 
 Endpoints:
@@ -65,76 +59,57 @@ Endpoints:
 | GET    | `advanced/settings` | none                                                                                            | Grouped safe advanced settings for the Settings tab, each with readable label, description, type, and current value; numeric fields also carry min, max, and step.                                                                              |
 | GET    | `advanced/save`     | safe advanced parameter name/value pairs                                                        | Validates names against the advanced allowlist, self-applies parsed config under the lock, updates validation state when the stability window changes, then persists through `api.saveConfigValues`. Returns `{config}` with saved values.      |
 
-Restore is implemented as a strict, fail-closed, replace-only flow for both the
-polar model and user presets. Because AvNav plugin URLs receive GET/HEAD only
-(POST is rejected upstream) and a single GET request line is length-bounded, a
-backup is uploaded in slices over several GETs, staged under the `plugin.py` lock
-with a `kind` discriminator, and validated by pure domain modules before being
-applied. Validation failures (`RestoreError`, `BackupError`, `ExportError`) are
-surfaced verbatim in the error envelope. See
-[import-restore.md](import-restore.md) for the full protocol and rules.
+Restore is implemented as a strict, fail-closed, replace-only flow for both the polar model and user presets. Because
+AvNav plugin URLs receive GET/HEAD only (POST is rejected upstream) and a single GET request line is length-bounded, a
+backup is uploaded in slices over several GETs, staged under the `plugin.py` lock with a `kind` discriminator, and
+validated by pure domain modules before being applied. Validation failures (`RestoreError`, `BackupError`,
+`ExportError`) are surfaced verbatim in the error envelope. See [import-restore.md](import-restore.md) for the full
+protocol and rules.
 
-`GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS
-grids are not accepted by the polar endpoint. Projection uses the resolved
-preset's TWA grid, so each curve carries projected cells only at the preset TWA
-columns the viewer plots, and a TWS enters `tws_bands` only when one of those
-preset columns has data. The response uses a 360 entry TWA curve array per
-populated TWS band, with array index equal to absolute TWA 0-359, so projected
-port cells (181-359 deg) are addressable; non-preset indices are
-`null`. Each populated band is anchored at index 0 with `{stw: 0.0, samples: 0}`
-so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared
-`export.anchor_origin` boundary condition (head to wind is 0 STW) applied to the
-projection that both `GET polar` and `GET export` consume: it is added only for
-bands that already carry data and never overwrites a real cell, so it never
-creates a band. When the requested TWA grid includes 0 deg, `GET export` emits
-`0.0` in the TWA 0 row of every populated band; grids without 0 deg omit the row.
+`GET polar` is preset-only: `format` is absent or a named preset. Inline TWA/TWS grids are not accepted by the polar
+endpoint. Projection uses the resolved preset's TWA grid, so each curve carries projected cells only at the preset TWA
+columns the viewer plots, and a TWS enters `tws_bands` only when one of those preset columns has data. The response uses
+a 360 entry TWA curve array per populated TWS band, with array index equal to absolute TWA 0-359, so projected port
+cells (181-359 deg) are addressable; non-preset indices are `null`. Each populated band is anchored at index 0 with
+`{stw: 0.0, samples: 0}` so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared `export.anchor_origin`
+boundary condition (head to wind is 0 STW) applied to the projection that both `GET polar` and `GET export` consume: it
+is added only for bands that already carry data and never overwrites a real cell, so it never creates a band. When the
+requested TWA grid includes 0 deg, `GET export` emits `0.0` in the TWA 0 row of every populated band; grids without 0
+deg omit the row.
 
-`GET export` mode resolution is deterministic: inline `twa`+`tws` wins and
-cannot be combined with `format`; otherwise `format` resolves first against the
-case-insensitive built-in set (`DefaultStarboard180`, `DefaultPort180`,
-`Default360`, `windy`, plus the pre-rename `Default180` alias) and then
-case-sensitive user presets; absent mode defaults to `DefaultStarboard180`.
-One-sided inline grids are errors. Inline and saved `twa` grids accept values
-0-359.
+`GET export` mode resolution is deterministic: inline `twa`+`tws` wins and cannot be combined with `format`; otherwise
+`format` resolves first against the case-insensitive built-in set (`DefaultStarboard180`, `DefaultPort180`,
+`Default360`, `windy`, plus the pre-rename `Default180` alias) and then case-sensitive user presets; absent mode
+defaults to `DefaultStarboard180`. One-sided inline grids are errors. Inline and saved `twa` grids accept values 0-359.
 
-`GET polar` and default `GET export` share the same projection function,
-configured percentile, and `MIN_SAMPLES_DISPLAY = 3` floor. Projection never
-folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges starboard
-bins by linear midpoint boundaries capped at 180 deg, excluding port bins; a
-circular grid (any TWA above 180 deg) assigns each raw bin to its nearest grid
-point on the circle, including the 360 deg/0 deg wrap. Both use the fixed TWS
-upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`,
-`true`, or `1` affects CSV export only and swaps the floor to
-`min_samples_for_export`.
+`GET polar` and default `GET export` share the same projection function, configured percentile, and
+`MIN_SAMPLES_DISPLAY = 3` floor. Projection never folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges
+starboard bins by linear midpoint boundaries capped at 180 deg, excluding port bins; a circular grid (any TWA above 180
+deg) assigns each raw bin to its nearest grid point on the circle, including the 360 deg/0 deg wrap. Both use the fixed
+TWS upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`, `true`, or `1` affects CSV export
+only and swaps the floor to `min_samples_for_export`.
 
-No response may contain non-finite floats. Current values are updated only from
-a built finite `Sample`; later missing or non-finite reads leave the previous
-finite values frozen. Histogram speeds originate from accepted finite samples,
+No response may contain non-finite floats. Current values are updated only from a built finite `Sample`; later missing
+or non-finite reads leave the previous finite values frozen. Histogram speeds originate from accepted finite samples,
 and timeline/counter values are integers.
 
-The enhanced endpoints back the Settings-tab "Enhanced Rules" section. `enhanced/keys`
-enumerates only currently-present store keys (AvNav exposes no list-all-registered-keys
-endpoint), so the viewer offers them as dropdown options and also allows free-text entry for
-custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
-computes each key's presence/freshness at the boundary (snapshotting `self.config` under the
-lock, probing via `getSingleValue`) and resolves the per-rule live status in the pure
-`enhanced_status` module outside the lock. `enhanced/save` self-applies first (sets
-`self.config` under the lock) and then calls `api.saveConfigValues` after releasing the lock;
-`saveConfigValues` only persists to disk and does not invoke the change callback, so there is no
-lock re-entrancy and the disk write never runs while the lock is held.
-The advanced settings endpoints use the same self-apply-then-save pattern, but
-only for safe runtime-tuning settings shown in the Settings tab.
+The enhanced endpoints back the Settings-tab "Enhanced Rules" section. `enhanced/keys` enumerates only currently-present
+store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer offers them as dropdown options and also
+allows free-text entry for custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
+computes each key's presence/freshness at the boundary (snapshotting `self.config` under the lock, probing via
+`getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the lock.
+`enhanced/save` self-applies first (sets `self.config` under the lock) and then calls `api.saveConfigValues` after
+releasing the lock; `saveConfigValues` only persists to disk and does not invoke the change callback, so there is no
+lock re-entrancy and the disk write never runs while the lock is held. The advanced settings endpoints use the same
+self-apply-then-save pattern, but only for safe runtime-tuning settings shown in the Settings tab.
 
-State mutations use GET for AvNav/viewer simplicity. Destructive reset requires
-`confirm=yes`; preset deletion also requires confirmation. Polar persistence
-writes still happen on the plugin thread. Preset writes are the exception:
-`plugin.py` holds its lock while `export.py` performs the `presets.json`
-read-modify-atomic-write so concurrent HTTP worker threads cannot collide.
-Reset does not write to disk on the HTTP thread; it only sets `_flush_requested`
-so the plugin thread performs the next polar-file flush. `export/json` likewise
-keeps live model access under the lock: `plugin.py` calls
-`persistence.serialize_to_dict(...)` while locked, then the pure API formatter
-wraps the finished dict.
+State mutations use GET for AvNav/viewer simplicity. Destructive reset requires `confirm=yes`; preset deletion also
+requires confirmation. Polar persistence writes still happen on the plugin thread. Preset writes are the exception:
+`plugin.py` holds its lock while `export.py` performs the `presets.json` read-modify-atomic-write so concurrent HTTP
+worker threads cannot collide. Reset does not write to disk on the HTTP thread; it only sets `_flush_requested` so the
+plugin thread performs the next polar-file flush. `export/json` likewise keeps live model access under the lock:
+`plugin.py` calls `persistence.serialize_to_dict(...)` while locked, then the pure API formatter wraps the finished
+dict.
 
 ## Related
 

@@ -6,6 +6,10 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/check-patterns-registry.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/check-patterns.test.mjs",
       "classification": "strict"
     },
@@ -34,6 +38,18 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/doc-format-contract.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/doc-reachability-contract.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/doc-toc-contract.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/documentation-checkers.test.mjs",
       "classification": "strict"
     },
@@ -43,6 +59,10 @@
     },
     {
       "path": "tests/js/format-scope.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/header-contract.test.mjs",
       "classification": "strict"
     },
     {
@@ -66,6 +86,10 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/prettier-config.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/release-create.test.mjs",
       "classification": "strict"
     },
@@ -83,6 +107,18 @@
     },
     {
       "path": "tests/js/setup.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/shared-instructions.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/skills-lock.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/smell-catalog-contract.test.mjs",
       "classification": "strict"
     },
     {
@@ -114,6 +150,14 @@
       "classification": "strict"
     },
     {
+      "path": "tests/js/viewer-grid-editor.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/viewer-polar-bands.test.mjs",
+      "classification": "strict"
+    },
+    {
       "path": "tests/js/viewer-polar.test.mjs",
       "classification": "strict"
     },
@@ -123,6 +167,10 @@
     },
     {
       "path": "tests/js/viewer-theme.test.mjs",
+      "classification": "strict"
+    },
+    {
+      "path": "tests/js/vitest-projects.test.mjs",
       "classification": "strict"
     },
     {

@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 
 import { buildFormatScope } from "../../tools/quality-policy/generate-format-scope.mjs";
 
@@ -25,10 +25,7 @@ test("every unsupported row has a reason and alternate validation", () => {
   for (const row of rows) {
     if (row.owner === "unsupported") {
       assert.ok(row.reason, `${row.path} is unsupported without a reason`);
-      assert.ok(
-        row.alternateValidation,
-        `${row.path} is unsupported without an alternate validation owner`
-      );
+      assert.ok(row.alternateValidation, `${row.path} is unsupported without an alternate validation owner`);
     }
   }
 });
@@ -67,10 +64,7 @@ test("known families classify as expected", () => {
   assert.equal(ownerOf(byPath, "install.sh"), "unsupported");
   assert.equal(ownerOf(byPath, "tests/mock-data/status.json"), "unsupported");
   assert.equal(ownerOf(byPath, "tests/mock-data/export-windy.csv"), "unsupported");
-  assert.equal(
-    ownerOf(byPath, "tools/quality-policy/baseline-coverage-capture.json"),
-    "unsupported"
-  );
+  assert.equal(ownerOf(byPath, "tools/quality-policy/baseline-coverage-capture.json"), "unsupported");
 });
 
 test("historical artifacts are excluded, not unsupported", () => {

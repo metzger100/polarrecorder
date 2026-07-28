@@ -1,5 +1,5 @@
 /**
- * Module: Polar Chart Geometry
+ * @file Polar Chart Geometry
  * Documentation: documentation/architecture/ui.md
  * Depends: dom.js
  */
@@ -52,12 +52,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       circle.setAttribute("fill", "none");
       circle.setAttribute("class", "chart-grid-line");
       svg.appendChild(circle);
-      const label = Polarrecorder.Dom.SvgText(
-        CENTER_X + 8,
-        CENTER_Y - radius + 4,
-        String(speed) + " kn",
-        "11"
-      );
+      const label = Polarrecorder.Dom.SvgText(CENTER_X + 8, CENTER_Y - radius + 4, String(speed) + " kn", "11");
       label.setAttribute("class", "chart-axis-label");
       label.setAttribute("text-anchor", "start");
       svg.appendChild(label);
@@ -73,12 +68,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       line.setAttribute("class", "chart-grid-line");
       svg.appendChild(line);
       const labelPoint = anglePoint(angle, PLOT_RADIUS + ANGLE_LABEL_OFFSET);
-      const label = Polarrecorder.Dom.SvgText(
-        labelPoint.x,
-        labelPoint.y,
-        String(angle) + "°",
-        "11"
-      );
+      const label = Polarrecorder.Dom.SvgText(labelPoint.x, labelPoint.y, String(angle) + "°", "11");
       label.setAttribute("class", "chart-angle-label");
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("dominant-baseline", "middle");

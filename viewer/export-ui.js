@@ -1,5 +1,5 @@
 /**
- * Module: Export UI
+ * @file Export UI
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js, presets.js, export-fields.js, export-presets.js
  */
@@ -140,9 +140,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     requestCsv()
       .then(function (csv) {
         state.previewActive = true;
-        const preview = /** @type {HTMLTextAreaElement} */ (
-          Polarrecorder.Dom.RequireById("csv-preview")
-        );
+        const preview = /** @type {HTMLTextAreaElement} */ (Polarrecorder.Dom.RequireById("csv-preview"));
         preview.value = previewRows(csv);
         setMessage("Preview updated.", "info");
       })
@@ -155,9 +153,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     if (!state.previewActive || !Polarrecorder.ExportPresets.IsValid()) return;
     requestCsv()
       .then(function (csv) {
-        const preview = /** @type {HTMLTextAreaElement} */ (
-          Polarrecorder.Dom.RequireById("csv-preview")
-        );
+        const preview = /** @type {HTMLTextAreaElement} */ (Polarrecorder.Dom.RequireById("csv-preview"));
         preview.value = previewRows(csv);
       })
       .catch(function (error) {
@@ -233,11 +229,9 @@ window.Polarrecorder = window.Polarrecorder || {};
       setMessage("Enter a preset name.", "error");
       return;
     }
-    const existing = Polarrecorder.ExportPresets.All().find(
-      function (/** @type {Preset} */ preset) {
-        return preset.name === name && !preset.builtin;
-      }
-    );
+    const existing = Polarrecorder.ExportPresets.All().find(function (/** @type {Preset} */ preset) {
+      return preset.name === name && !preset.builtin;
+    });
     if (existing && !window.confirm("Overwrite preset '" + name + "'?")) return;
     const params = currentParams();
     params.set("name", name);

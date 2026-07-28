@@ -18,17 +18,10 @@
         </div>
       </header>
 
-      <div class="connection-banner" id="connection-banner" hidden>
-        Connection lost — retrying...
-      </div>
+      <div class="connection-banner" id="connection-banner" hidden>Connection lost — retrying...</div>
 
       <main class="tab-shell">
-        <section
-          class="tab-panel is-active"
-          id="tab-polar"
-          data-tab-panel="polar"
-          aria-labelledby="nav-polar"
-        >
+        <section class="tab-panel is-active" id="tab-polar" data-tab-panel="polar" aria-labelledby="nav-polar">
           <div class="card chart-card">
             <div class="section-head">
               <div>
@@ -40,31 +33,17 @@
                 <select id="polar-preset"></select>
               </label>
             </div>
-            <div id="polar-chart" class="chart-host loading-host">
-              Connecting to Polar Recorder...
-            </div>
+            <div id="polar-chart" class="chart-host loading-host">Connecting to Polar Recorder...</div>
             <div class="legend-title">TWS bands</div>
             <div id="polar-chips" class="chip-row" aria-label="TWS bands"></div>
           </div>
         </section>
 
-        <section
-          class="tab-panel"
-          id="tab-status"
-          data-tab-panel="status"
-          aria-labelledby="nav-status"
-        >
-          <div id="status-panel" class="status-grid loading-host">
-            Connecting to Polar Recorder...
-          </div>
+        <section class="tab-panel" id="tab-status" data-tab-panel="status" aria-labelledby="nav-status">
+          <div id="status-panel" class="status-grid loading-host">Connecting to Polar Recorder...</div>
         </section>
 
-        <section
-          class="tab-panel"
-          id="tab-timeline"
-          data-tab-panel="timeline"
-          aria-labelledby="nav-timeline"
-        >
+        <section class="tab-panel" id="tab-timeline" data-tab-panel="timeline" aria-labelledby="nav-timeline">
           <div class="card chart-card">
             <div class="section-head">
               <div>
@@ -73,42 +52,21 @@
               </div>
               <div id="timeline-ranges" class="segmented" aria-label="Timeline range"></div>
             </div>
-            <div id="timeline-chart" class="chart-host loading-host">
-              Connecting to Polar Recorder...
-            </div>
+            <div id="timeline-chart" class="chart-host loading-host">Connecting to Polar Recorder...</div>
           </div>
         </section>
 
-        <section
-          class="tab-panel"
-          id="tab-export"
-          data-tab-panel="export"
-          aria-labelledby="nav-export"
-        >
-          <div id="export-panel" class="export-stack loading-host">
-            Connecting to Polar Recorder...
-          </div>
+        <section class="tab-panel" id="tab-export" data-tab-panel="export" aria-labelledby="nav-export">
+          <div id="export-panel" class="export-stack loading-host">Connecting to Polar Recorder...</div>
         </section>
 
-        <section
-          class="tab-panel"
-          id="tab-settings"
-          data-tab-panel="settings"
-          aria-labelledby="nav-settings"
-        >
-          <div id="settings-panel" class="export-stack loading-host">
-            Connecting to Polar Recorder...
-          </div>
+        <section class="tab-panel" id="tab-settings" data-tab-panel="settings" aria-labelledby="nav-settings">
+          <div id="settings-panel" class="export-stack loading-host">Connecting to Polar Recorder...</div>
         </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Polar Recorder tabs">
-        <button
-          class="nav-item is-active state-layer"
-          id="nav-polar"
-          type="button"
-          data-tab="polar"
-        >
+        <button class="nav-item is-active state-layer" id="nav-polar" type="button" data-tab="polar">
           <span aria-hidden="true">⌖</span>
           <span>Polar</span>
         </button>

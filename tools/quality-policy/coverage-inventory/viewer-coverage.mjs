@@ -79,9 +79,7 @@ export function checkViewerCoverage(root, floors, viewerReport) {
   const pluginFiles = ["plugin.js", "plugin.mjs"];
   const allFiles = [...viewerFiles, ...pluginFiles];
   const allFileSet = new Set(allFiles);
-  const reportedByRel = new Map(
-    viewerReportEntries(root, viewerReport).map(([id, entry]) => [id.rel, entry])
-  );
+  const reportedByRel = new Map(viewerReportEntries(root, viewerReport).map(([id, entry]) => [id.rel, entry]));
   const contractOwned = floors.contractOwned?.javascript || {};
   const discovered = new Set(discoverExecutableTestHelpers(root));
 
@@ -94,16 +92,12 @@ export function checkViewerCoverage(root, floors, viewerReport) {
         );
       }
       if (reportedByRel.has(file)) {
-        failures.push(
-          `${file}: classified contract-owned but has measured executable coverage data`
-        );
+        failures.push(`${file}: classified contract-owned but has measured executable coverage data`);
       }
       continue;
     }
     if (!reportedByRel.has(file)) {
-      failures.push(
-        `${file}: not measured and not contract-owned; run test:coverage:viewer or classify it`
-      );
+      failures.push(`${file}: not measured and not contract-owned; run test:coverage:viewer or classify it`);
       continue;
     }
     if (viewerFiles.includes(file)) {
@@ -124,19 +118,12 @@ export function checkViewerCoverage(root, floors, viewerReport) {
   }
   for (const file of Object.keys(contractOwned)) {
     if (!allFileSet.has(file)) {
-      failures.push(
-        `coverage-floors.json contractOwned.javascript["${file}"]: file no longer exists`
-      );
+      failures.push(`coverage-floors.json contractOwned.javascript["${file}"]: file no longer exists`);
     }
   }
 
   const viewerFamily = aggregateJsFamily(root, viewerReport, viewerFiles);
-  requireAtLeast(
-    failures,
-    "viewer family lines",
-    viewerFamily.lines,
-    floors.families.viewerFamilyLinePercent
-  );
+  requireAtLeast(failures, "viewer family lines", viewerFamily.lines, floors.families.viewerFamilyLinePercent);
   requireAtLeast(
     failures,
     "viewer family functions",
@@ -149,12 +136,7 @@ export function checkViewerCoverage(root, floors, viewerReport) {
     viewerFamily.statements,
     floors.families.viewerFamilyStatementPercent
   );
-  requireAtLeast(
-    failures,
-    "viewer family branches",
-    viewerFamily.branches,
-    floors.families.viewerFamilyBranchPercent
-  );
+  requireAtLeast(failures, "viewer family branches", viewerFamily.branches, floors.families.viewerFamilyBranchPercent);
 
   const pluginFamily = aggregateJsFamily(root, viewerReport, pluginFiles);
   requireAtLeast(
