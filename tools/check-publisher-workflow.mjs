@@ -60,6 +60,11 @@ const QUALITY_STEPS = [
     usesRepo: "actions/setup-node",
     with: { "node-version": "${{ steps.node_version.outputs.version }}" }
   },
+  {
+    name: "Set up Python",
+    usesRepo: "actions/setup-python",
+    with: { "python-version": "3.14" }
+  },
   { name: "Install dependencies", run: "npm ci" },
   { name: "Provision toolchain", run: "npm run setup" },
   { name: "Run quality gate", run: "npm run check:all" }
