@@ -149,7 +149,7 @@ test("fails when quality.yml gains an extra release-style step", () => {
   );
   const result = runPublisherWorkflowCheck({ root, print: false });
   assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("expected exactly 6 steps")));
+  assert.ok(result.failures.some((f) => f.includes("expected exactly 7 steps")));
   cleanup(root);
 });
 
