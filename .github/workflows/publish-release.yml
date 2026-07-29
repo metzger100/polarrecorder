@@ -15,9 +15,9 @@ concurrency:
 jobs:
   publish-release:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     permissions:
       contents: write
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository at tag ref
@@ -27,10 +27,9 @@ jobs:
 
       - name: Validate release tag
         id: release_version
-        shell: bash
         run: node tools/release-version.mjs --github-output "$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Verify committed release artifacts
+      - name: Verify release artifacts
         id: release_assets
         shell: bash
         run: |
@@ -41,13 +40,15 @@ jobs:
           notes_path="releases/polarrecorder-${version}.md"
 
           if [[ ! -f "$zip_path" || ! -f "$notes_path" ]]; then
-            echo "Release artifacts not found. Run the local release workflow first."
+            echo "Release artifacts not found. Run \`npm run release:create\` locally first."
             exit 1
           fi
 
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
-          echo "notes_path=$notes_path" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$version"
+            echo "zip_path=$zip_path"
+            echo "notes_path=$notes_path"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
