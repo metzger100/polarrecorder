@@ -7,7 +7,7 @@ parts: helper names, internal function decomposition, and test-case naming, prov
 the exit conditions and constraints hold.
 
 This plan covers ROADMAP item 1 only. Items 2-5 (restore/import, optional signal
-hooks, dashboard widgets, dyninstruments palette) are explicitly out of scope and
+hooks, dashboard widgets, paired-project palette) are explicitly out of scope and
 must not be touched.
 
 ## Goal

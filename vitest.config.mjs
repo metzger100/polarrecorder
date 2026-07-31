@@ -13,7 +13,7 @@ import { defineConfig } from "vitest/config";
 
 const VIEWER_TESTS = ["tests/js/viewer-*.test.mjs"];
 const PLUGIN_TESTS = ["tests/js/plugin-*.test.mjs"];
-const TOOLS_TESTS = ["tests/js/*.test.mjs"];
+const TOOLS_TESTS = ["tests/js/*.test.mjs", "tests/portable-core/*.test.mjs"];
 const TOOLS_EXCLUDE = [...VIEWER_TESTS, ...PLUGIN_TESTS];
 
 // Project configs do not inherit the root `test` options, so every project repeats this.

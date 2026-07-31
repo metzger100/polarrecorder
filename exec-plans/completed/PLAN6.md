@@ -7,7 +7,7 @@ Written after repository verification and the cross-repository quality-system re
 This plan covers the remaining Polar Recorder migration defects, retirement of completed migration scaffolding,
 activation of the maintained documentation tools, strict quality-tool ownership, common dependency and release pins,
 portable policy evidence, generic AvNav metadata validation, developer onboarding, live-host validation, and final
-alignment with Dyninstruments.
+alignment with paired-project.
 
 The coding agent may choose equivalent internal helper names and file splits as long as the behavioral, structural,
 negative-proof, and documentation outcomes below are met. The public command names, maintained documentation owners,
@@ -22,8 +22,8 @@ No pre-plan user interview was run. The plan therefore makes these explicit assu
    pre-commit framework is introduced. A novice-default remote-governance profile belongs to the future generic
    scaffolder, not this exemplar migration.
 3. Polar Recorder remains independently buildable and testable. Its required gate must never read the sibling
-   Dyninstruments checkout.
-4. The paired Dyninstruments plan is `PLAN39 — Finalize the generic quality migration and establish the aligned
+   paired-project checkout.
+4. The paired paired-project plan is `PLAN39 — Finalize the generic quality migration and establish the aligned
 viewer-profile exemplar`. The two plans coordinate guarantees; neither repository becomes a package dependency of
    the other.
 5. Extracting a third, versioned `avnav-plugin-quality` package and `create-avnav-plugin` scaffolder is a subsequent
@@ -38,7 +38,7 @@ evidence instead of weakening a gate or silently improvising.
 ## Goal
 
 Finish Polar Recorder's quality migration so it is a trustworthy hybrid Python/JavaScript AvNav plugin exemplar and
-exposes the same common quality guarantees and contributor vocabulary as Dyninstruments.
+exposes the same common quality guarantees and contributor vocabulary as paired-project.
 
 Expected outcomes after completion:
 
@@ -49,7 +49,7 @@ Expected outcomes after completion:
 - Every maintained JavaScript and Python quality tool is linted, typed where applicable, size-limited, and
   behavior-tested; oversized checker programs are split into focused owners.
 - Common direct tool versions, npm overrides, actionlint checksums, GitHub Action pins, SemVer corpus, schema corpus,
-  and public command names match the paired Dyninstruments outcome.
+  and public command names match the paired paired-project outcome.
 - `plugin.json` uses maintained Ajv validation with a generic AvNav metadata base and a Polar server-plugin profile.
 - Complexity/coverage/test baselines are portable and contain no obsolete migration debt; all viewer files reach the
   generic 80% per-file line floor.
@@ -71,7 +71,7 @@ plan was written:
    Linux-x86_64/Node 26.4.0/npm 12.0.1/Python 3.14.6 checkout.
 3. The gate executes 387 Python tests, reports 95.77% combined Python coverage, and reports viewer coverage of 91.03%
    lines and 77.41% branches.
-4. `check:core` currently invokes `check:docs`, while Dyninstruments' equivalent public command is `docs:check`.
+4. `check:core` currently invokes `check:docs`, while paired-project' equivalent public command is `docs:check`.
 5. markdownlint-cli2 0.23.1 and Linkinator 8.0.2 are exact installed dependencies with committed configs, but no
    package script executes either. `.markdownlint-cli2.jsonc` explicitly says it is “Not yet wired.”
 6. A manual markdownlint run passes the current 36 Markdown files. A naïve Linkinator repository invocation checks
@@ -159,7 +159,7 @@ Alignment does not justify porting Dyn mapper/theme rules, Vitest, jsdom, layout
 - Keep `plugin.py` the only AvNav boundary and lock owner; do not change API, persistence, viewer, installer, or release
   behavior.
 - Keep viewer scripts raw/no-build under `window.Polarrecorder`.
-- Do not make Polar invoke, import, or inspect Dyninstruments from setup, hooks, tests, `check:all`, package, or release
+- Do not make Polar invoke, import, or inspect paired-project from setup, hooks, tests, `check:all`, package, or release
   commands.
 
 ### Quality integrity
@@ -549,7 +549,7 @@ when new tests need additional existing-shape samples—not to alter product out
 
 ### Cross-repository alignment
 
-- [x] Common exact dev dependencies and the `js-yaml` override match Dyninstruments.
+- [x] Common exact dev dependencies and the `js-yaml` override match paired-project.
 - [x] Node/npm, actionlint version/checksums, publisher Action SHAs, and common public script vocabulary match.
 - [x] The common generic schema and SemVer corpora are byte-identical and pass both real implementations.
 - [x] Python/pytest/mypy/Ruff and domain-specific checks are documented as the hybrid profile rather than unexplained
@@ -590,9 +590,9 @@ Recorded live during implementation. Each entry states what was done, the comman
   ("Git hooks are correctly configured."). Node v26.4.0, npm 12.0.1, Python 3.14.6 confirmed live (matches point 2).
 - `npm audit --json` reproduced Verified Baseline point 25 exactly: 2 high findings, both via direct `js-yaml`
   5.2.1 (markdownlint-cli2's dependency), no runtime dependency chain affected.
-- Read-only recon of the sibling Dyninstruments repo (`/home/leobareth/Dokumente/Programmieren/avnav/run/avnavdata/plugins/dyninstruments`,
+- Read-only recon of the paired project,
   completed PLAN39) confirmed: common exact dev dependency snapshot from Baseline point 24 is still current;
-  `js-yaml` override target is `5.2.2` (Dyninstruments' `fast-uri` override does not apply here — Polar has no Ajv
+  `js-yaml` override target is `5.2.2` (paired-project' `fast-uri` override does not apply here — Polar has no Ajv
   dependency yet, added in Phase F); checkout action pin target `de0fac2e4500dabe0009e67214ff5f5447ce83dd` (v6.0.2)
   and `softprops/action-gh-release` pin target `3bb12739c298aeb8a4eeaf626c5b8d85266b0e65` (v2.6.2); actionlint 1.7.12
   with identical 4 platform checksums (Polar's `tools/actionlint.sh` already byte-matches, confirmed by Dyn's own
@@ -805,7 +805,7 @@ Markdown lint fix (a code-span trailing-space typo introduced in this plan's own
 
 - Added `tsconfig.tools.json` (explicit `files` array, `ES2020`/`es2020`/`ES2020` target-module-lib
   matching the repo's existing `tsconfig.checkjs.json`/`tsconfig.tests.json` convention rather than
-  Dyninstruments' `ES2022`/`ES2023`, since the plan explicitly allows equivalent internal choices and
+  paired-project' `ES2022`/`ES2023`, since the plan explicitly allows equivalent internal choices and
   internal consistency with the two existing tsconfig files outweighs matching Dyn's unrelated numbers)
   listing every one of the 53 maintained `tools/**/*.mjs` files discovered by `find tools -name '*.mjs'`.
   A cold `tsc -p tsconfig.tools.json` run found exactly 6 errors across 2 files (`run-format.mjs`'s
@@ -891,7 +891,7 @@ docker podman` found neither), so `docker build` and an in-container run of `set
 
 ### Phase F - Replace hand-written metadata shape checks with base/profile Ajv schemas
 
-- F1: Added `schemas/avnav-plugin-base.schema.json` (`{"type": "object"}`, matching Dyninstruments'
+- F1: Added `schemas/avnav-plugin-base.schema.json` (`{"type": "object"}`, matching paired-project'
   own verified minimalism -- confirmed via Phase A3 that AvNav's loader imposes no other required
   `plugin.json` field) and two Polar profile schemas composing it via `allOf` +
   `{"$ref": "avnav-plugin-base.schema.json"}`: `schemas/polar-plugin-dev.schema.json` (forbids both
@@ -914,14 +914,14 @@ docker podman` found neither), so `docker build` and an in-container run of `set
   independently of Ajv), and a corpus-driven test that runs every `genericBase` and
   `polarServerProfile` row in the new corpus file through the real compiled Ajv validators directly.
 - F2: Added `tools/quality-policy/plugin-schema-corpus.json` with a `genericBase` section
-  byte-for-byte identical (as data, not file bytes) to Dyninstruments' own `genericBase` corpus
+  byte-for-byte identical (as data, not file bytes) to paired-project' own `genericBase` corpus
   section (`[{}, {"anyKey": "anyValue"}, {"version": "1.2.3"}]` valid / `[[], "not-an-object", null,
-42, true]` invalid) -- Dyninstruments had written its `genericBase` corpus specifically so Polar
+42, true]` invalid) -- paired-project had written its `genericBase` corpus specifically so Polar
   could adopt it verbatim once this phase landed, and now it has. Added a local
   `polarServerProfile.dev`/`.release` section for the Polar-specific profile cases, not shared with
-  Dyninstruments' unrelated `dynLayoutsProfile`. Confirmed (Baseline fact 27, re-verified) that
+  paired-project' unrelated `dynLayoutsProfile`. Confirmed (Baseline fact 27, re-verified) that
   `tools/quality-policy/semver-corpus.json`'s `valid`/`invalid` arrays already exactly match
-  Dyninstruments' own copy (per Dyninstruments' own PLAN39 evidence, byte-diffed against this exact
+  paired-project' own copy (per paired-project' own PLAN39 evidence, byte-diffed against this exact
   file) and needed no change; `tests/js/release-version.test.mjs`'s corpus tests already exercise
   every row against Polar's real `release-version.mjs` implementation.
 - Verification: `node tools/check-schema.mjs` (clean against the real repo), `node --test
@@ -1062,12 +1062,12 @@ tests/js/install-script.test.mjs` (12/12 passed), a full `npm run check:core` (c
   `npm run test:coverage:check` (clean), and a final combined `npm run check:all` (clean, exit 0) as
   the definitive closing proof. Every negative proof added across Phases A-H was exercised as part of
   its owning test file within these runs; none were skipped or weakened to reach this green state.
-  - Paired comparison against the sibling Dyninstruments repository (read-only; nothing in
-    Dyninstruments was modified), recorded as completion evidence only, not a required repository
+  - Paired comparison against the sibling paired-project repository (read-only; nothing in
+    paired-project was modified), recorded as completion evidence only, not a required repository
     command: exact-version match confirmed for every common devDependency (`@eslint/js` 10.0.1,
     `eslint` 10.8.0, `globals` 17.8.0, `typescript` 7.0.2); the `js-yaml` override matches exactly
     (`5.2.2` in both) -- Polar also declares `js-yaml` as a direct devDependency (used by
-    `tools/check-publisher-workflow.mjs` to parse the workflow YAML) where Dyninstruments only
+    `tools/check-publisher-workflow.mjs` to parse the workflow YAML) where paired-project only
     overrides a transitive resolution, a real and explained difference, not drift; both repos share
     identical `engines`/`packageManager` (`node >=26 <27`, `npm@12.0.1`); `tools/actionlint.sh` pins
     the identical actionlint version (`1.7.12`) and all four platform SHA-256 checksums byte-for-byte;
@@ -1081,9 +1081,9 @@ tests/js/install-script.test.mjs` (12/12 passed), a full `npm run check:core` (c
     and spot-checking `check:all`/`check:core`/`typecheck`/`docs:check`/`test:coverage:check`'s exact
     compositions confirms matching semantics with only explained, Python-backend-shaped differences
     (Polar's `check:python-contracts`, `test:split`'s Python half, `typecheck:python`,
-    `test:coverage:python`/`test:coverage:viewer` split vs. Dyninstruments' single `test:coverage`,
-    since Dyninstruments has no Python component) -- no unexplained common-contract drift found.
-    Dyninstruments has no equivalent live-host checklist document, so there was no existing manual-
+    `test:coverage:python`/`test:coverage:viewer` split vs. paired-project' single `test:coverage`,
+    since paired-project has no Python component) -- no unexplained common-contract drift found.
+    paired-project has no equivalent live-host checklist document, so there was no existing manual-
     checklist vocabulary to align `live-avnav-checklist.md` against; it is original to this repo.
   - Live-AvNav checklist: **not performed**. This sandboxed development environment has no running
     AvNav instance, no real boat instrument feed, and no host to install the plugin onto -- there is no

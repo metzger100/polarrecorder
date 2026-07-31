@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { isDirtyOutsidePrefix, parsePorcelainStatusZ } from "./release-git.mjs";
 import { isValidSemver, tagFor } from "./release-version.mjs";
 import { createReleaseArchive } from "./release-archive.mjs";
+import { runReleasePolicy } from "./portable-core/release-engine.mjs";
 
 /** @typedef {{status: number | null, stdout: string, stderr: string, error?: Error | null}} CommandResult */
 /** @typedef {(command: string, args: string[], options: {cwd?: string}) => CommandResult} RunCommand */
@@ -128,7 +129,7 @@ export function runReleaseCreate(argv = process.argv.slice(2)) {
  * @returns {string}
  */
 function validateInputs({ rootDir, version, runCommand }) {
-  if (!isValidSemver(version)) {
+  if (!isValidSemver(version) || !runReleasePolicy({ version, payload: [] }).ok) {
     throw new Error("release:create aborted: --version must be a valid SemVer string without 'v' prefix");
   }
 

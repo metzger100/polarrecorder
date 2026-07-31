@@ -16,7 +16,8 @@ import path from "node:path";
  */
 export function runReleasePolicy({ version, payload, baselinePayload = payload }) {
   const failures = [];
-  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) failures.push("invalid semantic version");
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version))
+    failures.push("invalid semantic version");
   const normalized = payload.map((entry) => path.posix.normalize(entry.split(path.sep).join("/")));
   if (normalized.some((entry) => entry.startsWith("../") || path.posix.isAbsolute(entry))) {
     failures.push("release payload escapes its root");

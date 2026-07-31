@@ -114,12 +114,13 @@ function runComplexityEslintOnFixture(relativePath, content) {
   }
 }
 
-const OWNER_RELATIVE_PATH = "tools/quality-policy/eslint-complexity-config.mjs";
+const OWNER_RELATIVE_PATH = "tools/portable-core/complexity-engine.mjs";
+const ADAPTER_RELATIVE_PATH = "tools/quality-policy/eslint-complexity-config.mjs";
 const LIMIT_PATTERNS = {
   complexity: /\bcomplexity["']?\s*:\s*(?:\[[^,]*,\s*)?10\b/,
-  "max-statements": /["']?max-statements["']?\s*:\s*(?:\[[^,]*,\s*)?40\b/,
-  "max-depth": /["']?max-depth["']?\s*:\s*(?:\[[^,]*,\s*)?4\b/,
-  "max-params": /["']?max-params["']?\s*:\s*(?:\[[^,]*,\s*)?6\b/
+  statements: /\bstatements["']?\s*:\s*(?:\[[^,]*,\s*)?40\b/,
+  depth: /\bdepth["']?\s*:\s*(?:\[[^,]*,\s*)?4\b/,
+  params: /\bparams["']?\s*:\s*(?:\[[^,]*,\s*)?6\b/
 };
 
 /** @param {string} content @returns {boolean} */
@@ -153,15 +154,19 @@ test("exactly one file declares all four strict complexity limits together", () 
 test("the shared owner module itself declares all four limits", () => {
   const content = fs.readFileSync(path.join(ROOT, OWNER_RELATIVE_PATH), "utf8");
   assert.equal(declaresAllFourLimitsInText(content), true);
+  const adapter = fs.readFileSync(path.join(ROOT, ADAPTER_RELATIVE_PATH), "utf8");
+  assert.match(adapter, /"max-statements": PORTABLE_LIMITS\.statements/);
+  assert.match(adapter, /"max-depth": PORTABLE_LIMITS\.depth/);
+  assert.match(adapter, /"max-params": PORTABLE_LIMITS\.params/);
 });
 
 test("a seeded second copy of all four limit values is detected as drift", () => {
   const seeded = [
     "export const DUPLICATE_LIMITS = {",
     "  complexity: 10,",
-    '  "max-statements": 40,',
-    '  "max-depth": 4,',
-    '  "max-params": 6',
+    "  statements: 40,",
+    "  depth: 4,",
+    "  params: 6",
     "};"
   ].join("\n");
   assert.equal(declaresAllFourLimitsInText(seeded), true);

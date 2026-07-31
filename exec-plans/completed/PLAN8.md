@@ -26,8 +26,8 @@ assumptions explicit:
 3. This plan **supersedes PLAN7 Status assumption 3** on the repository owner's explicit instruction. A read-only
    pull-request quality workflow is now in scope. The transport-only tag publisher stays transport-only, and no
    CODEOWNERS file, branch ruleset, or pre-commit framework is introduced.
-4. Required gates must remain independently runnable and must never read the sibling Dyninstruments checkout.
-5. The paired implementation plan is Dyninstruments
+4. Required gates must remain independently runnable and must never read the sibling paired-project checkout.
+5. The paired implementation plan is paired-project
    `exec-plans/active/PLAN41.md — Converge the shared quality contract into an extraction-ready common core`.
 6. Common alignment means the same guarantees, contracts, and contributor vocabulary — not byte-identical
    product-specific tools. Python tooling stays Python.
@@ -80,15 +80,15 @@ The following facts were checked against Polar Recorder `8ff80c9` before this pl
 4. Coverage for JavaScript uses c8 with `--check-coverage --lines 80 --functions 80 --statements 80 --branches 65` and a
    second hand-enumerated file list. There is no `vitest`, `@vitest/coverage-v8`, or `jsdom` dependency.
 5. `.prettierrc.json` sets `printWidth: 100`, `tabWidth: 2`, `singleQuote: false`, `trailingComma: "none"`, and
-   `semi: true`, with no `proseWrap`. Dyninstruments sets `printWidth: 120` and `proseWrap: "always"` plus explicit
+   `semi: true`, with no `proseWrap`. paired-project sets `printWidth: 120` and `proseWrap: "always"` plus explicit
    defaults.
-6. Adopting the Dyninstruments configuration here reformats about 35 Markdown files, 66 of 104 JavaScript/MJS files, and
+6. Adopting the paired-project configuration here reformats about 35 Markdown files, 66 of 104 JavaScript/MJS files, and
    4 JSON/YAML files. The reverse direction would reformat at least 237 files there. Adopting the sibling configuration
    here is therefore the cheaper single-repository direction and is what the paired plans agree on.
 7. `tools/check-agents-pointer.mjs` requires `CLAUDE.md` to contain `[AGENTS.md](AGENTS.md)`, to omit the
    `SHARED_INSTRUCTIONS` marker, to stay at or under 40 non-empty lines, and to name all three mandatory preflight files
    and prove they exist.
-8. Dyninstruments enforces the same concern through a Vitest contract test that caps `CLAUDE.md` at 8 total lines and
+8. paired-project enforces the same concern through a Vitest contract test that caps `CLAUDE.md` at 8 total lines and
    does not check preflight names. This repository's `CLAUDE.md` is 24 total and 17 non-empty lines, so it fails that
    cap; the sibling's is 6 total and 4 non-empty lines and fails this repository's preflight-name requirement. The two
    contracts are mutually exclusive.
@@ -96,7 +96,7 @@ The following facts were checked against Polar Recorder `8ff80c9` before this pl
    `Related`. Every document here satisfies the sibling's narrower two-section rule, so this repository's requirement is
    a strict superset and becomes the converged contract.
 10. `tools/check-patterns.mjs` is imperative: `collect*` discovery functions feed `check*` functions that report through
-    a flat 24-entry `PATTERN_RULE_IDS` allow-list. Dyninstruments uses a declarative `RULES` array of 41 rules with
+    a flat 24-entry `PATTERN_RULE_IDS` allow-list. paired-project uses a declarative `RULES` array of 41 rules with
     per-rule `scope`, `severity`, and suppression support.
 11. Exactly 9 rule identifiers match between the repositories: `canvas-api-typeof-guard`, `default-truthy-fallback`,
     `exec-plan-reference`, `framework-method-typeof-guard`, `hardcoded-runtime-default`, `premature-legacy-support`,
@@ -109,11 +109,11 @@ The following facts were checked against Polar Recorder `8ff80c9` before this pl
 13. `tools/quality-policy/eslint.complexity.config.mjs` enforces `complexity: 10`, `max-statements: 40`, `max-depth: 4`,
     and `max-params: 6` as errors with `noInlineConfig` over `viewer/*.js`, `plugin.js`, and `plugin.mjs`, with no
     baseline or ledger.
-14. Dyninstruments' `tools/quality-policy/complexity-scan.mjs` runs ESLint with the identical four rules at identical
+14. paired-project' `tools/quality-policy/complexity-scan.mjs` runs ESLint with the identical four rules at identical
     limits and adds a 175-entry legacy ledger. **The complexity owner is already the same maintained tool in both
     repositories**; the limit values are hardcoded separately in each, which is a drift risk. This repository's
     zero-debt policy is the greenfield model and must not gain a baseline.
-15. `tools/check-headers.mjs` enforces the mandatory module header. Dyninstruments enforces the same concern with
+15. `tools/check-headers.mjs` enforces the mandatory module header. paired-project enforces the same concern with
     `eslint-plugin-jsdoc`'s `require-file-overview` rule, which is the maintained owner.
 16. `tools/check-publisher-workflow.mjs` fails when `.github/workflows` contains any file other than
     `publish-release.yml` — "must contain exactly one file" — and requires exactly one job id, `publish-release`. Adding
@@ -132,11 +132,11 @@ The following facts were checked against Polar Recorder `8ff80c9` before this pl
     completed plans. Active plans, including this file, are linted. The sibling disables 14 rules and globs only root
     and `documentation/` Markdown, leaving 8 tracked files formatted but unlinted; a live run of this rule set against
     all 88 of its tracked Markdown files produces zero issues, so the sibling adopts this configuration.
-21. Linkinator options are inlined in `tools/check-doc-links.mjs`. Dyninstruments externalizes them in
+21. Linkinator options are inlined in `tools/check-doc-links.mjs`. paired-project externalizes them in
     `linkinator.config.json`, which is the converged owner.
 22. `tools/quality-policy/hotspot-budgets.json` plus `check-hotspot-budgets.mjs` is the data-driven hotspot owner. The
     sibling hardcodes a two-entry array inside a test file and adopts this shape.
-23. There is no `.agents/` directory, no skills, and no `skills-lock.json`. Dyninstruments has seven skills and a lock
+23. There is no `.agents/` directory, no skills, and no `skills-lock.json`. paired-project has seven skills and a lock
     pinning five upstream skills from `mattpocock/skills` by SHA-256.
 24. `AGENTS.md` has no `SHARED_INSTRUCTIONS` markers. The sibling wraps its entire body in them, including
     project-specific content, so the mechanism currently delimits nothing generic in either repository.
@@ -144,7 +144,7 @@ The following facts were checked against Polar Recorder `8ff80c9` before this pl
     around `npm run check:all`, which is the name the sibling documents. The functional gate is identical; only the
     documented entry point differs.
 26. `tools/check-naming.mjs` and `tools/check-namespace.mjs` enforce the `Polarrecorder` namespace and the
-    `--polarrecorder-` CSS prefix. The sibling has the same concern for `DyniComponents` without dedicated checkers.
+    `--polarrecorder-` CSS prefix. The sibling has the same concern for `PairedComponents` without dedicated checkers.
 27. Three concerns carry different file names for the same job: `tools/check-schema.mjs` versus
     `tools/validate-schemas.mjs`, `tools/check-test-focus.mjs` versus `tools/check-vitest-only.mjs`, and
     `documentation/guides/live-avnav-checklist.md` versus `documentation/guides/manual-avnav-validation.md`.
@@ -249,7 +249,7 @@ floors, and its product-specific validation policy. No phase may delete valid ev
 
 ### Repository independence and paired work
 
-- No required script, hook, test, workflow, release command, or documentation checker may resolve `../dyninstruments`.
+- No required script, hook, test, workflow, release command, or documentation checker may resolve `../paired-project`.
 - The paired checkout may be read only by the final one-off alignment comparison, never by a committed gate.
 - Do not create the future scaffolder, shared npm package, or generic project manifest in this plan.
 - Do not claim byte identity for product-coupled tools. Record justified differences instead.
@@ -639,7 +639,7 @@ other README category applies.
 **Status as of 2026-07-27 (see Progress / Completion Evidence for the full per-phase record):** every group below is
 met, including "Single ownership"'s namespace-rule bullet, all of "Rule namespace" (the ported declarative engine,
 per-rule scope/severity/suppression support, and the generic-directory token/catalog-parity assertions), and
-"Completion"'s archive bullet. The user confirmed in this session that the paired Dyninstruments plan (PLAN41) has also
+"Completion"'s archive bullet. The user confirmed in this session that the paired paired-project plan (PLAN41) has also
 reached completion, satisfying the one precondition this session itself could not verify; the plan was archived to
 `exec-plans/completed/PLAN8.md` on that confirmation.
 
@@ -734,7 +734,7 @@ date. Keep the paired-comparison table from Phase J2 in this section.
 
 - Replaced `.prettierrc.json` with the sibling's exact content (`arrowParens`, `bracketSpacing`, `printWidth: 120`,
   `proseWrap: "always"`, `semi`, `singleQuote`, `tabWidth`, `trailingComma`, `useTabs`), byte-identical to
-  `../dyninstruments/.prettierrc.json`.
+  `../paired-project/.prettierrc.json`.
 - `npm run format`: reformatted 109 files (1725 insertions, 2258 deletions), close to the ~105-file estimate in baseline
   fact 6.
 - Added `tests/js/prettier-config.test.mjs` pinning the exact key set and values, with a missing-key negative and a
@@ -952,7 +952,7 @@ all 7 pairs in baseline fact 12, plus re-checked fact 11 against them:
 - **`internal-namespace-fallback` vs `internal-hook-fallback` -- distinct, not renamed.** Ours flags any
   `Polarrecorder.<PascalCaseMember>(...)` call immediately followed by `||`/`??`. The sibling's
   `runInternalHookFallbackRule` flags a function literally named `normalize<Something>` that declares a parameter whose
-  name contains "fallback" -- a narrow, unrelated Dyninstruments-specific heuristic keyed to that repo's own
+  name contains "fallback" -- a narrow, unrelated paired-project-specific heuristic keyed to that repo's own
   `cfg`/`normalize*` naming convention. `internal-namespace-fallback` is already the E3-prescribed name; no action
   needed.
 - **`unowned-todo` vs `todo-without-owner` -- overlapping, renamed anyway (see below).** The sibling's rule also covers
@@ -1222,7 +1222,7 @@ Complete.
   user to identify this repository's equivalent" framing) and needed only terminology substitution (their
   "component/widget" framing swapped for this repository's "module/checker/validation-rule" vocabulary; "renderer" ->
   "collection/formatting owner"), copied into `.agents/skills/` verbatim in structure.
-- `scan-smells`, by contrast, was authored in the sibling as concrete Dyninstruments examples
+- `scan-smells`, by contrast, was authored in the sibling as concrete paired-project examples
   (`renderer.createRenderer`, `ratioDefaults`, `theme.tokens.resolve`, their `boundary-next-line(...)` suppression
   marker) -- deeply specific, not a template. Rewrote it fully with this repository's own real smell catalog
   (`redundant-null-type-guard`, `hardcoded-runtime-default`, `canvas-api-typeof-guard`, `framework-method-typeof-guard`,
@@ -1262,7 +1262,7 @@ Complete.
   mentioning `server/polarrecorder/`, `npm run check:all`, or any of this repository's own real rule names -- but H1
   explicitly instructs adapting "commands and paths to this repository's stack," which requires exactly those mentions.
   Interpreted the assertion as: free of the _sibling's_ domain vocabulary
-  (`Dyninstruments`/`DyniComponents`/`widget`/`gauge`/`mapper`/`cluster`/`renderer`/`ratioDefaults`/`rangeDefaults`),
+  (`paired-project`/`PairedComponents`/`widget`/`gauge`/`mapper`/`cluster`/`renderer`/`ratioDefaults`/`rangeDefaults`),
   which is what actually makes a skill file specific to one product's UI-component model rather than liftable to a
   different AvNav plugin's own equivalent skill set. `tests/js/skills-lock.test.mjs`'s token list encodes this reading;
   all 5 files pass it.
@@ -1339,7 +1339,7 @@ Complete.
 
 #### J2 -- one-off paired comparison
 
-Read-only comparison against the sibling checkout at `../dyninstruments` (its own PLAN41 session was confirmed actively
+Read-only comparison against the sibling checkout at `../paired-project` (its own PLAN41 session was confirmed actively
 running concurrently during Phase H, so this reflects a snapshot, not a frozen baseline -- exactly the kind of
 moving-target comparison this step exists to reconcile, not something a committed gate could ever depend on).
 
@@ -1358,7 +1358,7 @@ moving-target comparison this step exists to reconcile, not something a committe
 #### J3 -- plan closure
 
 Not run. Per the explicit top-level instruction, this plan must not be archived to `exec-plans/completed/PLAN8.md` in
-this session: doing so requires the paired Dyninstruments plan (PLAN41) to have reached the same point, and this session
+this session: doing so requires the paired paired-project plan (PLAN41) to have reached the same point, and this session
 has no mechanism to confirm that (the one live signal available -- seeing PLAN41's skill files being written mid-session
 -- shows the sibling session was active, not that it has finished). Reporting completion and stopping here, as
 instructed.
@@ -1376,7 +1376,7 @@ verify).
 
 #### J3 -- plan closure, revisited
 
-The user explicitly confirmed in this session that the paired Dyninstruments plan (PLAN41) has also reached
+The user explicitly confirmed in this session that the paired paired-project plan (PLAN41) has also reached
 completion, resolving the one precondition J3 had deferred on. Moved this file from `exec-plans/active/PLAN8.md` to
 `exec-plans/completed/PLAN8.md` accordingly. `npm run check:all`, `npm run hooks:doctor`, and `npm run package:check`
 were all re-confirmed green immediately before the move (same run as Phase E's completion evidence above); no code
@@ -1395,4 +1395,4 @@ change accompanied the move itself, only this file's relocation, its own self-re
 - [Execution-plan authoring](../../documentation/guides/exec-plan-authoring.md)
 - [Documentation maintenance](../../documentation/guides/documentation-maintenance.md)
 - [Preceding alignment plan](../completed/PLAN7.md)
-- Dyninstruments paired plan: `../../../dyninstruments/exec-plans/active/PLAN41.md`
+- paired-project paired plan: `../../../paired-project/exec-plans/active/PLAN41.md`

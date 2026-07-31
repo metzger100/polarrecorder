@@ -10,7 +10,7 @@ naming, provided the exit conditions and constraints hold.
 
 This plan covers ROADMAP item 1 only, for **two** backup artifacts: the learned
 polar model (`polar.json`) and the user export presets (`presets.json`). Items 2-5
-(optional signal hooks, dashboard widgets, dyninstruments palette) are explicitly
+(optional signal hooks, dashboard widgets, paired-project palette) are explicitly
 out of scope and must not be touched.
 
 ## Goal

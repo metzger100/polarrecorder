@@ -38,7 +38,15 @@ test("path policy rejects absolute and traversal paths", () => {
 test("generic policy engines fail closed", () => {
   assert.deepEqual(runFileSizePolicy({ files: { clean: "x\n" }, limit: 1 }).failures, []);
   assert.equal(runFileSizePolicy({ files: { large: "x\nx\n" }, limit: 1 }).ok, false);
+  assert.equal(runComplexityPolicy({ limits: STRICT_LIMITS }).ok, true);
   assert.equal(runComplexityPolicy({ limits: STRICT_LIMITS, findings: { fresh: 1 } }).ok, false);
+  assert.equal(
+    runCoveragePolicy({
+      summary: { sample: { lines: 90, functions: 90, statements: 90, branches: 90 } },
+      floors: { sample: 90 }
+    }).ok,
+    true
+  );
   assert.equal(
     runCoveragePolicy({
       summary: { sample: { lines: 80, functions: 80, statements: 80, branches: 80 } },
@@ -81,6 +89,7 @@ test("every portable policy engine has clean and failing cases", () => {
     false
   );
   assert.equal(runHookPolicy({ root: ROOT, paths: ["../outside"] }).ok, false);
+  assert.equal(runHookPolicy({ root: ROOT, paths: [".githooks/pre-push"] }).ok, true);
 });
 
 test("the generic fixture is present and readable", () => {
