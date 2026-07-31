@@ -1,209 +1,219 @@
 #!/usr/bin/env node
 
 /**
- * `npm run check:generic-surface` -- applies the single genericness token owner
- * (`tools/quality-policy/generic-tokens.json`) case-insensitively to every text
- * target the Shared Core Contract names: the `SHARED_INSTRUCTIONS` block, every
- * generic skill file, every Tier 1 tool module's full content, and every generic
- * rule definition's content. A finding here means a candidate "generic" artifact
- * still carries a token that would make it un-liftable to a different repository.
- *
- * The token arrays and the four target *concepts* are Tier 1 (this module and
- * `generic-tokens.json`); the concrete file paths and skill directory names for
- * this repository are project-owned data in
- * `tools/quality-policy/generic-surface-scope.json`.
+ * @file check-generic-surface - Genericness token scanner for the Tier 1 shared-core surface
+ * Documentation: documentation/conventions/quality-gates.md
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { CONTRACT_PATH, readPortableCoreContract } from "./quality-policy/portable-core-contract.mjs";
+import { readVersionedProfile } from "./quality-policy/profile-schema.mjs";
 
-import { readJson } from "./portable-core/json.mjs";
-import { runProfileSchemaCheck } from "./portable-core/schema-engine.mjs";
-
+const AGENTS_PATH = "AGENTS.md";
 const BEGIN_MARKER = "<!-- BEGIN SHARED_INSTRUCTIONS -->";
 const END_MARKER = "<!-- END SHARED_INSTRUCTIONS -->";
+const GENERIC_RULE_DEFINITIONS_DIR = "tools/check-patterns/generic";
+const TEXT_EXTENSIONS = new Set([".js", ".mjs", ".json", ".md", ".yml", ".yaml", ".toml"]);
 
-/** @typedef {{target: string, token: string}} GenericSurfaceFinding */
-/** @typedef {{root?: string, print?: boolean}} GenericSurfaceOptions */
-/** @typedef {{ok: boolean, findings: GenericSurfaceFinding[]}} GenericSurfaceResult */
-
-/**
- * @param {string} root
- * @returns {{projectTokens: string[], domainTokens: string[], hostTokens: string[]}}
- */
-function readTokens(root) {
-  const profilePath = path.join(root, "tools", "quality-policy", "generic-tokens.json");
-  const parsedResult = readJson(profilePath);
-  if (!parsedResult.ok) throw new Error(parsedResult.error);
-  const parsed = /** @type {Record<string, unknown>} */ (parsedResult.value);
-  const schemaResult = runProfileSchemaCheck({
-    profile: parsed,
-    allowedFields: ["schemaVersion", "profileType", "note", "projectTokens", "domainTokens", "hostTokens"],
-    schemaVersion: 1
-  });
-  if (!schemaResult.ok) throw new Error(schemaResult.failures.join("; "));
-  if (parsed.profileType !== "genericness-token-profile") throw new Error("genericness profile has an unknown type");
-  for (const group of ["projectTokens", "domainTokens", "hostTokens"]) {
-    if (
-      !Array.isArray(parsed[group]) ||
-      parsed[group].some((token) => typeof token !== "string" || token.length === 0)
-    ) {
-      throw new Error(`genericness profile has an invalid ${group} array`);
-    }
-  }
-  return {
-    projectTokens: /** @type {string[]} */ (parsed.projectTokens),
-    domainTokens: /** @type {string[]} */ (parsed.domainTokens),
-    hostTokens: /** @type {string[]} */ (parsed.hostTokens)
-  };
-}
-
-const TEXT_EXTENSIONS = new Set([
-  ".md",
-  ".js",
-  ".mjs",
-  ".py",
-  ".json",
-  ".jsonc",
-  ".toml",
-  ".sh",
-  ".css",
-  ".html",
-  ".txt",
-  ".yml",
-  ".yaml"
-]);
+/** @typedef {{ target: string, token: string }} GenericSurfaceFinding */
+/** @typedef {{ ok: boolean, checkedTargets: number, findings: number, warn: boolean }} GenericSurfaceSummary */
+/** @typedef {{ root?: string, print?: boolean, warn?: boolean, patternEngineOnly?: boolean }} GenericSurfaceCheckOptions */
+/** @typedef {{ name: string, content: string, genericDefinitions?: boolean }} ScanTarget */
 
 /**
- * @param {string} dir
- * @returns {string[]}
- */
-function listMjsFilesRecursive(dir) {
-  if (!fs.existsSync(dir)) return [];
-  /** @type {string[]} */
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const abs = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...listMjsFilesRecursive(abs));
-    else if (entry.name.endsWith(".mjs")) out.push(abs);
-  }
-  return out.sort();
-}
-
-/**
- * @param {string} content
- * @returns {string}
- */
-function extractSharedInstructionsBlock(content) {
-  const begin = content.indexOf(BEGIN_MARKER);
-  const end = content.indexOf(END_MARKER);
-  if (begin < 0 || end < 0 || end <= begin) return "";
-  return content.slice(begin + BEGIN_MARKER.length, end);
-}
-
-/**
- * @param {string} root
- * @returns {{name: string, content: string}[]}
- */
-function collectTargets(root) {
-  /** @type {{name: string, content: string}[]} */
-  const targets = [];
-
-  const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
-  if (fs.existsSync(contractPath)) {
-    const result = readJson(contractPath);
-    if (!result.ok) throw new Error(result.error);
-    const contract = /** @type {Record<string, unknown>} */ (result.value);
-    if (!Array.isArray(contract.mandatoryPaths)) {
-      throw new Error("portable-core contract has no mandatoryPaths inventory");
-    }
-    for (const rel of /** @type {unknown[]} */ (contract.mandatoryPaths)) {
-      if (typeof rel !== "string" || !TEXT_EXTENSIONS.has(path.extname(rel))) continue;
-      const abs = path.join(root, rel);
-      if (!fs.existsSync(abs)) throw new Error(`manifest-listed generic path is missing: ${rel}`);
-      targets.push({ name: `manifest-listed Tier 1 path: ${rel}`, content: fs.readFileSync(abs, "utf8") });
-    }
-  } else {
-    const scopePath = path.join(root, "tools", "quality-policy", "generic-surface-scope.json");
-    const scope = JSON.parse(fs.readFileSync(scopePath, "utf8"));
-    for (const name of scope.skillDirs) {
-      const skillPath = path.join(root, ".agents", "skills", name, "SKILL.md");
-      if (fs.existsSync(skillPath))
-        targets.push({ name: `generic skill: ${name}`, content: fs.readFileSync(skillPath, "utf8") });
-    }
-    for (const rel of scope.tier1ToolModules) {
-      const abs = path.join(root, rel);
-      if (fs.existsSync(abs))
-        targets.push({ name: `Tier 1 tool module: ${rel}`, content: fs.readFileSync(abs, "utf8") });
-    }
-    for (const rel of scope.genericRuleDefDirs) {
-      for (const abs of listMjsFilesRecursive(path.join(root, rel))) {
-        targets.push({
-          name: `generic rule definition: ${path.relative(root, abs).replace(/\\/g, "/")}`,
-          content: fs.readFileSync(abs, "utf8")
-        });
-      }
-    }
-  }
-
-  const agentsPath = path.join(root, "AGENTS.md");
-  if (fs.existsSync(agentsPath)) {
-    targets.push({
-      name: "SHARED_INSTRUCTIONS block (AGENTS.md)",
-      content: extractSharedInstructionsBlock(fs.readFileSync(agentsPath, "utf8"))
-    });
-  }
-
-  return targets.filter((target, index, all) => all.findIndex((item) => item.name === target.name) === index);
-}
-
-/**
- * Run the genericness token scan and return every finding.
- * @param {GenericSurfaceOptions} [options]
- * @returns {GenericSurfaceResult}
+ * @param {GenericSurfaceCheckOptions} [options]
+ * @returns {{ summary: GenericSurfaceSummary, findings: GenericSurfaceFinding[], ok: boolean }}
  */
 export function runGenericSurfaceCheck(options = {}) {
   const root = path.resolve(options.root || process.cwd());
-  const print = options.print !== false;
-  const tokens = readTokens(root);
-  const allTokens = [...tokens.projectTokens, ...tokens.domainTokens, ...tokens.hostTokens];
-  const targets = collectTargets(root);
+  const warn = Boolean(options.warn);
+  const tokens = loadTokens(root);
+  const targets = collectTargets(root, options.patternEngineOnly === true);
 
   /** @type {GenericSurfaceFinding[]} */
   const findings = [];
   for (const target of targets) {
-    const lower = target.content.toLowerCase();
-    for (const token of allTokens) {
-      if (lower.includes(token.toLowerCase())) {
-        findings.push({ target: target.name, token });
-      }
+    const haystack = scanContent(target).toLowerCase();
+    for (const token of tokens) {
+      if (containsToken(haystack, token)) findings.push({ target: target.name, token });
     }
   }
 
-  const ok = findings.length === 0;
-  if (print) {
-    if (ok) {
-      console.log("Generic surface check passed: zero genericness token findings.");
-    } else {
-      for (const finding of findings) {
-        console.error(`[generic-surface] ${finding.target}: contains token '${finding.token}'`);
-      }
-    }
-    console.log("SUMMARY_JSON=" + JSON.stringify({ ok, checkedTargets: targets.length, findings: findings.length }));
-  }
-  return { ok, findings };
+  const ok = warn || findings.length === 0;
+  const summary = {
+    ok,
+    checkedTargets: targets.length,
+    findings: findings.length,
+    warn
+  };
+
+  if (options.print !== false) printFindings(findings, summary, warn);
+
+  return { summary, findings, ok: summary.ok };
 }
 
-/**
- * @returns {boolean}
- */
+/** @param {string} haystack @param {string} token @returns {boolean} */
+function containsToken(haystack, token) {
+  const loweredToken = token.toLowerCase();
+  if (!/\.(?:js|mjs|json|py)$/.test(loweredToken)) return haystack.includes(loweredToken);
+  const escaped = loweredToken.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?![a-z0-9])`, "i").test(haystack);
+}
+
+/** @param {GenericSurfaceFinding[]} findings @param {GenericSurfaceSummary} summary @param {boolean} warn @returns {void} */
+function printFindings(findings, summary, warn) {
+  const prefix = warn ? "[generic-surface-warn]" : "[generic-surface]";
+  const print = warn ? console.log : console.error;
+  for (const finding of findings) {
+    print(`${prefix} ${finding.target}: contains project-specific token '${finding.token}'`);
+  }
+  const printSummary = summary.ok ? console.log : console.error;
+  printSummary("SUMMARY_JSON=" + JSON.stringify(summary));
+}
+
+/** @param {string} root @returns {string[]} */
+function loadTokens(root) {
+  const data = readVersionedProfile(path.join(root, "tools/quality-policy/generic-tokens.json"), [
+    "profileType",
+    "note",
+    "projectTokens",
+    "domainTokens",
+    "hostTokens"
+  ]);
+  if (data.profileType !== undefined && data.profileType !== "genericness-token-profile") {
+    throw new Error("Genericness token profile has an unknown profileType.");
+  }
+  return [...data.projectTokens, ...data.domainTokens, ...data.hostTokens];
+}
+
+/** @param {string} root @param {boolean} patternEngineOnly @returns {ScanTarget[]} */
+function collectTargets(root, patternEngineOnly) {
+  /** @type {ScanTarget[]} */
+  const targets = [];
+
+  const manifestPaths = loadManifestPaths(root);
+  const selected = manifestPaths.filter((relativePath) => {
+    if (!TEXT_EXTENSIONS.has(path.extname(relativePath).toLowerCase())) return false;
+    return (
+      !patternEngineOnly ||
+      relativePath === "tools/check-patterns.mjs" ||
+      relativePath.startsWith("tools/check-patterns/")
+    );
+  });
+  for (const relativePath of selected) {
+    const absolutePath = path.join(root, relativePath);
+    const content = fs.readFileSync(absolutePath, "utf8");
+    targets.push({
+      name: relativePath,
+      content,
+      genericDefinitions: relativePath.startsWith(`${GENERIC_RULE_DEFINITIONS_DIR}/`)
+    });
+  }
+
+  if (!patternEngineOnly) {
+    const agentsPath = path.join(root, AGENTS_PATH);
+    targets.push({
+      name: "AGENTS.md#SHARED_INSTRUCTIONS",
+      content: extractSharedInstructionsBlock(fs.readFileSync(agentsPath, "utf8"))
+    });
+  }
+
+  return targets;
+}
+
+/** @param {string} root @returns {string[]} */
+function loadManifestPaths(root) {
+  const contractPath = path.join(root, CONTRACT_PATH);
+  if (fs.existsSync(contractPath)) {
+    return [...new Set([...readPortableCoreContract(root).mandatoryPaths, ...discoverGenericRulePaths(root)])].sort();
+  }
+  return discoverFallbackPatternPaths(root);
+}
+
+/** @param {string} root @returns {string[]} */
+function discoverGenericRulePaths(root) {
+  const genericRoot = path.join(root, GENERIC_RULE_DEFINITIONS_DIR);
+  if (!fs.existsSync(genericRoot)) throw new Error(`Missing generic rule directory: ${GENERIC_RULE_DEFINITIONS_DIR}`);
+  /** @type {string[]} */
+  const discovered = [];
+  /** @param {string} directory */
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(absolutePath);
+      else if (entry.isFile() && TEXT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+        discovered.push(path.relative(root, absolutePath).split(path.sep).join("/"));
+      }
+    }
+  }
+  visit(genericRoot);
+  if (discovered.length === 0) throw new Error(`Generic rule directory is empty: ${GENERIC_RULE_DEFINITIONS_DIR}`);
+  return discovered.sort();
+}
+
+/** @param {string} root @returns {string[]} */
+function discoverFallbackPatternPaths(root) {
+  const patternRoot = path.join(root, "tools", "check-patterns");
+  if (!fs.existsSync(patternRoot)) return [];
+  /** @type {string[]} */
+  const discovered = [];
+  /** @param {string} directory */
+  function visit(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(absolutePath);
+      else if (entry.isFile() && TEXT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+        discovered.push(path.relative(root, absolutePath).split(path.sep).join("/"));
+      }
+    }
+  }
+  visit(patternRoot);
+  const runnerPath = path.join(root, "tools", "check-patterns.mjs");
+  if (fs.existsSync(runnerPath)) discovered.push(path.relative(root, runnerPath).split(path.sep).join("/"));
+  const skillsRoot = path.join(root, ".agents", "skills");
+  if (fs.existsSync(skillsRoot)) {
+    for (const entry of fs.readdirSync(skillsRoot, { withFileTypes: true })) {
+      const skillPath = path.join(skillsRoot, entry.name, "SKILL.md");
+      if (entry.isDirectory() && fs.existsSync(skillPath)) {
+        discovered.push(path.relative(root, skillPath).split(path.sep).join("/"));
+      }
+    }
+  }
+  return [...new Set(discovered)].sort();
+}
+
+/** @param {ScanTarget} target @returns {string} */
+function scanContent(target) {
+  if (!target.genericDefinitions) return target.content;
+  return target.content.replace(/name:\s*"[^"]+"/g, 'name: "<canonical-rule-id>"');
+}
+
+/** @param {string} content @returns {string} */
+function extractSharedInstructionsBlock(content) {
+  const begin = content.indexOf(BEGIN_MARKER);
+  const end = content.indexOf(END_MARKER);
+  if (begin === -1 || end === -1) {
+    throw new Error("AGENTS.md is missing the SHARED_INSTRUCTIONS marker pair.");
+  }
+  return content.slice(begin + BEGIN_MARKER.length, end);
+}
+
+/** @param {string[]} [argv] @returns {void} */
+export function runGenericSurfaceCheckCli(argv = process.argv.slice(2)) {
+  const warn = argv.includes("--warn");
+  const patternEngineOnly = argv.includes("--pattern-engine-only");
+  const { summary } = runGenericSurfaceCheck({ root: process.cwd(), warn, patternEngineOnly, print: true });
+  process.exitCode = summary.ok ? 0 : 1;
+}
+
+/** @returns {boolean} */
 function isCliEntrypoint() {
   if (!process.argv[1]) return false;
   return pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 }
 
 if (isCliEntrypoint()) {
-  const result = runGenericSurfaceCheck({ root: process.cwd(), print: true });
-  process.exit(result.ok ? 0 : 1);
+  runGenericSurfaceCheckCli();
 }

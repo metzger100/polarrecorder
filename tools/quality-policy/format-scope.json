@@ -509,6 +509,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/create-avnav-plugin-starter.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/doc-format-contract.test.mjs",
       "owner": "prettier"
     },
@@ -1063,6 +1067,10 @@
       "owner": "ruff"
     },
     {
+      "path": "tools/create-avnav-plugin-starter.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/hooks-doctor.mjs",
       "owner": "prettier"
     },
@@ -1231,6 +1239,14 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/portable-core-contract.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/profile-schema.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/project-file-size-scope.json",
       "owner": "prettier"
     },
@@ -1244,6 +1260,10 @@
     },
     {
       "path": "tools/quality-policy/project-schema-profile.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/read-json-policy.mjs",
       "owner": "prettier"
     },
     {
@@ -1440,7 +1460,7 @@
     }
   ],
   "countByOwner": {
-    "prettier": 232,
+    "prettier": 237,
     "unsupported": 25,
     "ruff": 90
   }

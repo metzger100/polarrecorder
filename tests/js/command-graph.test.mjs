@@ -51,7 +51,8 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "test:unit",
   "check:strict",
   "dependencies:audit",
-  "portable-core:attest"
+  "portable-core:attest",
+  "starter:create"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */

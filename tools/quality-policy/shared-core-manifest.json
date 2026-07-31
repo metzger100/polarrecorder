@@ -5,7 +5,11 @@
     ".agents/skills/grill-me-repo/SKILL.md": "01dbea2ec180f575a51458bb012147c2f8859796d3ede608f8a18067cf9ddad6",
     ".agents/skills/preflight/SKILL.md": "0f499961c56210c47a9eb5d95309615981f9bb46e642c83eb3a897c406f4d2d5",
     ".agents/skills/scan-smells/SKILL.md": "2b8ca3666e809adff6ba91f6f50879684743e36c564f9bccb9b5e32884f2f005",
+    "schemas/portable-core-contract.schema.json": "ed7de941860ac3b6ebfadec41c941d05b14d14b85dfb199d341821c1b6fbed2a",
     "tests/portable-core/portable-policy-engines.test.mjs": "e40592b104fe4e971d968804e83c67dd5c99dd6fa1c06549f8bbbe0ee4872670",
+    "tools/check-generic-surface.mjs": "898a63ef59c2c0cccbd466eca6a5d33cd894857e9188f9620a5cdfd67eb12948",
+    "tools/check-shared-core.mjs": "addad31801a934c3c4c5876ee003786d4c6d72cad70d569d17e6fa0b953b21b6",
+    "tools/portable-core-attest.mjs": "3caec73ae5ad2933f7a7e296db37f2700f91145fe452d24f68d4c6e724322b81",
     "tools/portable-core/complexity-engine.mjs": "834d9537ceaa8482438dca01a3fafe98809aabb8ca203055d7240d925107c146",
     "tools/portable-core/coverage-engine.mjs": "1c08aef7c9dffeee36aadae5d90ffdf0147776a1b6cfe0bf923d7291be0b116f",
     "tools/portable-core/doc-link-engine.mjs": "6421aabc3ad1115d3001065aff988922ee828f94970e90cfe361d4ee496b6162",
@@ -19,6 +23,10 @@
     "tools/portable-core/release-engine.mjs": "b86d94db38137d00203bcbb056b9268fb2642a2b983bb2ab79bc2af9f1ea6d1f",
     "tools/portable-core/schema-engine.mjs": "2a98fec823ea276ef21471e4a5b616fd4dd3e12016be164b478caae8bc599196",
     "tools/portable-core/suppression-engine.mjs": "df209526c37f54d21dd8d2cb7e07455ac8d2b024768879437683650cdfe521d4",
-    "tools/portable-core/test-inventory-engine.mjs": "f07298ac369e757a491f2bca66178880c0682199900842e593baf2c4e9e5b6d3"
+    "tools/portable-core/test-inventory-engine.mjs": "f07298ac369e757a491f2bca66178880c0682199900842e593baf2c4e9e5b6d3",
+    "tools/quality-policy/portable-core-contract.json": "97312fc5b1d240b4e924b40248605b564d0594181bfe4c8d032676bebfec0890",
+    "tools/quality-policy/portable-core-contract.mjs": "009b6c36d5c626865ae973c939696b534cea3f6ffb8b5c8f607d83f68bf45b42",
+    "tools/quality-policy/profile-schema.mjs": "775049ea030a30ce7cebe155b5bfd6a1bbf53748a125af0198d69705d2ae433f",
+    "tools/quality-policy/read-json-policy.mjs": "1b66ce32915b7a51a9edd60c57ee45b2d7bba2989d7805e74bdc549580f192af"
   }
 }

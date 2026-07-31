@@ -106,6 +106,6 @@ test("attestation is anonymous, deterministic, and schema-shaped", () => {
     fs.readFileSync(path.join(ROOT, "tests", "fixtures", "portable-core", "attestation.json"), "utf8")
   );
   assert.deepEqual(parsed, golden);
-  assert.deepEqual(Object.keys(parsed), ["coreVersion", "manifestSha256", "entries"]);
+  assert.deepEqual(Object.keys(parsed), ["coreVersion", "manifestSha256", "genericRulesSha256", "entries"]);
   assert.equal(runStandaloneBoundaryCheck({ root: ROOT, print: false }).ok, true);
 });

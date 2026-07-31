@@ -24,6 +24,7 @@
     "check:standalone": "node tools/check-standalone-boundary.mjs",
     "check:suppressions": "node tools/portable-core/suppression-engine.mjs",
     "portable-core:attest": "node tools/portable-core-attest.mjs",
+    "starter:create": "node tools/create-avnav-plugin-starter.mjs",
     "test:tools": "vitest run --project tools",
     "check:complexity": "eslint --config tools/quality-policy/eslint.complexity.config.mjs viewer/*.js plugin.js plugin.mjs",
     "check:scaling": "bash -c 'PATH=\"$PWD/venv/bin:$PATH\"; python -m pytest tests/test_operation_count_evaluator.py tests/test_polar_model.py tests/test_projection_scaling_contract.py tests/test_api_handlers_scaling_contract.py -q'",
