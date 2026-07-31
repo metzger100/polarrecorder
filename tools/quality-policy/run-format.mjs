@@ -14,6 +14,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { runFormatPolicy } from "../portable-core/format-engine.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
 const HOOK_ENVIRONMENT_PATH = path.join(ROOT, "tools", "quality-policy", "project-hook-environment.json");
@@ -51,6 +52,8 @@ function loadScope(root) {
  */
 export function runFormat({ mode = "check", root = ROOT } = {}) {
   const scope = loadScope(root);
+  const owners = [...new Set(scope.rows.map((row) => row.owner))];
+  if (!runFormatPolicy({ rows: scope.rows, owners }).ok) return { ok: false };
   const prettierPaths = scope.rows.filter((row) => row.owner === "prettier").map((row) => row.path);
   const ruffPaths = scope.rows.filter((row) => row.owner === "ruff").map((row) => row.path);
 

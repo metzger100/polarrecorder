@@ -3,7 +3,7 @@
 ## Status
 
 Finalized on 2026-07-23 and ready for implementation after repository verification, a commit-by-commit review of the
-Dyninstruments quality-system work from `cb146da2535f86c2d23f51c934c5e86c88f935a1` through current Dyninstruments `HEAD`
+paired-project quality-system work from `cb146da2535f86c2d23f51c934c5e86c88f935a1` through current paired-project `HEAD`
 (`06875c3454fda9a734ee7193ff527cc5ed36f3b2`), and four final executability audits. The latter commit is the authority
 correction that removed remote quality governance while preserving the maintained local quality system. The audits made
 Phase 0 capture canonicalization, transitional command activation, test-fixture provenance, complete formatter and
@@ -52,21 +52,21 @@ The following parts are prescriptive:
 - phase ordering, file-size constraints, phase exit conditions, and acceptance criteria.
 
 Implementers may choose equivalent internal helper names or split a large tool module differently, provided the same
-ownership, negative proof, command, and runtime-preservation outcomes are met. Dyninstruments paths, counts, hashes,
+ownership, negative proof, command, and runtime-preservation outcomes are met. paired-project paths, counts, hashes,
 coverage floors, complexity identities, and test exceptions must never be copied as Polar Recorder policy data.
 
 No pre-plan user interview was run. The plan therefore makes these explicit decisions:
 
 1. Product behavior, AvNav integration, persisted data, APIs, viewer output, and release ZIP contents are preserved;
    this is a tooling migration.
-2. Polar Recorder uses Python/pytest plus Node's maintained test runner rather than importing Dyninstruments' Vitest
+2. Polar Recorder uses Python/pytest plus Node's maintained test runner rather than importing paired-project' Vitest
    topology literally. Equivalent split commands, strict test typing, coverage inventory, and focused-test blocking are
    required.
 3. Python property testing uses Hypothesis rather than adding JavaScript `fast-check` to test Python-owned math.
 4. The current wall-clock performance gate is replaced by deterministic operation-count scaling contracts for every
    scaling-sensitive owner it currently exercises, including the complete `api_handlers.format_polar` path. No benchmark
    baseline is introduced.
-5. The current Python release manifest remains the single packaging authority; Dyninstruments' JavaScript ZIP builder is
+5. The current Python release manifest remains the single packaging authority; paired-project' JavaScript ZIP builder is
    not ported.
 
 Repo rules and core principles outrank this plan. If implementation reveals a conflict, amend the active plan and record
@@ -76,8 +76,8 @@ the evidence instead of weakening a gate or silently improvising.
 
 ## Goal
 
-Migrate Polar Recorder from its current bespoke, partially Dyninstruments-derived checks to the final hardened
-local-first system now present in Dyninstruments, adapted to Polar Recorder's Python-heavy, static-viewer architecture.
+Migrate Polar Recorder from its current bespoke, partially paired-project-derived checks to the final hardened
+local-first system now present in paired-project, adapted to Polar Recorder's Python-heavy, static-viewer architecture.
 
 Expected outcomes after completion:
 
@@ -126,7 +126,7 @@ The following facts were rechecked against the live Polar Recorder repository be
 2. `exec-plans/active/` contains only `.gitkeep`; completed plans are `PLAN1.md` through `PLAN4.md`. The next sequential
    active path is this file, `exec-plans/active/PLAN5.md`.
 3. The documented complete gate is `tools/check-all.sh`; `npm run check:all` delegates to it. `check:core` currently
-   means only the JavaScript subgate, which does not match the final Dyninstruments command model.
+   means only the JavaScript subgate, which does not match the final paired-project command model.
 4. `tools/check-all.sh` runs Ruff lint/format, strict mypy, Python 3.9 compatibility, pytest, pytest coverage, area
    coverage, Python file/header/ contract/dependency/duplication checks, wall-clock performance, runtime finite-value
    contracts, release dry-run validation, and finally `npm run check:js:all`.
@@ -138,7 +138,7 @@ The following facts were rechecked against the live Polar Recorder repository be
    `setup`, no Node/npm version contract, and no maintained standard-tool configuration files.
 8. The initial verification environment had Node `v26.4.0` and npm `12.0.0`; the finalization recheck had the same Node
    version and npm `12.0.1`. These are environment observations, not repository-owned guarantees. The final
-   Dyninstruments contract is Node major 26 and npm `12.0.1`; migration must declare and test that contract rather than
+   paired-project contract is Node major 26 and npm `12.0.1`; migration must declare and test that contract rather than
    silently accepting either observed environment.
 9. CONTRIBUTING currently instructs developers to create `venv` and run an unpinned
    `pip install ruff mypy pytest pytest-cov coverage`. There is no Python developer requirements or lock file.
@@ -171,11 +171,11 @@ The following facts were rechecked against the live Polar Recorder repository be
     parameter-based.
 20. `tools/check-performance.py` uses `time.perf_counter()` with one-second and 1.5-second ceilings plus a 2.8 doubling
     ratio. It is machine-sensitive and is not the deterministic counted-operation model retained in current
-    Dyninstruments.
+    paired-project.
 21. Generic documentation, AI-sync, header, namespace, naming, duplication, and several generic JavaScript language
     rules are implemented by repository-owned checkers. They may be removed only after a parity ledger records a
     maintained-tool or focused-contract replacement with clean and negative proof.
-22. Markdownlint 0.23.0 with the current Dyninstruments baseline passes all 33 maintained Polar Recorder Markdown files.
+22. Markdownlint 0.23.0 with the current paired-project baseline passes all 33 maintained Polar Recorder Markdown files.
     Link-fragment debt is not yet proven because the current custom link checker ignores fragments.
 23. A Polar-adapted ESLint 9.39.5 probe reports 16 adoption findings: 15 file overviews need conversion to `@file`, and
     one tool assignment is useless. There is no broad JavaScript lint-debt baseline to carry.
@@ -193,7 +193,7 @@ The following facts were rechecked against the live Polar Recorder repository be
 28. `.github/workflows/publish-release.yml` is the only workflow. It is tag-only but uses workflow-wide write
     permission, mutable action tags, inline prerelease parsing, and has no timeout or concurrency policy.
 29. There is no `.github/CODEOWNERS`, `.github/workflows/quality.yml`, or `.pre-commit-config.yaml`. These absences
-    match the final Dyninstruments rollback and are target-state requirements, not gaps.
+    match the final paired-project rollback and are target-state requirements, not gaps.
 30. `release:prepare` produces release evidence but has no side-effect-free help contract or dirty-tree rejection.
     `release:create` duplicates SemVer, permits arbitrary dirt under `releases/`, invokes `tools/check-all.sh` directly,
     then uses the Python ZIP/check tools, commits ZIP plus notes, and creates an annotated tag.
@@ -206,10 +206,10 @@ The following facts were rechecked against the live Polar Recorder repository be
     remain untouched.
 33. README is already 350 non-empty lines. Formatter adoption raises it to 374, so development/release text must be
     consolidated and linked to focused docs rather than appended indefinitely.
-34. Dyninstruments' surviving post-rollback system includes exact tool pins, standard lint/format/link/duplication
+34. paired-project' surviving post-rollback system includes exact tool pins, standard lint/format/link/duplication
     tools, strict source/test typing, coverage and complexity ratchets, deterministic scaling, a tested tracked pre-push
     hook, fail-closed local release tooling, and a pure tag publisher.
-35. Dyninstruments rollback `06875c3` explicitly removed branch/PR quality CI, CODEOWNERS/ruleset governance, the
+35. paired-project rollback `06875c3` explicitly removed branch/PR quality CI, CODEOWNERS/ruleset governance, the
     pre-commit framework, and tag-side quality execution. It did not remove the local quality policies above.
 36. The current `tools/check-performance.py` times both `PolarModel.update_accepted` and the complete
     `api_handlers.format_polar` response path. Replacing it with only model and lower-level projection contracts would
@@ -405,7 +405,7 @@ Create these Phase 0 artifacts before Phase 5-7 create any active policy:
 
 - `tools/quality-policy/phase0-baseline.json` for `capturedCommit`, exact tool versions, the selected
   developer-Python/bootstrap/lock-generation/platform contract, production/test/formatter-disposition inventories and
-  counts, the old command graph, existing thresholds, and an explicit statement that Dyninstruments policy data is not
+  counts, the old command graph, existing thresholds, and an explicit statement that paired-project policy data is not
   an input;
 - `phase0-test-capture.json` for the complete executable JavaScript and Python test/helper inventories and the verified
   empty focused/disabled and exception sets;
@@ -470,7 +470,7 @@ At minimum, ledger these owners separately:
 - hook, release prepare/create, runtime-manifest, and publisher behavior.
 - focused/disabled test detection, structured boundary suppression, unsafe DOM sinks, selected hotspot budgets,
   installer behavior, and exact `check:core` inclusion;
-- Dyninstruments' `schema:check` as an approved non-port only while executable package tests own the existing
+- paired-project' `schema:check` as an approved non-port only while executable package tests own the existing
   `plugin.json` object/development/release-stamped shapes and a tested inventory proves there is no additional
   declarative schema/layout family; any new artifact must acquire an explicit validator/owner.
 
@@ -579,7 +579,7 @@ Add Polar-specific versions of:
 - `tools/actionlint.sh` with pinned version/platform checksums and a persistent user-cache path under the Polar Recorder
   name, outside the repository and `node_modules`.
 
-Use the verified Dyninstruments direct versions where the same tool is used. Pin c8 and Node test/type dependencies
+Use the verified paired-project direct versions where the same tool is used. Pin c8 and Node test/type dependencies
 exactly. Only fixtures preauthorized in `phase0-planned-quality-fixtures.json` may be excluded, each by exact path rather
 than a broad directory pattern that could hide production files.
 
@@ -628,7 +628,7 @@ check:core = check:standard && typecheck && package:check &&
 check:all  = check:core && test:coverage:check
 ```
 
-This graph deliberately adapts Dyninstruments' core by retaining the Polar-specific Python contract group and runtime
+This graph deliberately adapts paired-project' core by retaining the Polar-specific Python contract group and runtime
 test split. `check:python-contracts` does not also run `tools/check-duplication.py`; Python duplication is owned only by
 `duplication:python`. The graph runs Ruff lint/format, strict mypy, Python
 compatibility/architecture/dependency/runtime contracts, pytest, every Node tool/contract/viewer/plugin suite, package
@@ -827,7 +827,7 @@ contract, unless a direct corpus proves jscpd rejects both:
 - equivalent function bodies whose local identifiers were renamed;
 - long equivalent normalized statement blocks across different functions/files.
 
-Current Dyninstruments retains separate `duplicate-functions` and `duplicate-block-clones` rules alongside jscpd, so
+Current paired-project retains separate `duplicate-functions` and `duplicate-block-clones` rules alongside jscpd, so
 absence of literal token clones is not structural parity. Do not delete the Python AST duplicate checker in this phase.
 
 Remove `tools` from Ruff's broad exclusion. Ruff lint and format must discover every maintained Python tool; if a
@@ -1293,7 +1293,7 @@ contracts.
 
 #### 7A. Add the JavaScript complexity no-regression policy
 
-Adapt the Dyninstruments stable-identity scanner for Polar source roots only:
+Adapt the paired-project stable-identity scanner for Polar source roots only:
 
 - `plugin.js`;
 - `plugin.mjs`;
@@ -1989,5 +1989,5 @@ check:standard`, and `npm run check:core` all still passed, proving ordinary che
 - [Documentation maintenance](../../documentation/guides/documentation-maintenance.md)
 - [Release workflow](../../documentation/guides/release-workflow.md)
 - [Execution-plan authoring](../../documentation/guides/exec-plan-authoring.md)
-- Dyninstruments completed `PLAN33.md` through `PLAN36.md`, with PLAN36 and rollback commit
+- paired-project completed `PLAN33.md` through `PLAN36.md`, with PLAN36 and rollback commit
   `06875c3454fda9a734ee7193ff527cc5ed36f3b2` authoritative for delivery scope

@@ -3,7 +3,7 @@
 ## Status
 
 - PLAN4 was written after inspecting the Polar Recorder source tree and the AvNav
-  core source tree (`/home/leobareth/Dokumente/Programmieren/avnav/server` and
+  core source tree (`<host-source>/server` and
   `.../avnav/viewer`). Every Verified Baseline fact is checked against current
   files, not memory.
 - PLAN4 is the authoritative implementation source for **ROADMAP item 1
@@ -14,7 +14,7 @@
   defaults within the stated ranges, and test-case naming, provided the exit
   conditions and constraints hold.
 - This plan covers ROADMAP item 1 only. ROADMAP items 2 (AvNav dashboard widgets)
-  and 3 (dyninstruments palette) are explicitly out of scope and must not be
+  and 3 (paired-project palette) are explicitly out of scope and must not be
   touched.
 - The file name is `PLAN4.md` because `exec-plans/completed/` already contains
   `PLAN1.md`, `PLAN2.md`, and `PLAN3.md`. The ROADMAP has been renumbered across
@@ -344,7 +344,7 @@ Every fact was verified against repository files on the working branch.
     `Polarrecorder.Dom`, `Polarrecorder.ImportUpload`, and `Polarrecorder.FetchJson`.
     `viewer/viewer.html` loads viewer scripts in a fixed, gate-checked order.
 
-### AvNav core contracts (verified in `/home/leobareth/Dokumente/Programmieren/avnav`)
+### AvNav core contracts (verified in a local host source tree)
 
 22. `server/avnav_api.py:348` `registerEditableParameters(paramList, changeCallback)`
     documents parameter `type` as one of `STRING, NUMBER, FLOAT, SELECT, BOOLEAN`
@@ -1153,7 +1153,7 @@ free-text, threshold inputs, and live status badge; save through `enhanced/save`
   Revisit only with a dedicated design.
 - **Heel *tagging*** (storing heel per accepted sample): rejected in favor of a
   band reject, because tagging requires a `polar.json` schema bump and migration.
-- ROADMAP items 2 (dashboard widgets) and 3 (dyninstruments palette).
+- ROADMAP items 2 (dashboard widgets) and 3 (paired-project palette).
 
 ---
 

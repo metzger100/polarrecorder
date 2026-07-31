@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { runTestInventoryPolicy } from "../portable-core/test-inventory-engine.mjs";
 
 const ROOT = process.cwd();
 const TSCONFIG_PATH = path.join(ROOT, "tsconfig.tests.json");
@@ -228,6 +229,13 @@ export function runTestInventoryCheck({ root = ROOT, print = true } = {}) {
   }
 
   failures.push(...checkPlannedFixtureProvenance(root));
+  const committed = JSON.parse(fs.readFileSync(inventoryPath(root), "utf8"));
+  failures.push(
+    ...runTestInventoryPolicy({
+      entries: committed.entries,
+      livePaths: discoverExecutableTestHelpers(root)
+    }).failures
+  );
 
   const summary = { ok: failures.length === 0 };
   if (print) reportInventory(failures, summary);

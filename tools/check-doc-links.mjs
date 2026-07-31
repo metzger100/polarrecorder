@@ -16,6 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { check } from "linkinator";
+import { runDocumentationLinkPolicy } from "./portable-core/doc-link-engine.mjs";
 
 /**
  * Every maintained Markdown file that Prettier owns, sourced directly from the single
@@ -57,7 +58,8 @@ export async function runDocLinksCheck(options = {}) {
   const broken = result.links
     .filter((link) => link.state === "BROKEN")
     .map((link) => ({ url: link.url, parent: link.parent }));
-  const ok = broken.length === 0;
+  const policy = runDocumentationLinkPolicy({ broken: broken.map((link) => `${link.parent || "seed"}: ${link.url}`) });
+  const ok = policy.ok;
 
   if (print) {
     if (ok) {

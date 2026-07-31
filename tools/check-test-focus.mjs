@@ -24,6 +24,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { discoverExecutableTestHelpers } from "./quality-policy/test-inventory.mjs";
+import { runFocusedTestPolicy } from "./portable-core/focused-test-engine.mjs";
 
 const ROOT = process.cwd();
 const FOCUS_PROPERTY_NAMES = new Set(["only", "skip", "todo"]);
@@ -209,7 +210,8 @@ export function runTestFocusCheck({ root = ROOT, print = true } = {}) {
     const source = fs.readFileSync(path.join(root, rel), "utf8");
     failures.push(...scanFile(source, rel));
   }
-  const summary = { ok: failures.length === 0, checkedFiles: relFiles.length };
+  const policy = runFocusedTestPolicy({ findings: failures });
+  const summary = { ok: policy.ok, checkedFiles: relFiles.length };
   if (print) reportTestFocus(failures, summary);
   return { ok: summary.ok, failures, checkedFiles: summary.checkedFiles };
 }

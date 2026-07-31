@@ -757,6 +757,10 @@
       "owner": "ruff"
     },
     {
+      "path": "tests/portable-core/portable-policy-engines.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/scaling_contract_fixtures.py",
       "owner": "ruff"
     },
@@ -1436,7 +1440,7 @@
     }
   ],
   "countByOwner": {
-    "prettier": 231,
+    "prettier": 232,
     "unsupported": 25,
     "ruff": 90
   }

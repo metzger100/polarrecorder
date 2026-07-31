@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { runFileSizePolicy } from "./portable-core/file-size-engine.mjs";
 
 import { countFindingsByKind, detectOneliners, ONELINER_MESSAGE_BY_KIND } from "./check-file-size/oneliner-rules.mjs";
 
@@ -74,7 +75,7 @@ export function runFileSizeCheck({ root = process.cwd(), onelinerMode = "warn", 
   for (const file of targetFiles) {
     const content = fs.readFileSync(file.abs, "utf8");
     const nonEmptyLines = content.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
-    if (nonEmptyLines > MAX_ALLOWED_LINES) {
+    if (!runFileSizePolicy({ files: { [file.rel]: content }, limit: MAX_ALLOWED_LINES }).ok) {
       failures.push(`${file.rel}: ${nonEmptyLines} non-empty lines (limit ${MAX_ALLOWED_LINES})`);
     }
     // Oneliner-density rules target hand-written viewer/entrypoint JS read by a human on every

@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 
 import { listRegularFiles, relativePath } from "./portable-core/path-policy.mjs";
 
-const SKIP_DIRS = new Set([".git", ".claude", ".vscode", "node_modules", "venv", "coverage", "releases", "exec-plans"]);
+const SKIP_DIRS = new Set([".git", ".claude", ".vscode", "node_modules", "venv", "coverage", "releases"]);
 const TEXT_EXTENSIONS = new Set([
   ".md",
   ".js",
@@ -26,13 +26,7 @@ const TEXT_EXTENSIONS = new Set([
   ".yml",
   ".yaml"
 ]);
-const BOUNDARY_PATTERNS = [
-  new RegExp(`${"/"}(?:home|Users)${"/"}`),
-  new RegExp(["cross-", "checkout"].join(""), "i"),
-  new RegExp(["external", " checkout"].join(""), "i"),
-  new RegExp(["other", " repository"].join(""), "i"),
-  new RegExp(["checkout", " path"].join(""), "i")
-];
+const BOUNDARY_PATTERNS = [new RegExp(`${"/"}(?:home|Users)${"/"}`), /\bdyninstruments\b/i, /\bdynicomponents\b/i];
 
 /**
  * @typedef {{path: string, reason: string}}

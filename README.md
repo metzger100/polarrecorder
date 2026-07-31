@@ -518,7 +518,8 @@ manifest, `npm run check:generic-surface` runs the blocking genericness scan, an
 zero inline suppression comments. `npm run portable-core:attest` emits an anonymous deterministic digest record
 containing only the contract version, manifest digest, and entry digests. For reproducibility, the complete
 `npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no network
-access or neighboring-directory inputs.
+access or neighboring-directory inputs. The standalone-boundary check includes archived execution plans, so maintained
+history cannot retain another checkout's identity.
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
 republishes an already-committed local artifact when a `v*` tag is pushed. See the

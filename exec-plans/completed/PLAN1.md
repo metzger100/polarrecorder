@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-- PLAN1 was written after inspecting the AvNav source tree (`avnav-master/`) and the dyninstruments source tree (`dyninstruments-main/`).
+- PLAN1 was written after inspecting the AvNav source tree (`avnav-master/`) and the paired-project source tree (`paired-project-main/`).
 - Implementation must follow PLAN1. Defects discovered in PLAN1 *itself* mid-implementation (gaps, contradictions, errors) are not grounds to silently improvise: they are corrected through the `plan-controller`'s **plan-defect handling protocol** and recorded in the per-plan amendments ledger (see §10 Phase 0). Only changes too large to absorb that way require a subsequent plan.
 - PLAN1 covers both repository bootstrap and the first production-quality architecture.
 - Implementation begins with a **human-authored, inspection-verified foundation** spanning two phases. **Phase 0 (Retired Local Agent Bootstrap)** is intentionally empty in the current repository; **Phase 1 (Repository Bootstrap)** creates the skeleton, the AI instructions (`AGENTS.md`/`CLAUDE.md`) and the quality gate (`tools/check-all.sh`) that future implementation work is bound by. Neither implements product functionality. Because Phase 1 builds the rulebook and gate — and would otherwise be self-verified by a gate it is simultaneously creating — it is **authored and verified by a human, exactly like Phase 0**. The **product build begins at Phase 2**, by which point a complete, trusted foundation and a working `check-all.sh` already exist, so the deterministic gate is the binding arbiter for every later phase with no self-verification exception.
@@ -27,7 +27,7 @@ Observable end state after PLAN1 is fully implemented:
 10. A 4-hour in-memory rejection timeline of 1-minute decision buckets for live diagnostics (so the user can see *when* data was being accepted vs. rejected and confirm that anchoring/motoring stretches were detected).
 11. A user app (full-page HTML) with polar diagram viewer, recording controls (start/pause, reset with confirmation, download), export configurator (built-in Windy preset + user-saved presets, all with editable grids), and rejection timeline visualization.
 12. Export to human-readable CSV in configurable polar table grids (Windy Passage Planner default preset, user-saved presets).
-13. Strict dev/test/docs infrastructure matching dyninstruments quality standards: execution-plan-driven development, strict AI-agent instructions, linters, high test coverage, modular documentation, deterministic tests, quality gate scripts, release packaging.
+13. Strict dev/test/docs infrastructure matching paired-project quality standards: execution-plan-driven development, strict AI-agent instructions, linters, high test coverage, modular documentation, deterministic tests, quality gate scripts, release packaging.
 
 ---
 
@@ -129,7 +129,7 @@ Every fact below was verified against files in the provided source trees. Positi
 
 44. **Static files in the plugin directory are served** at `<URL_PREFIX>/<name>/<filename>`. Source: `pluginhandler.py:1097–1100`.
 
-### dyninstruments Quality Infrastructure
+### paired-project Quality Infrastructure
 
 45. **AGENTS.md and CLAUDE.md share a `SHARED_INSTRUCTIONS` block** between `<!-- BEGIN SHARED_INSTRUCTIONS -->` and `<!-- END SHARED_INSTRUCTIONS -->` markers, kept in sync by `tools/sync-ai-instructions.mjs`. Source: `AGENTS.md:4,197`, `CLAUDE.md:5,199`.
 
@@ -161,9 +161,9 @@ Every fact below was verified against files in the provided source trees. Positi
 
 58. **No VWT sentence parser.** AvNav does not parse the VWT (True Wind relative to bow, 0–180 with L/R indicator) sentence. Only MWV with T reference and MWD are parsed for true wind. Source: exhaustive search of `avnav_nmea.py`.
 
-59. **dyninstruments uses plugin.mjs as the entry point**, not plugin.js. Plugin.js exists but is a legacy stub. Source: `plugin.mjs:70` (default export `initDyniPlugin`), `plugin.js:1` (minimal legacy adapter).
+59. **paired-project uses plugin.mjs as the entry point**, not plugin.js. Plugin.js exists but is a legacy stub. Source: `plugin.mjs:70` (default export `initDyniPlugin`), `plugin.js:1` (minimal legacy adapter).
 
-60. **dyninstruments is JS-only (no Python).** It has no `plugin.py` because it is a pure client-side widget plugin. The polarrecorder is fundamentally different: it is a Python-first server-side plugin with a lightweight JS viewer. Source: absence of `plugin.py` in dyninstruments root.
+60. **paired-project is JS-only (no Python).** It has no `plugin.py` because it is a pure client-side widget plugin. The polarrecorder is fundamentally different: it is a Python-first server-side plugin with a lightweight JS viewer. Source: absence of `plugin.py` in paired-project root.
 
 ---
 
@@ -1396,7 +1396,7 @@ polarrecorder/
 │
 ├── misc/                               # Read-only unpacked reference source trees (NOT shipped, NOT modified; deleted in Phase 11 once the project is complete)
 │   ├── avnav-master/                   # AvNav source tree (Verified Baseline references)
-│   └── dyninstruments/                 # dyninstruments source tree (quality-infra references)
+│   └── paired-project/                 # paired-project source tree (quality-infra references)
 │
 ├── exec-plans/
 │   ├── active/
@@ -1410,23 +1410,23 @@ polarrecorder/
 │   ├── check-release.py               # Release artifact validation
 │   ├── check-python-filesize.py       # Python file size limit + header enforcement
 │   ├── release-zip.py                 # Release zip builder (excludes data/, tests/, tools/, etc.)
-│   ├── check-docs.mjs                 # TABLEOFCONTENTS ↔ filesystem sync (from dyninstruments)
-│   ├── check-doc-format.mjs           # Status/Overview/Key Details structure (from dyninstruments)
-│   ├── check-doc-reachability.mjs     # Internal Markdown link resolution (from dyninstruments)
-│   ├── check-ai-instructions.mjs      # AGENTS.md/CLAUDE.md shared block sync (from dyninstruments)
-│   ├── sync-ai-instructions.mjs       # Shared block sync tool (from dyninstruments)
-│   ├── check-file-size.mjs            # 400-line JS limit + oneliner detection (from dyninstruments)
-│   ├── check-headers.mjs              # JS file header enforcement (adapted from dyninstruments)
-│   ├── check-patterns.mjs             # JS anti-pattern detection (purpose-built, no dyninstruments dependency)
+│   ├── check-docs.mjs                 # TABLEOFCONTENTS ↔ filesystem sync (from paired-project)
+│   ├── check-doc-format.mjs           # Status/Overview/Key Details structure (from paired-project)
+│   ├── check-doc-reachability.mjs     # Internal Markdown link resolution (from paired-project)
+│   ├── check-ai-instructions.mjs      # AGENTS.md/CLAUDE.md shared block sync (from paired-project)
+│   ├── sync-ai-instructions.mjs       # Shared block sync tool (from paired-project)
+│   ├── check-file-size.mjs            # 400-line JS limit + oneliner detection (from paired-project)
+│   ├── check-headers.mjs              # JS file header enforcement (adapted from paired-project)
+│   ├── check-patterns.mjs             # JS anti-pattern detection (purpose-built, no paired-project dependency)
 │   ├── check-namespace.mjs            # window.Polarrecorder enforcement (adapted from check-umd.mjs)
-│   ├── check-naming.mjs               # Naming convention enforcement (purpose-built, no dyninstruments dependency)
-│   ├── check-dependencies.mjs         # JS dependency direction enforcement (purpose-built, no dyninstruments dependency)
-│   ├── install-hooks.mjs              # Git pre-push hook installer (from dyninstruments)
+│   ├── check-naming.mjs               # Naming convention enforcement (purpose-built, no paired-project dependency)
+│   ├── check-dependencies.mjs         # JS dependency direction enforcement (purpose-built, no paired-project dependency)
+│   ├── install-hooks.mjs              # Git pre-push hook installer (from paired-project)
 │   └── mock-server.py                 # Minimal HTTP server serving deterministic stateful API responses for UI testing
 │
 ├── releases/                          # Release zip artifacts
 │
-├── AGENTS.md                          # AI agent instructions (adapted from dyninstruments)
+├── AGENTS.md                          # AI agent instructions (adapted from paired-project)
 ├── CLAUDE.md                          # Claude-specific agent instructions (shared block with AGENTS.md)
 ├── README.md                          # User-facing documentation
 ├── CONTRIBUTING.md                    # Contributor guide
@@ -1690,15 +1690,15 @@ Therefore **preset mutations (`presets/save`, `presets/delete`) are serialized b
 
 ### AI Agent Instructions
 
-**AGENTS.md and CLAUDE.md** share a `SHARED_INSTRUCTIONS` block between `<!-- BEGIN SHARED_INSTRUCTIONS -->` and `<!-- END SHARED_INSTRUCTIONS -->` markers, kept in sync by `tools/sync-ai-instructions.mjs` (from dyninstruments). Validated by `tools/check-ai-instructions.mjs`.
+**AGENTS.md and CLAUDE.md** share a `SHARED_INSTRUCTIONS` block between `<!-- BEGIN SHARED_INSTRUCTIONS -->` and `<!-- END SHARED_INSTRUCTIONS -->` markers, kept in sync by `tools/sync-ai-instructions.mjs` (from paired-project). Validated by `tools/check-ai-instructions.mjs`.
 
-**Required `SHARED_INSTRUCTIONS` sections (adapted from dyninstruments):**
+**Required `SHARED_INSTRUCTIONS` sections (adapted from paired-project):**
 
 **Section 0 — Mandatory Session Preflight (No Exceptions):** Before planning, coding, review, or documentation edits, always read: (1) `documentation/TABLEOFCONTENTS.md`, (2) `documentation/conventions/coding-standards.md`, (3) `documentation/conventions/smell-prevention.md`. Precedence on conflict: `core-principles.md` > `coding-standards.md` > `smell-prevention.md` > task-specific docs.
 
 **Section 1 — Project Constraints (AvNav Plugin Environment):** Python 3.9+ stdlib-only runtime (no pip install on target Raspberry Pi). No bundler, no build step for runtime files. Plain JS served as static files by AvNav. `window.Polarrecorder` namespace for JS. Dev-only tooling: pytest, ruff, mypy, Node.js check scripts. `avnav_api` is referenced only by `plugin.py`, and only as a `TYPE_CHECKING`-guarded type import (never imported at runtime, since it is absent from the dev/CI environment); the AvNav API is otherwise reached purely through the duck-typed `api` object AvNav injects. No AvNav imports in `polarrecorder/`.
 
-**Section 2 — Token-Efficient Documentation System:** Read `TABLEOFCONTENTS.md` first. Identify 1–3 relevant files for the task. Read only those. Never read all documentation files sequentially. Documentation structure mirrors dyninstruments format: every file has Status, Overview, Key Details, Related sections.
+**Section 2 — Token-Efficient Documentation System:** Read `TABLEOFCONTENTS.md` first. Identify 1–3 relevant files for the task. Read only those. Never read all documentation files sequentially. Documentation structure mirrors paired-project format: every file has Status, Overview, Key Details, Related sections.
 
 **Section 3 — Coding Standards Summary:** Python: **400-line file limit** (`plugin.py`, `polarrecorder/`, `tests/` — uniform with JS; `tools/` exempt), mandatory file headers (`"""Module: ...`), type annotations on all functions, google-style docstrings on all public functions, ruff formatting enforced, mypy strict, no `print()`, no bare `except` in `polarrecorder/`. JS: 400-line file limit, mandatory `/** Module: ... */` headers, `window.Polarrecorder` namespace, no ES module `import`/`export`, no `console.log`, no `var`, strict equality (`===`/`!==` only), no `eval()`/`innerHTML`.
 
@@ -1727,7 +1727,7 @@ This is the highest-precedence document in the project. Numbered, non-negotiable
 9. **Clock injection.** Every time-dependent module receives a clock callable (`ClockFn`). No hidden `time.monotonic()` calls in `polarrecorder/`. Enables fully deterministic tests. (Section 8, Testing Approach)
 10. **Quality gate before commit.** `tools/check-all.sh` must pass. No exceptions, no "fix it later." (Section 8, Quality Gate Scripts)
 11. **Documentation before code.** Every module has a documentation target. Doc stubs with Status/Overview/Key Details exist before implementation starts. (Phase 1 deliverables)
-12. **File size limits are absolute.** A single **400 non-empty-line hard limit** applies to every Python and JS source file — `plugin.py`, all `polarrecorder/` modules, all `tests/`, and the viewer JS files — matching dyninstruments. `tools/` scripts and non-code files (Markdown, JSON, etc.) are exempt. Split the module, don't compress code. (Section 8, Python Rules / JS Tooling)
+12. **File size limits are absolute.** A single **400 non-empty-line hard limit** applies to every Python and JS source file — `plugin.py`, all `polarrecorder/` modules, all `tests/`, and the viewer JS files — matching paired-project. `tools/` scripts and non-code files (Markdown, JSON, etc.) are exempt. Split the module, don't compress code. (Section 8, Python Rules / JS Tooling)
 
 ### Quality Gate Scripts
 
@@ -1744,7 +1744,7 @@ python -m pytest tests/ --tb=short
 python -m pytest tests/ --cov=polarrecorder --cov-report=term-missing --cov-fail-under=90
 python tools/check-python-filesize.py
 python tools/check-release.py --dry-run  # exits 0 if no zip in releases/; validates if present
-# JS checks (dyninstruments-derived)
+# JS checks (paired-project-derived)
 npm run check:all
 echo "All checks passed."
 ```
@@ -1762,7 +1762,7 @@ echo "All checks passed."
 | `python tools/check-release.py --dry-run` | Release artifact validation (exits 0 if no zip in `releases/`; validates contents if one exists) |
 | `npm run check:all` | All JS + doc checks (patterns, docs, filesize, headers, namespace, naming, deps) |
 
-Documentation checks are handled entirely by the dyninstruments-derived JS tools via `npm run check:docs`, which runs `check-docs.mjs` (TABLEOFCONTENTS ↔ filesystem sync, orphan detection), `check-doc-format.mjs` (Status/Overview/Key Details structure), `check-doc-reachability.mjs` (internal cross-reference resolution), and `check-ai-instructions.mjs` (AGENTS.md/CLAUDE.md shared block sync).
+Documentation checks are handled entirely by the paired-project-derived JS tools via `npm run check:docs`, which runs `check-docs.mjs` (TABLEOFCONTENTS ↔ filesystem sync, orphan detection), `check-doc-format.mjs` (Status/Overview/Key Details structure), `check-doc-reachability.mjs` (internal cross-reference resolution), and `check-ai-instructions.mjs` (AGENTS.md/CLAUDE.md shared block sync).
 
 **The final gate (`check-all.sh`) always runs both Python and JS checks.**
 
@@ -1926,13 +1926,13 @@ class Logger(Protocol):
 
 Modules that don't need logging (pure functions like `units.py`, `bins.py`, `histogram.py`) receive no logger. Modules that need logging (`config.py` parse function, `persistence.py`, `pipeline.py`, `reader.py`) accept an optional `logger` parameter in their constructors or top-level functions.
 
-### JS Tooling (derived from dyninstruments)
+### JS Tooling (derived from paired-project)
 
-JS quality enforcement reuses dyninstruments tooling scripts (`tools/*.mjs`), classified by adaptation level. All tools are Node.js scripts run via `npm run` commands — no ESLint or external linter dependency.
+JS quality enforcement reuses paired-project tooling scripts (`tools/*.mjs`), classified by adaptation level. All tools are Node.js scripts run via `npm run` commands — no ESLint or external linter dependency.
 
 **Copy as-is (path/config changes only):**
 
-| dyninstruments tool | Adaptation |
+| paired-project tool | Adaptation |
 |---|---|
 | `check-file-size.mjs` | 400-line hard limit per JS file + oneliner compression detection. Change scanned paths to all `*.js` files in the project root (i.e. `viewer.js`, `polar-chart.js`, `timeline-chart.js`, `export-ui.js`, and any future split files such as `grid-editor.js`). Explicitly excludes `plugin.mjs`. |
 | `check-doc-format.mjs` | Status/Overview/Key Details structure check on all `documentation/**/*.md`. Works unchanged. |
@@ -1944,13 +1944,13 @@ JS quality enforcement reuses dyninstruments tooling scripts (`tools/*.mjs`), cl
 
 **Adapt (keep scanning framework, replace rules):**
 
-| dyninstruments tool | polarrecorder adaptation |
+| paired-project tool | polarrecorder adaptation |
 |---|---|
 | `check-namespace.mjs` → `check-namespace.mjs` | Checks that every scanned JS file (all root `*.js`, excluding `plugin.mjs`): (1) contains `window.Polarrecorder` at least once (namespace is used), and (2) does not assign any identifier directly to `window.<name>` other than `window.Polarrecorder` (no other global pollution). Exit code 1 with filename and line number on any violation. |
 
-**Build standalone — purpose-built scripts with NO dyninstruments dependency:**
+**Build standalone — purpose-built scripts with NO paired-project dependency:**
 
-The three tools below are **NOT copied or adapted from dyninstruments.** Inspection of the dyninstruments sources shows they are coupled to dyninstruments' component-registry architecture (`check-naming.mjs` and `check-dependencies.mjs` both `import` from `tools/components-registry-loader.mjs` and use a `SENTINEL_BASE`/cluster-widget registry; `check-patterns.mjs` is not a single file — it imports from a `tools/check-patterns/` subdirectory of rule/shared modules). polarrecorder has no component registry (just four flat, namespaced JS files with a fixed load order), so importing that machinery would either fail at runtime or require porting the whole registry. Each is therefore written from scratch as a small, self-contained Node.js script using only built-ins (`fs`, `path`, `readline`), with no imports from any other `tools/` module.
+The three tools below are **NOT copied or adapted from paired-project.** Inspection of the paired-project sources shows they are coupled to paired-project' component-registry architecture (`check-naming.mjs` and `check-dependencies.mjs` both `import` from `tools/components-registry-loader.mjs` and use a `SENTINEL_BASE`/cluster-widget registry; `check-patterns.mjs` is not a single file — it imports from a `tools/check-patterns/` subdirectory of rule/shared modules). polarrecorder has no component registry (just four flat, namespaced JS files with a fixed load order), so importing that machinery would either fail at runtime or require porting the whole registry. Each is therefore written from scratch as a small, self-contained Node.js script using only built-ins (`fs`, `path`, `readline`), with no imports from any other `tools/` module.
 
 | polarrecorder tool | Specification |
 |---|---|
@@ -1962,9 +1962,9 @@ These three run on the empty/minimal Phase 1 repo without error (no registry to 
 
 **Drop (not applicable to polarrecorder):**
 
-| dyninstruments tool | Reason |
+| paired-project tool | Reason |
 |---|---|
-| `check-smell-contracts.mjs` | All contracts are dyninstruments-specific (theme-cache, formatter-boundary, placeholder, state-screen). Not worth adapting for 4 JS files; `check-patterns.mjs` covers polarrecorder needs. |
+| `check-smell-contracts.mjs` | All contracts are paired-project-specific (theme-cache, formatter-boundary, placeholder, state-screen). Not worth adapting for 4 JS files; `check-patterns.mjs` covers polarrecorder needs. |
 | `check-coverage.mjs` | JS coverage not required for MVP. Python coverage handles domain logic. |
 | `perf-run.mjs` / `perf-check.mjs` | No JS performance benchmarks needed. |
 
@@ -1995,7 +1995,7 @@ No npm dependencies required — all check scripts use only Node.js built-ins (`
 
 ### Git Hooks
 
-**Pre-push hook** — `tools/install-hooks.mjs` (copied from dyninstruments) creates `.githooks/pre-push` which runs `tools/check-all.sh`. Push is blocked if any check fails. Setup:
+**Pre-push hook** — `tools/install-hooks.mjs` (copied from paired-project) creates `.githooks/pre-push` which runs `tools/check-all.sh`. Push is blocked if any check fails. Setup:
 
 1. `npm run hooks:install` — creates `.githooks/pre-push`, sets `git config core.hooksPath .githooks`.
 2. The hook file is committed to the repo (`.githooks/` directory). `install-hooks.mjs` only needs to run once per clone to set the git config.
@@ -2007,7 +2007,7 @@ The hook runs the full gate (Python + JS checks). There is no pre-commit hook �
 
 ### Smell Prevention Catalog (for `documentation/conventions/smell-prevention.md`)
 
-The smell catalog follows the dyninstruments format: tabular, with columns Smell Class, Anti-Pattern, Required Pattern, Enforcement, Severity (block/warn). The following smells are specific to polarrecorder:
+The smell catalog follows the paired-project format: tabular, with columns Smell Class, Anti-Pattern, Required Pattern, Enforcement, Severity (block/warn). The following smells are specific to polarrecorder:
 
 **Python smells (enforced by ruff, mypy, `check-python-filesize.py`, and code review):**
 
@@ -2092,7 +2092,7 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 10. Do not block the AvNav plugin thread for long operations. Persistence writes and API responses must be fast.
 11. Do not crash AvNav on corrupt persistence files. Fall back to backup, then empty model, with logging.
 12. Do not modify AvNav source code.
-13. Do not copy dyninstruments infrastructure blindly. Adapt patterns for a Python-first server-side plugin with a lightweight JS viewer.
+13. Do not copy paired-project infrastructure blindly. Adapt patterns for a Python-first server-side plugin with a lightweight JS viewer.
 14. Do not hide uncertainty from users. Show confidence per bin. Show rejection reasons. Show when data is sparse.
 15. Do not make the polar look more reliable than the data supports. Empty bins are empty, not interpolated.
 16. Do not store the `data/` directory in the release zip.
@@ -2147,7 +2147,7 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 - `tools/check-python-filesize.py` — Python file size limit + header enforcement.
 - `tools/check-release.py` — **created in Phase 1** (not deferred to Phase 10), because `check-all.sh` invokes `python tools/check-release.py --dry-run` on every run and the script must therefore exist from the first phase. The Phase 1 version only needs the `--dry-run` path: exit 0 when no zip exists in `releases/`. Its full zip-content validation logic is completed in Phase 10. Without this, `check-all.sh` aborts under `set -e` on a missing-file error.
 - `tests/test_smoke.py` — one trivial test that imports `polarrecorder` (and instantiates the `plugin.py` stub). This is **required**, not optional: `pytest` returns exit code 5 ("no tests collected") when zero tests exist, which aborts `check-all.sh` under `set -euo pipefail` even though coverage itself would report 100%. A single passing test makes both `pytest tests/` and the `--cov-fail-under=90` run exit 0.
-- JS check scripts: copied/adapted from dyninstruments where noted (`check-docs.mjs`, `check-doc-format.mjs`, `check-doc-reachability.mjs`, `check-ai-instructions.mjs`, `sync-ai-instructions.mjs`, `check-file-size.mjs`, `check-headers.mjs`, `check-namespace.mjs`, `install-hooks.mjs`) and **purpose-built with no dyninstruments dependency** (`check-patterns.mjs`, `check-naming.mjs`, `check-dependencies.mjs`) — see Section 8 JS Tooling for the classification.
+- JS check scripts: copied/adapted from paired-project where noted (`check-docs.mjs`, `check-doc-format.mjs`, `check-doc-reachability.mjs`, `check-ai-instructions.mjs`, `sync-ai-instructions.mjs`, `check-file-size.mjs`, `check-headers.mjs`, `check-namespace.mjs`, `install-hooks.mjs`) and **purpose-built with no paired-project dependency** (`check-patterns.mjs`, `check-naming.mjs`, `check-dependencies.mjs`) — see Section 8 JS Tooling for the classification.
 - `.githooks/pre-push` hook (installed via `npm run hooks:install`).
 - `tests/conftest.py` with `FakeAvNavAPI`, `FakeClock`, and `FakeLogger` fixtures.
 - `polarrecorder/__init__.py`.
@@ -2451,7 +2451,7 @@ The smell catalog follows the dyninstruments format: tabular, with columns Smell
 - `tools/check-all.sh` passes with zero failures.
 - Coverage meets thresholds: `polarrecorder/` overall ≥ 90%, `polarrecorder/validation/` ≥ 95%, `polarrecorder/histogram.py` ≥ 95%.
 - All documentation up to date.
-- **Delete the `misc/` reference folder** (`misc/avnav-master/` and `misc/dyninstruments/`). These were development-time references for the Verified Baseline (§3) and the dyninstruments quality-infra adaptation; once the project is complete they are no longer needed and only bloat the repository. Removing `misc/` has no effect on `tools/check-all.sh` (the Python checks scan only project Python sources, and the doc checks scan `documentation/`), and it is already absent from every release zip (the release allowlist in §10 Phase 10 ships only the named runtime files + `polarrecorder/`). Do this as a final cleanup step; the gate below is re-run afterward to confirm green.
+- **Delete the `misc/` reference folder** (`misc/avnav-master/` and `misc/paired-project/`). These were development-time references for the Verified Baseline (§3) and the paired-project quality-infra adaptation; once the project is complete they are no longer needed and only bloat the repository. Removing `misc/` has no effect on `tools/check-all.sh` (the Python checks scan only project Python sources, and the doc checks scan `documentation/`), and it is already absent from every release zip (the release allowlist in §10 Phase 10 ships only the named runtime files + `polarrecorder/`). Do this as a final cleanup step; the gate below is re-run afterward to confirm green.
 - Manual test checklist:
   - [ ] Install plugin by copying directory to AvNav plugins.
   - [ ] AvNav loads plugin without errors.

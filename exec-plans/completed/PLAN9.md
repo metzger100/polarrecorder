@@ -31,10 +31,10 @@ explicit:
 2. This repository remains a Python/JavaScript hybrid **role model**, not a greenfield template. Neither repository can
    be used directly for a greenfield project, and this plan does not try to make that true. The greenfield environment
    will be written separately and derived from the byte-identical core this plan produces.
-3. Required gates must remain independently runnable. No gate may read the sibling Dyninstruments checkout, at any
+3. Required gates must remain independently runnable. No gate may read the sibling paired-project checkout, at any
    phase, for any reason. Cross-repository identity is proven by both repositories committing the **same manifest
    digests**, verified locally in each.
-4. The paired implementation plan is Dyninstruments `exec-plans/active/PLAN42.md`, with the same title. The two plans
+4. The paired implementation plan is paired-project `exec-plans/active/PLAN42.md`, with the same title. The two plans
    share the Shared Core Contract, the Canonical Rule Identifiers table, and the Paired Acceptance Matrix verbatim.
 5. Donation direction is decided per artifact on audited merit, not per repository. This repository donates some
    implementations and adopts others.
@@ -78,7 +78,7 @@ Expected outcomes after completion:
 
 ## Verified Baseline
 
-Verified against this checkout at `e03962b` and the Dyninstruments checkout at `c743f965` on 2026-07-28. Both worktrees
+Verified against this checkout at `e03962b` and the paired-project checkout at `c743f965` on 2026-07-28. Both worktrees
 clean, both on `main`.
 
 1. `npm run check:all` exits 0 in both repositories. This repository reports 378 passing pytest tests, 34 passing JS
@@ -90,7 +90,7 @@ clean, both on `main`.
 3. Every maintained tool is pinned to the identical version in both repositories: eslint 10.8.0, prettier 3.9.6, vitest
    4.1.10, typescript 7.0.2, stylelint 17.14.1, markdownlint-cli2 0.23.1, jscpd 5.0.12, ajv 8.20.0, linkinator 8.0.2.
    `engines` and `packageManager` are identical.
-4. After normalising `polarrecorder|dyninstruments|Dyni|DyniComponents|…` to a single token, collapsing whitespace, and
+4. After normalising `polarrecorder|paired-project|Dyni|PairedComponents|…` to a single token, collapsing whitespace, and
    dropping blank lines, residual divergence across shared tooling files is: `install.sh` 1 %,
    `tools/quality-policy/run-format.mjs` 36 %, `tools/release-prepare.mjs` 36 %, `linkinator.config.json` 38 %,
    `tools/quality-policy/generate-format-scope.mjs` 45 %, `tools/release-create.mjs` 50 %, `.githooks/pre-push` 55 %,
@@ -118,17 +118,17 @@ clean, both on `main`.
    `polarrecorder, polar recorder, avnav, plugin.py, plugin.js, plugin.mjs, server/polarrecorder, polar.json, windy`.
    `tests/js/check-patterns-registry.test.mjs` uses `polarrecorder, avnav, pluginhandler, configcache`.
    `tests/js/skills-lock.test.mjs` uses
-   `dyninstruments, dynicomponents, widget, gauge, mapper, cluster, renderer, ratioDefaults, rangeDefaults, createRenderer`.
-   Dyninstruments uses three further lists.
+   `paired-project, paired-components, widget, gauge, mapper, cluster, renderer, ratioDefaults, rangeDefaults, createRenderer`.
+   paired-project uses three further lists.
 9. `tests/js/skills-lock.test.mjs` forbids **the sibling repository's** tokens while explicitly permitting this
    repository's own, and its own docstring states the skills are "adapted for use on this repository, **not a
-   repository-agnostic package**". Dyninstruments' equivalent contract forbids its own tokens instead. The same five
+   repository-agnostic package**". paired-project' equivalent contract forbids its own tokens instead. The same five
    files therefore carry opposite liftability contracts.
-10. `tests/js/check-patterns-registry.test.mjs` scans whole generic rule-definition **file contents**; Dyninstruments'
+10. `tests/js/check-patterns-registry.test.mjs` scans whole generic rule-definition **file contents**; paired-project'
     `tests/contract/pattern-rule-generic-scope-contract.test.js` checks only rule semantics and documents in-file that
     scope globs are deliberately exempt. The two contracts check different things.
 11. Grepping the generic tool layer here finds 5 project-token occurrences, all in `tools/check-patterns/shared.mjs`:
-    `polarrecorder` 3 times, `viewer` twice. `viewer` is not in any blocklist here, so those pass. Dyninstruments'
+    `polarrecorder` 3 times, `viewer` twice. `viewer` is not in any blocklist here, so those pass. paired-project'
     generic layer leaks 26 or more.
 12. Rule-name sets: 16 generic and 12 project rules here; 19 generic and 23 project rules there. Exactly 8 generic names
     exist in both: `absolute-home-path`, `canvas-api-typeof-guard`, `default-truthy-fallback`, `exec-plan-reference`,
@@ -144,12 +144,12 @@ clean, both on `main`.
 15. This repository's classification of fact 14's third case is the correct one.
     `tools/check-patterns/generic/structural-rules.mjs:160-175` detects an inline numeric floor of 8 or more inside
     `Math.max(...)` or `clamp(...)` and emits the project-free message "user-visible layout/text floors must come from a
-    shared owner". Dyninstruments' copy carries the same detection but a 17-entry product file list as its scope and the
+    shared owner". paired-project' copy carries the same detection but a 17-entry product file list as its scope and the
     message "Use ResponsiveScaleProfile-derived sizing", which is why it was classified project.
 16. `tools/quality-policy/eslint-complexity-config.mjs` freezes `STRICT_LIMITS` at complexity 10, max-statements 40,
     max-depth 4, max-params 6, and `tools/quality-policy/eslint.complexity.config.mjs` builds them at **error** severity
     with `noInlineConfig: true`. Its header states there is no baseline, scanner, or exception ledger anywhere in this
-    repository. Dyninstruments freezes the identical four values but exports its rule fragment at **warn** severity and
+    repository. paired-project freezes the identical four values but exports its rule fragment at **warn** severity and
     has no second config file.
 17. `npm run check:complexity` here is
     `eslint --config tools/quality-policy/eslint.complexity.config.mjs viewer/*.js plugin.js plugin.mjs`, so
@@ -174,20 +174,20 @@ clean, both on `main`.
     `tools/quality-policy/format-scope.json`: this repository has **0** `eslint-disable`, `@ts-ignore`,
     `@ts-expect-error`, `prettier-ignore`, and `istanbul ignore`. The only four files matching those strings are
     `eslint.config.mjs`, which defines the banned term list, and three convention documents that describe the policy.
-    Dyninstruments has 1152 `@ts-ignore` plus 13 `eslint-disable` across 160 files, all under `tests/`.
+    paired-project has 1152 `@ts-ignore` plus 13 `eslint-disable` across 160 files, all under `tests/`.
 22. That zero is enforced structurally: `eslint.config.mjs` sets `linterOptions: { noInlineConfig: true }` on all three
     file groups and sets `"no-warning-comments": ["error", { terms: SUPPRESSION_COMMENT_TERMS, location: "anywhere" }]`
     over `eslint-disable`, `ts-ignore`, `ts-nocheck`, `ts-expect-error`, `prettier-ignore`, and `istanbul ignore`.
 23. Further `eslint.config.mjs` differences: this repository uses `eqeqeq: "error"` and `no-unused-vars` with
     `caughtErrors: "all"` and `caughtErrorsIgnorePattern: "^_"`; sets `no-console: "error"`,
     `no-empty: ["error", { allowEmptyCatch: false }]`, and `no-restricted-globals: ["error", "isFinite", "isNaN"]` on
-    shipped runtime. Dyninstruments uses `eqeqeq: ["error", "smart"]` and `caughtErrors: "none"`, has no `no-console` or
+    shipped runtime. paired-project uses `eqeqeq: ["error", "smart"]` and `caughtErrors: "none"`, has no `no-console` or
     `no-empty` rule, and adds `no-useless-assignment` plus `@eslint-community/eslint-plugin-eslint-comments` with
     `reportUnusedDisableDirectives: "error"` and an inventory-driven relaxed-test-file class. This repository has no
     relaxed test class.
 24. `vitest.config.mjs` here uses `defineConfig`, no globals, projects `tools` / `viewer` / `plugin` defined by glob
     patterns only, and carries an in-file rationale that patterns prevent a new test file being silently excluded from
-    every gate. Dyninstruments' `vitest.config.js` is CommonJS `module.exports` with no `defineConfig`, `globals: true`,
+    every gate. paired-project' `vitest.config.js` is CommonJS `module.exports` with no `defineConfig`, `globals: true`,
     projects `unit-node` / `contract` / `unit-dom`, and explicit **file lists** for the first two with a catch-all third
     project. Test files here are `.test.mjs` using `import` and `node:assert/strict`; there they are `.test.js` using
     `require()` and `expect()`.
@@ -206,7 +206,7 @@ clean, both on `main`.
     `tools/quality-policy/generate_baseline_coverage_capture.py`.
 27. `AGENTS.md` §8 still names `tools/check-all.sh` as an authority — "`tools/check-all.sh` is a pure wrapper alias
     around the same command" — and `documentation/conventions/quality-gates.md` documents it. The file is 8 lines and
-    does nothing but `cd` to the repository root and run `npm run check:all`. Dyninstruments has no such concept.
+    does nothing but `cd` to the repository root and run `npm run check:all`. paired-project has no such concept.
 28. The `SHARED_INSTRUCTIONS` block is 74 lines here and 67 lines there. The `BEGIN` marker sits **after** the
     "AGENTS.md is a routing map" line here and **before** it there, so the two blocks do not enclose the same sections.
     Section 2 forbids plan-number citation outright here and permits a literal `PLANn.md` pointer there. The block here
@@ -226,12 +226,12 @@ clean, both on `main`.
     `check:reachability`, and `check:docformat`. This repository has a dedicated `tests/js/doc-toc-contract.test.mjs`;
     that repository folds TOC into reachability.
 32. `skills-lock.json` here holds 5 entries — `preflight`, `create-plan`, `doc-sync`, `scan-smells`, `grill-me-repo` —
-    each with `sourceType: "sibling-repository"` and source `dyninstruments/.agents/skills/<name>/SKILL.md`.
+    each with `sourceType: "sibling-repository"` and source `paired-project/.agents/skills/<name>/SKILL.md`.
     `tests/js/skills-lock.test.mjs` asserts `sha256(local SKILL.md) === computedHash`, and recomputation confirms the
-    hashes match **this repository's own local files** (`preflight` → `dedbc2e3…`). The Dyninstruments files hash
+    hashes match **this repository's own local files** (`preflight` → `dedbc2e3…`). The paired-project files hash
     differently (`preflight` → `af0e5f8b…`). The recorded provenance is therefore false, and the drift between the two
     copies is undetected.
-33. Dyninstruments' `skills-lock.json` holds 5 entries named `grill-me`, `improve-codebase-architecture`, `prd-to-plan`,
+33. paired-project' `skills-lock.json` holds 5 entries named `grill-me`, `improve-codebase-architecture`, `prd-to-plan`,
     `request-refactor-plan`, `write-a-prd` from `mattpocock/skills`, none of which matches any local skill directory
     there, and its contract test never compares a hash to a file. Each repository has half of a working lock mechanism.
 34. `.agents/skills/` here holds exactly the 5 generic skills. There it holds those 5 plus two project skills,
@@ -257,10 +257,10 @@ clean, both on `main`.
     `${POLARRECORDER_VENV:-$REPO_ROOT/venv}/bin` to `PATH` when present, and runs one `npm run check:all`. It has no
     trailing newline. `.githooks/README.md` here follows the four-section documentation shape; there it is free-form.
 40. `exec-plans/completed/PLAN8.md` is the most recent completed plan here; `exec-plans/active/` contains only
-    `.gitkeep`. Dyninstruments' most recent completed plan is `PLAN41.md`.
+    `.gitkeep`. paired-project' most recent completed plan is `PLAN41.md`.
 41. The `todo-without-owner` scope divergence is observable, not theoretical. This repository's
     `todo-without-owner:markdown` uses `collectMarkdownTodoTargets`, which walks `documentation/` plus six root Markdown
-    files and never reaches `exec-plans/`. Dyninstruments' single rule scopes `["**/*.js", "**/*.md"]` excluding only
+    files and never reaches `exec-plans/`. paired-project' single rule scopes `["**/*.js", "**/*.md"]` excluding only
     `node_modules/**`, `README.md`, `CONTRIBUTING.md`, and `ROADMAP.md`, so it scans `exec-plans/**` too. Writing the
     bare marker word in a plan file therefore passes `npm run check:patterns` here and fails there — verified while
     authoring this plan. Fact 38's file-size exemption does not extend to the pattern rules. Collapsing the three rules
@@ -273,7 +273,7 @@ clean, both on `main`.
 
 ## Shared Core Contract
 
-This section is verbatim identical in Dyninstruments `PLAN42.md` and Polar Recorder `PLAN9.md`. Neither may be edited
+This section is verbatim identical in paired-project `PLAN42.md` and Polar Recorder `PLAN9.md`. Neither may be edited
 without amending the other in the same task.
 
 ### Definitions
@@ -294,33 +294,33 @@ Direction is decided on audited merit, per artifact.
 
 | Artifact                                                                               | Canonical source        | Reason                                                                                          |
 | -------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
-| `tools/check-patterns.mjs`, `check-patterns/shared*.mjs`, `check-patterns/rules-*.mjs` | Dyninstruments          | Severity model, `--warn` mode, per-finding suppression, declarative default runner              |
-| Suppression marker grammar                                                             | Dyninstruments, renamed | Owner, date, reason, and expiry validation; prefix must be de-branded                           |
+| `tools/check-patterns.mjs`, `check-patterns/shared*.mjs`, `check-patterns/rules-*.mjs` | paired-project          | Severity model, `--warn` mode, per-finding suppression, declarative default runner              |
+| Suppression marker grammar                                                             | paired-project, renamed | Owner, date, reason, and expiry validation; prefix must be de-branded                           |
 | `tools/check-patterns/generic/*` rule definitions                                      | Merge                   | Union of both sets under canonical names, with scope and remedy externalised                    |
 | `tools/check-file-size.mjs` and `check-file-size/*`                                    | Polar Recorder          | Exports `runFileSizeCheck`, so it is importable and self-testable                               |
-| `tools/check-test-focus.mjs`                                                           | Polar Recorder          | Exports `runTestFocusCheck`; the Dyninstruments copy exports nothing                            |
-| `tools/check-schema.mjs`                                                               | Polar Recorder          | Has a self-test; the Dyninstruments copy has none                                               |
+| `tools/check-test-focus.mjs`                                                           | Polar Recorder          | Exports `runTestFocusCheck`; the paired-project copy exports nothing                            |
+| `tools/check-schema.mjs`                                                               | Polar Recorder          | Has a self-test; the paired-project copy has none                                               |
 | `tools/check-doc-links.mjs`, `check-doc-links-proof.mjs`                               | Polar Recorder          | Have self-tests                                                                                 |
 | `tools/hooks-install.mjs`, `tools/hooks-doctor.mjs`                                    | Polar Recorder          | Have self-tests and richer repair output                                                        |
 | `tools/quality-policy/run-format.mjs`, `generate-format-scope.mjs`                     | Polar Recorder          | Lowest residual divergence already, and self-tested                                             |
-| `tools/quality-policy/check-coverage-inventory.mjs` and its data schema                | Dyninstruments          | "Every shipped file classified exactly once" is the stronger fail-closed invariant              |
-| `tools/quality-policy/test-inventory.mjs` and its data schema                          | Dyninstruments          | Per-file classification generalises; the flat helper list does not                              |
-| `complexity-scan.mjs`, `complexity-budget.mjs`, `complexity-capture-integrity.mjs`     | Dyninstruments          | An empty baseline reproduces strict enforcement, so one mechanism serves both postures          |
+| `tools/quality-policy/check-coverage-inventory.mjs` and its data schema                | paired-project          | "Every shipped file classified exactly once" is the stronger fail-closed invariant              |
+| `tools/quality-policy/test-inventory.mjs` and its data schema                          | paired-project          | Per-file classification generalises; the flat helper list does not                              |
+| `complexity-scan.mjs`, `complexity-budget.mjs`, `complexity-capture-integrity.mjs`     | paired-project          | An empty baseline reproduces strict enforcement, so one mechanism serves both postures          |
 | `tools/quality-policy/eslint-complexity-config.mjs`                                    | Merge                   | One owner exporting `STRICT_LIMITS` plus a severity-parameterised rule fragment                 |
-| `tools/release-*.mjs`, `tools/release-path-policy.mjs`, `release-zip-builder.mjs`      | Dyninstruments          | All-JavaScript; no Python release path                                                          |
-| `install.sh`                                                                           | Dyninstruments          | Already 1 % residual divergence                                                                 |
+| `tools/release-*.mjs`, `tools/release-path-policy.mjs`, `release-zip-builder.mjs`      | paired-project          | All-JavaScript; no Python release path                                                          |
+| `install.sh`                                                                           | paired-project          | Already 1 % residual divergence                                                                 |
 | `eslint.config.mjs` base strictness                                                    | Polar Recorder          | `noInlineConfig`, banned suppression terms, strict `eqeqeq`, `caughtErrors: "all"`              |
-| `eslint.config.mjs` test scoping                                                       | Dyninstruments          | Inventory-driven relaxation is the more precise mechanism                                       |
+| `eslint.config.mjs` test scoping                                                       | paired-project          | Inventory-driven relaxation is the more precise mechanism                                       |
 | `jscpd.config.json` thresholds                                                         | Polar Recorder          | `threshold: 0` at 5 lines / 50 tokens is the stronger bound                                     |
-| Duplication second layer                                                               | Dyninstruments          | `duplicate-functions` and `duplicate-block-clones` replace two bespoke tools                    |
+| Duplication second layer                                                               | paired-project          | `duplicate-functions` and `duplicate-block-clones` replace two bespoke tools                    |
 | `vitest.config` shape                                                                  | Polar Recorder          | `defineConfig`, ESM, glob-only projects, no silent-exclusion risk                               |
 | `documentation/conventions/documentation-format.md`                                    | Polar Recorder          | Matches what both already enforce                                                               |
 | `documentation/guides/exec-plan-authoring.md`                                          | Polar Recorder          | `**Status:** Current.`, no emoji vocabulary                                                     |
 | `.githooks/pre-push`, `.githooks/README.md`                                            | Polar Recorder shape    | Documented shape, plus an optional repo-local virtualenv `PATH` block that is inert without one |
 | `.markdownlint-cli2.jsonc`, `linkinator.config.json`                                   | Merge                   | Same rule set, union of ignores, strictest link options                                         |
 | `tsconfig.*.json` `compilerOptions`                                                    | Merge                   | Identical options; `files` and `include` stay project-owned                                     |
-| `skills-lock.json` semantics                                                           | Polar Recorder          | Hash is verified against the local file; Dyninstruments never compares a hash                   |
-| `skills-lock.json` shape assertions                                                    | Dyninstruments          | Explicit generic/project skill classification                                                   |
+| `skills-lock.json` semantics                                                           | Polar Recorder          | Hash is verified against the local file; paired-project never compares a hash                   |
+| `skills-lock.json` shape assertions                                                    | paired-project          | Explicit generic/project skill classification                                                   |
 | `SHARED_INSTRUCTIONS` block                                                            | Merge                   | Resolved per conflict in the table below                                                        |
 | `.github/workflows/*`, `.nvmrc`, `.prettierrc.json`, `.codex/config.toml`, base schema | Already identical       | No change                                                                                       |
 
@@ -329,7 +329,7 @@ Direction is decided on audited merit, per artifact.
 | Conflict                     | Resolution                                                                                                                             |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `BEGIN` marker position      | `BEGIN` goes immediately after the one-line file purpose and before the routing-map note, so both blocks enclose sections 0 through 4  |
-| Plan-citation rule           | Adopt the Dyninstruments reading: a literal pointer to a real `PLANn.md` file is permitted; citing a plan or phase as authority is not |
+| Plan-citation rule           | Adopt the paired-project reading: a literal pointer to a real `PLANn.md` file is permitted; citing a plan or phase as authority is not |
 | Required documentation shape | Adopt the Polar Recorder inclusion: the shape rule belongs inside the shared block, since both repositories enforce it                 |
 | Quality-checklist skeleton   | Union of both item sets, with every product-specific item moved below the `END` marker                                                 |
 | Gate-name references         | The block names only `check:all`, `check:fast`, and `check:core`; every other command name lives below the `END` marker                |
@@ -338,7 +338,7 @@ Direction is decided on audited merit, per artifact.
 
 One identifier and one classification per concept. Both repositories rename to match.
 
-| Concept                            | Canonical name                       | Class   | Was (Dyninstruments)                 | Was (Polar Recorder)                    |
+| Concept                            | Canonical name                       | Class   | Was (paired-project)                 | Was (Polar Recorder)                    |
 | ---------------------------------- | ------------------------------------ | ------- | ------------------------------------ | --------------------------------------- |
 | Unsafe HTML or DOM sink            | `unsafe-html-dom-sink`               | generic | `unsafe-html-dom-sink`               | `inner-html-assignment`                 |
 | Swallowed catch                    | `empty-catch`                        | generic | `empty-catch`                        | `promise-empty-catch`                   |
@@ -361,7 +361,7 @@ real.
 One file, `tools/quality-policy/generic-tokens.json`, with three arrays, identical in both repositories:
 
 - `projectTokens` — every product token of **both** repositories, so a Tier 1 file naming either is rejected: `dyni`,
-  `dyninstruments`, `dynicomponents`, `dyniplugin`, `polarrecorder`, `polar recorder`, `polar.json`, `windy`.
+  `paired-project`, `paired-components`, `paired-plugin`, `polarrecorder`, `polar recorder`, `polar.json`, `windy`.
 - `domainTokens` — product-domain nouns that make a file un-liftable even when neither project is named: `widget`,
   `cluster`, `gauge`, `renderer`, `mapper`, `viewer`, `layout profile`, `componentContext`, `ClusterWidget`,
   `ResponsiveScaleProfile`, `widget-kits`, `editable`, `pluginhandler`, `configcache`.
@@ -509,7 +509,7 @@ schemas, and every baseline data file — stays exactly as project-specific as i
 
 - No gate, test, tool, or config may read, resolve, or stat a path outside this repository. `sibling-repository` as a
   `sourceType` value is forbidden, and fact 32's five entries must stop using it.
-- Tier 1 changes land in this repository and Dyninstruments in the same working session, verified by an out-of-band
+- Tier 1 changes land in this repository and paired-project in the same working session, verified by an out-of-band
   `cmp` before either side's phase is closed.
 - If a Tier 1 file cannot be made identical, it is not Tier 1. Reclassify it to Tier 2, record the reason in this plan,
   and remove it from the manifest — do not weaken the manifest check.
@@ -614,7 +614,7 @@ Dependencies: Phase A.
 #### B3. Add the donated checkers to the manifest
 
 - Add all ten donated modules plus their submodules to `shared-core-manifest.json`.
-- Verify out-of-band with `cmp` that each added path is byte-identical to Dyninstruments' after its paired phase.
+- Verify out-of-band with `cmp` that each added path is byte-identical to paired-project' after its paired phase.
 
 Exit conditions: `npm run check:all` green; `npm run check:shared-core` green over the donated set; every donated
 checker exports a `run*()` function and reads project values from project-owned data; the three new self-tests each have
@@ -733,7 +733,7 @@ Dependencies: Phase A.
 - Rewrite the block per the five conflict resolutions in the Shared Core Contract. Move the `BEGIN` marker to sit after
   the one-line file purpose and before the routing-map note, so the block encloses sections 0 through 4.
 - Keep this repository's "Required Documentation Shape" subsection inside the block — the contract adopts it. Change
-  section 2 to the Dyninstruments reading, which permits a literal `PLANn.md` pointer. Union the checklist skeletons,
+  section 2 to the paired-project reading, which permits a literal `PLANn.md` pointer. Union the checklist skeletons,
   pushing every product-specific item below the `END` marker.
 - Add the block, extracted, as a manifest entry via a generated `tools/quality-policy/shared-instructions.md` that
   `AGENTS.md` is asserted to contain verbatim. `AGENTS.md` itself stays Tier 2, since section 5 onward is
@@ -757,7 +757,7 @@ Dependencies: Phase A.
 #### E3. Repair the skill lock
 
 - Rewrite `skills-lock.json` so `sourceType` is `vendored-generic` for the five generic skills and `project-local` for
-  any project skill. Remove every `sibling-repository` source value and the `dyninstruments/.agents/skills/...` paths
+  any project skill. Remove every `sibling-repository` source value and the `paired-project/.agents/skills/...` paths
   (fact 32) — they assert a provenance nothing verifies and that the audit showed to be false.
 - Keep the existing hash-versus-local-file assertion and the tampered-file negative fixture; they are this repository's
   contribution.
@@ -934,11 +934,11 @@ contracts; every count in `quality-gates.md` is test-asserted.
 
 Intent: prove every row of the Paired Acceptance Matrix in both repositories.
 
-Dependencies: all previous phases, and Dyninstruments `PLAN42.md` Phases A through J.
+Dependencies: all previous phases, and paired-project `PLAN42.md` Phases A through J.
 
 #### K1. Verify identity out of band
 
-- Run `cmp` over every manifest path against the Dyninstruments checkout and record a zero-difference result for every
+- Run `cmp` over every manifest path against the paired-project checkout and record a zero-difference result for every
   entry. This is a review action, not a gate: no committed check may read the sibling checkout.
 - Confirm `shared-core-manifest.json` `entries`, `generic-tokens.json`, the extracted shared-instructions text, and the
   five generic skill files are byte-identical.
@@ -956,7 +956,7 @@ Dependencies: all previous phases, and Dyninstruments `PLAN42.md` Phases A throu
   inventory, and stating that the greenfield environment is derived from it rather than from either repository.
 - Record in this plan which Tier 1 candidates were reclassified to Tier 2 and why, and which Python capabilities reach a
   Tier 1 checker only through an adapter, so the greenfield authors inherit the reasoning and not just the result.
-- Move `PLAN9.md` to `exec-plans/completed/` and update the Dyninstruments plan's pointer.
+- Move `PLAN9.md` to `exec-plans/completed/` and update the paired-project plan's pointer.
 
 Exit conditions: every row P1 through P14 of the Paired Acceptance Matrix verified and recorded in both plans; both
 gates green; suppression count still zero here; no reclassification left unexplained.
@@ -1012,7 +1012,7 @@ Documentation files that must change:
   carries all three arrays.
 - `runGenericSurfaceCheck()` reports zero findings over the shared-instructions text, the five generic skill files,
   every Tier 1 tool module's full content, and every generic rule definition's content and rendered semantics.
-- No Tier 1 file contains `polarrecorder`, `dyninstruments`, `viewer`, `widget`, `cluster`, `avnav`, `plugin.py`, or any
+- No Tier 1 file contains `polarrecorder`, `paired-project`, `viewer`, `widget`, `cluster`, `avnav`, `plugin.py`, or any
   other listed token.
 - The `skills-lock.test.mjs` claim that the skills are not repository-agnostic is removed.
 
@@ -1163,7 +1163,7 @@ responsible for fixing — again the "don't weaken a gate, but don't do a later 
 `skills-lock.test.mjs` derives its enforced set from `generic-tokens.json` (not a hand-copied list) but selects only the
 sibling-vocabulary-relevant subset: `domainTokens` minus `{configcache, pluginhandler, editable}` (host/AvNav-adjacent
 terms this repository's own skill docs legitimately use today) plus the `dyni*`-prefixed `projectTokens`. This
-reproduces the test's original enforcement scope (Dyninstruments-specific vocabulary) while sourcing values from the
+reproduces the test's original enforcement scope (paired-project-specific vocabulary) while sourcing values from the
 single owner file. Phase E should widen this to the full union once the skill files are converged and drop this
 narrowing comment.
 
@@ -1217,7 +1217,7 @@ already delegates file discovery entirely to `test-inventory.mjs`; the hook scri
 `.githooks`/`core.hooksPath` conventions). `generate-format-scope.mjs`'s `classify()` function is not named as an
 extraction target by the plan's specific instruction (only the three JSON files above are named) and was left untouched;
 its bespoke per-file classification rules remain project-specific code, to be addressed by whatever later phase actually
-converges it with Dyninstruments' copy.
+converges it with paired-project' copy.
 
 **B2 — self-test gaps.** Investigated the three named owners before adding anything:
 
@@ -1262,11 +1262,11 @@ to 18 total. `npm run check:shared-core` passes over the full set, and `runManif
 
 **Plan note (B3 — cross-repository cmp deferred):** the Hard Constraints section requires Tier 1 changes to land in both
 repositories in the same working session, verified by an out-of-band `cmp`, before either side's phase is closed. This
-session's work was scoped to this repository only (no changes were made in `../dyninstruments`), so that `cmp`
+session's work was scoped to this repository only (no changes were made in `../paired-project`), so that `cmp`
 verification could not be performed here. This is consistent with the Phase K dependency structure, which names
-Dyninstruments `PLAN42.md` Phases A through J as a prerequisite for the joint Paired Acceptance Matrix checkpoint (row
+paired-project `PLAN42.md` Phases A through J as a prerequisite for the joint Paired Acceptance Matrix checkpoint (row
 P4) rather than a per-phase requirement -- the digests recorded here are this repository's local truth pending
-Dyninstruments running its own equivalent donation-prep phase. This must be resolved before Phase K can close; it is
+paired-project running its own equivalent donation-prep phase. This must be resolved before Phase K can close; it is
 recorded here rather than silently assumed.
 
 **Exit conditions verified:**
@@ -1291,7 +1291,7 @@ recorded here rather than silently assumed.
 
 #### Shared-core reconciliation addendum
 
-The prior B manifest entries are not byte-identical to the corresponding Dyninstruments files, so the donated checker
+The prior B manifest entries are not byte-identical to the corresponding paired-project files, so the donated checker
 set is Tier 2 rather than shared core. The generic rule-definition directory is also Tier 2 until its paired migration
 produces byte-identical content; its Tier 1 scan root is removed. Both manifests now retain only the five proven
 identical base files: `.codex/config.toml`, `.nvmrc`, `.prettierrc.json`, `schemas/avnav-plugin-base.schema.json`, and
@@ -1328,12 +1328,12 @@ proven Tier 1 paths; its SHA-256 is `99f84ba9158bd4f45569752555bca2ffc07ec1dfc5d
 manifest contract was updated to that reconciled value. Review-only out-of-band checks all exited 0:
 
 ```text
-cmp tools/quality-policy/shared-core-manifest.json ../dyninstruments/tools/quality-policy/shared-core-manifest.json
-cmp .codex/config.toml ../dyninstruments/.codex/config.toml
-cmp .nvmrc ../dyninstruments/.nvmrc
-cmp .prettierrc.json ../dyninstruments/.prettierrc.json
-cmp schemas/avnav-plugin-base.schema.json ../dyninstruments/schemas/avnav-plugin-base.schema.json
-cmp exec-plans/active/.gitkeep ../dyninstruments/exec-plans/active/.gitkeep
+cmp tools/quality-policy/shared-core-manifest.json ../paired-project/tools/quality-policy/shared-core-manifest.json
+cmp .codex/config.toml ../paired-project/.codex/config.toml
+cmp .nvmrc ../paired-project/.nvmrc
+cmp .prettierrc.json ../paired-project/.prettierrc.json
+cmp schemas/avnav-plugin-base.schema.json ../paired-project/schemas/avnav-plugin-base.schema.json
+cmp exec-plans/active/.gitkeep ../paired-project/exec-plans/active/.gitkeep
 ```
 
 `npm run check:shared-core` exits 0 with `checkedEntries: 5`, zero findings, and zero manifest `.mjs` entries. No
@@ -1341,9 +1341,9 @@ committed tool, test, configuration, or gate reads the sibling repository.
 
 **Reclassification note (audit correction):** the sixth Phase A seed entry, `.github/workflows/quality.yml`, is also
 absent from the reconciled five-entry manifest above without a recorded reason, which the "no reclassification left
-unexplained" exit condition requires. A direct `diff` against `../dyninstruments/.github/workflows/quality.yml` confirms
+unexplained" exit condition requires. A direct `diff` against `../paired-project/.github/workflows/quality.yml` confirms
 the files have genuinely diverged: this repository's workflow now inlines a Python setup step (`actions/setup-python`
-plus a `POLARRECORDER_PYTHON` environment variable) that Dyninstruments' Python-free workflow has no equivalent for,
+plus a `POLARRECORDER_PYTHON` environment variable) that paired-project' Python-free workflow has no equivalent for,
 introduced by this phase's/Phase G's `tools/setup.mjs` retirement moving its Python-3.14 guard and virtualenv creation
 steps into CI configuration directly. This is a genuine, reviewed Tier 2 reclassification, not an unexplained drop:
 `.github/workflows/quality.yml` is Tier 2 pending a paired convergence of the Python-setup step, recorded here per the
@@ -1376,7 +1376,7 @@ identifiers; `console-in-runtime` covers the runtime entrypoint scope in additio
 `no-console` rule. All project-specific scopes remain in `project-pattern-scopes.json`. Documentation and the
 `scan-smells` skill use the canonical identifiers, and the skill lock digest was refreshed. The generic rule
 definitions, registry, and canonical-name data stay Tier 2 because this repository's profile is not byte-identical to
-Dyninstruments. No canonical-name data file was added to Tier 1, and `shared-core-manifest.json` remains unchanged at
+paired-project. No canonical-name data file was added to Tier 1, and `shared-core-manifest.json` remains unchanged at
 its five entries.
 
 **D3 — Tier 2 registry contract.** `project-pattern-scopes.json` owns the canonical generic-name list. The registry
@@ -1454,7 +1454,7 @@ configuration, or gate reads the sibling checkout.
 
 ### Phase G — Retire superseded bespoke tooling (landed)
 
-**Release-proof amendment (user-authorized).** The planned Dyninstruments release implementation was inspected only out
+**Release-proof amendment (user-authorized).** The planned paired-project release implementation was inspected only out
 of band and uses a local `zip` executable; it cannot reproduce Python `zipfile`'s compressed bytes. The old Python
 builder was separately proven to reproduce `releases/polarrecorder-1.0.0-beta.7.zip` from its own tagged source. The
 Phase G release proof therefore uses exact runtime-content identity: normalized archive paths and SHA-256 equality for
@@ -1583,7 +1583,7 @@ required tokens and that each new rung's script body names the real test file it
 **H3 — narrated counts.** `documentation/conventions/quality-gates.md` already narrates zero coverage-inventory,
 test-inventory, exception, or complexity-baseline **entry counts** — Phase F (reclassified) kept this repository's own
 family-based `coverage-floors.json` schema and a baseline-free direct-ESLint complexity policy instead of adopting
-Dyninstruments' per-file schema and scan-plus-budget mechanism, so the specific drift-prone counts this bullet
+paired-project' per-file schema and scan-plus-budget mechanism, so the specific drift-prone counts this bullet
 originally targeted do not exist in this document the way the plan's audit found them. What the document does narrate
 are four numeric **policy thresholds** (complexity `10/40/4/6`, viewer coverage `80/80/80/65`), which are config values,
 not counts that grow — but they can still silently drift from their live source, so
@@ -1602,9 +1602,9 @@ links, links-proof, TOC, format, reachability, smell-catalog, and pointer contra
 `quality-gates.md` is test-asserted (or, for the two counts that no longer apply under this repository's Tier 2
 mechanisms, confirmed absent from the document by the same test).
 
-**Next phase:** Phase K — pair verification and closeout. Its dependencies (all previous phases, plus Dyninstruments
+**Next phase:** Phase K — pair verification and closeout. Its dependencies (all previous phases, plus paired-project
 `PLAN42.md` Phases A through J) are not yet satisfied from this repository's side alone: Phase K requires joint,
-out-of-band cross-repository verification against Dyninstruments' own phase progress, which this session has not
+out-of-band cross-repository verification against paired-project' own phase progress, which this session has not
 performed (see the Phase B/C/E notes above on deferred cross-repo `cmp` work).
 
 ---
@@ -1619,7 +1619,7 @@ list retains `viewer`, and the extracted instructions match the shared block ver
 
 P1–P14 are evidenced by the paired full-gate results recorded in the preceding completed phases, the local
 `check:shared-core` and `check:generic-surface` results from this closeout (both zero findings in both repositories),
-the direct `cmp` sweep, and the paired documentation gates. The direct rerun of Dyninstruments' full gate was
+the direct `cmp` sweep, and the paired documentation gates. The direct rerun of paired-project' full gate was
 interrupted by the execution host during linting; no failure was reported before termination. The existing clean-shell
 full-gate records remain the final complete-gate evidence for this change set.
 
@@ -1631,7 +1631,7 @@ derived from it rather than copied from either role model.
 
 ## Related
 
-- Paired plan: Dyninstruments `exec-plans/completed/PLAN42.md`
+- Paired plan: paired-project `exec-plans/completed/PLAN42.md`
 - [PLAN8.md](../completed/PLAN8.md) — the contract convergence this plan completes
 - [PLAN7.md](../completed/PLAN7.md) — the alignment attempt whose implementation gap this plan closes
 - [PLAN5.md](../completed/PLAN5.md) — the fail-closed gate set this plan must not weaken

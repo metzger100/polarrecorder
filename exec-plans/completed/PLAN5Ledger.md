@@ -133,7 +133,7 @@ check-all.sh`, and `git diff --check` — all exit 0. Recorded final counts: 387
   `documentation/guides/exec-plan-authoring.md`, `documentation/guides/
 release-workflow.md`) were confirmed already consistent with the locked Phase 8 state
   (most had already been synchronized directly during 8F); no changes needed.
-- **9D (Documentation-only proof):** Grepped for `/home/<user>` or `/Users/<user>`
+- **9D (Documentation-only proof):** Grepped for machine-local absolute paths.
   absolute-path residue across every `*.md` file outside `exec-plans/completed/` and
   `releases/` — none found. Grepped for lingering active claims naming
   `check-performance.py`/`check-coverage.py` as live checkers — the one match
@@ -333,7 +333,7 @@ package:check` (36 Node + 19 pytest); `npm run actions:lint`; `bash -n
 
 - Start/Finish: 2026-07-24 (same session, continuing directly from Phase 6)
 - **7A (JavaScript complexity no-regression policy):** Found and adapted the sibling
-  `dyninstruments` plugin's own `tools/quality-policy/complexity-scan.mjs`/
+  `paired-project` plugin's own `tools/quality-policy/complexity-scan.mjs`/
   `complexity-budget.mjs`/`phase0-complexity-capture.mjs` (explicitly named in the plan
   text) for Polar's production JS roots (`PRODUCTION_ROOTS = ["viewer"]`, plus the two
   entrypoints). Unlike the temporary Phase 2A `complexity-scan-lib.mjs` (hand-rolled
@@ -361,7 +361,7 @@ package:check` (36 Node + 19 pytest); `npm run actions:lint`; `bash -n
   `check-complexity-migration.mjs`, `complexity-scan-lib.mjs`, and
   `tests/js/complexity-migration.test.mjs` (the Phase 2A temporary owner and its
   self-test) in the same change as their replacement. Added 17 self-tests in
-  `tests/js/complexity-budget.test.mjs` (adapted from `dyninstruments`' own
+  `tests/js/complexity-budget.test.mjs` (adapted from `paired-project`' own
   `complexity-budget.test.js`, minus its `jsonc-parser`-based duplicate-JSON-key
   detection -- a deliberate scope reduction, since no other Polar quality-policy checker
   uses that hardening and adding a new dependency for one lone check would be
@@ -374,13 +374,13 @@ package:check` (36 Node + 19 pytest); `npm run actions:lint`; `bash -n
   `command-graph.json`; removed `check:complexity` from `notYetActivatedLeaves`.
   - Real transitive typing debt found while bringing the new files under strict
     `checkJs` via `tsconfig.tests.json` (the same phenomenon recorded in the Phase 5B
-    entry): `complexity-scan.mjs`'s adapted-from-dyninstruments AST-walking code had no
-    JSDoc types at all (dyninstruments does not hold `tools/quality-policy/` to strict
+    entry): `complexity-scan.mjs`'s adapted-from-paired-project AST-walking code had no
+    JSDoc types at all (paired-project does not hold `tools/quality-policy/` to strict
     `checkJs`); added a full `AstNode`/`Finding`/`FunctionIndexEntry` typedef set and
     ~40 parameter/return annotations, fixed one ESLint `Linter.RulesRecord` cast and one
     `message.ruleId`-can-be-`null` narrowing gap (both real, both in the adapted code,
     neither present in the original hand-rolled Phase 2A scanner).
-- **7B (deterministic scaling contracts):** Ported the sibling `dyninstruments` plugin's
+- **7B (deterministic scaling contracts):** Ported the sibling `paired-project` plugin's
   `operation-count-evaluator.mjs` to Python as `tests/operation_count_evaluator.py`
   (`evaluate_linear_scaling`: `work(2n) <= 2*work(n) + fixed_overhead`;
   `evaluate_bounded_by_configured_steps`: `work(steps) <= steps*tolerance_per_step`; both
@@ -462,7 +462,7 @@ smell-prevention.md`/`tools/check-smell-catalog.mjs` (updated "Hot-path regressi
   including the 17 new `complexity-budget.test.mjs` cases) and
   `npm run typecheck:tests`/`npm run typecheck:source` both clean.
   `python -m ruff check .`/`ruff format --check .`/`mypy --strict` clean repo-wide.
-- Deviations: (1) skipped `dyninstruments`' `jsonc-parser`-based duplicate-JSON-key
+- Deviations: (1) skipped `paired-project`' `jsonc-parser`-based duplicate-JSON-key
   detection in `complexity-budget.mjs` for the reason recorded in 7A above (consistency
   with every other Polar quality-policy checker's plain-`JSON.parse` convention, not a
   correctness gap this project has ever guarded elsewhere); (2) the already-recorded

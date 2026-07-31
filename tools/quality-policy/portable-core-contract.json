@@ -1,113 +1,99 @@
 {
   "schemaVersion": 1,
-  "coreVersion": "1.0.0",
+  "coreVersion": "2.0.0",
   "mandatoryRoles": [
     {
-      "name": "manifest-verifier",
-      "paths": ["tools/check-shared-core.mjs", "tools/portable-core-attest.mjs", "tools/check-standalone-boundary.mjs"]
+      "name": "portable-role-1",
+      "paths": ["tools/portable-core/complexity-engine.mjs"]
     },
-    { "name": "genericness-scanner", "paths": ["tools/check-generic-surface.mjs"] },
     {
-      "name": "instructions-and-skills",
+      "name": "portable-role-2",
+      "paths": ["tools/portable-core/coverage-engine.mjs"]
+    },
+    {
+      "name": "portable-role-3",
+      "paths": ["tools/portable-core/doc-link-engine.mjs"]
+    },
+    {
+      "name": "portable-role-4",
+      "paths": ["tools/portable-core/file-size-engine.mjs"]
+    },
+    {
+      "name": "portable-role-5",
+      "paths": ["tools/portable-core/focused-test-engine.mjs"]
+    },
+    {
+      "name": "portable-role-6",
+      "paths": ["tools/portable-core/format-engine.mjs"]
+    },
+    {
+      "name": "portable-role-7",
+      "paths": ["tools/portable-core/hook-engine.mjs"]
+    },
+    {
+      "name": "portable-role-8",
+      "paths": ["tools/portable-core/json.mjs"]
+    },
+    {
+      "name": "portable-role-9",
+      "paths": ["tools/portable-core/lint-policy.mjs"]
+    },
+    {
+      "name": "portable-role-10",
+      "paths": ["tools/portable-core/path-policy.mjs"]
+    },
+    {
+      "name": "portable-role-11",
+      "paths": ["tools/portable-core/release-engine.mjs"]
+    },
+    {
+      "name": "portable-role-12",
+      "paths": ["tools/portable-core/schema-engine.mjs"]
+    },
+    {
+      "name": "portable-role-13",
+      "paths": ["tools/portable-core/suppression-engine.mjs"]
+    },
+    {
+      "name": "portable-role-14",
+      "paths": ["tools/portable-core/test-inventory-engine.mjs"]
+    },
+    {
+      "name": "portable-role-15",
+      "paths": [".agents/skills/create-plan/SKILL.md"]
+    },
+    {
+      "name": "portable-role-16",
       "paths": [
-        "tools/quality-policy/shared-instructions.md",
-        ".agents/skills/preflight/SKILL.md",
-        ".agents/skills/create-plan/SKILL.md",
         ".agents/skills/doc-sync/SKILL.md",
+        ".agents/skills/grill-me-repo/SKILL.md",
+        ".agents/skills/preflight/SKILL.md",
         ".agents/skills/scan-smells/SKILL.md",
-        ".agents/skills/grill-me-repo/SKILL.md"
-      ]
-    },
-    {
-      "name": "pattern-core",
-      "paths": [
-        "tools/check-patterns/ast-utils.mjs",
-        "tools/check-patterns/rules-core.mjs",
-        "tools/check-patterns/shared-suppressions.mjs",
-        "tools/check-patterns/generic/canonical-rule-ids.mjs",
-        "tools/check-patterns/generic/duplication-rules.mjs",
-        "tools/check-patterns/generic/namespace-policy.mjs",
-        "tools/check-patterns/generic/rules-core-generic-defs.mjs",
-        "tools/check-patterns/generic/rules-failfast-generic-defs.mjs",
-        "tools/check-patterns/generic/rules-regex-generic-defs.mjs"
-      ]
-    },
-    { "name": "file-size", "paths": ["tools/portable-core/file-size-engine.mjs"] },
-    { "name": "focused-tests", "paths": ["tools/portable-core/focused-test-engine.mjs"] },
-    {
-      "name": "schema",
-      "paths": [
-        "tools/portable-core/schema-engine.mjs",
-        "schemas/portable-core-contract.schema.json",
-        "schemas/portable-profile.schema.json"
-      ]
-    },
-    { "name": "documentation-links", "paths": ["tools/portable-core/doc-link-engine.mjs"] },
-    { "name": "hooks", "paths": ["tools/portable-core/hook-engine.mjs"] },
-    { "name": "formatting", "paths": ["tools/portable-core/format-engine.mjs"] },
-    { "name": "complexity", "paths": ["tools/portable-core/complexity-engine.mjs"] },
-    { "name": "coverage", "paths": ["tools/portable-core/coverage-engine.mjs"] },
-    { "name": "suppression-scanner", "paths": ["tools/portable-core/suppression-engine.mjs"] },
-    { "name": "test-inventory", "paths": ["tools/portable-core/test-inventory-engine.mjs"] },
-    { "name": "release", "paths": ["tools/portable-core/release-engine.mjs"] },
-    {
-      "name": "filesystem-policy",
-      "paths": [
-        "tools/portable-core/path-policy.mjs",
-        "tools/portable-core/json.mjs",
-        "tools/portable-core/lint-policy.mjs"
-      ]
-    },
-    {
-      "name": "self-tests",
-      "paths": [
-        "tests/js/portable-core.test.mjs",
-        "tests/js/generic-rule-corpus.test.mjs",
-        "tests/js/suppression-policy.test.mjs",
-        "tests/fixtures/portable-core/clean.txt"
+        "tests/portable-core/portable-policy-engines.test.mjs"
       ]
     }
   ],
   "mandatoryPaths": [
-    "tools/check-shared-core.mjs",
-    "tools/check-generic-surface.mjs",
-    "tools/portable-core-attest.mjs",
-    "tools/check-standalone-boundary.mjs",
-    "tools/portable-core/path-policy.mjs",
-    "tools/portable-core/json.mjs",
-    "tools/portable-core/file-size-engine.mjs",
-    "tools/portable-core/focused-test-engine.mjs",
-    "tools/portable-core/schema-engine.mjs",
-    "tools/portable-core/doc-link-engine.mjs",
-    "tools/portable-core/hook-engine.mjs",
-    "tools/portable-core/format-engine.mjs",
-    "tools/portable-core/complexity-engine.mjs",
-    "tools/portable-core/coverage-engine.mjs",
-    "tools/portable-core/test-inventory-engine.mjs",
-    "tools/portable-core/release-engine.mjs",
-    "tools/portable-core/lint-policy.mjs",
-    "tools/portable-core/suppression-engine.mjs",
-    "tools/check-patterns/ast-utils.mjs",
-    "tools/check-patterns/rules-core.mjs",
-    "tools/check-patterns/shared-suppressions.mjs",
-    "tools/check-patterns/generic/canonical-rule-ids.mjs",
-    "tools/check-patterns/generic/duplication-rules.mjs",
-    "tools/check-patterns/generic/namespace-policy.mjs",
-    "tools/check-patterns/generic/rules-core-generic-defs.mjs",
-    "tools/check-patterns/generic/rules-failfast-generic-defs.mjs",
-    "tools/check-patterns/generic/rules-regex-generic-defs.mjs",
-    "schemas/portable-profile.schema.json",
-    "tools/quality-policy/shared-instructions.md",
-    ".agents/skills/preflight/SKILL.md",
     ".agents/skills/create-plan/SKILL.md",
     ".agents/skills/doc-sync/SKILL.md",
-    ".agents/skills/scan-smells/SKILL.md",
     ".agents/skills/grill-me-repo/SKILL.md",
-    "schemas/portable-core-contract.schema.json",
-    "tests/js/portable-core.test.mjs",
-    "tests/js/generic-rule-corpus.test.mjs",
-    "tests/js/suppression-policy.test.mjs",
-    "tests/fixtures/portable-core/clean.txt"
+    ".agents/skills/preflight/SKILL.md",
+    ".agents/skills/scan-smells/SKILL.md",
+    "tests/portable-core/portable-policy-engines.test.mjs",
+    "tools/portable-core/complexity-engine.mjs",
+    "tools/portable-core/coverage-engine.mjs",
+    "tools/portable-core/doc-link-engine.mjs",
+    "tools/portable-core/file-size-engine.mjs",
+    "tools/portable-core/focused-test-engine.mjs",
+    "tools/portable-core/format-engine.mjs",
+    "tools/portable-core/hook-engine.mjs",
+    "tools/portable-core/json.mjs",
+    "tools/portable-core/lint-policy.mjs",
+    "tools/portable-core/path-policy.mjs",
+    "tools/portable-core/release-engine.mjs",
+    "tools/portable-core/schema-engine.mjs",
+    "tools/portable-core/suppression-engine.mjs",
+    "tools/portable-core/test-inventory-engine.mjs"
   ],
   "metadataPaths": [
     "tools/quality-policy/portable-core-contract.json",
@@ -115,8 +101,10 @@
     "tools/quality-policy/shared-core-manifest.sha256"
   ],
   "profileSchemas": [
-    { "path": "schemas/portable-core-contract.schema.json", "schemaVersion": 1 },
-    { "path": "schemas/portable-profile.schema.json", "schemaVersion": 1 }
+    {
+      "path": "tools/portable-core/schema-engine.mjs",
+      "schemaVersion": 1
+    }
   ],
   "canonicalRuleIds": [
     "absolute-home-path",
@@ -142,30 +130,55 @@
     "invalid-lint-suppression"
   ],
   "requiredCheckerExports": [
-    { "path": "tools/check-shared-core.mjs", "exports": ["runSharedCoreCheck"] },
-    { "path": "tools/check-generic-surface.mjs", "exports": ["runGenericSurfaceCheck"] },
-    { "path": "tools/portable-core-attest.mjs", "exports": ["runPortableCoreAttest"] },
-    { "path": "tools/check-standalone-boundary.mjs", "exports": ["runStandaloneBoundaryCheck"] },
-    { "path": "tools/portable-core/file-size-engine.mjs", "exports": ["runFileSizePolicy"] },
-    { "path": "tools/portable-core/focused-test-engine.mjs", "exports": ["runFocusedTestPolicy"] },
-    { "path": "tools/portable-core/schema-engine.mjs", "exports": ["runProfileSchemaCheck"] },
-    { "path": "tools/portable-core/doc-link-engine.mjs", "exports": ["runDocumentationLinkPolicy"] },
-    { "path": "tools/portable-core/hook-engine.mjs", "exports": ["runHookPolicy"] },
-    { "path": "tools/portable-core/format-engine.mjs", "exports": ["runFormatPolicy"] },
-    { "path": "tools/portable-core/complexity-engine.mjs", "exports": ["runComplexityPolicy"] },
-    { "path": "tools/portable-core/coverage-engine.mjs", "exports": ["runCoveragePolicy"] },
-    { "path": "tools/portable-core/test-inventory-engine.mjs", "exports": ["runTestInventoryPolicy"] },
-    { "path": "tools/portable-core/release-engine.mjs", "exports": ["runReleasePolicy"] },
-    { "path": "tools/portable-core/suppression-engine.mjs", "exports": ["runSuppressionCheck"] }
+    {
+      "path": "tools/portable-core/complexity-engine.mjs",
+      "exports": ["runComplexityPolicy"]
+    },
+    {
+      "path": "tools/portable-core/coverage-engine.mjs",
+      "exports": ["runCoveragePolicy"]
+    },
+    {
+      "path": "tools/portable-core/doc-link-engine.mjs",
+      "exports": ["runDocumentationLinkPolicy"]
+    },
+    {
+      "path": "tools/portable-core/file-size-engine.mjs",
+      "exports": ["runFileSizePolicy"]
+    },
+    {
+      "path": "tools/portable-core/focused-test-engine.mjs",
+      "exports": ["runFocusedTestPolicy"]
+    },
+    {
+      "path": "tools/portable-core/format-engine.mjs",
+      "exports": ["runFormatPolicy"]
+    },
+    {
+      "path": "tools/portable-core/hook-engine.mjs",
+      "exports": ["runHookPolicy"]
+    },
+    {
+      "path": "tools/portable-core/release-engine.mjs",
+      "exports": ["runReleasePolicy"]
+    },
+    {
+      "path": "tools/portable-core/schema-engine.mjs",
+      "exports": ["runProfileSchemaCheck"]
+    },
+    {
+      "path": "tools/portable-core/suppression-engine.mjs",
+      "exports": ["runSuppressionCheck"]
+    },
+    {
+      "path": "tools/portable-core/test-inventory-engine.mjs",
+      "exports": ["runTestInventoryPolicy"]
+    }
   ],
   "requiredSelfTestRoles": [
-    { "role": "portable-core-contract", "tests": ["tests/js/portable-core.test.mjs"] },
     {
-      "role": "generic-rule-registry",
-      "tests": ["tests/js/portable-core.test.mjs", "tests/js/generic-rule-corpus.test.mjs"]
-    },
-    { "role": "policy-engines", "tests": ["tests/js/portable-core.test.mjs"] },
-    { "role": "standalone-boundary", "tests": ["tests/js/portable-core.test.mjs"] },
-    { "role": "suppression-scanner", "tests": ["tests/js/suppression-policy.test.mjs"] }
+      "role": "engines",
+      "tests": ["tests/js/portable-core.test.mjs"]
+    }
   ]
 }

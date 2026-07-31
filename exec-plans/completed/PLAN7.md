@@ -6,7 +6,7 @@ Written after repository verification and the cross-repository quality-system au
 
 This plan closes the remaining Polar Recorder migration gaps: the complexity self-grandfathering escape, duplicated
 command-graph work, an unbounded fast gate, non-portable actionlint checksum behavior, missing portable Codex
-configuration, synchronized contributor documentation, and final mechanical alignment evidence with Dyninstruments.
+configuration, synchronized contributor documentation, and final mechanical alignment evidence with paired-project.
 
 Archived at the repository owner's direction on 2026-07-27. The remaining paired-repository verification is recorded
 in the completion evidence for a future follow-up.
@@ -25,8 +25,8 @@ these assumptions explicit:
    scaffolder, shared quality package, default remote-CI profile, or generic `doctor` command is separate future work.
 3. The current local-first governance remains deliberate for this repository. The transport-only tag publisher stays
    transport-only; no PR workflow, CODEOWNERS file, branch ruleset, or pre-commit framework is introduced here.
-4. Required gates must remain independently runnable and must never read the sibling Dyninstruments checkout.
-5. The paired implementation plan is Dyninstruments
+4. Required gates must remain independently runnable and must never read the sibling paired-project checkout.
+5. The paired implementation plan is paired-project
    `exec-plans/active/PLAN40.md — Close quality-contract gaps and establish the final viewer-profile role model`.
 6. Common alignment means the same guarantees and contributor vocabulary, not byte-identical product-specific tools.
 
@@ -38,7 +38,7 @@ with repository evidence instead of weakening a gate or silently improvising.
 ## Goal
 
 Finish the Polar Recorder migration as an honest, extraction-ready hybrid-profile role model whose shared quality
-contracts align with Dyninstruments and whose zero-complexity-debt policy cannot be bypassed by editing policy data.
+contracts align with paired-project and whose zero-complexity-debt policy cannot be bypassed by editing policy data.
 
 Expected outcomes after completion:
 
@@ -71,7 +71,7 @@ The following facts were rechecked against Polar Recorder
 3. The same gate reported 95.7723% combined Python coverage, 91.7508% exact Python branch coverage, and 93.43% viewer
    lines/statements with 79.38% viewer branches.
 4. Node 26, npm 12.0.1, `packageManager = npm@12.0.1`, and all direct development dependencies are exact. Twelve common
-   maintained-tool versions currently match Dyninstruments exactly.
+   maintained-tool versions currently match paired-project exactly.
 5. `check:all` is exactly `npm run check:core && npm run test:coverage:check`; `check:strict` is exactly
    `npm run check:all`.
 6. `check:core` already reaches the complete Python and Node suite through `test:split`.
@@ -98,9 +98,9 @@ The following facts were rechecked against Polar Recorder
     does not configure `complexity`, `max-statements`, `max-depth`, or `max-params`.
 16. `tools/actionlint.sh` contains reviewed checksums for Linux/Darwin on amd64/arm64, but installation always calls
     `sha256sum`. Stock macOS supplies `shasum`, so the advertised Darwin branches are not executable as written.
-17. Dyninstruments' actionlint owner already falls back from `sha256sum` to `shasum -a 256` and uses
+17. paired-project' actionlint owner already falls back from `sha256sum` to `shasum -a 256` and uses
     `#!/usr/bin/env bash`.
-18. Polar Recorder tracks a zero-byte regular file named `.codex`; Dyninstruments has a configuration directory, but
+18. Polar Recorder tracks a zero-byte regular file named `.codex`; paired-project has a configuration directory, but
     its current MCP block is Windows-specific and unpinned.
 19. `schemas/avnav-plugin-base.schema.json` is byte-identical in both repositories, and both schema corpora contain the
     same generic valid and invalid case payloads.
@@ -151,7 +151,7 @@ threshold.
 
 Polar Recorder has no current shipped complexity violation. The smallest fail-closed design is therefore direct ESLint
 enforcement. A mutable baseline provides no legitimate capability and creates the exact bypass the policy claims to
-forbid. Dyninstruments' digest-anchored historical ratchet remains valid for its real legacy debt and must not be copied
+forbid. paired-project' digest-anchored historical ratchet remains valid for its real legacy debt and must not be copied
 back into Polar Recorder.
 
 ### One concern should have one core path
@@ -163,7 +163,7 @@ meaningful and prevents the recursive aggregate from repeating work.
 ### Alignment is semantic, not a copied tool tree
 
 Polar Recorder keeps Python, Node's test runner, c8, Ruff, mypy, pytest, hash-locked Python setup, and server-plugin
-policy. Dyninstruments keeps Vitest/V8/jsdom and its historical ratchets. Only public meanings, common maintained-tool
+policy. paired-project keeps Vitest/V8/jsdom and its historical ratchets. Only public meanings, common maintained-tool
 pins, generic schema cases, AI configuration, hook and release intent, and evidence vocabulary align.
 
 ### Role model is not greenfield output
@@ -198,7 +198,7 @@ template.
 
 ### Repository independence and paired work
 
-- No required script, hook, test, release command, or documentation checker may resolve `../dyninstruments`.
+- No required script, hook, test, release command, or documentation checker may resolve `../paired-project`.
 - The paired checkout may be read only by the final one-off alignment comparison, never by a committed gate.
 - Do not create the future scaffolder, shared npm package, remote-CI profile, CODEOWNERS file, or generic project
   manifest in this plan.
@@ -370,7 +370,7 @@ template.
   currently installed Codex configuration schema.
 - Add no MCP server. In particular, do not introduce `@latest`, OS-specific launchers, or user-specific environment
   paths.
-- Use the exact same normalized file bytes as Dyninstruments.
+- Use the exact same normalized file bytes as paired-project.
 
 #### D4. Add a local Codex drift proof
 
@@ -435,7 +435,7 @@ template.
 ### Phase F — Prove standalone quality and paired alignment
 
 **Intent:** Close the migration with reproducible evidence, not prose-only parity claims.  
-**Dependencies:** Phases B–E and completion of the paired Dyninstruments plan.
+**Dependencies:** Phases B–E and completion of the paired paired-project plan.
 
 #### F1. Run focused and complete local gates
 
@@ -466,7 +466,7 @@ template.
   - identical `.codex/config.toml`;
   - no required command in either repository references the sibling path.
 - Record justified profile differences: Python/c8/Ruff/mypy and direct zero-debt complexity here; Vitest/V8/jsdom and
-  historical legacy ratchets in Dyninstruments.
+  historical legacy ratchets in paired-project.
 - Keep this comparison one-off unless a separately approved shared-package design gives it a stable owner.
 
 #### F4. Close the active plan
@@ -539,7 +539,7 @@ planned. Test fixtures representing plugin behavior do not change unless require
 
 - [x] `.codex` is a directory containing the normalized `config.toml`, not an empty marker file.
 - [x] The configuration contains no OS-specific command/environment and no unpinned MCP.
-- [x] It is byte-identical to Dyninstruments' normalized configuration (verified against Dyninstruments' current,
+- [x] It is byte-identical to paired-project' normalized configuration (verified against paired-project' current,
       uncommitted worktree state -- see Phase F3).
 - [x] A local test proves required keys and forbidden-token rejection.
 - [x] Generic schema and generic case payloads still match the paired repository.
@@ -561,10 +561,10 @@ planned. Test fixtures representing plugin behavior do not change unless require
 - [x] `npm run check:all` passes.
 - [x] `npm run hooks:doctor` passes.
 - [x] The adversarial complexity probe fails closed with arbitrary policy data present.
-- [x] The paired mechanical comparison (against Dyninstruments' current worktree) reports no unexplained
+- [x] The paired mechanical comparison (against paired-project' current worktree) reports no unexplained
       common-contract drift.
 - [ ] Both repositories remain independently runnable and clean apart from their intended plan implementations --
-      Polar Recorder is clean; Dyninstruments' PLAN40 is still uncommitted/active as of this comparison (see Phase F3).
+      Polar Recorder is clean; paired-project' PLAN40 is still uncommitted/active as of this comparison (see Phase F3).
       **This is the one criterion this session cannot close; see "What remains" below.**
 
 ---
@@ -601,12 +601,12 @@ results, parity results, and deviations. Do not mark criteria complete from expe
   from failing to passing. The temporary probe directory was deleted after recording this result; nothing was
   committed. This is the negative behavior Phase B's direct-ESLint replacement must make structurally impossible (no
   policy file for ESLint's built-in `complexity`/`max-statements`/`max-depth`/`max-params` rules to read).
-- Dyninstruments paired baseline: `exec-plans/active/PLAN40.md` exists and is still active (not yet implemented) at
-  read time, verified against Dyninstruments commit `9a62c68b2cde6df4afb9be4248e18de46ef52af9`. Both plans agree on the
+- paired-project paired baseline: `exec-plans/active/PLAN40.md` exists and is still active (not yet implemented) at
+  read time, verified against paired-project commit `9a62c68b2cde6df4afb9be4248e18de46ef52af9`. Both plans agree on the
   shared contract: identical `check:fast` target string, `check:core`/`check:all`/`check:strict` semantics, `.codex`
   portability rules (strip Windows `cmd`/env/`chrome-devtools-mcp@latest`, keep the rest, byte-identical output), and
   independence constraints. No disagreement found requiring plan amendment. Because PLAN40 is not yet implemented in
-  Dyninstruments, the final byte-identical `.codex/config.toml` and full paired mechanical comparison (Phase F3) cannot
+  paired-project, the final byte-identical `.codex/config.toml` and full paired mechanical comparison (Phase F3) cannot
   be closed from this side alone; this is tracked explicitly rather than assumed.
 
 ### Phase B — direct-ESLint complexity enforcement (2026-07-27)
@@ -661,7 +661,7 @@ results, parity results, and deviations. Do not mark criteria complete from expe
   closed with the new explicit message before any cache/tmp directory is created. All 16 tests in the file pass, and
   the 3 pre-existing offline/cache/in-repo-cache-rejection tests are unaffected.
 - Removed the zero-byte `.codex` marker file; created `.codex/config.toml`. Content was derived by observing that
-  Dyninstruments' own `.codex/config.toml` (mid-implementation of PLAN40 in that repo, read-only) had, by the time this
+  paired-project' own `.codex/config.toml` (mid-implementation of PLAN40 in that repo, read-only) had, by the time this
   phase ran, already been stripped down to exactly the portable subset both plans describe (project-doc/approval/
   sandbox/web-search keys, no MCP block, no Windows `cmd`/env) -- `sha256sum` of that file
   (`be6ded57d66fa0d9101ef7eb2b9fb1aa3105e2871f8eca93218da1c6dc937f64`) was copied byte-for-byte into Polar Recorder's
@@ -684,7 +684,7 @@ results, parity results, and deviations. Do not mark criteria complete from expe
   string and exclusions and documents the new `test:unit` alias.
 - Updated `README.md`'s "For developers" section (trimmed to a short pointer into `CONTRIBUTING.md` to keep the file
   under its hotspot budget -- see below) and `CONTRIBUTING.md` (exact `check:fast` composition, hybrid-role-model
-  sentence naming the sibling `dyninstruments` alignment).
+  sentence naming the sibling `paired-project` alignment).
 - `npm run docs:check` passes (36 Markdown files linted, 40 links checked, TOC/format/reachability/smell-catalog/
   `CLAUDE.md`-pointer checks all pass).
 - `rg "PLAN7|Phase [A-Z]"` over shipped source/docs (outside `exec-plans/`) finds no citation; `check:patterns`'s
@@ -725,7 +725,7 @@ state.
 
 ### Phase F3 — read-only paired comparison (2026-07-27)
 
-Dyninstruments' `exec-plans/active/PLAN40.md` was **still active and uncommitted** at comparison time (`git status
+paired-project' `exec-plans/active/PLAN40.md` was **still active and uncommitted** at comparison time (`git status
 --short` in that checkout showed modified `.codex/config.toml`, `CONTRIBUTING.md`, `README.md`, two
 `documentation/conventions/*.md` files, `documentation/guides/documentation-maintenance.md`, `package.json`, two
 `tests/`/`tools/quality-policy/*.json` files, `tsconfig.tests.json`, and an untracked `tests/tools/codex-config.test.js`
@@ -737,47 +737,47 @@ state, since most of what PLAN7/PLAN40 require to align was already present:
   `jscpd`, `linkinator`, `markdownlint-cli2`, `prettier`, `stylelint`, `stylelint-config-standard`, `typescript`)
   match exactly. `engines.node` (`>=26 <27`), `engines.npm` (`12.0.1`), and `packageManager` (`npm@12.0.1`) match
   exactly.
-- **`check:fast`/`check:all`/`check:strict` exact strings**: Dyninstruments' `check:fast` is
+- **`check:fast`/`check:all`/`check:strict` exact strings**: paired-project' `check:fast` is
   `"npm run check:standard && npm run typecheck && npm run test:unit"` -- byte-identical to Polar Recorder's.
   `check:all` (`"npm run check:core && npm run test:coverage:check"`) and `check:strict` (`"npm run check:all"`) are
-  also byte-identical. `check:core` composition differs in group set/order as expected (Dyninstruments has no
+  also byte-identical. `check:core` composition differs in group set/order as expected (paired-project has no
   Python-specific `check:python-contracts` leaf; Polar Recorder's `test:focus:check` sits before `check:smells` while
-  Dyninstruments' sits after) -- a justified profile difference, since `check:core` shares a _meaning_
+  paired-project' sits after) -- a justified profile difference, since `check:core` shares a _meaning_
   ("complete deterministic non-coverage gate"), not an exact graph, per the Target Alignment Contract.
 - **`.codex/config.toml`**: `diff` reports zero differences; both files share SHA-256
   `be6ded57d66fa0d9101ef7eb2b9fb1aa3105e2871f8eca93218da1c6dc937f64`.
 - **Generic AvNav schema**: `schemas/avnav-plugin-base.schema.json` is byte-identical (`diff` empty). The
   `genericBase` corpus in `tools/quality-policy/plugin-schema-corpus.json` is structurally identical
-  (`JSON.stringify` equal); Dyninstruments' corpus note has already been corrected (no longer claims "no sibling has
+  (`JSON.stringify` equal); paired-project' corpus note has already been corrected (no longer claims "no sibling has
   published a base/profile split") and now names Polar Recorder's shared corpus explicitly.
 - **actionlint**: identical version (`1.7.12`) and all four SHA-256 checksums (`8aca8db9…`, `325e971b…`,
   `5b44c3bc…`, `aba9ced2…`) match exactly, byte-for-byte, despite the two scripts using different internal variable
   names/case-statement shapes. Both scripts independently implement the same portable fallback intent
-  (`command -v sha256sum` else `shasum -a 256`); Dyninstruments' fallback path does not pre-check for the total
+  (`command -v sha256sum` else `shasum -a 256`); paired-project' fallback path does not pre-check for the total
   absence of both tools the way Polar Recorder's explicit prerequisite-message branch does -- a minor, non-required
   implementation difference, not a contract violation (only "portable checksum behavior" is shared, not byte-identical
   scripts).
 - **Publisher workflow Action SHAs**: `actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2` and
   `softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2` match exactly in both
   `.github/workflows/publish-release.yml` files.
-- **No sibling-path reference in required commands**: `grep -rn "\.\./dyninstruments\|/dyninstruments/"` over Polar
+- **No sibling-path reference in required commands**: `grep -rn "\.\./paired-project\|/paired-project/"` over Polar
   Recorder's `.json`/`.mjs`/`.sh`/`.py`/`.js` files (excluding `node_modules`) finds only one hit, inside
   `.claude/settings.local.json` (a Claude Code session tool-permission allowlist entry, not a repo script, hook, test,
-  release command, or documentation checker). Every other "dyninstruments" mention in maintained source is prose
-  attribution ("adapted from the sibling `dyninstruments` plugin"), not a path resolution. `grep -rn "polarrecorder"`
-  over Dyninstruments' equivalent file types (excluding `node_modules`) found zero hits.
+  release command, or documentation checker). Every other "paired-project" mention in maintained source is prose
+  attribution ("adapted from the sibling `paired-project` plugin"), not a path resolution. `grep -rn "polarrecorder"`
+  over paired-project' equivalent file types (excluding `node_modules`) found zero hits.
 
 **No unexplained common-contract drift was found** on any dimension compared above; every profile difference found
 (`check:core` group set/order, actionlint script internals) is explained by the two repositories' documented,
 justified differences (Python/Node hybrid vs. pure-JS/Vitest, and independent-but-equivalent script authorship).
 
-**What remains** (the one acceptance criterion this session cannot close): Dyninstruments' PLAN40 was uncommitted and
+**What remains** (the one acceptance criterion this session cannot close): paired-project' PLAN40 was uncommitted and
 still in `exec-plans/active/` at comparison time, so "both repositories remain independently runnable and clean apart
-from their intended plan implementations" cannot yet be certified for the Dyninstruments side -- that worktree had
+from their intended plan implementations" cannot yet be certified for the paired-project side -- that worktree had
 real, in-progress, uncommitted edits during this session (never touched by this agent, per the Hard Constraints).
 Every dimension actually compared showed no drift, and Polar Recorder's own worktree is clean apart from this plan's
 intended changes. At the repository owner's direction, this plan was archived with the external condition still open:
-Dyninstruments must commit/finalize its PLAN40 implementation, then a follow-up session must re-run this Phase F3
+paired-project must commit/finalize its PLAN40 implementation, then a follow-up session must re-run this Phase F3
 comparison against that committed state (in particular re-confirming `check:core`'s exact composition and the
 `.codex/config.toml` byte-identity once both sides are frozen).
 
@@ -790,4 +790,4 @@ comparison against that committed state (in particular re-confirming `check:core
 - [Testing infrastructure](../../documentation/conventions/testing-infrastructure.md)
 - [Execution-plan authoring](../../documentation/guides/exec-plan-authoring.md)
 - [Documentation maintenance](../../documentation/guides/documentation-maintenance.md)
-- Dyninstruments paired plan: `../../../dyninstruments/exec-plans/active/PLAN40.md`
+- paired-project paired plan: `../../../paired-project/exec-plans/active/PLAN40.md`

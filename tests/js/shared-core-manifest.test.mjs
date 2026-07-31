@@ -15,7 +15,7 @@ import { CANONICAL_GENERIC_RULE_IDS } from "../../tools/check-patterns/generic/c
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, "tools", "quality-policy", "shared-core-manifest.json");
-const ANCHORED_MANIFEST_DIGEST = "e649d2f4947081f0023745adca9f37d5d4f2b7afc4f43add0b9a035cf1a894b1";
+const ANCHORED_MANIFEST_DIGEST = "da363ff66126d67fb5a8279ed594f3caadf009f73f1208a5b24edb83076486f5";
 
 /**
  * @returns {string}

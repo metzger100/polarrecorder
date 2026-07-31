@@ -30,6 +30,7 @@ import { checkPythonCoverage } from "./coverage-inventory/python-coverage.mjs";
 import { checkViewerCoverage } from "./coverage-inventory/viewer-coverage.mjs";
 import { checkFloorRatchet, diffCoverageFloorBaseline } from "./coverage-inventory/floor-baseline.mjs";
 import { floorsPath, pythonReportPath, readJson, viewerReportPath } from "./coverage-inventory/shared.mjs";
+import { runCoveragePolicy } from "../portable-core/coverage-engine.mjs";
 
 export {
   deriveCoverageFloorBaseline,
@@ -93,6 +94,20 @@ export function runCoverageInventoryCheck(options = {}) {
   try {
     const viewerReport = loadViewerReport(root);
     failures.push(...checkViewerCoverage(root, floors, viewerReport));
+    const total = viewerReport.total;
+    failures.push(
+      ...runCoveragePolicy({
+        summary: {
+          viewer: {
+            lines: total.lines.pct,
+            functions: total.functions.pct,
+            statements: total.statements.pct,
+            branches: total.branches.pct
+          }
+        },
+        floors: { viewer: floors.families.viewerFamilyLinePercent }
+      }).failures
+    );
   } catch (error) {
     failures.push(/** @type {Error} */ (error).message);
   }

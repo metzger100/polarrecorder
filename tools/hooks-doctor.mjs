@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { runHookPolicy } from "./portable-core/hook-engine.mjs";
 
 const EXPECTED_HOOKS_PATH = ".githooks";
 
@@ -25,7 +26,6 @@ export function runHooksDoctor(options = {}) {
   const print = options.print !== false;
   /** @type {string[]} */
   const failures = [];
-  const prePush = path.join(root, ".githooks", "pre-push");
 
   if (!fs.existsSync(path.join(root, ".git"))) {
     failures.push("Not a git repository root: .git directory is missing.");
@@ -50,10 +50,9 @@ export function runHooksDoctor(options = {}) {
     }
   }
 
-  if (!fs.existsSync(prePush)) {
-    failures.push("Missing .githooks/pre-push");
-  } else if ((fs.statSync(prePush).mode & 0o111) === 0) {
-    failures.push(".githooks/pre-push is not executable. Run: npm run hooks:install");
+  const hookResult = runHookPolicy({ root, paths: [".githooks/pre-push"] });
+  for (const failure of hookResult.failures) {
+    failures.push(failure.includes("missing hook") ? "Missing .githooks/pre-push" : failure);
   }
 
   if (print) {
