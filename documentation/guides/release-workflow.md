@@ -21,8 +21,8 @@ Version authority:
   `vX.Y.Z[-prerelease][+build]` git tag.
 - The development checkout does not carry a release version in `plugin.json`.
 - `pyproject.toml` declares the project version as dynamic.
-- `tools/release-zip.py --version <version>` stamps that version into the packaged copy of `plugin.json`, which is what
-  runtime `pluginInfo()` reads from an installed release zip.
+- `tools/release-archive.mjs --version <version>` stamps that version into the packaged copy of `plugin.json`, which is
+  what runtime `pluginInfo()` reads from an installed release zip.
 - A development checkout without a stamped `plugin.json` reports the benign development fallback defined in release
   tooling.
 
@@ -61,8 +61,9 @@ Step-by-step release flow:
    command runs it or claims it passed on your behalf.
 
 `release:create` accepts full SemVer release versions, including prereleases such as `1.0.0-beta.1`. It runs the
-required gate (`npm run check:all`), builds the runtime zip with `python tools/release-zip.py --version <version>`,
-validates it with `python tools/check-release.py`, commits the zip and notes, and creates an annotated `v<version>` tag.
+required gate (`npm run check:all`), then creates and validates the runtime zip with the local
+`tools/release-archive.mjs` manifest/staging tool and the installed `zip`/`unzip` executables, commits the zip and
+notes, and creates an annotated `v<version>` tag.
 
 The zip must contain a single top-level `polarrecorder/` directory. Inside that directory, it must contain only runtime
 files: `plugin.py`, `plugin.js`, `plugin.mjs`, `plugin.css`, stamped `plugin.json`, `viewer/`, and
@@ -73,7 +74,7 @@ Manual inspection commands remain useful before publishing:
 
 ```bash
 python -m zipfile --list releases/polarrecorder-X.Y.Z.zip
-python tools/check-release.py releases/polarrecorder-X.Y.Z.zip
+node tools/release-archive.mjs --dry-run
 ```
 
 GitHub release publishing:
@@ -111,7 +112,7 @@ Troubleshooting:
 | `release:create` fails on `npm run check:all` | Lint, typing, test, docs, release, or viewer gate failure | Run `npm run check:all`, fix all failures, rerun release           |
 | `release:create` fails on notes               | Missing or empty companion notes file                     | Create `releases/polarrecorder-X.Y.Z.md` and rerun                 |
 | `release:create` fails with duplicate tag     | `vX.Y.Z` already exists                                   | Choose next version or delete/retarget the tag intentionally       |
-| Zip contains unexpected files                 | Runtime allowlist drift                                   | Update `tools/release_manifest.py` deliberately and rerun the gate |
+| Zip contains unexpected files                 | Runtime allowlist drift                                   | Update `tools/release-archive.mjs` deliberately and rerun the gate |
 | GitHub workflow fails on missing artifacts    | Tag points at a commit without matching zip or notes      | Commit both files, retag intentionally, and push the corrected tag |
 
 ## Related

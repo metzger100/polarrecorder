@@ -13,32 +13,44 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
+const HOOK_ENVIRONMENT_PATH = path.join(ROOT, "tools", "quality-policy", "project-hook-environment.json");
 
 /**
- * @returns {string} the `ruff` executable, preferring the project/POLARRECORDER_VENV venv
+ * @returns {{venvEnvironmentVariable: string}}
+ */
+function readHookEnvironment() {
+  return JSON.parse(fs.readFileSync(HOOK_ENVIRONMENT_PATH, "utf8"));
+}
+
+/**
+ * @returns {string} the `ruff` executable, preferring the project-owned venv env var's venv
  */
 function resolveRuff() {
-  const venvDir = process.env.POLARRECORDER_VENV || path.join(ROOT, "venv");
+  const { venvEnvironmentVariable } = readHookEnvironment();
+  const venvDir = process.env[venvEnvironmentVariable] || path.join(ROOT, "venv");
   const venvRuff = path.join(venvDir, "bin", "ruff");
   return fs.existsSync(venvRuff) ? venvRuff : "ruff";
 }
 
 /**
+ * @param {string} root
  * @returns {{rows: {path: string, owner: string}[]}}
  */
-function loadScope() {
-  const scopePath = path.join(ROOT, "tools", "quality-policy", "format-scope.json");
+function loadScope(root) {
+  const scopePath = path.join(root, "tools", "quality-policy", "format-scope.json");
   return JSON.parse(fs.readFileSync(scopePath, "utf8"));
 }
 
 /**
- * @param {string} mode "check" | "write"
- * @returns {number} exit code
+ * Run Prettier/Ruff over `format-scope.json`'s classification in either check or write mode.
+ * @param {{mode?: "check"|"write", root?: string}} [options]
+ * @returns {{ok: boolean}}
  */
-function run(mode) {
-  const scope = loadScope();
+export function runFormat({ mode = "check", root = ROOT } = {}) {
+  const scope = loadScope(root);
   const prettierPaths = scope.rows.filter((row) => row.owner === "prettier").map((row) => row.path);
   const ruffPaths = scope.rows.filter((row) => row.owner === "ruff").map((row) => row.path);
 
@@ -47,8 +59,8 @@ function run(mode) {
   if (prettierPaths.length > 0) {
     const prettierArgs = [mode === "check" ? "--check" : "--write", ...prettierPaths];
     try {
-      execFileSync(path.join(ROOT, "node_modules", ".bin", "prettier"), prettierArgs, {
-        cwd: ROOT,
+      execFileSync(path.join(root, "node_modules", ".bin", "prettier"), prettierArgs, {
+        cwd: root,
         stdio: "inherit"
       });
     } catch {
@@ -59,14 +71,24 @@ function run(mode) {
   if (ruffPaths.length > 0) {
     const ruffArgs = ["format", ...(mode === "check" ? ["--check"] : []), ...ruffPaths];
     try {
-      execFileSync(resolveRuff(), ruffArgs, { cwd: ROOT, stdio: "inherit" });
+      execFileSync(resolveRuff(), ruffArgs, { cwd: root, stdio: "inherit" });
     } catch {
       failed = true;
     }
   }
 
-  return failed ? 1 : 0;
+  return { ok: !failed };
 }
 
-const mode = process.argv.includes("--write") ? "write" : "check";
-process.exit(run(mode));
+/**
+ * @returns {boolean}
+ */
+function isCliEntrypoint() {
+  if (!process.argv[1]) return false;
+  return pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+}
+
+if (isCliEntrypoint()) {
+  const mode = process.argv.includes("--write") ? "write" : "check";
+  process.exit(runFormat({ mode }).ok ? 0 : 1);
+}

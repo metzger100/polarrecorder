@@ -1,8 +1,7 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { test } from "vitest";
 
 const VIEWER_FILE = "viewer/viewer.js";
 const LATE_WIRED_MODULES = new Set([
@@ -182,3 +181,7 @@ function checkViewerModuleLoadReferences(jsFiles, definitionMap, failures) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   process.exit(runDependencyCheck().ok ? 0 : 1);
 }
+
+test("viewer dependency contract owner exports its runner", () => {
+  if (typeof runDependencyCheck !== "function") throw new Error("missing dependency contract runner");
+});

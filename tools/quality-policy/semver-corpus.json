@@ -1,5 +1,5 @@
 {
-  "note": "Shared valid/invalid SemVer corpus. tests/js/release-version.test.mjs and tests/test_release_manifest.py both assert against this exact file so the JS (tools/release-version.mjs) and Python (tools/release_manifest.py) SemVer authorities can never silently diverge on version acceptance or prerelease classification.",
+  "note": "Shared valid/invalid SemVer corpus. tests/js/release-version.test.mjs asserts tag parsing and tools/release-archive.mjs uses the same SemVer grammar for local archive stamping.",
   "valid": [
     { "version": "0.0.0", "prerelease": false },
     { "version": "1.0.0", "prerelease": false },

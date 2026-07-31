@@ -29,10 +29,23 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.summary.ok, true);
 });
 
+test("variable-renamed cross-file functions fail the generic duplication rule", () => {
+  const result = runChecker({
+    "viewer/one.js":
+      viewerHeader() +
+      "function first(alpha) { const local = alpha + 7; const next = local * 3; const total = next + alpha + 9; return total + local + next + alpha + 11 + total + local + next + alpha + 13; }\n",
+    "viewer/two.js":
+      viewerHeader() +
+      "function second(beta) { const value = beta + 7; const result = value * 3; const sum = result + beta + 9; return sum + value + result + beta + 11 + sum + value + result + beta + 13; }\n"
+  });
+  assert.equal(result.status, 1);
+  assert.equal(result.summary.byRule["duplicate-functions"], 2);
+});
+
 test("plugin entrypoints are scanned", () => {
   // ES-module syntax by runtime scope and console.log are ESLint's job now (see
   // tests/js/eslint-config.test.mjs); this only proves check-patterns.mjs still visits
-  // both entrypoint files for its own retained rules (e.g. inner-html-assignment).
+  // both entrypoint files for its own retained rules (e.g. unsafe-html-dom-sink).
   const legacyClean = runChecker({
     "plugin.js": '(function () {\n  "use strict";\n}());\n'
   });
@@ -42,12 +55,19 @@ test("plugin entrypoints are scanned", () => {
     "plugin.js": 'document.body.innerHTML = "<b>x</b>";\n'
   });
   assert.equal(legacyBad.status, 1);
-  assert.equal(legacyBad.summary.byRule["inner-html-assignment"], 1);
+  assert.equal(legacyBad.summary.byRule["unsafe-html-dom-sink"], 1);
 
   const clean = runChecker({
     "plugin.mjs": "export default function plugin(_api) {}\n"
   });
   assert.equal(clean.status, 0, clean.failures.join("\n"));
+});
+
+test("a console call in a runtime entrypoint fails", () => {
+  const result = runChecker({ "plugin.mjs": "console.error('unexpected');\n" });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.summary.byRule["console-in-runtime"], 1);
 });
 
 test("a default-truthy fallback fails", () => {
@@ -237,7 +257,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule["promise-empty-catch"], 1);
+  assert.equal(result.summary.byRule["empty-catch"], 1);
 });
 
 test("a framework-method typeof guard fails", () => {
@@ -285,7 +305,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule["catch-fallback"], 1);
+  assert.equal(result.summary.byRule["catch-fallback-without-suppression"], 1);
 });
 
 test("a catch with a boundary-fallback marker passes", () => {
@@ -330,7 +350,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   });
 
   assert.equal(result.status, 1);
-  assert.equal(result.summary.byRule["internal-namespace-fallback"], 1);
+  assert.equal(result.summary.byRule["internal-contract-fallback"], 1);
 });
 
 test("an illegal global assignment fails namespace-token-consistency", () => {
@@ -388,6 +408,17 @@ test("a Markdown TODO without an owner fails", () => {
 
   assert.equal(result.status, 1);
   assert.equal(result.summary.byRule["todo-without-owner"], 1);
+});
+
+test("the canonical work-marker rule preserves the JavaScript, Python, and Markdown finding union", () => {
+  const result = runChecker({
+    "viewer/bad.js": viewerHeader() + "// TODO: JavaScript marker\n",
+    "server/polarrecorder/bad.py": "# TODO: Python marker\n",
+    "documentation/note.md": "# Note\n\nTODO: Markdown marker\n"
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.summary.byRule["todo-without-owner"], 3);
 });
 
 test("a real historical exec-plan filename reference passes", () => {

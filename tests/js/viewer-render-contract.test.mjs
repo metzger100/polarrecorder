@@ -5,8 +5,8 @@
  * through the shared vm harness. The static checkers prove the viewer never
  * *writes* a forbidden pattern; these contracts prove the viewer never
  * *renders* one. They are the JS-side twin of check-runtime-contracts.py
- * (which guards the Python export boundary) and mirror the dyninstruments
- * mapper-output-no-nan / placeholder / falsy-default-preservation contracts.
+ * (which guards the Python export boundary) and verify equivalent viewer
+ * non-finite, placeholder, and falsy-value guarantees.
  *
  * Every scenario feeds a contract-valid API payload only - absent optionals are
  * expressed the way the producer expresses them (current_values: null), never
@@ -17,6 +17,7 @@
  */
 
 import { pathToFileURL } from "node:url";
+import { test } from "vitest";
 
 import {
   createEnvironment,
@@ -26,7 +27,7 @@ import {
   ok,
   statusPayload,
   textTree
-} from "./viewer-harness.mjs";
+} from "../../tools/viewer-harness.mjs";
 
 const VIEWER_MODULES = [
   "placeholders.js",
@@ -182,3 +183,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(result.ok ? 0 : 1);
   });
 }
+
+test("viewer render contracts hold for every contract-valid payload", async () => {
+  const result = await runViewerContracts({ print: false });
+  if (!result.ok) throw new Error(result.failures.join("\n"));
+});

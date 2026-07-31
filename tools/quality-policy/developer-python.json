@@ -3,7 +3,7 @@
   "environmentOverrideVariable": "POLARRECORDER_PYTHON",
   "lockGenerator": "pip-compile (pip-tools)",
   "lockGeneratorInvocation": "python -m piptools compile --generate-hashes --output-file=requirements-dev.txt requirements-dev.in",
-  "note": "Frozen, hand-verified developer-Python contract; this file is the machine-readable authority tools/setup.mjs reads. Widening supportedVersionRange requires re-verifying mypy/ruff/pytest against the new interpreter with recorded evidence, not editing this file in isolation.",
+  "note": "Frozen, hand-verified developer-Python contract. Widening supportedVersionRange requires re-verifying mypy/ruff/pytest against the new interpreter with recorded evidence, not editing this file in isolation.",
   "pipBootstrapVersion": "26.1.2",
   "preferredInterpreter": "python3",
   "rationale": "Native verification host: Arch/CachyOS with pacman as the sole package manager; python 3.14.6-2 is the only Python package available there (no pyenv/uv, no 3.9-3.13 package). mypy 2.3.0 on Python 3.14.6 analyzes the target-version=\"py39\" Ruff/mypy configuration with no internal error, superseding an earlier mypy-2.1.0-era internal error recorded against this same configuration. The developer interpreter version is pinned narrowly to what was actually verified there.",

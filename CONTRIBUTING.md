@@ -54,8 +54,7 @@ path.
 - Read `documentation/TABLEOFCONTENTS.md`, `documentation/conventions/coding-standards.md`, and
   `documentation/conventions/smell-prevention.md` before changing code or docs.
 - For complex multi-session work, write a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
-- Run `npm run check:all` before handing off changes (`tools/check-all.sh` is a compatibility wrapper around the same
-  command).
+- Run `npm run check:all` before handing off changes.
 - Do not add runtime dependencies, generated build artifacts, unrelated product logic, or raw reference-source copies.
 - JavaScript tests run under Vitest, configured in `vitest.config.mjs` as three include-pattern projects (`viewer`,
   `plugin`, `tools`); Python tests stay on pytest. Add a JavaScript test simply by creating `tests/js/<name>.test.mjs`
@@ -73,9 +72,9 @@ path.
   `npm run test:split` (Python then Node tests, the complete test suite reached by `check:core`), and
   `npm run check:all` (`check:core` plus coverage, required before handoff/push/release) are documented in full in
   [quality gates](documentation/conventions/quality-gates.md).
-- Polar Recorder is a finished Python/JavaScript hybrid-profile role model whose shared quality contracts (command graph
-  meanings, direct zero-debt complexity policy, portable `.codex/config.toml`) are deliberately aligned with the sibling
-  `dyninstruments` viewer-profile plugin. It is not a generic scaffolder or blank-plugin starter template.
+- Polar Recorder is a finished Python/JavaScript plugin with explicit quality contracts: command-graph meanings, a
+  direct zero-debt complexity policy, and portable `.codex/config.toml`. It is not a generic scaffolder or blank-plugin
+  starter template.
 - Releases are prepared, validated, and created locally (`npm run release:prepare`, manual notes/version review,
   `npm run release:create -- --version=X.Y.Z`, then `git push --tags`); before pushing the tag, run the manual
   [manual AvNav validation checklist](documentation/guides/manual-avnav-validation.md) against a real AvNav host and

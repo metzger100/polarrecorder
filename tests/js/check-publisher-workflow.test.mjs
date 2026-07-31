@@ -1,5 +1,5 @@
 /**
- * Self-tests for tools/check-publisher-workflow.mjs, the actionlint-backed parsed-workflow
+ * Tests for the test-side parsed-workflow contract, alongside actionlint's syntax check,
  * contract over both `.github/workflows/publish-release.yml` and `quality.yml`, plus a real
  * dependency-free execution proof for `tools/release-version.mjs` (the publisher's only
  * `run` step besides the artifact lookup) in a temporary checkout with `node_modules` absent.
@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 import { test } from "vitest";
 import path from "node:path";
 
-import { runPublisherWorkflowCheck } from "../../tools/check-publisher-workflow.mjs";
+import { runPublisherWorkflowCheck } from "./publisher-workflow-contract.test.mjs";
 
 const ROOT = process.cwd();
 const REAL_WORKFLOW = fs.readFileSync(path.join(ROOT, ".github", "workflows", "publish-release.yml"), "utf8");

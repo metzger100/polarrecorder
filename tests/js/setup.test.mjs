@@ -64,8 +64,14 @@ test("developer Python contract shape", () => {
   assert.ok(Array.isArray(contract.supportedPlatforms) && contract.supportedPlatforms.length > 0);
 });
 
-test("setup has no hook installation side effect", () => {
-  const source = fs.readFileSync(path.join(ROOT, "tools", "setup.mjs"), "utf8");
+test("setup is inline, provisions the pinned Python environment, and has no hook installation side effect", () => {
+  const source = PKG.scripts.setup;
+  assert.ok(source.includes("npm ci"));
+  assert.ok(source.includes("POLARRECORDER_PYTHON"));
+  assert.ok(source.includes("Python 3.14"));
+  assert.ok(source.includes("pip==26.1.2"));
+  assert.ok(source.includes("--require-hashes -r requirements-dev.txt"));
+  assert.ok(source.includes("tools/actionlint.sh --install"));
   assert.ok(!/hooksPath|install-hooks|core\.hooksPath/.test(source));
 });
 

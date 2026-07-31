@@ -15,7 +15,6 @@ Full gate:
 npm run check:all
 ```
 
-`tools/check-all.sh` is a pure compatibility wrapper: it resolves the repository root and runs `npm run check:all`.
 `npm run check:strict` is an exact alias of `check:all`.
 
 `check:all` is exactly `check:core` plus `test:coverage:check`, the sole coverage half of the gate. `check:core` is the
@@ -34,9 +33,9 @@ check:core = check:standard && typecheck && package:check &&
 | `npm run typecheck`              | `typecheck:source && typecheck:tests && typecheck:tools && typecheck:python` (strict no-emit JS typing over viewer/plugin, tests, and `tools/**/*.mjs`, plus `mypy --strict`)                                                                                       |
 | `npm run package:check`          | `schema:check` plus release dry-run build/validate and dedicated package/release/installer tests                                                                                                                                                                    |
 | `npm run test:focus:check`       | Blocks JS `.only`/`.skip`/`.todo`/focus and Python pytest/unittest skip/skipif/xfail markers                                                                                                                                                                        |
-| `npm run check:smells`           | JS/Python pattern checks plus viewer contract metadata checks; the sole path to `check:patterns`/`check-smell-contracts.mjs` from `check:core` (`test:contract` does not call it)                                                                                   |
+| `npm run check:smells`           | JS/Python pattern checks; the viewer metadata contracts run in the `tools` Vitest project reached by `test:split`                                                                                                                                                   |
 | `npm run check:python-contracts` | Python 3.9 compatibility, contract-trust smells, architecture/dependency, and runtime finite-number contracts                                                                                                                                                       |
-| `npm run test:split`             | `test:python && test:node` (pytest, then `test:tools && test:contract && test:viewer && test:plugin`)                                                                                                                                                               |
+| `npm run test:split`             | `test:python && test:node` (pytest, then `test:tools && test:viewer && test:plugin`)                                                                                                                                                                                |
 | `npm run check:complexity`       | `eslint --config tools/quality-policy/eslint.complexity.config.mjs viewer/*.js plugin.js plugin.mjs`, enforcing complexity 10/max-statements 40/max-depth 4/max-params 6 as ESLint errors directly against the live tree -- no baseline, scanner, or budget ledger  |
 | `npm run check:scaling`          | Deterministic counted-operation scaling contracts for `PolarModel.update_accepted`, `projection.project_grid`, `api_handlers.format_polar`                                                                                                                          |
 | `npm run docs:check`             | `docs:lint` (markdownlint-cli2), `docs:links:proof`, `docs:links` (root-seeded Linkinator). TOC, format, reachability, smell-catalog completeness, and the `CLAUDE.md` pointer contract are Vitest contract tests reached through `test:tools` instead              |
@@ -44,12 +43,12 @@ check:core = check:standard && typecheck && package:check &&
 
 Convenience aliases:
 
-| Alias                  | Purpose                                                                                                                                                                                                                                                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run check:fast`   | Exactly `check:standard && typecheck && test:unit`: static standards, full typing, and a bounded unit-test selection. It is bounded feedback for iteration, not the final gate -- it deliberately excludes `test:split`, `test:tools`, `test:contract`, `check:python-contracts`, `package:check`, `docs:check`, `check:complexity`, `check:scaling`, and coverage. |
-| `npm run test:unit`    | `test:python && test:viewer && test:plugin`: the ordinary Python product suite plus viewer/plugin behavior tests, excluding quality-tool self-tests (`test:tools`) and structural contracts (`test:contract`)                                                                                                                                                       |
-| `npm run check:all`    | `check:core && test:coverage:check`; the canonical complete local gate, required before handoff/push/release                                                                                                                                                                                                                                                        |
-| `npm run check:strict` | Exact alias of `check:all`                                                                                                                                                                                                                                                                                                                                          |
+| Alias                  | Purpose                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check:fast`   | Exactly `check:standard && typecheck && test:unit`: static standards, full typing, and a bounded unit-test selection. It is bounded feedback for iteration, not the final gate -- it deliberately excludes `test:split`, `test:tools`, `check:python-contracts`, `package:check`, `docs:check`, `check:complexity`, `check:scaling`, and coverage. |
+| `npm run test:unit`    | `test:python && test:viewer && test:plugin`: the ordinary Python product suite plus viewer/plugin behavior tests, excluding quality-tool self-tests (`test:tools`)                                                                                                                                                                                 |
+| `npm run check:all`    | `check:core && test:coverage:check`; the canonical complete local gate, required before handoff/push/release                                                                                                                                                                                                                                       |
+| `npm run check:strict` | Exact alias of `check:all`                                                                                                                                                                                                                                                                                                                         |
 
 Coverage half of the gate:
 
@@ -88,10 +87,19 @@ or builds.
 Rule ownership:
 
 - [Smell prevention](smell-prevention.md) lists every blocking rule enforced by these commands.
+- `tools/quality-policy/project-pattern-scopes.json` is the Tier 2 registry profile: it owns the final generic-rule
+  identifier list and project-specific scopes. `tools/check-patterns/rules.mjs` verifies that profile against the
+  generic and project registries.
 - [Coding standards](coding-standards.md) explains the implementation conventions behind the rules.
 - [Documentation format](documentation-format.md) defines the required documentation shape behind `npm run docs:check`.
 - [Testing infrastructure](testing-infrastructure.md) explains the fake AvNav, coverage, and viewer-test setup.
 - [Release workflow](../guides/release-workflow.md) explains release artifact creation and publishing.
+
+## Generic-core inventory
+
+`tools/quality-policy/shared-core-manifest.json` is the authoritative inventory of reusable tooling files and their
+reviewed local digests. `npm run check:shared-core` verifies only this repository; it never reads an external checkout.
+New tooling should be derived from the documented local contracts rather than copied from an unrelated repository.
 
 ## Related
 

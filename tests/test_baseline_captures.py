@@ -9,14 +9,9 @@ changed.
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
-import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from types import ModuleType
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 QUALITY_POLICY_DIR = REPO_ROOT / "tools" / "quality-policy"
@@ -37,18 +32,13 @@ EXPECTED_DIGESTS = {
 CAPTURED_COMMIT = "08edef88b0102af6507ef02fd4448f7fd1eaca45"
 
 
-def _load_module(name: str) -> ModuleType:
-    spec = importlib.util.spec_from_file_location(name, QUALITY_POLICY_DIR / f"{name}.py")
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 def _sha256_of_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _canonical_json(value: object) -> str:
+    """Serialize JSON with the immutable-capture canonical layout."""
+    return json.dumps(value, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
 
 
 def test_every_captured_file_has_an_independent_expected_digest() -> None:
@@ -60,13 +50,12 @@ def test_every_captured_file_has_an_independent_expected_digest() -> None:
 
 def test_canonical_json_is_stable_under_key_reordering() -> None:
     """Semantically identical data in a different key/list order yields identical bytes."""
-    canonical_json = _load_module("canonical_json")
     first = {"b": 1, "a": [{"y": 2, "x": 1}], "c": {"z": 3, "y": 2}}
     second = {"a": [{"x": 1, "y": 2}], "c": {"y": 2, "z": 3}, "b": 1}
-    assert canonical_json.dumps_canonical(first) == canonical_json.dumps_canonical(second)
+    assert _canonical_json(first) == _canonical_json(second)
 
 
-def test_canonical_json_has_no_volatile_metadata_fields() -> None:
+def test_baseline_captures_have_no_volatile_metadata_fields() -> None:
     """Captures never embed timestamps, durations, or machine-local paths."""
     volatile_markers = (
         "timestamp",
@@ -110,9 +99,8 @@ def test_coverage_capture_values_meet_their_own_recorded_floors() -> None:
 
     This does not re-run pytest/c8 (nesting a full coverage run inside a coverage run is
     unreliable); regenerating `baseline-coverage-capture.json` itself requires running
-    `python tools/quality-policy/generate_baseline_coverage_capture.py --stdout` by hand and
-    diffing against the committed file, which is exercised as part of establishing the
-    baseline rather than on every `pytest` run.
+    reviewing a proposed capture against the committed file, which is exercised as part of
+    establishing the baseline rather than on every `pytest` run.
     """
     data = json.loads(
         (QUALITY_POLICY_DIR / "baseline-coverage-capture.json").read_text(encoding="utf-8")

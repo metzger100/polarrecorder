@@ -72,13 +72,12 @@ export function discoverExecutableTestHelpers(root = ROOT) {
 
 /**
  * @param {string} [root]
- * @returns {{path: string, classification: "strict"}[]}
+ * @returns {Record<string, {classification: "strict"}>}
  */
 export function buildTestInventory(root = ROOT) {
-  return discoverExecutableTestHelpers(root).map((relPath) => ({
-    path: relPath,
-    classification: "strict"
-  }));
+  return Object.fromEntries(
+    discoverExecutableTestHelpers(root).map((relPath) => [relPath, { classification: "strict" }])
+  );
 }
 
 /**
@@ -88,14 +87,14 @@ export function buildTestInventory(root = ROOT) {
 export function diffTestInventory(root = ROOT) {
   const live = new Set(discoverExecutableTestHelpers(root));
   const committed = JSON.parse(fs.readFileSync(inventoryPath(root), "utf8"));
-  /** @type {{path: string, classification: string}[]} */
-  const entries = committed.executableTestHelpers;
-  const committedPaths = new Set(entries.map((entry) => entry.path));
+  /** @type {Record<string, {classification: string}>} */
+  const entries = committed.entries;
+  const committedPaths = new Set(Object.keys(entries));
   const missingFromInventory = [...live].filter((p) => !committedPaths.has(p)).sort();
   const extraInInventory = [...committedPaths].filter((p) => !live.has(p)).sort();
-  const nonStrictEntries = entries
-    .filter((entry) => entry.classification !== "strict")
-    .map((entry) => entry.path)
+  const nonStrictEntries = Object.entries(entries)
+    .filter(([, entry]) => entry.classification !== "strict")
+    .map(([file]) => file)
     .sort();
   return { missingFromInventory, extraInInventory, nonStrictEntries };
 }
@@ -248,7 +247,7 @@ function reportInventory(failures, summary) {
 }
 
 /**
- * Compares `tsconfig.tests.json`'s `include` array against the live executable
+ * Compares `tsconfig.tests.json`'s `files` array against the live executable
  * test/helper discovery, so the strict-checkJs project file itself cannot silently
  * drift from the same file set `test-inventory.json` and the runner both track.
  *
@@ -260,7 +259,7 @@ export function diffTsconfigTestsInventory(root = ROOT, tsconfigPath = TSCONFIG_
   const live = new Set(discoverExecutableTestHelpers(root));
   const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
   /** @type {string[]} */
-  const included = config.include.filter((/** @type {string} */ entry) => !entry.endsWith(".d.ts"));
+  const included = config.files.filter((/** @type {string} */ entry) => !entry.endsWith(".d.ts"));
   const includedSet = new Set(included);
   const missingFromTsconfig = [...live].filter((p) => !includedSet.has(p)).sort();
   const extraInTsconfig = included.filter((p) => !live.has(p)).sort();
@@ -282,10 +281,10 @@ export function runTypecheckTests({ root = ROOT, print = true } = {}) {
     /** @type {string[]} */
     const failures = [];
     for (const missing of missingFromTsconfig) {
-      failures.push(`${missing} is missing from tsconfig.tests.json's include list`);
+      failures.push(`${missing} is missing from tsconfig.tests.json's files list`);
     }
     for (const extra of extraInTsconfig) {
-      failures.push(`tsconfig.tests.json includes stale/removed executable ${extra}`);
+      failures.push(`tsconfig.tests.json files list includes stale/removed executable ${extra}`);
     }
     if (print) for (const failure of failures) console.error(`[test-inventory] ${failure}`);
     return { ok: false, failures, checkedFiles: 0 };
@@ -314,7 +313,7 @@ function writeInventory() {
       "Committed executable JS test/helper inventory. Regenerate with " +
       "`node tools/quality-policy/test-inventory.mjs --write` whenever a test/helper file " +
       "is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
-    executableTestHelpers: entries
+    entries
   };
   fs.writeFileSync(inventoryPath(ROOT), JSON.stringify(payload, null, 2) + "\n");
 }

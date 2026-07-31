@@ -1,0 +1,8 @@
+{
+  "note": "Project-owned scope for tools/check-file-size.mjs (Tier 1). Names the root Markdown files, root JS entrypoint files, and viewer/documentation/tools scan-root directory names this repository has; the checker itself contains no project path.",
+  "rootMarkdownFiles": ["AGENTS.md", "ARCHITECTURE.md", "CLAUDE.md", "CONTRIBUTING.md", "README.md", "ROADMAP.md"],
+  "rootJsFiles": ["plugin.js", "plugin.mjs"],
+  "viewerScanRoot": "viewer",
+  "documentationScanRoot": "documentation",
+  "toolsScanRoot": "tools"
+}

@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 
 import { isDirtyOutsidePrefix, parsePorcelainStatusZ } from "./release-git.mjs";
 import { isValidSemver, tagFor } from "./release-version.mjs";
+import { createReleaseArchive } from "./release-archive.mjs";
 
 /** @typedef {{status: number | null, stdout: string, stderr: string, error?: Error | null}} CommandResult */
 /** @typedef {(command: string, args: string[], options: {cwd?: string}) => CommandResult} RunCommand */
@@ -13,6 +14,7 @@ import { isValidSemver, tagFor } from "./release-version.mjs";
  *   rootDir?: string,
  *   version?: string,
  *   runCommand?: RunCommand,
+ *   archiveBuilder?: (root: string, version: string, output: string) => {filesIncluded: number, totalSizeBytes: number},
  *   output?: Output
  * }} CreateReleaseOptions
  */
@@ -52,6 +54,7 @@ export function createRelease(options) {
   const version = String(options.version || "").trim();
 
   const runCommand = options.runCommand || defaultRunCommand;
+  const archiveBuilder = options.archiveBuilder || createReleaseArchive;
   const output = options.output || {
     log: (/** @type {string} */ message) => console.log(message)
   };
@@ -68,24 +71,7 @@ export function createRelease(options) {
   const zipAbs = path.join(releasesDir, zipName);
   const releaseNotesAbs = notesAbs;
 
-  // release_manifest.py is the sole runtime-file-list authority (see
-  // documentation/guides/release-workflow.md); this only orchestrates its two
-  // required Python steps and reads back the manifest summary it reports, rather than
-  // re-deriving or re-validating the file list a second time in JS.
-  const zipResult = runRequiredCheck(
-    runCommand,
-    rootDir,
-    ["python", "tools/release-zip.py", "--version", version],
-    `python tools/release-zip.py --version ${version}`
-  );
-  runRequiredCheck(
-    runCommand,
-    rootDir,
-    ["python", "tools/check-release.py", `releases/${zipName}`],
-    `python tools/check-release.py releases/${zipName}`
-  );
-
-  const { filesIncluded, totalSizeBytes } = parseZipSummary(zipResult.stdout);
+  const { filesIncluded, totalSizeBytes } = archiveBuilder(rootDir, version, zipAbs);
 
   const tag = tagFor(version);
   runGit(runCommand, rootDir, [
@@ -112,22 +98,6 @@ export function createRelease(options) {
     filesIncluded,
     totalSizeBytes
   };
-}
-
-/**
- * @param {string} stdout the captured stdout of `python tools/release-zip.py`
- * @returns {{filesIncluded: number, totalSizeBytes: number}}
- */
-function parseZipSummary(stdout) {
-  const line = stdout
-    .split(/\r?\n/)
-    .reverse()
-    .find((candidate) => candidate.startsWith("SUMMARY_JSON="));
-  if (!line) {
-    throw new Error("release:create aborted: release-zip.py did not report a SUMMARY_JSON line");
-  }
-  const parsed = JSON.parse(line.slice("SUMMARY_JSON=".length));
-  return { filesIncluded: parsed.filesIncluded, totalSizeBytes: parsed.totalSizeBytes };
 }
 
 /**
@@ -255,7 +225,7 @@ export function defaultRunCommand(command, args, options = {}) {
 }
 
 // Prepend the project-local venv's bin directory to PATH so spawned `python`/dev
-// tooling resolves to the project venv by default, matching tools/check-all.sh and
+// tooling resolves to the project venv by default, matching the pre-push gate and
 // the pre-push hook. Honors POLARRECORDER_VENV; falls back to system PATH if absent.
 /**
  * @param {NodeJS.ProcessEnv} env

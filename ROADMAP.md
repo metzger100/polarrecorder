@@ -20,19 +20,16 @@ Goal: Add an option to configure the keys for twa, tws and stw in the settings t
 **Goal:** Surface Polar Recorder data directly on the AvNav dashboard through one widget with three selectable kinds,
 themed to fit AvNav without fighting its CSS and responsive across any dashboard cell size.
 
-This is the most ambitious roadmap item. The reference implementation is the sibling `dyninstruments` plugin, which
-registers configurable instrument widgets with a `kind` selector. We copy its registration, kind-dispatch, theming, and
-responsiveness _patterns_, but deliberately stay far simpler: `renderHtml` only (no canvas), three kinds, and a small
-theme-token set. The notes below say what to implement and how.
+This is the most ambitious roadmap item. It uses a small, purpose-built widget design: `renderHtml` only (no canvas),
+three kinds, and a compact theme-token set. The notes below say what to implement and how.
 
 #### 2.1 Single widget, three kinds
 
-Register exactly one widget through the AvNav plugin API: `avnav.api.registerWidget(definition, editableParameters)`
-(see `dyninstruments/runtime/widget-registrar.js:112` and the flow in its `ARCHITECTURE.md`). The widget definition
-carries `name`, `description`, `storeKeys`, `className`, and the lifecycle callbacks `initFunction`, `renderHtml`, and
-`finalizeFunction`; the second argument is the `editableParameters` object.
+Register exactly one widget through the AvNav plugin API: `avnav.api.registerWidget(definition, editableParameters)`.
+The widget definition carries `name`, `description`, `storeKeys`, `className`, and the lifecycle callbacks
+`initFunction`, `renderHtml`, and `finalizeFunction`; the second argument is the `editableParameters` object.
 
-A `kind` SELECT parameter chooses what the single widget shows, exactly like `dyninstruments/config/clusters/speed.js`:
+A `kind` SELECT parameter chooses what the single widget shows:
 
 ```js
 kind: {
@@ -48,15 +45,14 @@ kind: {
 ```
 
 `renderHtml` reads the resolved `kind` from its props and dispatches to one of three pure render functions. Keep
-dispatch a plain `switch` in `renderHtml` — do **not** copy the dyninstruments cluster-route / mapper /
-deferred-host-commit machinery (`cluster/ClusterWidget.js`, `runtime/cluster/*`); it solves a multi-surface, many-widget
-problem we do not have.
+dispatch a plain `switch` in `renderHtml`; a multi-surface routing layer would solve a problem this widget does not
+have.
 
 #### 2.2 Per-kind configuration (editable parameters)
 
 Each kind exposes only its own options, using AvNav's conditional-parameter visibility. A parameter is shown only when
-its `condition` matches the current config; a `condition` **array** is OR, a `condition` **object** is AND (verified in
-`dyninstruments/config/clusters/speed.js`). Parameter types we need are `SELECT`, `BOOLEAN`, and `NUMBER`/`FLOAT`.
+its `condition` matches the current config; a `condition` **array** is OR and a `condition` **object** is AND. Parameter
+types we need are `SELECT`, `BOOLEAN`, and `NUMBER`/`FLOAT`.
 
 - **`polar`** — a preset selector (`SELECT`) listing the built-in presets plus user presets, reusing the same preset
   source as the viewer/export ([export-import.md](documentation/user/export-import.md)). Condition: `{ kind: "polar" }`.
@@ -65,12 +61,11 @@ its `condition` matches the current config; a `condition` **array** is OR, a `co
 - **`timeline`** — a time-window control (`SELECT` or `NUMBER`) for how far back the timeline reaches, condition
   `{ kind: "timeline" }`.
 
-#### 2.3 Data sourcing (key divergence from dyninstruments)
+#### 2.3 Data sourcing
 
-`dyninstruments` binds widgets to AvNav store keys via `storeKeys`. Polar Recorder's data is **not** in the AvNav store
-— it lives behind the plugin's own HTTP API (the same endpoints the viewer already calls:
-[api.md](documentation/architecture/api.md)). The widget must therefore fetch its data from those endpoints rather than
-from `storeKeys`:
+Polar Recorder's data is **not** in the AvNav store — it lives behind the plugin's own HTTP API (the same endpoints the
+viewer already calls: [api.md](documentation/architecture/api.md)). The widget must therefore fetch its data from those
+endpoints rather than from `storeKeys`:
 
 - `polar` consumes the polar/preset projection endpoint.
 - `status` consumes the status endpoint.
@@ -92,16 +87,15 @@ existing viewer polar-drawing logic where possible instead of reimplementing it.
 
 #### 2.5 Theming without clashing with AvNav CSS
 
-Follow the dyninstruments approach (`plugin.css`, README "Theming"):
+Use the plugin's existing theming conventions:
 
 - Scope **every** CSS rule under the widget's own class — for Polar Recorder that is `.widget.polarrecorder` (no naked
   selectors that could leak into AvNav).
 - Drive all colors, fonts, and weights through `--polarrecorder-` custom properties (the project's mandated prefix) with
   sensible defaults, so a user `user.css` can override them.
-- Inherit AvNav day/night by providing matching `.nightMode .widget.polarrecorder` overrides, mirroring the documented
-  dyninstruments day+night recipe.
-- If AvNav's native widget header/value rows are unwanted, hide them only inside our widget via a scoped class
-  (dyninstruments uses a `*-hide-native-head` class), never globally.
+- Inherit AvNav day/night by providing matching `.nightMode .widget.polarrecorder` overrides.
+- If AvNav's native widget header/value rows are unwanted, hide them only inside our widget via a scoped class, never
+  globally.
 
 #### 2.6 Responsiveness across aspect ratios and sizes
 
@@ -110,44 +104,35 @@ The widget must look correct in any dashboard cell, from a tiny square to a wide
 - For the SVG kinds, use a fixed `viewBox` with `preserveAspectRatio` so the drawing scales to the cell; size the polar
   from `min(width, height)` so it stays circular and centered in non-square cells.
 - For `status`/`timeline`, use fluid CSS (percentages, `clamp()`, flex/grid) that reflows rather than overflows.
-- Where layout must change by shape (e.g. stacked vs inline), switch on the cell aspect ratio. dyninstruments measures
-  this in JS for its canvas widgets (`shared/widget-kits/...`); our renderHtml widgets should prefer CSS container
+- Where layout must change by shape (e.g. stacked vs inline), switch on the cell aspect ratio. Prefer CSS container
   queries or a simple ratio check, and only measure via `ResizeObserver` if CSS cannot express the breakpoint.
 
 #### 2.7 Scope discipline
 
-Copy from dyninstruments: single-widget registration, the `kind` SELECT, conditional editable parameters,
-`.widget.<plugin>`-scoped CSS variables, and day/night theming. Do **not** copy: canvas rendering and HiDPI setup, the
-component registry/loader, cluster routes + mappers + viewmodels, route-activation controllers, deferred host commit,
-per-unit parameter generation, and the large geometry-token catalog. Those exist for a many-widget, multi-surface
-product; this is three `renderHtml` views.
+Use single-widget registration, the `kind` SELECT, conditional editable parameters, `.widget.<plugin>`-scoped CSS
+variables, and day/night theming. Keep canvas rendering and HiDPI setup, a component registry/loader, route controllers,
+and large geometry-token catalogs out of scope; this is three `renderHtml` views.
 
-### 3. Adopt the dyninstruments color set
+### 3. Refine the viewer color set
 
-**Goal:** Replace Polar Recorder's current viewer palette with the default `dyninstruments` color palette for both day
-and night, because it looks better and reads more clearly than today's colors.
+**Goal:** Refine Polar Recorder's viewer palette for clearer day and night readability.
 
 Today the viewer defines a day palette in `:root` and a night palette under `.nightMode`
 ([viewer-shell.css](viewer/viewer-shell.css)), and [theme.js](viewer/theme.js) mirrors AvNav's live `--avnav-*` colors
 into the `--polarrecorder-*` tokens and toggles `.nightMode` from AvNav.
 
-This idea re-bases the `--polarrecorder-*` tokens on the dyninstruments **default** palette (only the default color set
-— not the `darkmode`, `bold`, or other presets). We keep our mandated `--polarrecorder-` prefix and adopt the _values_,
-not the `--dyni-` names:
+This idea re-bases the `--polarrecorder-*` tokens on a cohesive local palette. We keep the mandated `--polarrecorder-`
+prefix:
 
-- **Semantic colors** map to the dyninstruments default set: ok `#70F3AF` → `accepted`, alarm `#FA584A` → `rejected`,
-  warning `#e7c66a` → `quarantined`, info `#70B0F3` → accent/links, pointer `#ff2b2b` → highlight. (Our current
-  accepted/rejected/quarantined values are already close; this aligns them exactly and gives one shared, named semantic
-  set.)
-- **Day surface** uses the dyninstruments default light foreground/background/ border tokens.
-- **Night** reuses the same default semantic colors over a dark surface variant of those default tokens — i.e. the same
-  palette, not a separate preset.
+- **Semantic colors** map to local roles: ok `#70F3AF` → `accepted`, alarm `#FA584A` → `rejected`, warning `#e7c66a` →
+  `quarantined`, info `#70B0F3` → accent/links, pointer `#ff2b2b` → highlight.
+- **Day surface** uses coordinated foreground, background, and border tokens.
+- **Night** reuses the semantic colors over a dark surface variant rather than a separate palette.
 
 Implementation notes:
 
-- Set the `--polarrecorder-*` tokens from the dyninstruments default values instead of mirroring AvNav's `--avnav-*`
-  colors in [theme.js](viewer/theme.js); keep the existing `.nightMode` detection so the night variant still activates
-  with AvNav's night mode.
+- Set the `--polarrecorder-*` tokens in [theme.js](viewer/theme.js); keep the existing `.nightMode` detection so the
+  night variant still activates with AvNav's night mode.
 - Define the palette once as named tokens so the future dashboard widget (item 4) and the viewer share a single source
   of color truth.
 

@@ -38,9 +38,7 @@ Section 8 that ruff/mypy cannot see:
                       module/name that no longer defines that helper (renamed,
                       moved, or deleted). A stale map silently stops guarding the
                       helper, so an agent could re-implement it freely. Verifying
-                      the map closes that gap (the static twin of the
-                      dyninstruments ``canonical-helper-completeness`` runtime
-                      check).
+                      the map closes that gap.
 
 Scope is server/polarrecorder/ only: that is where producer contracts are
 guaranteed. plugin.py (AvNav boundary) and tests/ legitimately use defensive

@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Actionlint-backed parsed-workflow contract for `.github/workflows/`.
  *
@@ -18,6 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { load as loadYaml } from "js-yaml";
+import { test } from "vitest";
 
 const WORKFLOWS_DIR = ".github/workflows";
 
@@ -324,3 +323,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const result = runPublisherWorkflowCheck();
   process.exit(result.ok ? 0 : 1);
 }
+
+test("publisher workflow contract owner exports its runner", () => {
+  if (typeof runPublisherWorkflowCheck !== "function") throw new Error("missing publisher workflow runner");
+});

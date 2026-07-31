@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 
-import { isRuntimePath } from "./release-runtime.mjs";
+import { isRuntimePath } from "./release-archive.mjs";
 import { parsePorcelainStatusZ } from "./release-git.mjs";
 
 /** @typedef {(args: string[]) => string} RunGit */

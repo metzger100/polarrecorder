@@ -9,6 +9,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
@@ -18,17 +19,19 @@ const AGENTS_PATH = path.join(ROOT, "AGENTS.md");
 const BEGIN_MARKER = "<!-- BEGIN SHARED_INSTRUCTIONS -->";
 const END_MARKER = "<!-- END SHARED_INSTRUCTIONS -->";
 
-const PROJECT_SPECIFIC_TOKENS = [
-  "polarrecorder",
-  "polar recorder",
-  "avnav",
-  "plugin.py",
-  "plugin.js",
-  "plugin.mjs",
-  "server/polarrecorder",
-  "polar.json",
-  "windy"
-];
+const GENERIC_TOKENS_PATH = path.join(ROOT, "tools", "quality-policy", "generic-tokens.json");
+const EXTRACTED_BLOCK_PATH = path.join(ROOT, "tools", "quality-policy", "shared-instructions.md");
+
+/**
+ * @param {string} [tokensPath]
+ * @returns {string[]}
+ */
+function readGenericTokens(tokensPath = GENERIC_TOKENS_PATH) {
+  const parsed = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  return [...parsed.projectTokens, ...parsed.domainTokens, ...parsed.hostTokens];
+}
+
+const PROJECT_SPECIFIC_TOKENS = readGenericTokens();
 
 /**
  * @param {string} content
@@ -65,6 +68,12 @@ test("the enclosed block is non-empty and contains the mandatory preflight", () 
   assert.ok(block.includes("documentation/conventions/smell-prevention.md"));
 });
 
+test("the extracted shared-instructions artifact matches AGENTS.md verbatim", () => {
+  const content = fs.readFileSync(AGENTS_PATH, "utf8");
+  const extracted = fs.readFileSync(EXTRACTED_BLOCK_PATH, "utf8");
+  assert.equal(extractSharedBlock(content).trim(), extracted.trim());
+});
+
 test("the enclosed block is free of this repository's project-specific tokens", () => {
   const content = fs.readFileSync(AGENTS_PATH, "utf8");
   const block = extractSharedBlock(content).toLowerCase();
@@ -85,6 +94,18 @@ test("a missing END marker is caught as unbalanced", () => {
   const endCount = seeded.split(END_MARKER).length - 1;
   assert.equal(beginCount, 1);
   assert.equal(endCount, 0);
+});
+
+test("a token added to generic-tokens.json is picked up by this call site", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-tokens-single-owner-"));
+  const tokensPath = path.join(dir, "generic-tokens.json");
+  fs.writeFileSync(
+    tokensPath,
+    JSON.stringify({ projectTokens: ["zzz-synthetic-token"], domainTokens: [], hostTokens: [] })
+  );
+  const tokens = readGenericTokens(tokensPath);
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.ok(tokens.includes("zzz-synthetic-token"));
 });
 
 test("AGENTS.md stays at or below the 400 non-empty-line limit", () => {

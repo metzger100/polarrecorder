@@ -48,7 +48,7 @@ test("discovery matches the real repo inventory with no drift", () => {
   assert.deepEqual(nonStrictEntries, []);
 });
 
-test("tsconfig.tests.json's include list matches live discovery with no drift", () => {
+test("tsconfig.tests.json's files list matches live discovery with no drift", () => {
   const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory();
   assert.deepEqual(missingFromTsconfig, []);
   assert.deepEqual(extraInTsconfig, []);
@@ -57,7 +57,7 @@ test("tsconfig.tests.json's include list matches live discovery with no drift", 
 test("detects a live file missing from tsconfig.tests.json", () => {
   const root = makeFakeRoot({ inventory: [], live: ["tests/js/a.test.mjs"] });
   const tsconfigPath = path.join(root, "tsconfig.tests.json");
-  fs.writeFileSync(tsconfigPath, JSON.stringify({ include: [] }));
+  fs.writeFileSync(tsconfigPath, JSON.stringify({ files: [] }));
   const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory(root, tsconfigPath);
   assert.deepEqual(missingFromTsconfig, ["tests/js/a.test.mjs"]);
   assert.deepEqual(extraInTsconfig, []);
@@ -67,7 +67,7 @@ test("detects a live file missing from tsconfig.tests.json", () => {
 test("detects a stale tsconfig.tests.json include entry", () => {
   const root = makeFakeRoot({ inventory: [], live: ["tests/js/a.test.mjs"] });
   const tsconfigPath = path.join(root, "tsconfig.tests.json");
-  fs.writeFileSync(tsconfigPath, JSON.stringify({ include: ["tests/js/a.test.mjs", "tests/js/removed.test.mjs"] }));
+  fs.writeFileSync(tsconfigPath, JSON.stringify({ files: ["tests/js/a.test.mjs", "tests/js/removed.test.mjs"] }));
   const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory(root, tsconfigPath);
   assert.deepEqual(missingFromTsconfig, []);
   assert.deepEqual(extraInTsconfig, ["tests/js/removed.test.mjs"]);
@@ -248,7 +248,9 @@ function makeFakeRoot({ inventory, live }) {
   fs.mkdirSync(path.join(root, "tools", "quality-policy"), { recursive: true });
   fs.writeFileSync(
     path.join(root, "tools", "quality-policy", "test-inventory.json"),
-    JSON.stringify({ note: "fake", executableTestHelpers: inventory })
+    JSON.stringify({
+      entries: Object.fromEntries(inventory.map((entry) => [entry.path, { classification: entry.classification }]))
+    })
   );
   writeExceptionBaseline(root, []);
   writePlannedFixtures(root, []);

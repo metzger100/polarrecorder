@@ -1,9 +1,8 @@
-import { fail } from "../shared.mjs";
-import { getFileData } from "../file-cache.mjs";
+import { getFileData } from "../shared.mjs";
 
 /**
  * @typedef {import("../shared.mjs").Rule} Rule
- * @typedef {import("../shared.mjs").PatternFile} PatternFile
+ * @typedef {import("../shared.mjs").Finding} Finding
  */
 
 const KEBAB_CASE_FILENAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\.js$/;
@@ -26,43 +25,45 @@ function basename(relPath) {
  * kebab-case filenames, PascalCase `<jsGlobalPrefix>.<Member>` exports, and
  * camelCase function declarations. Contains no project-specific token itself;
  * a project rule instance supplies `jsGlobalPrefix` and the case options as
- * plain configuration. `cssCustomPropertyPrefix` is carried for parity/
- * documentation only — CSS custom-property naming is a stylelint concern
- * (`custom-property-pattern`), not this rule's.
+ * plain configuration.
  * @param {Rule} rule Rule instance carrying the configuration above.
- * @param {PatternFile[]} files Files in scope.
- * @returns {void}
+ * @param {string[]} files Files in scope.
+ * @returns {Finding[]}
  */
 export function runNamespacePolicyRule(rule, files) {
+  /** @type {Finding[]} */
+  const out = [];
   const prefix = rule.jsGlobalPrefix;
   for (const file of files) {
-    const { content, lines } = getFileData(file);
-    if (rule.filenameCase === "kebab" && !KEBAB_CASE_FILENAME.test(basename(file.rel))) {
-      fail(file.rel, 0, "JS filenames must be kebab-case", rule.name, lines);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
+    if (rule.filenameCase === "kebab" && !KEBAB_CASE_FILENAME.test(basename(file))) {
+      out.push({ file, line: 1, message: "JS filenames must be kebab-case" });
     }
-    if (!content.includes(`window.${prefix}`)) {
-      fail(file.rel, 0, `missing window.${prefix} namespace usage`, rule.name, lines);
+    if (!text.includes(`window.${prefix}`)) {
+      out.push({ file, line: 1, message: `missing window.${prefix} namespace usage` });
     }
     for (let index = 0; index < lines.length; index += 1) {
       for (const match of lines[index].matchAll(/\bwindow\.([A-Za-z_$][\w$]*)\s*=/g)) {
         if (match[1] !== prefix) {
-          fail(file.rel, index, `illegal global window.${match[1]} assignment`, rule.name, lines);
+          out.push({ file, line: index + 1, message: `illegal global window.${match[1]} assignment` });
         }
       }
     }
     if (rule.memberCase === "pascal") {
-      for (const match of content.matchAll(new RegExp(`${prefix}\\.([A-Za-z_$][\\w$]*)\\s*=`, "g"))) {
+      for (const match of text.matchAll(new RegExp(`${prefix}\\.([A-Za-z_$][\\w$]*)\\s*=`, "g"))) {
         if (!PASCAL_CASE.test(match[1])) {
-          fail(file.rel, 0, `exported namespace member '${match[1]}' must be PascalCase`, rule.name, lines);
+          out.push({ file, line: 1, message: `exported namespace member '${match[1]}' must be PascalCase` });
         }
       }
     }
     if (rule.functionCase === "camel") {
-      for (const match of content.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)) {
+      for (const match of text.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g)) {
         if (!CAMEL_CASE.test(match[1])) {
-          fail(file.rel, 0, `function '${match[1]}' must be camelCase`, rule.name, lines);
+          out.push({ file, line: 1, message: `function '${match[1]}' must be camelCase` });
         }
       }
     }
   }
+  return out;
 }

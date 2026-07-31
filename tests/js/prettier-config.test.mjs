@@ -1,6 +1,6 @@
 /**
- * Contract test pinning .prettierrc.json to the shared, paired-repository shape so a future
- * local edit that breaks shared-file identity fails a gate instead of drifting silently.
+ * Contract test pinning .prettierrc.json to the reviewed local shape so a future edit that
+ * breaks the formatting policy fails a gate instead of drifting silently.
  */
 
 import assert from "node:assert/strict";

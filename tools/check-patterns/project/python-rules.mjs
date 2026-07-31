@@ -1,175 +1,93 @@
-import { fail } from "../shared.mjs";
-import { getFileData } from "../file-cache.mjs";
-import { collectPythonFiles } from "../discovery.mjs";
+import { getFileData, scopeFor } from "../shared.mjs";
 
 /**
  * @typedef {import("../shared.mjs").Rule} Rule
- * @typedef {import("../shared.mjs").PatternFile} PatternFile
+ * @typedef {import("../shared.mjs").Finding} Finding
  */
-
-const PYTHON_SCOPE = { key: "python", collect: collectPythonFiles };
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @param {RegExp} pattern
+ * @param {string} message
+ * @returns {Finding[]}
  */
-function runAvnavImport(files) {
+function runLinePattern(files, pattern, message) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
-      if (/^\s*(import|from)\s+avnav/.test(lines[index])) {
-        fail(file.rel, index, "AvNav import forbidden", "avnav-import", lines);
-      }
+      if (pattern.test(lines[index])) out.push({ file, line: index + 1, message });
     }
   }
-}
-
-/**
- * @param {PatternFile[]} files
- * @returns {void}
- */
-function runPluginhandlerImport(files) {
-  for (const file of files) {
-    const { lines } = getFileData(file);
-    for (let index = 0; index < lines.length; index += 1) {
-      if (/^\s*import\s+pluginhandler\b/.test(lines[index])) {
-        fail(file.rel, index, "pluginhandler import forbidden", "pluginhandler-import", lines);
-      }
-    }
-  }
-}
-
-/**
- * @param {PatternFile[]} files
- * @returns {void}
- */
-function runReversePluginImport(files) {
-  for (const file of files) {
-    const { lines } = getFileData(file);
-    for (let index = 0; index < lines.length; index += 1) {
-      if (/^\s*from\s+plugin\s+import\b|^\s*import\s+plugin\b/.test(lines[index])) {
-        fail(file.rel, index, "plugin.py import forbidden", "reverse-plugin-import", lines);
-      }
-    }
-  }
-}
-
-/**
- * @param {PatternFile[]} files
- * @returns {void}
- */
-function runDomainLockAcquisition(files) {
-  for (const file of files) {
-    const { lines } = getFileData(file);
-    for (let index = 0; index < lines.length; index += 1) {
-      if (/\bthreading\.(Lock|RLock|Condition)\s*\(/.test(lines[index])) {
-        fail(
-          file.rel,
-          index,
-          "threading lock acquisition forbidden in server/polarrecorder/",
-          "domain-lock-acquisition",
-          lines
-        );
-      }
-    }
-  }
-}
-
-/**
- * @param {PatternFile[]} files
- * @returns {void}
- */
-function runDomainTimeSleep(files) {
-  for (const file of files) {
-    const { lines } = getFileData(file);
-    for (let index = 0; index < lines.length; index += 1) {
-      if (/\btime\.sleep\s*\(/.test(lines[index])) {
-        fail(file.rel, index, "time.sleep forbidden", "domain-time-sleep", lines);
-      }
-    }
-  }
+  return out;
 }
 
 /**
  * @param {string} file Root-relative path of the file being scanned.
- * @param {number} index Zero-based line index.
- * @param {string} line Raw source line.
- * @param {string[]} lines File split into lines.
- * @returns {void}
+ * @param {number} line 1-based line number.
+ * @param {string} line_ Raw source line.
+ * @returns {Finding[]}
  */
-function checkPythonSuppression(file, index, line, lines) {
-  const noqa = /#\s*noqa\b/i.exec(line);
+function checkPythonSuppression(file, line, line_) {
+  /** @type {Finding[]} */
+  const out = [];
+  const noqa = /#\s*noqa\b/i.exec(line_);
   if (noqa) {
-    const after = line.slice(noqa.index);
+    const after = line_.slice(noqa.index);
     const coded = /#\s*noqa\s*:\s*[A-Z]+[0-9]+(?:[,\s]+[A-Z]+[0-9]+)*/i.exec(after);
     if (!coded) {
-      fail(
-        file,
-        index,
-        "blanket '# noqa' is forbidden; use '# noqa: <CODES>  # <reason>'",
-        "invalid-lint-suppression",
-        lines
-      );
+      out.push({ file, line, message: "blanket '# noqa' is forbidden; use '# noqa: <CODES>  # <reason>'" });
     } else if (!/#\s*\S/.test(after.slice(coded[0].length))) {
-      fail(
-        file,
-        index,
-        "'# noqa' must be justified with a trailing '# <reason>' comment",
-        "invalid-lint-suppression",
-        lines
-      );
+      out.push({ file, line, message: "'# noqa' must be justified with a trailing '# <reason>' comment" });
     }
   }
 
-  const typeIgnore = /#\s*type:\s*ignore\b/i.exec(line);
+  const typeIgnore = /#\s*type:\s*ignore\b/i.exec(line_);
   if (typeIgnore) {
-    const after = line.slice(typeIgnore.index);
+    const after = line_.slice(typeIgnore.index);
     const coded = /#\s*type:\s*ignore\[[^\]]+\]/i.exec(after);
     if (!coded) {
-      fail(
+      out.push({
         file,
-        index,
-        "blanket '# type: ignore' is forbidden; use '# type: ignore[<code>]  # <reason>'",
-        "invalid-lint-suppression",
-        lines
-      );
+        line,
+        message: "blanket '# type: ignore' is forbidden; use '# type: ignore[<code>]  # <reason>'"
+      });
     } else if (!/#\s*\S/.test(after.slice(coded.index + coded[0].length))) {
-      fail(
-        file,
-        index,
-        "'# type: ignore' must be justified with a trailing '# <reason>' comment",
-        "invalid-lint-suppression",
-        lines
-      );
+      out.push({ file, line, message: "'# type: ignore' must be justified with a trailing '# <reason>' comment" });
     }
   }
 
   if (
-    /#\s*ruff\s*:\s*noqa(?!\s*:)/i.test(line) ||
-    /#\s*flake8\s*:\s*noqa\b/i.test(line) ||
-    /#\s*mypy\s*:\s*ignore-errors\b/i.test(line)
+    /#\s*ruff\s*:\s*noqa(?!\s*:)/i.test(line_) ||
+    /#\s*flake8\s*:\s*noqa\b/i.test(line_) ||
+    /#\s*mypy\s*:\s*ignore-errors\b/i.test(line_)
   ) {
-    fail(
+    out.push({
       file,
-      index,
-      "file-level blanket suppression is forbidden; suppress specific codes with a reason",
-      "invalid-lint-suppression",
-      lines
-    );
+      line,
+      message: "file-level blanket suppression is forbidden; suppress specific codes with a reason"
+    });
   }
+  return out;
 }
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runInvalidLintSuppression(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
-      checkPythonSuppression(file.rel, index, lines[index], lines);
+      out.push(...checkPythonSuppression(file, index + 1, lines[index]));
     }
   }
+  return out;
 }
 
 /** @type {Rule[]} */
@@ -178,42 +96,48 @@ export const PYTHON_PROJECT_RULES = [
     id: "avnav-import",
     name: "avnav-import",
     severity: "block",
-    scope: PYTHON_SCOPE,
-    run: (_rule, files) => runAvnavImport(files)
+    scope: scopeFor("python-domain"),
+    run: (_rule, files) => runLinePattern(files, /^\s*(import|from)\s+avnav/, "AvNav import forbidden")
   },
   {
     id: "pluginhandler-import",
     name: "pluginhandler-import",
     severity: "block",
-    scope: PYTHON_SCOPE,
-    run: (_rule, files) => runPluginhandlerImport(files)
+    scope: scopeFor("python-domain"),
+    run: (_rule, files) => runLinePattern(files, /^\s*import\s+pluginhandler\b/, "pluginhandler import forbidden")
   },
   {
     id: "reverse-plugin-import",
     name: "reverse-plugin-import",
     severity: "block",
-    scope: PYTHON_SCOPE,
-    run: (_rule, files) => runReversePluginImport(files)
+    scope: scopeFor("python-domain"),
+    run: (_rule, files) =>
+      runLinePattern(files, /^\s*from\s+plugin\s+import\b|^\s*import\s+plugin\b/, "plugin.py import forbidden")
   },
   {
     id: "domain-lock-acquisition",
     name: "domain-lock-acquisition",
     severity: "block",
-    scope: PYTHON_SCOPE,
-    run: (_rule, files) => runDomainLockAcquisition(files)
+    scope: scopeFor("python-domain"),
+    run: (_rule, files) =>
+      runLinePattern(
+        files,
+        /\bthreading\.(Lock|RLock|Condition)\s*\(/,
+        "threading lock acquisition forbidden in server/polarrecorder/"
+      )
   },
   {
     id: "domain-time-sleep",
     name: "domain-time-sleep",
     severity: "block",
-    scope: PYTHON_SCOPE,
-    run: (_rule, files) => runDomainTimeSleep(files)
+    scope: scopeFor("python-domain"),
+    run: (_rule, files) => runLinePattern(files, /\btime\.sleep\s*\(/, "time.sleep forbidden")
   },
   {
     id: "invalid-lint-suppression",
     name: "invalid-lint-suppression",
     severity: "block",
-    scope: PYTHON_SCOPE,
+    scope: scopeFor("python-domain"),
     run: (_rule, files) => runInvalidLintSuppression(files)
   }
 ];

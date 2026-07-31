@@ -70,8 +70,7 @@ function classify(relativePath) {
     if (IMMUTABLE_CAPTURE_JSON_FILES.has(relativePath)) {
       return {
         owner: "unsupported",
-        reason:
-          "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+        reason: "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
         alternateValidation: "tests/test_baseline_captures.py digest anchors and regeneration proofs"
       };
     }
@@ -140,7 +139,7 @@ function classify(relativePath) {
  *
  * @returns {{path: string, owner: string, reason?: string, alternateValidation?: string}[]}
  */
-export function buildFormatScope() {
+export function runFormatScopeGeneration() {
   // Tracked plus untracked-but-not-ignored files: mid-migration, several genuinely
   // maintained files (a fresh package-lock.json, newly authored tools) are not yet
   // staged/committed, and `git ls-files` alone would silently miss them.
@@ -150,7 +149,9 @@ export function buildFormatScope() {
   })
     .split("\n")
     .filter(Boolean);
-  const tracked = [...new Set(discovered)].sort();
+  const tracked = [...new Set(discovered)]
+    .filter((relativePath) => fs.existsSync(path.join(ROOT, relativePath)))
+    .sort();
   /** @type {{path: string, owner: string, reason?: string, alternateValidation?: string}[]} */
   const rows = [];
   for (const relativePath of tracked) {
@@ -163,7 +164,7 @@ export function buildFormatScope() {
 }
 
 function main() {
-  const rows = buildFormatScope();
+  const rows = runFormatScopeGeneration();
   const unclassified = rows.filter((row) => row.owner === "unsupported" && !row.reason);
   if (unclassified.length > 0) {
     console.error("format-scope: unclassified files require an explicit disposition:");

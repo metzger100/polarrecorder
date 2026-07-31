@@ -36,14 +36,14 @@ move the problem. Each playbook names the rule, the checker that raises it, and 
 - **Fix:** Delete the local copy and `import` the canonical helper from its owner module. If the helper genuinely needs
   to move, move it (and update the owner map in the checker) — do not keep two.
 
-### Duplicate helper or copied block (`check-duplication.py`, `check-js-duplication.mjs`)
+### Duplicate helper or copied block (`duplicate-functions`, `jscpd`)
 
 - **Why it fires:** The same function body or a long statement block appears in two files.
 - **Fix:** Extract one canonical helper into the appropriate existing module (`units.py`, `bins.py`, a
   `window.Polarrecorder` namespace) and import/reuse it. Search before writing (`grep -rn "def <name>" server/`,
   `grep -rn "Polarrecorder\." viewer/`).
 
-### Silent error swallowing (`empty-catch`, `catch-fallback`, `promise-empty-catch`)
+### Silent error swallowing (`empty-catch`, `catch-fallback-without-suppression`)
 
 - **Checker:** `tools/check-patterns.mjs`.
 - **Why it fires:** A `catch` block is empty, or it neither rethrows nor marks a real boundary fallback; or a Promise
@@ -53,7 +53,7 @@ move the problem. Each playbook names the rule, the checker that raises it, and 
   `polarrecorder-boundary-fallback(<owner>): ...` comment explaining why the silent fallback is correct. A casual
   comment is not the escape hatch.
 
-### Re-defaulting an internal contract result (`internal-namespace-fallback`, `default-truthy-fallback`, `redundant-null-type-guard`)
+### Re-defaulting an internal contract result (`internal-contract-fallback`, `default-truthy-fallback`, `redundant-null-type-guard`)
 
 - **Checker:** `tools/check-patterns.mjs`.
 - **Why it fires:** Viewer code calls an internal `Polarrecorder.*` helper and then `|| / ??`-defaults its result,
@@ -88,7 +88,7 @@ move the problem. Each playbook names the rule, the checker that raises it, and 
 
 ### Rendered sentinel or clobbered zero (`viewer-render-no-sentinel`, `viewer-absent-placeholder`, `viewer-falsy-preservation`)
 
-- **Checker:** `tools/check-viewer-contracts.mjs`.
+- **Checker:** `tests/js/viewer-render-contract.test.mjs`.
 - **Why it fires:** The viewer rendered a `NaN`/`undefined`/`null` token from a contract-valid payload, dropped the
   absent-value placeholder, or turned a present `0` reading into a placeholder.
 - **Fix:** Keep boundary numbers finite and presence-check the container, not the value

@@ -7,8 +7,21 @@ import { pathToFileURL } from "node:url";
 import { countFindingsByKind, detectOneliners, ONELINER_MESSAGE_BY_KIND } from "./check-file-size/oneliner-rules.mjs";
 
 const MAX_ALLOWED_LINES = 400;
-const ROOT_MARKDOWN_FILES = ["AGENTS.md", "ARCHITECTURE.md", "CLAUDE.md", "CONTRIBUTING.md", "README.md", "ROADMAP.md"];
-const ROOT_JS_FILES = ["plugin.js", "plugin.mjs"];
+// project-file-size-scope.json is a fixed project config, not part of the (possibly fake)
+// scan root under test, so it is always read from the real repository, mirroring
+// check-doc-links.mjs's linkinator.config.json convention.
+const PROJECT_SCOPE_PATH = path.join(
+  path.dirname(new URL(import.meta.url).pathname),
+  "quality-policy",
+  "project-file-size-scope.json"
+);
+
+/**
+ * @returns {{rootMarkdownFiles: string[], rootJsFiles: string[], viewerScanRoot: string, documentationScanRoot: string, toolsScanRoot: string}}
+ */
+function readProjectScope() {
+  return JSON.parse(fs.readFileSync(PROJECT_SCOPE_PATH, "utf8"));
+}
 
 /**
  * @typedef {import("./check-file-size/oneliner-rules.mjs").OnelinerKind} OnelinerKind
@@ -116,9 +129,10 @@ function reportFileSize(failures, warnings, summary) {
  * @returns {TargetFile[]}
  */
 function collectTargetFiles(root) {
-  const viewerRoot = path.join(root, "viewer");
-  const docRoot = path.join(root, "documentation");
-  const toolsRoot = path.join(root, "tools");
+  const scope = readProjectScope();
+  const viewerRoot = path.join(root, scope.viewerScanRoot);
+  const docRoot = path.join(root, scope.documentationScanRoot);
+  const toolsRoot = path.join(root, scope.toolsScanRoot);
   const out = [];
   if (fs.existsSync(viewerRoot)) {
     for (const name of fs.readdirSync(viewerRoot)) {
@@ -128,12 +142,12 @@ function collectTargetFiles(root) {
       }
     }
   }
-  for (const name of ROOT_JS_FILES) {
+  for (const name of scope.rootJsFiles) {
     const abs = path.join(root, name);
     if (fs.existsSync(abs)) out.push({ abs, rel: name });
   }
   if (fs.existsSync(docRoot)) walkMarkdown(root, docRoot, out);
-  for (const name of ROOT_MARKDOWN_FILES) {
+  for (const name of scope.rootMarkdownFiles) {
     const abs = path.join(root, name);
     if (fs.existsSync(abs)) out.push({ abs, rel: name });
   }

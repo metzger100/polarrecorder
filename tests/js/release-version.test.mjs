@@ -1,8 +1,8 @@
 /**
  * Self-tests for tools/release-version.mjs, the single JavaScript
  * SemVer/tag parser. Asserts against the shared `tools/quality-policy/semver-corpus.json`
- * corpus, the same one `tests/test_release_manifest.py` asserts against, so the JS and
- * Python SemVer authorities can never silently diverge.
+ * corpus used by the local JavaScript archive builder, so tag parsing and archive stamping
+ * share one SemVer authority.
  */
 
 import assert from "node:assert/strict";

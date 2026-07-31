@@ -28,10 +28,10 @@ Default validation gate:
 npm run check:all
 ```
 
-`tools/check-all.sh` is a compatibility wrapper around the same command. The full gate is exactly `check:core` (Python
-linting/formatting/strict typing/tests/file-size/contracts, JS lint/format/tests/typecheck/duplication, docs,
-complexity, scaling, and package/release validation) plus `test:coverage:check` (Python + viewer/plugin JS coverage
-inventory). See [quality gates](../conventions/quality-gates.md) for the exact group composition.
+The full gate is exactly `check:core` (Python linting/formatting/strict typing/tests/file-size/contracts, JS
+lint/format/tests/typecheck/duplication, docs, complexity, scaling, and package/release validation) plus
+`test:coverage:check` (Python + viewer/plugin JS coverage inventory). See
+[quality gates](../conventions/quality-gates.md) for the exact group composition.
 
 Useful targeted checks:
 
@@ -39,7 +39,7 @@ Useful targeted checks:
 npm run docs:check
 npm run check:fast
 python -m pytest tests/ --tb=short
-python tools/check-release.py --dry-run
+node tools/release-archive.mjs --dry-run
 ```
 
 Touchpoint matrix:
