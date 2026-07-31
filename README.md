@@ -507,19 +507,20 @@ automatically.
 
 ## For developers
 
-Runtime code must remain dependency-free on target devices; development tooling is allowed and is checked by the
-canonical local gate (`npm run check:all`, required before handoff/push/release). Python tests run under pytest and
-JavaScript tests under Vitest (`npm run test:python`, `npm run test:viewer`, `npm run test:tools`,
-`npm run test:plugin`). See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and the bounded `check:fast` iteration
+Runtime code remains dependency-free on target devices. Run `npm run check:all` before handoff, push, or release; see
+[CONTRIBUTING.md](CONTRIBUTING.md) for setup, Python/JavaScript test commands, and the bounded `check:fast` iteration
 gate.
 
 The developer quality contract is local and fail-closed: `npm run check:shared-core` verifies the versioned exact-byte
 manifest, `npm run check:generic-surface` runs the blocking genericness scan, and `npm run check:suppressions` enforces
 zero inline suppression comments. `npm run portable-core:attest` emits an anonymous deterministic digest record
-containing only the contract version, manifest digest, and entry digests. For reproducibility, the complete
-`npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no network
-access or neighboring-directory inputs. The standalone-boundary check includes archived execution plans, so maintained
-history cannot retain another checkout's identity.
+containing only the contract version, manifest digest, generic-rule-tree digest, and entry digests. For reproducibility,
+the complete `npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no
+network access or neighboring-directory inputs.
+
+For a product-neutral learning project, run
+`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"`; its dependency-free host boundary
+and Node test are checked by its own `npm run check:all`.
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
 republishes an already-committed local artifact when a `v*` tag is pushed. See the

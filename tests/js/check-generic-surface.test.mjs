@@ -79,10 +79,10 @@ test("a seeded token in each of the four target concepts is caught", () => {
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(result.ok, false);
   const targets = result.findings.map((f) => f.target);
-  assert.ok(targets.some((t) => t.startsWith("SHARED_INSTRUCTIONS block")));
-  assert.ok(targets.some((t) => t.startsWith("generic skill:")));
-  assert.ok(targets.some((t) => t.startsWith("Tier 1 tool module:")));
-  assert.ok(targets.some((t) => t.startsWith("generic rule definition:")));
+  assert.ok(targets.includes("AGENTS.md#SHARED_INSTRUCTIONS"));
+  assert.ok(targets.includes(".agents/skills/example/SKILL.md"));
+  assert.ok(targets.includes("tools/check-patterns/shared.mjs"));
+  assert.ok(targets.includes("tools/check-patterns/generic/example-rule.mjs"));
 });
 
 test("current repository finding list is recorded", () => {

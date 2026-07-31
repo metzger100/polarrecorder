@@ -1,43 +1,38 @@
 #!/usr/bin/env node
 
 /**
- * Emit the anonymous portable-core identity for this repository's local manifest.
+ * @file portable-core-attest - Emits the anonymous portable-core digest record
+ * Documentation: documentation/conventions/quality-gates.md
  */
 
-import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+  MANIFEST_PATH,
+  buildAttestation,
+  readPortableCoreContract,
+  resolveContainedPath
+} from "./quality-policy/portable-core-contract.mjs";
+import { readJsonPolicy } from "./quality-policy/read-json-policy.mjs";
 
-/**
- * @param {string} root
- * @returns {{coreVersion: string, manifestSha256: string, entries: Record<string, string>}}
- */
-function readAttestation(root) {
-  const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
-  const manifestPath = path.join(root, "tools", "quality-policy", "shared-core-manifest.json");
-  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  const entries = Object.fromEntries(
-    Object.entries(manifest.entries).sort(([left], [right]) => left.localeCompare(right))
-  );
-  return {
-    coreVersion: contract.coreVersion,
-    manifestSha256: crypto.createHash("sha256").update(fs.readFileSync(manifestPath)).digest("hex"),
-    entries
-  };
+/** @param {{root?: string, print?: boolean}} [options] @returns {{coreVersion: string, manifestSha256: string, genericRulesSha256: string, entries: Record<string, string>}} */
+export function runPortableCoreAttestation(options = {}) {
+  const root = path.resolve(options.root || process.cwd());
+  readPortableCoreContract(root);
+  const manifest = readJsonPolicy(resolveContainedPath(root, MANIFEST_PATH));
+  const entries = /** @type {Record<string, string>} */ (manifest.entries);
+  const attestation = buildAttestation(root, entries);
+  if (options.print !== false) process.stdout.write(JSON.stringify(attestation) + "\n");
+  return attestation;
 }
 
-/**
- * Run the deterministic attestation.
- * @param {{root?: string, print?: boolean}} [options]
- * @returns {string}
- */
+/** @param {{root?: string, print?: boolean}} [options] @returns {string} */
 export function runPortableCoreAttest(options = {}) {
-  const root = path.resolve(options.root || process.cwd());
-  const output = JSON.stringify(readAttestation(root), null, 2) + "\n";
+  const output = JSON.stringify(runPortableCoreAttestation({ ...options, print: false }), null, 2) + "\n";
   if (options.print !== false) process.stdout.write(output);
   return output;
 }
 
-if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) runPortableCoreAttest();
+if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+  runPortableCoreAttestation();
+}

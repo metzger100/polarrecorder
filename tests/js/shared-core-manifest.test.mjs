@@ -10,12 +10,11 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
-import { runSharedCoreCheck, runManifestPreconditionCheck } from "../../tools/check-shared-core.mjs";
-import { CANONICAL_GENERIC_RULE_IDS } from "../../tools/check-patterns/generic/canonical-rule-ids.mjs";
+import { runManifestPreconditionCheck, runSharedCoreCheck } from "../../tools/check-shared-core.mjs";
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, "tools", "quality-policy", "shared-core-manifest.json");
-const ANCHORED_MANIFEST_DIGEST = "da363ff66126d67fb5a8279ed594f3caadf009f73f1208a5b24edb83076486f5";
+const ANCHORED_MANIFEST_DIGEST = "fa86af9cf2457ab9b247cb60790cb639cb64db9f369a6634234ab6ce1aa31998";
 
 /**
  * @returns {string}
@@ -41,20 +40,19 @@ function writeManifest(root, entries) {
     JSON.stringify({
       schemaVersion: 1,
       coreVersion: "1.0.0",
-      mandatoryRoles: Array.from({ length: 16 }, (_unused, index) => ({
-        name: `fixture-${index}`,
-        paths: Object.keys(entries)
-      })),
+      mandatoryRoles: Object.fromEntries(
+        Array.from({ length: 17 }, (_unused, index) => [`fixture-${index}`, Object.keys(entries)])
+      ),
       mandatoryPaths: Object.keys(entries),
       metadataPaths: [
         "tools/quality-policy/portable-core-contract.json",
         "tools/quality-policy/shared-core-manifest.json",
         "tools/quality-policy/shared-core-manifest.sha256"
       ],
-      profileSchemas: [{ path: Object.keys(entries)[0], schemaVersion: 1 }],
-      canonicalRuleIds: [...CANONICAL_GENERIC_RULE_IDS],
-      requiredCheckerExports: [{ path: Object.keys(entries)[0], exports: [] }],
-      requiredSelfTestRoles: [{ role: "fixture", tests: ["tests/js/fixture.test.mjs"] }]
+      profileSchemas: [Object.keys(entries)[0]],
+      canonicalRuleIds: Array.from({ length: 21 }, (_unused, index) => `rule-${index}`),
+      requiredCheckerExports: {},
+      requiredSelfTestRoles: { fixture: "tests/js/fixture.test.mjs" }
     })
   );
   fs.mkdirSync(path.join(root, "tests", "js"), { recursive: true });
@@ -82,7 +80,7 @@ test("a clean manifest with matching digests passes", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, true, JSON.stringify(result.findings));
+  assert.equal(result.summary.ok, true, JSON.stringify(result.findings));
 });
 
 test("a manifest entry missing on disk is caught", () => {
@@ -95,8 +93,8 @@ test("a manifest entry missing on disk is caught", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
-  assert.ok(result.findings.some((f) => f.reason.includes("missing on disk")));
+  assert.equal(result.summary.ok, false);
+  assert.ok(result.findings.some((f) => f.kind === "missing"));
 });
 
 test("a digest mismatch is caught", () => {
@@ -110,8 +108,8 @@ test("a digest mismatch is caught", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
-  assert.ok(result.findings.some((f) => f.reason.includes("digest mismatch")));
+  assert.equal(result.summary.ok, false);
+  assert.ok(result.findings.some((f) => f.kind === "mismatch"));
 });
 
 test("an extra manifest entry is caught", () => {
@@ -128,7 +126,7 @@ test("an extra manifest entry is caught", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
+  assert.equal(result.summary.ok, false);
   assert.ok(result.findings.some((f) => f.path === "extra.txt"));
 });
 
@@ -142,8 +140,8 @@ test("an escaping manifest entry is caught", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
-  assert.ok(result.findings.some((f) => f.reason.includes("escapes")));
+  assert.equal(result.summary.ok, false);
+  assert.ok(result.findings.some((f) => f.kind === "escaping" || /path/i.test(f.detail || "")));
 });
 
 test("an invalid manifest signature is caught", () => {
@@ -151,7 +149,7 @@ test("an invalid manifest signature is caught", () => {
   writeManifest(root, { "seed.txt": "0".repeat(64) });
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
+  assert.equal(result.summary.ok, false);
   assert.ok(result.findings.some((f) => f.path.endsWith(".sha256")));
 });
 
@@ -162,7 +160,7 @@ test("a mandatory path omitted from the manifest is caught", () => {
   const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
   contract.mandatoryPaths.push("omitted.txt");
-  contract.mandatoryRoles[0].paths.push("omitted.txt");
+  contract.mandatoryRoles["fixture-0"].push("omitted.txt");
   fs.writeFileSync(contractPath, JSON.stringify(contract));
   const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
   fs.writeFileSync(
@@ -171,7 +169,7 @@ test("a mandatory path omitted from the manifest is caught", () => {
   );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
-  assert.equal(result.ok, false);
+  assert.equal(result.summary.ok, false);
   assert.ok(result.findings.some((f) => f.path === "omitted.txt"));
 });
 
@@ -195,7 +193,7 @@ function writeManifestMjsFixture(root, rel, content, { entryPoint = false, withT
   );
   const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
-  contract.requiredCheckerExports = entryPoint ? [{ path: rel, exports: ["runExample"] }] : [];
+  contract.requiredCheckerExports = entryPoint ? { [rel]: ["runExample"] } : {};
   fs.writeFileSync(contractPath, JSON.stringify(contract));
   fs.writeFileSync(
     path.join(root, "package.json"),

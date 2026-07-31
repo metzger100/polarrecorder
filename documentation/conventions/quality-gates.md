@@ -106,10 +106,14 @@ Rule ownership:
 (`tools/quality-policy/shared-core-manifest.json`) is protected by `shared-core-manifest.sha256`; every listed entry is
 contained in the current repository root and matches its digest. Local paths, product tokens, report formats, and
 runtime payload lists remain Tier 2 profile data. `npm run portable-core:attest` emits only the core version, manifest
-digest, and sorted entry digests, with no host or repository identity. `npm run check:shared-core` verifies the full
-contract locally, while `npm run check:generic-surface` and `npm run check:suppressions` provide blocking genericness
-and zero-inline-suppression owners. A fresh copy containing only this repository must pass `npm run check:all` without
-network access or neighboring-directory inputs.
+digest, generic-rule-tree digest, and sorted entry digests, with no host or repository identity. The signed inventory
+includes the contract schema/loaders plus the verifier, generic-surface, and attestation entrypoints.
+`npm run check:shared-core` verifies the full contract locally, while `npm run check:generic-surface` and
+`npm run check:suppressions` provide blocking genericness and zero-inline-suppression owners. A fresh copy containing
+only this repository must pass `npm run check:all` without network access or neighboring-directory inputs.
+
+`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"` creates a product-neutral,
+dependency-free learning project with a minimal host boundary, a Node contract test, and its own `npm run check:all`.
 
 ## Related
 

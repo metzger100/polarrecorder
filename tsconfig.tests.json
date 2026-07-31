@@ -23,6 +23,7 @@
     "tests/js/check-publisher-workflow.test.mjs",
     "tests/js/publisher-workflow-contract.test.mjs",
     "tests/js/check-schema.test.mjs",
+    "tests/js/create-avnav-plugin-starter.test.mjs",
     "tests/js/codex-config.test.mjs",
     "tests/js/command-graph.test.mjs",
     "tests/js/complexity-policy.test.mjs",

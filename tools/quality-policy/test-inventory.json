@@ -25,6 +25,9 @@
     "tests/js/check-schema.test.mjs": {
       "classification": "strict"
     },
+    "tests/js/create-avnav-plugin-starter.test.mjs": {
+      "classification": "strict"
+    },
     "tests/js/codex-config.test.mjs": {
       "classification": "strict"
     },
