@@ -46,12 +46,14 @@ case "${archive_name}" in
 esac
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-case "$CACHE_DIR" in
-  "$repo_root"|"$repo_root"/*)
-    echo "actionlint.sh: ACTIONLINT_CACHE_DIR must not resolve inside the repository" >&2
-    exit 1
-    ;;
-esac
+if [ "${POLARRECORDER_ISOLATED_CHECK:-0}" != "1" ]; then
+  case "$CACHE_DIR" in
+    "$repo_root"|"$repo_root"/*)
+      echo "actionlint.sh: ACTIONLINT_CACHE_DIR must not resolve inside the repository" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 if [ "${1:-}" = "--install" ]; then
   if command -v sha256sum >/dev/null 2>&1; then

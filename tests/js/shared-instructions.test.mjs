@@ -71,7 +71,7 @@ test("the enclosed block is non-empty and contains the mandatory preflight", () 
 test("the extracted shared-instructions artifact matches AGENTS.md verbatim", () => {
   const content = fs.readFileSync(AGENTS_PATH, "utf8");
   const extracted = fs.readFileSync(EXTRACTED_BLOCK_PATH, "utf8");
-  assert.equal(extractSharedBlock(content).trim(), extracted.trim());
+  assert.equal(extractSharedBlock(content), extracted);
 });
 
 test("the enclosed block is free of this repository's project-specific tokens", () => {

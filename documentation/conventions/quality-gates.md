@@ -21,7 +21,8 @@ npm run check:all
 literal, locked group order:
 
 ```text
-check:core = check:standard && typecheck && package:check &&
+check:core = check:standard && check:shared-core && check:generic-surface &&
+             check:standalone && check:suppressions && typecheck && package:check &&
              test:focus:check && check:smells &&
              check:python-contracts && test:split && check:complexity &&
              check:scaling && docs:check && check:filesize
@@ -84,6 +85,10 @@ publisher (see [release workflow](../guides/release-workflow.md)): it verifies a
 and committed locally by `npm run check:all` and `release:create`, and never itself installs dependencies, lints, tests,
 or builds.
 
+Before `typecheck`, `check:core` also runs `check:shared-core`, the blocking `check:generic-surface` scan,
+`check:standalone`, and `check:suppressions`. These verify the versioned tooling contract, local genericness profile,
+repository containment, and zero inline suppressions respectively.
+
 Rule ownership:
 
 - [Smell prevention](smell-prevention.md) lists every blocking rule enforced by these commands.
@@ -97,9 +102,14 @@ Rule ownership:
 
 ## Generic-core inventory
 
-`tools/quality-policy/shared-core-manifest.json` is the authoritative inventory of reusable tooling files and their
-reviewed local digests. `npm run check:shared-core` verifies only this repository; it never reads an external checkout.
-New tooling should be derived from the documented local contracts rather than copied from an unrelated repository.
+`tools/quality-policy/portable-core-contract.json` is the versioned Tier 1 inventory contract. Its exact-byte manifest
+(`tools/quality-policy/shared-core-manifest.json`) is protected by `shared-core-manifest.sha256`; every listed entry is
+contained in the current repository root and matches its digest. Local paths, product tokens, report formats, and
+runtime payload lists remain Tier 2 profile data. `npm run portable-core:attest` emits only the core version, manifest
+digest, and sorted entry digests, with no host or repository identity. `npm run check:shared-core` verifies the full
+contract locally, while `npm run check:generic-surface` and `npm run check:suppressions` provide blocking genericness
+and zero-inline-suppression owners. A fresh copy containing only this repository must pass `npm run check:all` without
+network access or neighboring-directory inputs.
 
 ## Related
 

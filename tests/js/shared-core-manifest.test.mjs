@@ -1,8 +1,6 @@
 /**
- * Contract test for `tools/quality-policy/shared-core-manifest.json` and
- * `tools/check-shared-core.mjs`: the manifest's own digest is anchored against a literal
- * recorded here, and each of the checker's three failure modes -- a missing listed path, a digest
- * mismatch, and an unlisted Tier 1 path under a scan root -- has a negative fixture.
+ * Contract test for the manifest and verifier: the manifest digest is anchored against a literal, and malformed,
+ * missing, escaping, symlinked, extra, and digest-drifted entries have negative fixtures.
  */
 
 import assert from "node:assert/strict";
@@ -13,10 +11,11 @@ import path from "node:path";
 import { test } from "vitest";
 
 import { runSharedCoreCheck, runManifestPreconditionCheck } from "../../tools/check-shared-core.mjs";
+import { CANONICAL_GENERIC_RULE_IDS } from "../../tools/check-patterns/generic/canonical-rule-ids.mjs";
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, "tools", "quality-policy", "shared-core-manifest.json");
-const ANCHORED_MANIFEST_DIGEST = "b36847694c88edb5704d6ae00cda7d8de92a7a8cdaab33f18ec1d6e64fa8d76e";
+const ANCHORED_MANIFEST_DIGEST = "e649d2f4947081f0023745adca9f37d5d4f2b7afc4f43add0b9a035cf1a894b1";
 
 /**
  * @returns {string}
@@ -37,15 +36,30 @@ function writeManifest(root, entries) {
     path.join(root, "tools", "quality-policy", "shared-core-manifest.json"),
     JSON.stringify({ entries })
   );
-}
-
-/**
- * @param {string} root
- * @param {string[]} roots
- * @returns {void}
- */
-function writeScanRoots(root, roots) {
-  fs.writeFileSync(path.join(root, "tools", "quality-policy", "tier1-scan-roots.json"), JSON.stringify({ roots }));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "portable-core-contract.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      coreVersion: "1.0.0",
+      mandatoryRoles: Array.from({ length: 16 }, (_unused, index) => ({
+        name: `fixture-${index}`,
+        paths: Object.keys(entries)
+      })),
+      mandatoryPaths: Object.keys(entries),
+      metadataPaths: [
+        "tools/quality-policy/portable-core-contract.json",
+        "tools/quality-policy/shared-core-manifest.json",
+        "tools/quality-policy/shared-core-manifest.sha256"
+      ],
+      profileSchemas: [{ path: Object.keys(entries)[0], schemaVersion: 1 }],
+      canonicalRuleIds: [...CANONICAL_GENERIC_RULE_IDS],
+      requiredCheckerExports: [{ path: Object.keys(entries)[0], exports: [] }],
+      requiredSelfTestRoles: [{ role: "fixture", tests: ["tests/js/fixture.test.mjs"] }]
+    })
+  );
+  fs.mkdirSync(path.join(root, "tests", "js"), { recursive: true });
+  fs.writeFileSync(path.join(root, "tests", "js", "fixture.test.mjs"), "// fixture test\n");
+  fs.writeFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"), "invalid");
 }
 
 test("the committed manifest's own digest matches the anchored literal", () => {
@@ -61,6 +75,11 @@ test("a clean manifest with matching digests passes", () => {
   const root = makeFixtureRoot();
   fs.writeFileSync(path.join(root, "seed.txt"), "hello\n");
   writeManifest(root, { "seed.txt": crypto.createHash("sha256").update("hello\n").digest("hex") });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(result.ok, true, JSON.stringify(result.findings));
@@ -69,6 +88,11 @@ test("a clean manifest with matching digests passes", () => {
 test("a manifest entry missing on disk is caught", () => {
   const root = makeFixtureRoot();
   writeManifest(root, { "missing.txt": "0".repeat(64) });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(result.ok, false);
@@ -79,22 +103,76 @@ test("a digest mismatch is caught", () => {
   const root = makeFixtureRoot();
   fs.writeFileSync(path.join(root, "seed.txt"), "hello\n");
   writeManifest(root, { "seed.txt": "0".repeat(64) });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(result.ok, false);
   assert.ok(result.findings.some((f) => f.reason.includes("digest mismatch")));
 });
 
-test("an unlisted Tier 1 path under a scan root is caught", () => {
+test("an extra manifest entry is caught", () => {
   const root = makeFixtureRoot();
-  writeManifest(root, {});
-  fs.mkdirSync(path.join(root, "tier1"), { recursive: true });
-  fs.writeFileSync(path.join(root, "tier1", "unlisted.mjs"), "export const x = 1;\n");
-  writeScanRoots(root, ["tier1"]);
+  fs.writeFileSync(path.join(root, "seed.txt"), "hello\n");
+  writeManifest(root, {
+    "seed.txt": crypto.createHash("sha256").update("hello\n").digest("hex"),
+    "extra.txt": "0".repeat(64)
+  });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
   const result = runSharedCoreCheck({ root, print: false });
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(result.ok, false);
-  assert.ok(result.findings.some((f) => f.path === "tier1/unlisted.mjs"));
+  assert.ok(result.findings.some((f) => f.path === "extra.txt"));
+});
+
+test("an escaping manifest entry is caught", () => {
+  const root = makeFixtureRoot();
+  writeManifest(root, { "../escape.txt": "0".repeat(64) });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
+  const result = runSharedCoreCheck({ root, print: false });
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some((f) => f.reason.includes("escapes")));
+});
+
+test("an invalid manifest signature is caught", () => {
+  const root = makeFixtureRoot();
+  writeManifest(root, { "seed.txt": "0".repeat(64) });
+  const result = runSharedCoreCheck({ root, print: false });
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some((f) => f.path.endsWith(".sha256")));
+});
+
+test("a mandatory path omitted from the manifest is caught", () => {
+  const root = makeFixtureRoot();
+  fs.writeFileSync(path.join(root, "listed.txt"), "hello\n");
+  writeManifest(root, { "listed.txt": crypto.createHash("sha256").update("hello\n").digest("hex") });
+  const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  contract.mandatoryPaths.push("omitted.txt");
+  contract.mandatoryRoles[0].paths.push("omitted.txt");
+  fs.writeFileSync(contractPath, JSON.stringify(contract));
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
+  const result = runSharedCoreCheck({ root, print: false });
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some((f) => f.path === "omitted.txt"));
 });
 
 /**
@@ -110,6 +188,15 @@ function writeManifestMjsFixture(root, rel, content, { entryPoint = false, withT
   fs.writeFileSync(abs, content);
   const digest = crypto.createHash("sha256").update(content).digest("hex");
   writeManifest(root, { [rel]: digest });
+  const manifest = fs.readFileSync(path.join(root, "tools", "quality-policy", "shared-core-manifest.json"));
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "shared-core-manifest.sha256"),
+    crypto.createHash("sha256").update(manifest).digest("hex")
+  );
+  const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  contract.requiredCheckerExports = entryPoint ? [{ path: rel, exports: ["runExample"] }] : [];
+  fs.writeFileSync(contractPath, JSON.stringify(contract));
   fs.writeFileSync(
     path.join(root, "package.json"),
     JSON.stringify({ scripts: entryPoint ? { "check:fixture": `node ${rel}` } : {} })
@@ -120,6 +207,8 @@ function writeManifestMjsFixture(root, rel, content, { entryPoint = false, withT
       path.join(root, "tests", "js", "fixture.test.mjs"),
       `import "../../${rel}"; // references ${path.basename(rel)}\n`
     );
+  } else {
+    fs.rmSync(path.join(root, "tests", "js", "fixture.test.mjs"));
   }
 }
 

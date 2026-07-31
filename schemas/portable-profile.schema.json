@@ -1,0 +1,10 @@
+{
+  "$id": "portable-profile.schema.json",
+  "type": "object",
+  "required": ["schemaVersion", "profileType"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "profileType": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": true
+}

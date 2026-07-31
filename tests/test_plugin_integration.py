@@ -47,7 +47,7 @@ class LoopAvNavAPI(FakeAvNavAPI):
         number: int = 10,
         includeSource: bool = False,
         waitTime: float = 0.5,
-        filter: str | list[str] | None = None,  # noqa: A002
+        filter_values: str | list[str] | None = None,
     ) -> tuple[int, list[str]]:
         self.fetches += 1
         self.monotonic.advance(1.0)
@@ -60,7 +60,7 @@ class LoopAvNavAPI(FakeAvNavAPI):
             self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
         if self.fetches == self.restart_on_fetch and self.restart_callback is not None:
             self.restart_callback()
-        return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter)
+        return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter_values)
 
     def shouldStopMainThread(self) -> bool:
         return self.fetches >= self.max_fetches

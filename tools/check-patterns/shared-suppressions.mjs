@@ -1,6 +1,5 @@
-// Lint-directive / suppression-comment parsing (plugin-lint-disable-*, plugin-boundary-*).
-// De-branded generic suppression grammar: no product token, no repository name. Replaces the
-// former weaker `pattern-ignore: <ruleName>` convention (no owner, no reason, no expiry).
+// Parse the repository's structured lint and boundary marker grammar.
+// Invalid markers are reported instead of silently changing rule severity.
 
 import { getFileData, lineAt } from "./shared.mjs";
 
@@ -13,7 +12,7 @@ let lintDirectiveCache = new Map();
 let knownRuleNames = [];
 
 /**
- * The one rule name a `plugin-boundary-next-line(...)` marker may suppress: the catch/fallback
+ * The one rule name a boundary marker may suppress: the catch/fallback
  * concept. Update this constant if that rule's canonical name changes.
  */
 export const BOUNDARY_MARKER_RULE_NAME = "catch-fallback-without-suppression";

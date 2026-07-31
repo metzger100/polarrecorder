@@ -58,6 +58,9 @@
     "tests/js/format-scope.test.mjs": {
       "classification": "strict"
     },
+    "tests/js/generic-rule-corpus.test.mjs": {
+      "classification": "strict"
+    },
     "tests/js/header-contract.test.mjs": {
       "classification": "strict"
     },
@@ -77,6 +80,9 @@
       "classification": "strict"
     },
     "tests/js/plugin-entrypoints.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/portable-core.test.mjs": {
       "classification": "strict"
     },
     "tests/js/prettier-config.test.mjs": {
@@ -119,6 +125,9 @@
       "classification": "strict"
     },
     "tests/js/smell-catalog-contract.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/suppression-policy.test.mjs": {
       "classification": "strict"
     },
     "tests/js/test-focus.test.mjs": {

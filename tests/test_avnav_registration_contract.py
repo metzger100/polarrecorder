@@ -43,8 +43,8 @@ class PartialAvNavAPI:
     def setStatus(self, value: str, info: str) -> None:
         del value, info
 
-    def error(self, format: str, *param: object) -> None:  # noqa: A002
-        del format, param
+    def error(self, message_format: str, *param: object) -> None:
+        del message_format, param
 
 
 class PartialAvNavAPIWithUserApp(PartialAvNavAPI):

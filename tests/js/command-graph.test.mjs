@@ -20,6 +20,9 @@ const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
 const REQUIRED_CHECK_CORE_GROUPS = [
   "check:standard",
   "check:shared-core",
+  "check:generic-surface",
+  "check:standalone",
+  "check:suppressions",
   "typecheck",
   "package:check",
   "test:focus:check",
@@ -48,9 +51,7 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "test:unit",
   "check:strict",
   "dependencies:audit",
-  // Records today's genericness-token finding list (skill files, tools/check-patterns/shared.mjs)
-  // as the Phase C/E work list. It is not gating until those phases resolve the findings.
-  "check:generic-surface"
+  "portable-core:attest"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */

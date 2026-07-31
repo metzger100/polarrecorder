@@ -115,6 +115,15 @@ export function main(argv = process.argv.slice(2)) {
 }
 
 /**
+ * Canonical release-creation entry point for tests and local adapters.
+ * @param {string[]} [argv]
+ * @returns {void}
+ */
+export function runReleaseCreate(argv = process.argv.slice(2)) {
+  main(argv);
+}
+
+/**
  * @param {{rootDir: string, version: string, runCommand: RunCommand}} params
  * @returns {string}
  */

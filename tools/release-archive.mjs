@@ -100,6 +100,20 @@ export function validateReleaseArchive(root, version, archive, manifest = buildR
   }
 }
 
+/**
+ * Canonical checker entry point for release archive validation.
+ * @param {{root?: string, version: string, archive: string, manifest?: string[]}} options
+ * @returns {{ok: boolean, failures: string[]}}
+ */
+export function runReleaseArchive({ root = process.cwd(), version, archive, manifest }) {
+  try {
+    validateReleaseArchive(root, version, archive, manifest || buildReleaseManifest(root));
+    return { ok: true, failures: [] };
+  } catch (error) {
+    return { ok: false, failures: [error instanceof Error ? error.message : String(error)] };
+  }
+}
+
 /** @param {Buffer} value */
 function hash(value) {
   return crypto.createHash("sha256").update(value).digest("hex");

@@ -1,9 +1,7 @@
 /**
  * Self-test for `tools/check-generic-surface.mjs`: a fixture workspace with no
  * genericness token in any target passes, a fixture with a seeded token in each
- * of the four target concepts is caught, and the real repository's current
- * finding list is recorded (it is expected to be non-empty until Phases C and E
- * resolve it -- see `PLAN9.md` Phase A evidence).
+ * of the target concepts is caught, and the repository's current finding list remains observable for contract tests.
  */
 
 import assert from "node:assert/strict";
@@ -13,6 +11,7 @@ import path from "node:path";
 import { test } from "vitest";
 
 import { runGenericSurfaceCheck } from "../../tools/check-generic-surface.mjs";
+import { runProfileSchemaCheck } from "../../tools/portable-core/schema-engine.mjs";
 
 const BEGIN = "<!-- BEGIN SHARED_INSTRUCTIONS -->";
 const END = "<!-- END SHARED_INSTRUCTIONS -->";
@@ -48,6 +47,9 @@ function makeFixtureRoot({ seedToken }) {
   fs.writeFileSync(
     path.join(root, "tools", "quality-policy", "generic-tokens.json"),
     JSON.stringify({
+      schemaVersion: 1,
+      profileType: "genericness-token-profile",
+      note: "fixture",
       projectTokens: ["polarrecorder"],
       domainTokens: ["widget", "gauge", "renderer", "avnav"],
       hostTokens: ["avnav"]
@@ -83,7 +85,22 @@ test("a seeded token in each of the four target concepts is caught", () => {
   assert.ok(targets.some((t) => t.startsWith("generic rule definition:")));
 });
 
-test("current repository finding list is recorded (non-empty until Phases C/E)", () => {
+test("current repository finding list is recorded", () => {
   const result = runGenericSurfaceCheck({ root: process.cwd(), print: false });
   assert.ok(Array.isArray(result.findings));
+});
+
+test("profile schema rejects unknown versions and fields", () => {
+  assert.equal(
+    runProfileSchemaCheck({ profile: { schemaVersion: 2 }, allowedFields: ["schemaVersion"], schemaVersion: 1 }).ok,
+    false
+  );
+  assert.equal(
+    runProfileSchemaCheck({
+      profile: { schemaVersion: 1, extra: true },
+      allowedFields: ["schemaVersion"],
+      schemaVersion: 1
+    }).ok,
+    false
+  );
 });

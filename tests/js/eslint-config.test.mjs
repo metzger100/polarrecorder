@@ -106,6 +106,18 @@ test("a clean file stays clean", () => {
   assert.equal(result.ok, true, result.output);
 });
 
+test("the standard ESLint configuration rejects a generated suppression comment", () => {
+  const source = [
+    "/** @file Probe */",
+    `// ${"eslint-disable"} ${"no-unused-vars"}`,
+    "window.Polarrecorder = window.Polarrecorder || {};",
+    ""
+  ].join("\n");
+  const result = runEslintOnFixture("viewer/__eslint_test_probe.js", source);
+  assert.equal(result.ok, false, "expected the generated suppression fixture to fail lint");
+  assert.ok(result.output.includes("no-warning-comments"), result.output);
+});
+
 test("plugin.js rejects ES-module syntax", () => {
   const absolutePath = path.join(ROOT, "plugin.js");
   const original = fs.readFileSync(absolutePath, "utf8");

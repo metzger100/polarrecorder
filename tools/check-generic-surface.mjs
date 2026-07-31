@@ -18,6 +18,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { readJson } from "./portable-core/json.mjs";
+import { runProfileSchemaCheck } from "./portable-core/schema-engine.mjs";
+
 const BEGIN_MARKER = "<!-- BEGIN SHARED_INSTRUCTIONS -->";
 const END_MARKER = "<!-- END SHARED_INSTRUCTIONS -->";
 
@@ -30,23 +33,47 @@ const END_MARKER = "<!-- END SHARED_INSTRUCTIONS -->";
  * @returns {{projectTokens: string[], domainTokens: string[], hostTokens: string[]}}
  */
 function readTokens(root) {
-  const raw = fs.readFileSync(path.join(root, "tools", "quality-policy", "generic-tokens.json"), "utf8");
-  const parsed = JSON.parse(raw);
+  const profilePath = path.join(root, "tools", "quality-policy", "generic-tokens.json");
+  const parsedResult = readJson(profilePath);
+  if (!parsedResult.ok) throw new Error(parsedResult.error);
+  const parsed = /** @type {Record<string, unknown>} */ (parsedResult.value);
+  const schemaResult = runProfileSchemaCheck({
+    profile: parsed,
+    allowedFields: ["schemaVersion", "profileType", "note", "projectTokens", "domainTokens", "hostTokens"],
+    schemaVersion: 1
+  });
+  if (!schemaResult.ok) throw new Error(schemaResult.failures.join("; "));
+  if (parsed.profileType !== "genericness-token-profile") throw new Error("genericness profile has an unknown type");
+  for (const group of ["projectTokens", "domainTokens", "hostTokens"]) {
+    if (
+      !Array.isArray(parsed[group]) ||
+      parsed[group].some((token) => typeof token !== "string" || token.length === 0)
+    ) {
+      throw new Error(`genericness profile has an invalid ${group} array`);
+    }
+  }
   return {
-    projectTokens: parsed.projectTokens,
-    domainTokens: parsed.domainTokens,
-    hostTokens: parsed.hostTokens
+    projectTokens: /** @type {string[]} */ (parsed.projectTokens),
+    domainTokens: /** @type {string[]} */ (parsed.domainTokens),
+    hostTokens: /** @type {string[]} */ (parsed.hostTokens)
   };
 }
 
-/**
- * @param {string} root
- * @returns {{skillDirs: string[], tier1ToolModules: string[], genericRuleDefDirs: string[]}}
- */
-function readScope(root) {
-  const raw = fs.readFileSync(path.join(root, "tools", "quality-policy", "generic-surface-scope.json"), "utf8");
-  return JSON.parse(raw);
-}
+const TEXT_EXTENSIONS = new Set([
+  ".md",
+  ".js",
+  ".mjs",
+  ".py",
+  ".json",
+  ".jsonc",
+  ".toml",
+  ".sh",
+  ".css",
+  ".html",
+  ".txt",
+  ".yml",
+  ".yaml"
+]);
 
 /**
  * @param {string} dir
@@ -80,9 +107,45 @@ function extractSharedInstructionsBlock(content) {
  * @returns {{name: string, content: string}[]}
  */
 function collectTargets(root) {
-  const scope = readScope(root);
   /** @type {{name: string, content: string}[]} */
   const targets = [];
+
+  const contractPath = path.join(root, "tools", "quality-policy", "portable-core-contract.json");
+  if (fs.existsSync(contractPath)) {
+    const result = readJson(contractPath);
+    if (!result.ok) throw new Error(result.error);
+    const contract = /** @type {Record<string, unknown>} */ (result.value);
+    if (!Array.isArray(contract.mandatoryPaths)) {
+      throw new Error("portable-core contract has no mandatoryPaths inventory");
+    }
+    for (const rel of /** @type {unknown[]} */ (contract.mandatoryPaths)) {
+      if (typeof rel !== "string" || !TEXT_EXTENSIONS.has(path.extname(rel))) continue;
+      const abs = path.join(root, rel);
+      if (!fs.existsSync(abs)) throw new Error(`manifest-listed generic path is missing: ${rel}`);
+      targets.push({ name: `manifest-listed Tier 1 path: ${rel}`, content: fs.readFileSync(abs, "utf8") });
+    }
+  } else {
+    const scopePath = path.join(root, "tools", "quality-policy", "generic-surface-scope.json");
+    const scope = JSON.parse(fs.readFileSync(scopePath, "utf8"));
+    for (const name of scope.skillDirs) {
+      const skillPath = path.join(root, ".agents", "skills", name, "SKILL.md");
+      if (fs.existsSync(skillPath))
+        targets.push({ name: `generic skill: ${name}`, content: fs.readFileSync(skillPath, "utf8") });
+    }
+    for (const rel of scope.tier1ToolModules) {
+      const abs = path.join(root, rel);
+      if (fs.existsSync(abs))
+        targets.push({ name: `Tier 1 tool module: ${rel}`, content: fs.readFileSync(abs, "utf8") });
+    }
+    for (const rel of scope.genericRuleDefDirs) {
+      for (const abs of listMjsFilesRecursive(path.join(root, rel))) {
+        targets.push({
+          name: `generic rule definition: ${path.relative(root, abs).replace(/\\/g, "/")}`,
+          content: fs.readFileSync(abs, "utf8")
+        });
+      }
+    }
+  }
 
   const agentsPath = path.join(root, "AGENTS.md");
   if (fs.existsSync(agentsPath)) {
@@ -92,30 +155,7 @@ function collectTargets(root) {
     });
   }
 
-  for (const name of scope.skillDirs) {
-    const skillPath = path.join(root, ".agents", "skills", name, "SKILL.md");
-    if (fs.existsSync(skillPath)) {
-      targets.push({ name: `generic skill: ${name}`, content: fs.readFileSync(skillPath, "utf8") });
-    }
-  }
-
-  for (const rel of scope.tier1ToolModules) {
-    const abs = path.join(root, rel);
-    if (fs.existsSync(abs)) {
-      targets.push({ name: `Tier 1 tool module: ${rel}`, content: fs.readFileSync(abs, "utf8") });
-    }
-  }
-
-  for (const rel of scope.genericRuleDefDirs) {
-    for (const abs of listMjsFilesRecursive(path.join(root, rel))) {
-      targets.push({
-        name: `generic rule definition: ${path.relative(root, abs).replace(/\\/g, "/")}`,
-        content: fs.readFileSync(abs, "utf8")
-      });
-    }
-  }
-
-  return targets;
+  return targets.filter((target, index, all) => all.findIndex((item) => item.name === target.name) === index);
 }
 
 /**

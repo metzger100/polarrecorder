@@ -22,8 +22,8 @@ class FakeStoreAPI:
     def set_entry(self, key: str, value: float, timestamp: float) -> None:
         self.entries[key] = FakeDataEntry(value, timestamp)
 
-    def getSingleValue(self, key: str, includeInfo: bool = False) -> DataEntryLike | None:
-        self.calls.append((key, includeInfo))
+    def get_single_value(self, key: str, include_info: bool = False) -> DataEntryLike | None:
+        self.calls.append((key, include_info))
         return self.entries.get(key)
 
 

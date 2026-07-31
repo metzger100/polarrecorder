@@ -55,6 +55,12 @@ path.
   `documentation/conventions/smell-prevention.md` before changing code or docs.
 - For complex multi-session work, write a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
 - Run `npm run check:all` before handing off changes.
+- For quality-tooling changes, run `npm run check:shared-core`, `npm run check:generic-surface`, and
+  `npm run check:suppressions`; use `npm run portable-core:attest` for deterministic anonymous evidence.
+- Keep reusable mechanisms behind the versioned portable-core contract. Product paths, release payloads, and report
+  formats belong in local profiles or adapters, and external host spellings belong at integration boundaries.
+- A broad tooling change is complete only after `npm run check:all` passes from a fresh isolated copy containing only
+  this repository and no network access.
 - Do not add runtime dependencies, generated build artifacts, unrelated product logic, or raw reference-source copies.
 - JavaScript tests run under Vitest, configured in `vitest.config.mjs` as three include-pattern projects (`viewer`,
   `plugin`, `tools`); Python tests stay on pytest. Add a JavaScript test simply by creating `tests/js/<name>.test.mjs`

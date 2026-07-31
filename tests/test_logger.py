@@ -7,14 +7,14 @@ class FakeLogAPI:
     def __init__(self) -> None:
         self.calls: list[tuple[str, str]] = []
 
-    def log(self, format: str, *param: object) -> None:  # noqa: A002
-        self.calls.append(("log", format % param if param else format))
+    def log(self, message_format: str, *param: object) -> None:
+        self.calls.append(("log", message_format % param if param else message_format))
 
-    def debug(self, format: str, *param: object) -> None:  # noqa: A002
-        self.calls.append(("debug", format % param if param else format))
+    def debug(self, message_format: str, *param: object) -> None:
+        self.calls.append(("debug", message_format % param if param else message_format))
 
-    def error(self, format: str, *param: object) -> None:  # noqa: A002
-        self.calls.append(("error", format % param if param else format))
+    def error(self, message_format: str, *param: object) -> None:
+        self.calls.append(("error", message_format % param if param else message_format))
 
 
 def test_avnav_logger_delegates_all_levels() -> None:

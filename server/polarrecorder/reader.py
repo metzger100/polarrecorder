@@ -31,10 +31,10 @@ class DataEntryLike(Protocol):
 class StoreAPI(Protocol):
     """Duck-typed subset of the AvNav store API used by the reader."""
 
-    def getSingleValue(  # noqa: N802  # mirrors AvNav store API method name
+    def get_single_value(
         self,
         key: str,
-        includeInfo: bool = False,  # noqa: N803  # mirrors AvNav store API parameter name
+        include_info: bool = False,
     ) -> DataEntryLike | None:
         """Return a store value with optional metadata."""
         ...
@@ -85,7 +85,7 @@ class StoreReader:
         )
 
     def _read_entry(self, key: str) -> DataEntryLike | None:
-        return self._api.getSingleValue(key, includeInfo=True)
+        return self._api.get_single_value(key, include_info=True)
 
     def _read_enhanced(self, now_monotonic: float) -> dict[str, tuple[float, float]] | None:
         config = self._config

@@ -1,4 +1,6 @@
 {
+  "schemaVersion": 1,
+  "profileType": "genericness-token-profile",
   "note": "Genericness token owner for reusable tooling. Matching is case-insensitive against the SHARED_INSTRUCTIONS block, every generic skill file, every Tier 1 tool module's full content, and every generic rule definition's content and rendered semantics.",
   "projectTokens": ["polarrecorder", "polar recorder", "polar.json", "windy"],
   "domainTokens": [

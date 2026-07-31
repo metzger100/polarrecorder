@@ -123,7 +123,7 @@ class FakeAvNavAPI:
         number: int = 10,
         includeSource: bool = False,
         waitTime: float = 0.5,
-        filter: str | list[str] | None = None,  # noqa: A002
+        filter_values: str | list[str] | None = None,
     ) -> tuple[int, list[str]]:
         self.sequence = sequence + 1
         return self.sequence, []
@@ -137,14 +137,14 @@ class FakeAvNavAPI:
     def setStatus(self, value: str, info: str) -> None:
         self.statuses.append((value, info))
 
-    def log(self, format: str, *param: object) -> None:  # noqa: A002
-        self.logs.append(("info", format % param if param else format))
+    def log(self, message_format: str, *param: object) -> None:
+        self.logs.append(("info", message_format % param if param else message_format))
 
-    def error(self, format: str, *param: object) -> None:  # noqa: A002
-        self.logs.append(("error", format % param if param else format))
+    def error(self, message_format: str, *param: object) -> None:
+        self.logs.append(("error", message_format % param if param else message_format))
 
-    def debug(self, format: str, *param: object) -> None:  # noqa: A002
-        self.logs.append(("debug", format % param if param else format))
+    def debug(self, message_format: str, *param: object) -> None:
+        self.logs.append(("debug", message_format % param if param else message_format))
 
     def registerEditableParameters(
         self,

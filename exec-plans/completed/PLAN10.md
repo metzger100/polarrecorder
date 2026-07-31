@@ -87,6 +87,57 @@ Phase A must append exact local counts for suppression comments, portable-core c
 coverage classifications, test classifications, checker exports, and self-tests before implementation begins. Those
 counts become regression inputs; they may shrink where this plan requires cleanup and may not be hidden by exclusions.
 
+### Phase A evidence
+
+The baseline gate completed successfully before implementation. The following counts were emitted by repository-local
+commands and are retained as regression inputs:
+
+| Measurement                                                                                    |                          Baseline |
+| ---------------------------------------------------------------------------------------------- | --------------------------------: |
+| Repository files discovered by the local file inventory                                        |                               327 |
+| Maintained text files after excluding generated archives, coverage, and execution-plan records |                               301 |
+| Generic agent skills                                                                           |                                 5 |
+| Tooling `.mjs` candidates                                                                      |                                46 |
+| Quality-tool self-test references                                                              |                          78 files |
+| Coverage per-file classifications                                                              |                                17 |
+| Coverage family floors                                                                         |                                13 |
+| Test-inventory classifications                                                                 |                                58 |
+| Complexity baseline entries                                                                    | 0; strict direct policy is active |
+| Release payload files                                                                          |                                61 |
+| Generic/project/total pattern rules                                                            |                       21 / 8 / 29 |
+| NPM-invoked `.mjs` entry points with `run*()` exports                                          |                           16 / 19 |
+| Existing manifest entries                                                                      |                                 5 |
+
+The suppression scan found these baseline occurrences: `eslint-disable` 4, TypeScript ignore-family 7, `prettier-ignore`
+3, coverage-ignore-family 3, `# noqa` 29, Python type/mypy-ignore-family 10, and pattern-marker family 27. These include
+policy prose and negative fixtures; Phase G replaces them with an actual-comment scanner and requires zero
+maintained-source directives.
+
+The standalone-reference scan produced 19 local text matches for generic checkout/path vocabulary. It retained no
+identity, path, remote, branch, or comparison record. The local release archive dry-run passed with 61 runtime files; no
+runtime artifact was modified. The normal `npm run check:all` baseline result was exit 0.
+
+### Phase A candidate ledger
+
+Every mandatory role has a concrete local owner. The initial Tier 1 classification is based on mechanism responsibility,
+not current bytes; product paths, captured debt, runtime payloads, and local remediation text remain Tier 2 through
+profiles or adapters.
+
+| Mandatory role group                     | Initial Tier 1 candidates                                                                                                                                                               | Tier 2 boundary                                                     |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Contract, manifest, attestation          | `tools/check-shared-core.mjs`, `tools/quality-policy/portable-core-contract.json`, `tools/quality-policy/shared-core-manifest.json`, `tools/quality-policy/shared-core-manifest.sha256` | Local contract path resolution and entry inventory                  |
+| Genericness and instructions             | `tools/check-generic-surface.mjs`, `tools/quality-policy/shared-instructions.md`, `.agents/skills/*/SKILL.md`                                                                           | Local token policy and skill lock data                              |
+| Pattern engine and generic rules         | `tools/check-patterns.mjs`, `tools/check-patterns/*.mjs`, `tools/check-patterns/generic/*.mjs`                                                                                          | `tools/check-patterns/project/`, local scopes and remedies          |
+| Pattern fixtures and tests               | `tests/js/check-patterns*.test.mjs`, `tests/js/pattern-suppression.test.mjs`                                                                                                            | Product fixtures and namespace assertions                           |
+| File-size and focused-test mechanisms    | `tools/check-file-size*.mjs`, `tools/check-test-focus*.mjs`                                                                                                                             | Local scan roots and test language inventory                        |
+| Schema and documentation-link mechanisms | `tools/check-schema.mjs`, `tools/check-doc-links*.mjs`                                                                                                                                  | Local schemas, documentation roots and link policy                  |
+| Hooks and formatting                     | `tools/hooks-*.mjs`, `tools/quality-policy/run-format.mjs`, `tools/quality-policy/generate-format-scope.mjs`                                                                            | Local hook environment and formatter ownership                      |
+| Complexity, coverage, test inventory     | `tools/quality-policy/eslint-complexity-config.mjs`, `tools/quality-policy/check-coverage-inventory.mjs`, `tools/quality-policy/test-inventory.mjs`                                     | Strict limits, captured floors, report adapters and classifications |
+| Release orchestration                    | `tools/release-version.mjs`, `tools/release-archive.mjs`, `tools/release-git.mjs`, `tools/release-*.mjs`                                                                                | Runtime payload, filenames and local publisher environment          |
+| Shared policy fixtures and tests         | `tests/js/*quality*.test.mjs`, `tests/js/*inventory*.test.mjs`, `tests/js/release-*.test.mjs`                                                                                           | Product behavior tests and captured local data                      |
+
+No candidate was downgraded because of current implementation drift. Phase B begins the atomic contract migration.
+
 ---
 
 ## Canonical Portable-Core Contract
@@ -333,6 +384,15 @@ Exit conditions:
 - The attestation contains no identity, path, Git, host, or timestamp fields.
 - `npm run check:all` exits 0.
 
+### Phase B evidence
+
+The contract migration is now fail-closed over 35 exact-byte manifest entries. The committed manifest signature is
+`6a69f1cb667c57a911c84cc2e9d926f57b1e75775a23e67c1f6c392e3a945a24`; the contract is schema version 1 and core version
+1.0.0. Targeted tests cover clean operation, missing files, digest drift, extra entries, escaping paths, invalid
+signatures, checker export preconditions, missing self-tests, exact-byte instructions, deterministic anonymous
+attestation, and the isolated-boundary scan. `node tools/check-shared-core.mjs` reports 35 checked entries and zero
+findings. The golden attestation contains only `coreVersion`, `manifestSha256`, and `entries`.
+
 ### Phase C — Canonicalize genericness, instructions, and skills
 
 Intent: make the genericness boundary complete, local-profile-driven, and exact-byte checked.
@@ -356,6 +416,15 @@ Exit conditions:
 - Exact-byte instruction and skill checks pass.
 - Every deliverable is manifest-listed with a valid digest.
 - `npm run check:all` exits 0.
+
+### Phase C evidence
+
+Genericness is contract-driven: the blocking scanner reads every text path in `mandatoryPaths`, validates the local
+token profile at schema version 1, and has seeded clean/failing profile and token tests. The five local skill files and
+the extracted instructions are byte-locked; the instruction test compares the marked block without trimming or
+normalization. The blocking scan reports 36 targets and zero findings, the shared-core verifier reports 35 entries and
+zero findings, and the full `npm run check:all` gate passed with 379 tooling tests, 359 Python tests, 48 viewer/plugin
+tests, and unchanged coverage totals of 95.77% Python lines and 92.46% JavaScript lines.
 
 ### Phase D — Canonicalize the pattern engine and 21 generic rules
 
@@ -383,6 +452,14 @@ Exit conditions:
 - Every Tier 1 engine/rule/test file is manifest-listed and genericness-clean.
 - `npm run check:all` exits 0.
 
+### Phase D evidence
+
+The canonical generic registry contains exactly 21 identifiers in the prescribed order, backed by a manifest-listed
+canonical ID module and a clean corpus test. The registry fails closed if ordering or membership drifts; project rules
+remain composed after the generic set, and the required gate invokes blocking mode. `npm run check:smells` reports zero
+findings across 327 files, the genericness scan reports 38 clean manifest targets, and the full `npm run check:all` gate
+passed with 382 tooling tests, 359 Python tests, 48 viewer/plugin tests, and unchanged coverage floors.
+
 ### Phase E — Canonicalize standalone checkers and developer workflow mechanisms
 
 Intent: converge the remaining general-purpose checkers behind validated local profiles.
@@ -408,6 +485,16 @@ Exit conditions:
 - Hooks and formatting behavior remain locally identical.
 - All Tier 1 implementations/tests are manifest-listed.
 - `npm run check:all` exits 0.
+
+### Phase E evidence
+
+The portable checker engines now cover file size, focused tests, schemas, documentation links, hooks, formatting,
+complexity, coverage, test inventory, release policy, filesystem safety, JSON duplicate keys, and strict lint families;
+each has clean and failing cases in the portable self-test suite. Profile validation rejects unknown schema versions and
+fields, and release entry points expose `run*()` adapters without changing their command-line behavior. Format-scope
+discovery reproduces 345 local classifications (230 Prettier, 90 Ruff, 25 explicitly validated unsupported files).
+`npm run check:all` passed with 383 tooling tests, 359 Python tests, 48 viewer/plugin tests, and unchanged release
+archive parity over 61 runtime files.
 
 ### Phase F — Canonicalize complexity, coverage, and test inventory mechanisms
 
@@ -435,6 +522,15 @@ Exit conditions:
 - Tier 1 mechanisms/tests are manifest-listed; Tier 2 data is absent from the manifest.
 - `npm run check:all` exits 0.
 
+### Phase F evidence
+
+The portable complexity policy keeps strict limits at complexity 10, statements 40, depth 4, and parameters 6, while
+captured findings can only shrink. Coverage adapters now normalize finite 0–100 percentage summaries and reject
+malformed data or empty floor inventories; the test-inventory engine rejects stale, missing, unknown, and duplicate live
+paths. The local inventory remains 58 classifications, 17 per-file coverage classifications, and 13 family floors. The
+full `npm run check:all` gate passed with 383 tooling tests, 359 Python tests, 48 viewer/plugin tests, 95.77% Python
+lines, and 92.46% JavaScript lines.
+
 ### Phase G — Eliminate suppression comments across maintained source
 
 Intent: make the intended zero-suppression state real across every maintained language and tool surface.
@@ -461,6 +557,17 @@ Exit conditions:
 - No ignore list or threshold was widened.
 - `npm run check:all` exits 0.
 
+### Phase G evidence
+
+The maintained-surface suppression scan reports zero findings in every supported family: ESLint 0, TypeScript 0,
+formatter 0, coverage 0, language-linter 0, type-checker 0, generic-checker 0, and boundary 0. The Tier 1 scanner
+reports a clean tree, while generated Python and JavaScript negatives fail it; the standard ESLint configuration also
+rejects a generated directive through `no-warning-comments` and `noInlineConfig`. Host API spellings are isolated in
+`StoreBoundaryAdapter`, and the Python runtime contract gate receives its server path through the local package script
+environment. The completed Phase G `npm run check:all` gate passed with 386 tooling tests, 359 Python tests, 47 viewer
+tests, 1 plugin test, 95.78% Python lines, and 92.46% JavaScript lines. The shared-core check reports 39 exact-byte
+entries and the blocking genericness scan reports 40 clean targets.
+
 ### Phase H — Converge release orchestration and preserve package semantics
 
 Intent: make reusable release mechanics canonical while keeping the local payload profile standalone.
@@ -484,6 +591,16 @@ Exit conditions:
 - No runtime payload, filename, version classification, or publish behavior changes.
 - Tier 1 release mechanisms/tests are manifest-listed.
 - `npm run check:all` exits 0.
+
+### Phase H evidence
+
+Semantic-version validation, path containment, normalized payload parity, archive staging, archive content validation,
+and Git status parsing are covered by reusable policy modules and local adapters. Release-focused tests pass, including
+valid and invalid versions, path-escape rejection, order-independent parity, exact archive entry/content validation, and
+runtime-only payload checks. The local archive dry-run and package gate both report the unchanged 61-file runtime
+payload; no runtime payload, filename, version classification, or publish behavior changed. The release policy engine
+and its manifest-listed portable self-test are covered by the 39-entry exact-byte manifest. The Phase H
+`npm run check:all` gate is recorded after the release-policy test update.
 
 ### Phase I — Synchronize standalone documentation and close out
 
@@ -512,6 +629,38 @@ Exit conditions:
 - Anonymous attestation is deterministic across two consecutive invocations.
 - Every manifest entry has been exact-byte verified against its digest.
 - No completion claim relies on a warning, partial gate, historical run, or external checkout.
+
+### Phase I evidence
+
+Standalone documentation now describes the versioned portable-core contract, exact-byte manifest/signature, Tier 1 and
+Tier 2 boundary, adapter ownership, anonymous attestation, zero-inline-suppression policy, release parity, and the
+isolated-copy gate. The synchronized touchpoints are `AGENTS.md`, `README.md`, `CONTRIBUTING.md`,
+`documentation/conventions/quality-gates.md`, `coding-standards.md`, `smell-prevention.md`, `testing-infrastructure.md`,
+and `documentation/guides/documentation-maintenance.md`. `docs:check`, the standalone boundary audit, blocking
+genericness scan, suppression scan, and release dry-run all pass locally. The normal and isolated full gates, final
+anonymous attestation comparison, and final manifest evidence are recorded below before the plan is archived.
+
+## Final completion evidence
+
+1. Contract version `1.0.0`; final manifest SHA-256 `e649d2f4947081f0023745adca9f37d5d4f2b7afc4f43add0b9a035cf1a894b1`.
+2. Final Tier 1 role counts: manifest verifier 3, genericness scanner 1, instructions/skills 6, pattern core 9,
+   file-size 1, focused-tests 1, schema 3, documentation-links 1, hooks 1, formatting 1, complexity 1, coverage 1,
+   suppression scanner 1, test inventory 1, release 1, filesystem policy 3, self-tests 4. The manifest contains 39
+   unique entries because shared self-test paths are owned by more than one role.
+3. Fifteen canonical checker exports and three unique self-test files are contract-verified. The generic registry has 21
+   identifiers; the local product registry has 8 rules composed after it.
+4. Suppression counts are zero for ESLint, TypeScript, formatter, coverage, language-linter, type-checker,
+   generic-checker, and boundary families.
+5. Strict complexity limits are 10/40/4/6 with no active findings; captured baselines remain shrinking-only.
+6. Coverage inventory remains 17 per-file classifications and 13 family floors; final coverage is 95.78% Python lines
+   and 92.46% JavaScript lines.
+7. The executable JavaScript test inventory has 61 strict classifications and 0 exceptions.
+8. Documentation checks cover 42 Markdown files and 45 local links; standalone, genericness, and suppression scans
+   report zero findings.
+9. Normal `npm run check:all` exited 0; the fresh isolated-copy `npm run check:all` also exited 0. Two consecutive
+   anonymous attestation outputs were byte-identical; their output SHA-256 is
+   `cc5ae5fec2a8cd5e6a74650c668a1526b40d3a9cf7d3b51803a18e619b7a24ff`, with 39 entries and the manifest digest above.
+10. Local release archive validation preserves the exact 61-file runtime payload and content parity.
 
 ---
 

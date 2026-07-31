@@ -7,9 +7,7 @@ a short pointer to it, not a copy.
 
 ---
 
-<!-- BEGIN SHARED_INSTRUCTIONS -->
-
-**Critical:** This file is a routing map. Use it to find focused documentation, not to store implementation details.
+<!-- BEGIN SHARED_INSTRUCTIONS -->**Critical:** This file is a routing map. Use it to find focused documentation, not to store implementation details.
 
 ---
 
@@ -80,7 +78,6 @@ explicit README deliverables and exit conditions for these categories.
 Every maintained documentation page has a title, a plain `**Status:** Current.` line, and `## Overview`,
 `## Key Details`, and `## Related` sections. Additional interface material is optional when it helps explain a public
 contract. Keep documentation concise, concrete, and linked from the navigation index when it is new.
-
 <!-- END SHARED_INSTRUCTIONS -->
 
 ---
@@ -164,6 +161,11 @@ State and threading:
   unsafe browser patterns, dead commented-out code, and citing a plan or phase number outside `exec-plans/` (see section
   2 above and `documentation/guides/exec-plan-authoring.md`).
 - Required completion gate: `npm run check:all`.
+- The portable-core contract and exact-byte manifest own reusable quality mechanisms; local product paths and release
+  payloads stay in profiles or adapters. `check:shared-core`, blocking `check:generic-surface`, and `check:suppressions`
+  are required portions of `check:core`, and `portable-core:attest` emits anonymous digest-only evidence.
+- Maintained source has zero inline suppression comments. Negative suppression fixtures are generated at runtime, and
+  broad tooling changes require a full gate from an isolated copy containing only this repository.
 - Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run docs:check`.
 
 ---
