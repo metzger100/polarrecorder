@@ -9,8 +9,7 @@ counted operations stay within a configured-steps tolerance
 caller; this evaluator is a pure, offline function of those counts and never touches
 a wall clock.
 
-Adapted from the sibling `dyninstruments` plugin's
-`tools/quality-policy/operation-count-evaluator.mjs`.
+The evaluator is local test infrastructure with no runtime dependencies.
 """
 
 from __future__ import annotations

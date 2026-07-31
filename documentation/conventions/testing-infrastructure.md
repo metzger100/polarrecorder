@@ -55,9 +55,9 @@ Polar Recorder actually uses.
 - `npm run test:viewer` runs the Vitest `viewer` project over the theme bridge, polar chart, band selection, grid
   editor, and cross-module viewer smoke/enhanced/advanced settings suites with DOM-like fakes and no browser. It is
   reached through `test:node` (part of `test:split`, part of `check:core`) and directly through the bounded `test:unit`
-  aggregate (part of `check:fast`); `tools/check-all.sh` is a compatibility wrapper around `check:all`. The `viewer` and
-  `tools` projects both set `fileParallelism: false` because some fixtures (e.g. the ESLint self-tests) briefly write
-  into the real `viewer/`/`plugin.js`/`plugin.mjs` tree, which would race under concurrent file execution.
+  aggregate (part of `check:fast`). The `viewer` and `tools` projects both set `fileParallelism: false` because some
+  fixtures (e.g. the ESLint self-tests) briefly write into the real `viewer/`/`plugin.js`/`plugin.mjs` tree, which would
+  race under concurrent file execution.
 - `npm run test:tools` runs the Vitest `tools` project over the custom JS quality-tooling self-tests, including positive
   and clean cases for `tools/check-patterns.mjs` fail-fast rules.
 - `npm run typecheck:source` (`tools/quality-policy/typecheck-source.mjs`) strictly no-emit `checkJs`-types every
@@ -90,25 +90,23 @@ Polar Recorder actually uses.
   focused flat configuration (`tools/quality-policy/eslint.complexity.config.mjs`) that sets `complexity`,
   `max-statements`, `max-depth`, and `max-params` to error-level 10/40/4/6. There is no scanner, budget ledger, or
   baseline file for ESLint to read, so a coordinated edit to policy data can never authorize a violation -- this
-  replaced an earlier custom scanner/budget/baseline design (adapted from the sibling `dyninstruments` plugin) that let
-  an over-limit function pass once a matching baseline entry existed. `tests/js/complexity-policy.test.mjs` proves a
-  clean function passes, each of the four limits fails independently, `plugin.js`/`plugin.mjs`/`viewer/*.js` are all
-  covered, a dev-tool function over the same numeric limit is outside the shipped-product scope, the retired
-  scanner/budget/baseline files stay absent, and a fixture recreating a matching `complexity-baseline.json` next to a
-  real violation still fails because ESLint never reads it.
-- `npm run check:scaling` replaces the old wall-clock `tools/check-performance.py` with deterministic,
-  machine-independent counted-operation contracts: `tests/operation_count_evaluator.py` (adapted from `dyninstruments`'
-  `operation-count-evaluator.mjs`) offers `evaluate_linear_scaling` (`work(2n) <= 2 * work(n) + fixed_overhead`) and
-  `evaluate_bounded_by_configured_steps` (`work(steps) <= steps * tolerance_per_step`), both pure functions over
-  caller-supplied operation counts -- never a clock. Counts come from test-only counting `dict` substitutions
-  (`tests/counting_dict.py`) or a monkeypatched call-counting wrapper, never from instrumentation added to production
-  code. Three real contracts exercise this: `PolarModel.update_accepted`'s per-sample dict/histogram operations stay
-  linear in accepted-sample count (`tests/test_polar_model.py`); `projection.project_grid`'s raw-bin reads stay linear
-  in raw-bin count for a fixed grid, and its cells match the uninstrumented result
-  (`tests/test_projection_scaling_contract.py`); and `api_handlers.format_polar`'s projection-facing reads stay linear
-  in raw-bin count for a fixed grid, its curve/cell assembly stays bounded by the configured TWS grid cell count, and
-  its complete response (metadata, curves, confidence, missing-cell behavior) matches the ordinary formatter's output
-  (`tests/test_api_handlers_scaling_contract.py`).
+  replaced an earlier custom scanner/budget/baseline design that let an over-limit function pass once a matching
+  baseline entry existed. `tests/js/complexity-policy.test.mjs` proves a clean function passes, each of the four limits
+  fails independently, `plugin.js`/`plugin.mjs`/`viewer/*.js` are all covered, a dev-tool function over the same numeric
+  limit is outside the shipped-product scope, the retired scanner/budget/baseline files stay absent, and a fixture
+  recreating a matching `complexity-baseline.json` next to a real violation still fails because ESLint never reads it.
+- `npm run check:scaling` replaces the old wall-clock performance checker with deterministic, machine-independent
+  counted-operation contracts: `tests/operation_count_evaluator.py` offers `evaluate_linear_scaling`
+  (`work(2n) <= 2 * work(n) + fixed_overhead`) and `evaluate_bounded_by_configured_steps`
+  (`work(steps) <= steps * tolerance_per_step`), both pure functions over caller-supplied operation counts -- never a
+  clock. Counts come from test-only counting `dict` substitutions (`tests/counting_dict.py`) or a monkeypatched
+  call-counting wrapper, never from instrumentation added to production code. Three real contracts exercise this:
+  `PolarModel.update_accepted`'s per-sample dict/histogram operations stay linear in accepted-sample count
+  (`tests/test_polar_model.py`); `projection.project_grid`'s raw-bin reads stay linear in raw-bin count for a fixed
+  grid, and its cells match the uninstrumented result (`tests/test_projection_scaling_contract.py`); and
+  `api_handlers.format_polar`'s projection-facing reads stay linear in raw-bin count for a fixed grid, its curve/cell
+  assembly stays bounded by the configured TWS grid cell count, and its complete response (metadata, curves, confidence,
+  missing-cell behavior) matches the ordinary formatter's output (`tests/test_api_handlers_scaling_contract.py`).
 - Hypothesis (pinned in the developer lock only) adds generative property tests for core math:
   `circular_distance`/`circular_range` symmetry, rotation invariance, and `[0, 180]`/`[0, 360]` bounds in
   `tests/test_angle_math.py`; `twa_bin`/`tws_bin` bounded output and `twa_bin`'s 360-degree periodicity in

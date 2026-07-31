@@ -1,6 +1,6 @@
 {
-  "path": ["viewer", "plugin.js", "plugin.mjs"],
-  "format": ["javascript", "css"],
+  "path": ["viewer", "plugin.js", "plugin.mjs", "server/polarrecorder"],
+  "format": ["javascript", "python", "css"],
   "ignore": ["**/node_modules/**", "**/coverage/**", "**/venv/**", "**/*.min.js"],
   "threshold": 0,
   "reporters": ["consoleFull"],

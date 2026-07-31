@@ -510,8 +510,8 @@ automatically.
 Runtime code must remain dependency-free on target devices; development tooling is allowed and is checked by the
 canonical local gate (`npm run check:all`, required before handoff/push/release). Python tests run under pytest and
 JavaScript tests under Vitest (`npm run test:python`, `npm run test:viewer`, `npm run test:tools`,
-`npm run test:plugin`). See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, the bounded `check:fast` iteration gate,
-and this repository's role as a finished hybrid-profile role model aligned with the sibling `dyninstruments` plugin.
+`npm run test:plugin`). See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and the bounded `check:fast` iteration
+gate.
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
 republishes an already-committed local artifact when a `v*` tag is pushed. See the

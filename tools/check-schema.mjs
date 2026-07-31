@@ -1,37 +1,30 @@
 #!/usr/bin/env node
 
 /**
- * `npm run schema:check` -- Ajv-driven `plugin.json` shape validator; `npm run
- * package:check` composes it first, ahead of the release dry-run and package/release
- * tests (`tests/js/command-graph.test.mjs` proves the composition).
+ * `npm run schema:check` -- Ajv-driven shape validator for every schema-owned artifact
+ * named in project-owned `tools/quality-policy/project-schema-profile.json`. Composes the
+ * generic, upstream-verified base schema with each artifact's dev/release profile schemas
+ * via Ajv. `checkInventoryComplete` keeps the profile's `expectedArtifactCount` in sync with
+ * reality, so adding a new schema/layout artifact to the repository without a matching
+ * profile entry (and validator) fails closed instead of silently going unvalidated.
  *
- * Composes the generic, upstream-verified `schemas/avnav-plugin-base.schema.json` with
- * Polar's dev/release profile schemas (`schemas/polar-plugin-dev.schema.json` /
- * `schemas/polar-plugin-release.schema.json`) via Ajv. `plugin.json` is the only
- * schema/layout artifact this repository currently ships that needs an explicit shape
- * contract in both its committed development form (no `version`, no duplicate
- * declarative `userApps`; `release_manifest.plugin_json_version()` treats an absent
- * version as `None`) and its release form (version-stamped by
- * `release_manifest.stamp_plugin_json`). `SCHEMA_OWNED_ARTIFACTS` is the complete,
- * reviewed inventory of such artifacts -- exactly one entry today. Adding a new
- * schema/layout artifact to the repository without adding a matching validator here (and
- * growing this inventory in the same change) fails `checkInventoryComplete`, so
- * `package:check` cannot silently go blind to a second unvalidated artifact.
- *
- * `release_manifest.stamp_plugin_json` also writes `version` as plugin.json's first
- * serialized key -- an internal ordering contract of this repo's own stamping function,
- * not an AvNav upstream field, and not something JSON Schema can express. That one check
- * stays a small supplementary function outside the schema.
+ * Each artifact's release-form validator also checks that its `firstSerializedKey` (an
+ * internal key-ordering contract of this repo's own stamping function, not something JSON
+ * Schema can express) is really the first serialized key.
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import Ajv from "ajv";
+import { stampPluginJson } from "./release-archive.mjs";
 
-const SCHEMAS_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "schemas");
+const TOOLS_DIR = path.dirname(new URL(import.meta.url).pathname);
+const SCHEMAS_DIR = path.join(TOOLS_DIR, "..", "schemas");
+const PROFILE_PATH = path.join(TOOLS_DIR, "quality-policy", "project-schema-profile.json");
 
-/** @typedef {{name: string, validateDevForm: (data: unknown) => string[], validateReleaseForm: (data: unknown) => string[]}} SchemaOwnedArtifact */
+/** @typedef {{firstSerializedKey: string}} ReleaseFormProfile */
+/** @typedef {{name: string, devSchema: string, releaseSchema: string, releaseForm: ReleaseFormProfile}} ArtifactProfile */
+/** @typedef {{name: string, validateDevForm: (data: unknown) => string[], validateReleaseForm: (root: string) => string[]}} SchemaOwnedArtifact */
 
 /**
  * @param {string} name
@@ -42,66 +35,88 @@ function readSchema(name) {
 }
 
 /**
- * @returns {{validateDev: import("ajv").ValidateFunction, validateRelease: import("ajv").ValidateFunction}}
+ * @returns {{baseSchema: string, expectedArtifactCount: number, artifacts: ArtifactProfile[]}}
  */
-function compileValidators() {
-  const ajv = new Ajv({ allErrors: true });
-  ajv.addSchema(readSchema("avnav-plugin-base.schema.json"));
-  const validateDev = ajv.compile(readSchema("polar-plugin-dev.schema.json"));
-  const validateRelease = ajv.compile(readSchema("polar-plugin-release.schema.json"));
-  return { validateDev, validateRelease };
+function readProfile() {
+  return JSON.parse(fs.readFileSync(PROFILE_PATH, "utf8"));
 }
 
 /**
  * @param {import("ajv").ValidateFunction} validate
  * @param {unknown} data
+ * @param {string} artifactName
  * @param {string} formLabel
  * @returns {string[]}
  */
-function runValidator(validate, data, formLabel) {
+function runValidator(validate, data, artifactName, formLabel) {
   if (validate(data)) return [];
   const errors = validate.errors || [];
-  return errors.map((error) => `plugin.json (${formLabel}) ${error.instancePath || "/"} ${error.message}`);
-}
-
-const { validateDev, validateRelease } = compileValidators();
-
-/**
- * @param {unknown} data
- * @returns {string[]}
- */
-function validatePluginJsonDevForm(data) {
-  return runValidator(validateDev, data, "development form");
+  return errors.map((error) => `${artifactName} (${formLabel}) ${error.instancePath || "/"} ${error.message}`);
 }
 
 /**
- * @param {unknown} data
- * @returns {string[]}
+ * @param {string} root
+ * @param {string} artifactName
+ * @returns {unknown}
  */
-function validatePluginJsonReleaseForm(data) {
-  const failures = runValidator(validateRelease, data, "release form");
-  if (failures.length > 0) return failures;
-  const record = /** @type {Record<string, unknown>} */ (data);
-  if (Object.keys(record)[0] !== "version") {
-    failures.push(
-      "plugin.json (release form) must have 'version' as its first serialized key " +
-        "(release_manifest.stamp_plugin_json's own ordering contract; not an Ajv-expressible shape rule)"
-    );
-  }
-  return failures;
+function readArtifactDevForm(root, artifactName) {
+  return JSON.parse(fs.readFileSync(path.join(root, artifactName), "utf8"));
 }
+
+/**
+ * @param {string} root
+ * @param {ReleaseFormProfile} releaseForm
+ * @returns {unknown}
+ */
+function buildArtifactReleaseForm(root, releaseForm) {
+  return JSON.parse(stampPluginJson(root, "0.0.0-schema-check"));
+}
+
+/**
+ * @param {ArtifactProfile} artifact
+ * @param {import("ajv").ValidateFunction} validateDev
+ * @param {import("ajv").ValidateFunction} validateRelease
+ * @returns {SchemaOwnedArtifact}
+ */
+function buildSchemaOwnedArtifact(artifact, validateDev, validateRelease) {
+  return {
+    name: artifact.name,
+    validateDevForm: (data) => runValidator(validateDev, data, artifact.name, "development form"),
+    validateReleaseForm: (root) => {
+      const data = buildArtifactReleaseForm(root, artifact.releaseForm);
+      const failures = runValidator(validateRelease, data, artifact.name, "release form");
+      if (failures.length > 0) return failures;
+      const record = /** @type {Record<string, unknown>} */ (data);
+      if (Object.keys(record)[0] !== artifact.releaseForm.firstSerializedKey) {
+        failures.push(
+          `${artifact.name} (release form) must have '${artifact.releaseForm.firstSerializedKey}' as its first ` +
+            "serialized key (the stamping function's own ordering contract; not an Ajv-expressible shape rule)"
+        );
+      }
+      return failures;
+    }
+  };
+}
+
+/**
+ * @returns {{profile: ReturnType<typeof readProfile>, artifacts: SchemaOwnedArtifact[]}}
+ */
+function buildSchemaOwnedArtifacts() {
+  const profile = readProfile();
+  const ajv = new Ajv({ allErrors: true });
+  ajv.addSchema(readSchema(profile.baseSchema));
+  const artifacts = profile.artifacts.map((artifact) => {
+    const validateDev = ajv.compile(readSchema(artifact.devSchema));
+    const validateRelease = ajv.compile(readSchema(artifact.releaseSchema));
+    return buildSchemaOwnedArtifact(artifact, validateDev, validateRelease);
+  });
+  return { profile, artifacts };
+}
+
+const { profile: SCHEMA_PROFILE, artifacts: BUILT_ARTIFACTS } = buildSchemaOwnedArtifacts();
 
 /** @type {SchemaOwnedArtifact[]} */
-export const SCHEMA_OWNED_ARTIFACTS = [
-  {
-    name: "plugin.json",
-    validateDevForm: validatePluginJsonDevForm,
-    validateReleaseForm: validatePluginJsonReleaseForm
-  }
-];
-
-/** The reviewed, expected artifact count; changing this is itself the required review. */
-const EXPECTED_ARTIFACT_COUNT = 1;
+export const SCHEMA_OWNED_ARTIFACTS = BUILT_ARTIFACTS;
 
 /**
  * @param {SchemaOwnedArtifact[]} artifacts
@@ -110,9 +125,9 @@ const EXPECTED_ARTIFACT_COUNT = 1;
 function checkInventoryComplete(artifacts) {
   /** @type {string[]} */
   const failures = [];
-  if (artifacts.length !== EXPECTED_ARTIFACT_COUNT) {
+  if (artifacts.length !== SCHEMA_PROFILE.expectedArtifactCount) {
     failures.push(
-      `SCHEMA_OWNED_ARTIFACTS has ${artifacts.length} entries; expected exactly ${EXPECTED_ARTIFACT_COUNT} reviewed entries`
+      `SCHEMA_OWNED_ARTIFACTS has ${artifacts.length} entries; expected exactly ${SCHEMA_PROFILE.expectedArtifactCount} reviewed entries`
     );
   }
   for (const artifact of artifacts) {
@@ -124,31 +139,6 @@ function checkInventoryComplete(artifacts) {
     }
   }
   return failures;
-}
-
-/**
- * @param {string} root
- * @returns {unknown}
- */
-function readPluginJsonDevForm(root) {
-  return JSON.parse(fs.readFileSync(path.join(root, "plugin.json"), "utf8"));
-}
-
-/**
- * @param {string} root
- * @returns {unknown}
- */
-function buildPluginJsonReleaseForm(root) {
-  const venvPython = path.join(root, "venv", "bin", "python3");
-  const python = fs.existsSync(venvPython) ? venvPython : "python3";
-  const script = [
-    "import json, sys",
-    "sys.path.insert(0, 'tools')",
-    "import release_manifest as manifest",
-    "sys.stdout.write(manifest.stamp_plugin_json('0.0.0-schema-check').decode('utf-8'))"
-  ].join("\n");
-  const result = execFileSync(python, ["-c", script], { cwd: root, encoding: "utf8" });
-  return JSON.parse(result);
 }
 
 /**
@@ -164,13 +154,16 @@ export function runSchemaCheck(options = {}) {
   const failures = [...checkInventoryComplete(artifacts)];
 
   for (const artifact of artifacts) {
-    if (artifact.name !== "plugin.json") continue;
     if (typeof artifact.validateDevForm === "function") {
-      failures.push(...artifact.validateDevForm(readPluginJsonDevForm(root)));
+      try {
+        failures.push(...artifact.validateDevForm(readArtifactDevForm(root, artifact.name)));
+      } catch (error) {
+        failures.push(`${artifact.name}: could not read the development form: ${/** @type {Error} */ (error).message}`);
+      }
     }
     if (typeof artifact.validateReleaseForm === "function") {
       try {
-        failures.push(...artifact.validateReleaseForm(buildPluginJsonReleaseForm(root)));
+        failures.push(...artifact.validateReleaseForm(root));
       } catch (error) {
         failures.push(`${artifact.name}: could not build the release form: ${/** @type {Error} */ (error).message}`);
       }

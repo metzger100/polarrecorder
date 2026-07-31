@@ -5,9 +5,8 @@
  * (`release-create.mjs`) and the GitHub publisher workflow (invoked directly as a CLI
  * with `--github-output`). The canonical semver.org-recommended pattern, so a prerelease
  * identifier may start with a digit run followed by a required non-digit (e.g. `1x`,
- * `x-y-z.--`) -- `server/polarrecorder`'s `release_manifest.py` `SEMVER_RE` must stay
- * byte-equivalent; `tools/quality-policy/semver-corpus.json` is the shared valid/invalid
- * corpus both implementations' tests assert against.
+ * `x-y-z.--`). `tools/quality-policy/semver-corpus.json` is the shared valid/invalid
+ * corpus for tag parsing and local archive stamping.
  */
 
 export const SEMVER_REGEX =

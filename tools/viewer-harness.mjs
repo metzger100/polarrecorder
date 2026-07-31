@@ -4,7 +4,7 @@
  * Dependency-free DOM/fetch harness for vm-loading the viewer scripts in Node.
  *
  * Shared by tests/js/viewer-smoke.test.mjs (end-to-end render walk) and
- * tools/check-viewer-contracts.mjs (behavioral smell contracts) so both drive
+ * tests/js/viewer-render-contract.test.mjs (behavioral render contracts) so both drive
  * the real viewer through one fake host instead of duplicating ~400 lines of
  * stub DOM. createEnvironment accepts an optional responder so a contract can
  * feed absent/sparse API payloads; the default responder mirrors a healthy

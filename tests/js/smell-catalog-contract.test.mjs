@@ -13,7 +13,7 @@ import path from "node:path";
 import { test } from "vitest";
 
 import { PATTERN_RULE_IDS } from "../../tools/check-patterns.mjs";
-import { SMELL_CONTRACT_RULE_IDS } from "../../tools/check-smell-contracts.mjs";
+import { SMELL_CONTRACT_RULE_IDS } from "./viewer-structure-contract.test.mjs";
 
 export const REQUIRED_SMELL_RULES = [
   "Ruff selected families",
@@ -115,7 +115,7 @@ export const REQUIRED_SMELL_RULES = [
 
 export const EXECUTABLE_SMELL_RULE_IDS = [
   ...PATTERN_RULE_IDS.map((id) => ({ owner: "check-patterns.mjs", id })),
-  ...SMELL_CONTRACT_RULE_IDS.map((id) => ({ owner: "check-smell-contracts.mjs", id }))
+  ...SMELL_CONTRACT_RULE_IDS.map((id) => ({ owner: "viewer-structure-contract.test.mjs", id }))
 ];
 
 /**

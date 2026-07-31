@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { test } from "vitest";
 
 export const SMELL_CONTRACT_RULE_IDS = ["viewer-script-contract", "viewer-dependency-header-contract"];
 
@@ -237,6 +235,7 @@ function read(ctx, rel) {
   return fs.readFileSync(path.join(ctx.root, rel), "utf8");
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.exit(runSmellContracts().ok ? 0 : 1);
-}
+test("viewer script and dependency-header contracts hold", () => {
+  const result = runSmellContracts({ print: false });
+  if (!result.ok) throw new Error(result.failures.join("\n"));
+});

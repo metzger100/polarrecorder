@@ -9,6 +9,10 @@ a short pointer to it, not a copy.
 
 <!-- BEGIN SHARED_INSTRUCTIONS -->
 
+**Critical:** This file is a routing map. Use it to find focused documentation, not to store implementation details.
+
+---
+
 ## 0. Mandatory Session Preflight (No Exceptions)
 
 Before planning, coding, review, or documentation edits, always read:
@@ -26,59 +30,56 @@ If guidance conflicts, precedence is:
 3. `documentation/conventions/smell-prevention.md`
 4. Task-specific documentation
 
-Repo rules and core principles always override execution-plan instructions. An exec-plan in `exec-plans/` is the source
-of truth for _what to build_, but it cannot waive a mechanically enforced repo rule; when a plan conflicts with a repo
-rule, amend the plan instead of working around the rule.
+---
 
-## 1. Documentation Navigation
+## 1. Documentation Navigation Rule
 
-### Rule: Always Start with the Table of Contents
+1. **Read `documentation/TABLEOFCONTENTS.md` FIRST**
+2. **Read `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md` for every
+   task**
+3. Identify 1-3 additional relevant files for your task
+4. Read ONLY those additional files
+5. **Never read all files sequentially** (wastes tokens)
 
-1. Read `documentation/TABLEOFCONTENTS.md` first.
-2. Read `documentation/conventions/coding-standards.md` and `documentation/conventions/smell-prevention.md` for every
-   task.
-3. Identify one to three additional relevant files from the routing index.
-4. Read only those additional files unless the task genuinely needs more context.
-5. Do not read every documentation file sequentially.
-
-### Required Documentation Shape
-
-Every documentation file uses this structure:
-
-1. `Status`
-2. `Overview`
-3. `Key Details`
-4. `Related`
-
-Documentation must be complete when added or changed. Do not leave stub sections unless a current execution plan
-explicitly records the lifecycle and owner. New docs must be linked from the documentation index so every doc stays
-reachable from `AGENTS.md`/`CLAUDE.md`.
+---
 
 ## 2. Plan and Phase Citation Rule
 
-Never cite an execution-plan number or a phase identifier in shipped source, docstrings, test names, config notes, or
-documentation outside `exec-plans/`. Describe the code or config standalone instead; a plan's prose rots as the codebase
-evolves, but the code and its own comments should not.
+A comment, docstring, config note, or documentation paragraph outside `exec-plans/` must not cite a historical exec-plan
+number (`PLANn`) or phase identifier (`Phase N`) as authority. Describe the code or config standalone instead; a literal
+pointer to a real `PLANn.md` file (for example in a "related plans" list) is still fine. Plan prose belongs only inside
+`exec-plans/`.
+
+---
 
 ## 3. README Sync Principle
 
-`README.md` is mandatory documentation when user-facing behavior changes; it is not optional. Update it in the same task
-as the change, never as a follow-up. The specific categories that trigger this rule in this repository are listed below,
-outside this shared block, since they name this project's own product surface.
+`README.md` is mandatory documentation when user-facing behavior changes. Do not treat it as optional. Update
+`README.md` in the same task whenever a change affects theming/configuration, user-selectable options, installation or
+packaging, bundled assets, requirements/platform support, or contributor-visible workflow. For execution plans, include
+explicit README deliverables and exit conditions for these categories.
+
+---
 
 ## 4. Quality Checklist Skeleton
 
-- [ ] Completed mandatory preflight reads: table of contents, coding standards, and smell prevention.
+- [ ] Completed the mandatory preflight reads.
 - [ ] Read only necessary additional documentation beyond mandatory preflight.
-- [ ] Kept changes scoped to the requested behavior/docs.
-- [ ] Updated mapped documentation when behavior changes.
-- [ ] Updated user-facing `README.md` when it applies (see the README sync rule's specific categories below).
-- [ ] Reused existing helpers instead of duplicating them, and avoided this repository's forbidden anti-patterns.
-- [ ] Synced fixtures and tests in the same task when behavior-relevant shapes changed (see the fixture/test sync rule
-      below).
-- [ ] Updated the documentation index when adding, moving, or deleting docs.
-- [ ] Kept `CLAUDE.md` a short pointer to `AGENTS.md`, never a re-expanded duplicate.
-- [ ] Ran the full quality gate before handoff for normal development work.
+- [ ] Implementation complete.
+- [ ] Updated relevant documentation, including the navigation index if a doc was added, moved, or removed.
+- [ ] Updated `README.md` when the change is user-facing (see the README sync principle above).
+- [ ] Ran the project's full quality gate — no failures.
+- [ ] New/changed tests and coverage/complexity policy stay within this project's checked floors, budgets, and
+      classifications; no suppression, skip, or lowered threshold was added to reach green.
+- [ ] For releases, followed this project's release workflow exactly, without rerunning quality inside the publish step.
+
+---
+
+## Required Documentation Shape
+
+Every maintained documentation page has a title, a plain `**Status:** Current.` line, and `## Overview`,
+`## Key Details`, and `## Related` sections. Additional interface material is optional when it helps explain a public
+contract. Keep documentation concise, concrete, and linked from the navigation index when it is new.
 
 <!-- END SHARED_INSTRUCTIONS -->
 
@@ -162,7 +163,7 @@ State and threading:
   lock acquisition in domain modules, hidden real-time dependencies, magic thresholds outside named config/constants,
   unsafe browser patterns, dead commented-out code, and citing a plan or phase number outside `exec-plans/` (see section
   2 above and `documentation/guides/exec-plan-authoring.md`).
-- Required completion gate: `npm run check:all` (`tools/check-all.sh` is a pure wrapper alias around the same command).
+- Required completion gate: `npm run check:all`.
 - Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run docs:check`.
 
 ---
@@ -191,8 +192,8 @@ masks contract gaps, re-doing work the pipeline already did, and inventing senti
    namespace.
 3. If a canonical helper exists, import and use it. Do not copy it into a local variant.
 4. If none exists but the helper is generic, add it to the appropriate existing module rather than a new ad hoc
-   location. `tools/check-duplication.py` blocks cross-file duplicate function bodies and long copied statement blocks,
-   so extract and import one canonical helper.
+   location. The generic `duplicate-functions` rule and `jscpd` block cross-file duplicate function bodies and long
+   copied statement blocks, so extract and import one canonical helper.
 
 ### Forbidden patterns
 

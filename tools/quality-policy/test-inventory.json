@@ -1,181 +1,179 @@
 {
   "note": "Committed executable JS test/helper inventory. Regenerate with `node tools/quality-policy/test-inventory.mjs --write` whenever a test/helper file is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
-  "executableTestHelpers": [
-    {
-      "path": "tests/js/agents-pointer.test.mjs",
+  "entries": {
+    "tests/js/agents-pointer.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/check-patterns-registry.test.mjs",
+    "tests/js/check-doc-links-proof.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/check-patterns.test.mjs",
+    "tests/js/check-file-size-submodules.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/check-publisher-workflow.test.mjs",
+    "tests/js/check-generic-surface.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/check-schema.test.mjs",
+    "tests/js/check-patterns-registry.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/codex-config.test.mjs",
+    "tests/js/check-patterns.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/command-graph.test.mjs",
+    "tests/js/check-publisher-workflow.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/complexity-policy.test.mjs",
+    "tests/js/check-schema.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/coverage-inventory.test.mjs",
+    "tests/js/codex-config.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/doc-format-contract.test.mjs",
+    "tests/js/command-graph.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/doc-reachability-contract.test.mjs",
+    "tests/js/complexity-policy.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/doc-toc-contract.test.mjs",
+    "tests/js/coverage-inventory.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/documentation-checkers.test.mjs",
+    "tests/js/doc-format-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/eslint-config.test.mjs",
+    "tests/js/doc-reachability-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/format-scope.test.mjs",
+    "tests/js/doc-toc-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/header-contract.test.mjs",
+    "tests/js/docs-check-composition-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/hooks.test.mjs",
+    "tests/js/documentation-checkers.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/hotspot-budgets.test.mjs",
+    "tests/js/eslint-config.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/install-script.test.mjs",
+    "tests/js/format-scope.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/js-checkers.test.mjs",
+    "tests/js/header-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/plugin-entrypoints.test.mjs",
+    "tests/js/hooks.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/prettier-config.test.mjs",
+    "tests/js/hotspot-budgets.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/release-create.test.mjs",
+    "tests/js/install-script.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/release-git.test.mjs",
+    "tests/js/js-checkers.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/release-prepare.test.mjs",
+    "tests/js/pattern-suppression.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/release-version.test.mjs",
+    "tests/js/plugin-entrypoints.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/setup.test.mjs",
+    "tests/js/prettier-config.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/shared-instructions.test.mjs",
+    "tests/js/publisher-workflow-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/skills-lock.test.mjs",
+    "tests/js/quality-gates-doc-numbers-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/smell-catalog-contract.test.mjs",
+    "tests/js/release-archive.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/test-focus.test.mjs",
+    "tests/js/release-create.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/test-inventory.test.mjs",
+    "tests/js/release-git.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/typecheck-source.test.mjs",
+    "tests/js/release-prepare.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/typecheck-tools.test.mjs",
+    "tests/js/release-version.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-advanced.test.mjs",
+    "tests/js/run-format.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-enhanced.test.mjs",
+    "tests/js/setup.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-export.test.mjs",
+    "tests/js/shared-core-manifest.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-grid-editor.test.mjs",
+    "tests/js/shared-instructions.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-polar-bands.test.mjs",
+    "tests/js/skills-lock.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-polar.test.mjs",
+    "tests/js/smell-catalog-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-smoke.test.mjs",
+    "tests/js/test-focus.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/viewer-theme.test.mjs",
+    "tests/js/test-inventory.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tests/js/vitest-projects.test.mjs",
+    "tests/js/tool-path-existence-contract.test.mjs": {
       "classification": "strict"
     },
-    {
-      "path": "tools/viewer-harness.mjs",
+    "tests/js/typecheck-source.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/typecheck-tools.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-advanced.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-dependency-contract.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-enhanced.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-export.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-grid-editor.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-polar-bands.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-polar.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-render-contract.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-smoke.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-structure-contract.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/viewer-theme.test.mjs": {
+      "classification": "strict"
+    },
+    "tests/js/vitest-projects.test.mjs": {
+      "classification": "strict"
+    },
+    "tools/viewer-harness.mjs": {
       "classification": "strict"
     }
-  ]
+  }
 }

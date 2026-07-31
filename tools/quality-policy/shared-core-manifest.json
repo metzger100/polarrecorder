@@ -1,0 +1,10 @@
+{
+  "note": "Digest of every reusable-tooling file. A local digest mismatch means this repository has drifted from its reviewed tooling baseline.",
+  "entries": {
+    ".codex/config.toml": "be6ded57d66fa0d9101ef7eb2b9fb1aa3105e2871f8eca93218da1c6dc937f64",
+    ".nvmrc": "20d2add851bf39edcc6b5e830930f962db7e19dffa2cab8610eed551eda6c302",
+    ".prettierrc.json": "1f40b83da4cc81caedc738e83f8d342a2a1f231ce0dc0cfb08a6bbe1d94b451d",
+    "schemas/avnav-plugin-base.schema.json": "1247635fbc3c2a7236b1d055f93f2b4b1a43c9223a585e554a4cc1cdf39bf0a7",
+    "exec-plans/active/.gitkeep": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  }
+}

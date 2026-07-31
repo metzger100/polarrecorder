@@ -17,8 +17,7 @@ Enforces the two architectural guarantees that ruff/mypy cannot see:
                     architectural layer. A foundational module (e.g.
                     ``units``) may never import an orchestration module (e.g.
                     ``api_dispatch``); dependencies flow downward only. This is
-                    the flat-package twin of the dyninstruments
-                    ``dependency-direction`` layer check.
+                    enforced for this flat package.
 - layer-map-stale : the ``_LAYER_RANK`` map matches the real package - every
                     domain module is assigned exactly one layer and no mapped
                     name has been renamed or deleted. Independent of the scan

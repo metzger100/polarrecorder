@@ -13,11 +13,10 @@ import os from "node:os";
 import { test } from "vitest";
 import path from "node:path";
 
-import { runDependencyCheck } from "../../tools/check-dependencies.mjs";
-import { runSmellContracts } from "../../tools/check-smell-contracts.mjs";
-import { runJsDuplicationCheck } from "../../tools/check-js-duplication.mjs";
+import { runDependencyCheck } from "./viewer-dependency-contract.test.mjs";
+import { runSmellContracts } from "./viewer-structure-contract.test.mjs";
 import { runFileSizeCheck } from "../../tools/check-file-size.mjs";
-import { findLeakTokens } from "../../tools/check-viewer-contracts.mjs";
+import { findLeakTokens } from "./viewer-render-contract.test.mjs";
 
 /** @typedef {{ok: boolean, failures: string[], summary?: any}} CheckResult */
 /** @typedef {{root: string, print: boolean}} CheckOptions */
@@ -71,27 +70,6 @@ test("smell contracts", () => {
   const driftResult = runIn(drift, runSmellContracts);
   assert.equal(driftResult.ok, false);
   assert.ok(driftResult.failures.some((/** @type {string} */ f) => f.includes("viewer-dependency-header-contract")));
-});
-
-test("JS duplication check", () => {
-  const clean = runIn(
-    {
-      "viewer/a.js": header() + "window.Polarrecorder.A = " + bodyFn("alpha") + "\n",
-      "viewer/b.js": header() + "window.Polarrecorder.B = function () { return 1; };\n"
-    },
-    runJsDuplicationCheck
-  );
-  assert.equal(clean.ok, true, clean.failures.join("\n"));
-
-  const dup = runIn(
-    {
-      "viewer/a.js": header() + "window.Polarrecorder.A = " + bodyFn("alpha") + "\n",
-      "viewer/b.js": header() + "window.Polarrecorder.B = " + bodyFn("beta") + "\n"
-    },
-    runJsDuplicationCheck
-  );
-  assert.equal(dup.ok, false);
-  assert.ok(dup.failures.some((/** @type {string} */ f) => f.includes("duplicate function body across files")));
 });
 
 test("file size check", () => {
@@ -234,23 +212,6 @@ function smellContractsWorkspace() {
   const order = scripts.map((name) => `    <script src="${name}"></script>`).join("\n");
   files["viewer/viewer.html"] = `<!doctype html><html><body>\n${order}\n</body></html>\n`;
   return files;
-}
-
-/**
- * @param {string} name
- * @returns {string}
- */
-function bodyFn(name) {
-  return (
-    `function ${name}(alpha, beta, gamma) {\n` +
-    `  const total = alpha + beta + gamma;\n` +
-    `  const scaled = total * 2;\n` +
-    `  const trimmed = scaled - alpha;\n` +
-    `  const doubled = trimmed + scaled;\n` +
-    `  const capped = doubled - total;\n` +
-    `  return { total: total, scaled: scaled, trimmed: trimmed, doubled: doubled, capped: capped };\n` +
-    `};`
-  );
 }
 
 /**

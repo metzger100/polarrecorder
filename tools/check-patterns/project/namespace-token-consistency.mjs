@@ -1,5 +1,5 @@
+import { scopeFor } from "../shared.mjs";
 import { runNamespacePolicyRule } from "../generic/namespace-policy.mjs";
-import { collectViewerJsFiles } from "../discovery.mjs";
 
 /**
  * @typedef {import("../shared.mjs").Rule} Rule
@@ -14,7 +14,7 @@ export const NAMESPACE_TOKEN_CONSISTENCY_RULES = [
     id: "namespace-token-consistency",
     name: "namespace-token-consistency",
     severity: "block",
-    scope: { key: "viewer-only", collect: collectViewerJsFiles },
+    scope: scopeFor("viewer-only"),
     jsGlobalPrefix: "Polarrecorder",
     cssCustomPropertyPrefix: "--polarrecorder-",
     filenameCase: "kebab",

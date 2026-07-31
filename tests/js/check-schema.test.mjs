@@ -6,7 +6,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
-import { execFileSync } from "node:child_process";
 import { test } from "vitest";
 import path from "node:path";
 
@@ -17,12 +16,7 @@ const ROOT = process.cwd();
 /** @returns {string} */
 function makeFakeRoot() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-schema-check-"));
-  fs.mkdirSync(path.join(root, "venv", "bin"), { recursive: true });
-  fs.mkdirSync(path.join(root, "tools"), { recursive: true });
-  fs.copyFileSync(path.join(ROOT, "tools", "release_manifest.py"), path.join(root, "tools", "release_manifest.py"));
   fs.writeFileSync(path.join(root, "plugin.json"), "{}");
-  const realPython = execFileSync("which", ["python3"], { encoding: "utf8" }).trim();
-  fs.symlinkSync(realPython, path.join(root, "venv", "bin", "python3"));
   return root;
 }
 
@@ -94,37 +88,6 @@ test("checkInventoryComplete fails closed when the inventory grows unreviewed", 
   });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("expected exactly 1 reviewed entries")));
-});
-
-test("release form validation rejects a plugin.json missing a version after stamping", () => {
-  // Simulate a broken stamp_plugin_json by pointing at a release_manifest.py stub whose
-  // stamp omits 'version' -- proves the release-form validator, not just the dev-form one.
-  const root = makeFakeRoot();
-  const brokenManifest = `
-def stamp_plugin_json(version):
-    return b'{"name": "polarrecorder"}'
-`;
-  fs.appendFileSync(path.join(root, "tools", "release_manifest.py"), "\n\n" + brokenManifest);
-  const result = runSchemaCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("release form") && f.includes("version")));
-  cleanup(root);
-});
-
-test("release form validation rejects version-not-first-key even when the schema shape is valid", () => {
-  const root = makeFakeRoot();
-  const reorderedManifest =
-    `
-def stamp_plugin_json(version):
-    return b'{"name": "polarrecorder", "version": "` +
-    "0.0.0" +
-    `"}'
-`;
-  fs.appendFileSync(path.join(root, "tools", "release_manifest.py"), "\n\n" + reorderedManifest);
-  const result = runSchemaCheck({ root, print: false });
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((f) => f.includes("first serialized key")));
-  cleanup(root);
 });
 
 test("every genericBase and polarServerProfile corpus row matches the real Ajv validators", async () => {

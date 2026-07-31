@@ -1,4 +1,5 @@
-import { fail } from "./shared.mjs";
+// Source masking and brace/paren scanning helpers shared across check-patterns rules. Pure
+// text transforms and index math; no project concept, no engine state.
 
 /**
  * @param {string} line Single source line.
@@ -153,18 +154,6 @@ export function findMatchingParen(text, openIndex) {
 }
 
 /**
- * Extract the leading `rule-name:` token from a failure message built by a
- * scanJs() callback, so scanJs() itself does not need each rule name passed
- * separately.
- * @param {string} message Failure message produced by a scanJs() callback.
- * @returns {string} The rule id prefix, or "pattern" if none was found.
- */
-export function ruleNameFromMessage(message) {
-  const match = /^([a-z0-9-]+):/.exec(message);
-  return match ? match[1] : "pattern";
-}
-
-/**
  * Count word-boundary references to an identifier in masked text. A lone
  * declaration yields 1; any real use pushes the count above 1.
  * @param {string} masked Comment-and-string masked file contents.
@@ -174,27 +163,4 @@ export function ruleNameFromMessage(message) {
 export function countRefs(masked, name) {
   const matches = masked.match(new RegExp(`\\b${name}\\b`, "g"));
   return matches ? matches.length : 0;
-}
-
-/**
- * Run a regex over masked text; for each match, build() returns a message or
- * null to skip. Reports at the match's line using the shared fail() format.
- * @param {string} masked Comment-and-string masked (or raw) file contents to scan.
- * @param {import("./shared.mjs").PatternFile} file File being scanned, for failure reporting.
- * @param {RegExp} regex Global regex to iterate matches of.
- * @param {(match: RegExpExecArray) => (string | null)} build Builds a failure
- *   message for a match, or returns null to skip it.
- * @param {string[]} [lines] File split into lines, to honor the generic
- *   `pattern-ignore:` suppression convention. Omit to skip the check.
- * @returns {void}
- */
-export function scanJs(masked, file, regex, build, lines) {
-  /** @type {RegExpExecArray | null} */
-  let match;
-  while ((match = regex.exec(masked)) !== null) {
-    const message = build(match);
-    if (message === null) continue;
-    const index = masked.slice(0, match.index).split(/\r?\n/).length - 1;
-    fail(file.rel, index, message, ruleNameFromMessage(message), lines);
-  }
 }

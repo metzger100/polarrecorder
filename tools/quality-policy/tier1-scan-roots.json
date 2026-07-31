@@ -1,0 +1,4 @@
+{
+  "note": "Project-owned list of directories check-shared-core.mjs scans for unlisted reusable-tooling candidates. Pattern-rule definitions remain project-owned because they encode local policy.",
+  "roots": []
+}

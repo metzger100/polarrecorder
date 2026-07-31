@@ -1,0 +1,15 @@
+{
+  "note": "Project-owned schema profile for tools/check-schema.mjs (Tier 1). Names which schema files compose per shipped artifact and the release-form key-order contract; release staging owns the form builder.",
+  "baseSchema": "avnav-plugin-base.schema.json",
+  "expectedArtifactCount": 1,
+  "artifacts": [
+    {
+      "name": "plugin.json",
+      "devSchema": "polar-plugin-dev.schema.json",
+      "releaseSchema": "polar-plugin-release.schema.json",
+      "releaseForm": {
+        "firstSerializedKey": "version"
+      }
+    }
+  ]
+}

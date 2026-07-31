@@ -1,9 +1,7 @@
 /**
- * Local drift proof for the portable, paired `.codex/config.toml`: required portable keys
+ * Local drift proof for the portable `.codex/config.toml`: required portable keys
  * are present, and no OS-specific command/environment or MCP server declaration has crept
- * back in. Dependency-free by design (no TOML parser for this small fixed configuration);
- * byte identity with Dyninstruments' copy is owned by the one-off paired comparison, not
- * this test.
+ * back in. Dependency-free by design (no TOML parser for this small fixed configuration).
  */
 
 import assert from "node:assert/strict";

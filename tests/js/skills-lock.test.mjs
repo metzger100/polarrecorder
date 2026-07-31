@@ -2,18 +2,16 @@
  * Contract test for the agent skill layer: `skills-lock.json` entry shape (a source, a
  * source type, and a 64-character hex hash per skill), the lock's hash matching the live
  * `.agents/skills/<name>/SKILL.md` content (so an edited skill file is caught as drift), and
- * every generic skill file being free of the paired repository's project-specific
- * vocabulary (widget/gauge/renderer/mapper/cluster/Dyninstruments/DyniComponents) -- the
- * concrete tokens that would make a skill un-liftable to a future greenfield generator.
- * Polar Recorder's own real paths and commands (server/polarrecorder/, npm run check:all,
- * etc.) are expected and are not project-specific tokens in this sense: these skills live
- * inside this repository's own `.agents/skills/`, adapted for use on this repository, not a
- * repository-agnostic package.
+ * every generic skill file being free of the genericness tokens owned by
+ * `tools/quality-policy/generic-tokens.json` -- the concrete tokens that would make a skill
+ * un-liftable to a reusable tooling context. These generic skills remain independent of
+ * Polar Recorder's product vocabulary.
  */
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
@@ -21,18 +19,24 @@ const ROOT = process.cwd();
 const SKILLS_DIR = path.join(ROOT, ".agents", "skills");
 const LOCK_PATH = path.join(ROOT, "skills-lock.json");
 const HASH_PATTERN = /^[0-9a-f]{64}$/;
+const GENERIC_TOKENS_PATH = path.join(ROOT, "tools", "quality-policy", "generic-tokens.json");
 
+/**
+ * @param {string} [tokensPath]
+ * @returns {{projectTokens: string[], domainTokens: string[], hostTokens: string[]}}
+ */
+function readGenericTokenGroups(tokensPath = GENERIC_TOKENS_PATH) {
+  return JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+}
+
+/**
+ * Generic skills must be liftable without either repository's product vocabulary.
+ */
+const GENERIC_TOKEN_GROUPS = readGenericTokenGroups();
 const FORBIDDEN_TOKENS = [
-  "dyninstruments",
-  "dynicomponents",
-  "widget",
-  "gauge",
-  "mapper",
-  "cluster",
-  "renderer",
-  "ratioDefaults",
-  "rangeDefaults",
-  "createRenderer"
+  ...GENERIC_TOKEN_GROUPS.projectTokens,
+  ...GENERIC_TOKEN_GROUPS.domainTokens,
+  ...GENERIC_TOKEN_GROUPS.hostTokens
 ];
 
 /**
@@ -64,7 +68,24 @@ test("every lock entry has a source, a source type, and a 64-character hash", ()
     assert.ok(typeof entry.source === "string" && entry.source.length > 0, `${name}: missing source`);
     assert.ok(typeof entry.sourceType === "string" && entry.sourceType.length > 0, `${name}: missing sourceType`);
     assert.ok(HASH_PATTERN.test(entry.computedHash), `${name}: computedHash is not a 64-character hex hash`);
+    assert.ok(fs.existsSync(path.join(ROOT, entry.source)), `${name}: source must be a local file`);
+    assert.notEqual(entry.sourceType, "external-repository", `${name}: external provenance is not verifiable`);
   }
+});
+
+test("the lock directory set equals the declared generic and project skill sets", () => {
+  const lock = JSON.parse(fs.readFileSync(LOCK_PATH, "utf8"));
+  const declared = Object.keys(lock.skills).sort();
+  const local = fs
+    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(SKILLS_DIR, entry.name, "SKILL.md")))
+    .map((entry) => entry.name)
+    .sort();
+  assert.deepEqual(local, declared);
+});
+
+test("an external-repository source type is rejected", () => {
+  assert.notEqual("external-repository", "vendored-generic");
 });
 
 test("every locked skill's hash matches the live SKILL.md content", () => {
@@ -81,7 +102,7 @@ test("a tampered skill file is detected as drift", () => {
   assert.notEqual(sha256(tampered), lock.skills.preflight.computedHash);
 });
 
-test("every generic skill file is free of the paired repository's specific vocabulary", () => {
+test("every generic skill file is free of product-specific vocabulary", () => {
   for (const name of ["preflight", "create-plan", "doc-sync", "scan-smells", "grill-me-repo"]) {
     const content = readSkillFile(name).toLowerCase();
     for (const token of FORBIDDEN_TOKENS) {
@@ -91,7 +112,19 @@ test("every generic skill file is free of the paired repository's specific vocab
 });
 
 test("a seeded forbidden token would be caught", () => {
-  const seeded = "some skill text mentioning a DyniComponents widget renderer";
+  const seeded = "some skill text mentioning a Polar Recorder viewer";
   const lowered = seeded.toLowerCase();
   assert.ok(FORBIDDEN_TOKENS.some((token) => lowered.includes(token.toLowerCase())));
+});
+
+test("a token added to generic-tokens.json is picked up by this call site", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-tokens-single-owner-"));
+  const tokensPath = path.join(dir, "generic-tokens.json");
+  fs.writeFileSync(
+    tokensPath,
+    JSON.stringify({ projectTokens: [], domainTokens: ["zzz-synthetic-token"], hostTokens: [] })
+  );
+  const groups = readGenericTokenGroups(tokensPath);
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.ok(groups.domainTokens.includes("zzz-synthetic-token"));
 });

@@ -3,7 +3,7 @@
 /**
  * Hook doctor (`npm run hooks:doctor`).
  *
- * Verifies the pre-push gate is actually installed: `tools/check-all.sh` (via
+ * Verifies the pre-push gate is actually installed: `npm run check:all` (via
  * `.githooks/pre-push`) only runs on push if `core.hooksPath` points at `.githooks` and
  * the hook is executable; without this doctor, the gate silently never fires for a
  * fresh clone. Named to pair consistently with `hooks-install.mjs` (`hooks-*.mjs` <->
@@ -20,7 +20,7 @@ const EXPECTED_HOOKS_PATH = ".githooks";
  * @param {{root?: string, print?: boolean}} [options]
  * @returns {{ok: boolean, failures: string[]}}
  */
-export function checkHooksDoctor(options = {}) {
+export function runHooksDoctor(options = {}) {
   const root = options.root || process.cwd();
   const print = options.print !== false;
   /** @type {string[]} */
@@ -67,6 +67,6 @@ export function checkHooksDoctor(options = {}) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const result = checkHooksDoctor();
+  const result = runHooksDoctor();
   process.exit(result.ok ? 0 : 1);
 }

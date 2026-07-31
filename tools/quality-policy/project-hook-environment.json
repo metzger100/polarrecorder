@@ -1,0 +1,4 @@
+{
+  "note": "Project-owned environment variable name for tools/quality-policy/run-format.mjs's ruff/venv resolution (Tier 1 tool). The checker itself contains no project-prefixed variable name.",
+  "venvEnvironmentVariable": "POLARRECORDER_VENV"
+}

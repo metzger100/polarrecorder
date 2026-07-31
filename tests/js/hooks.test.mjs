@@ -13,8 +13,8 @@ import os from "node:os";
 import { test } from "vitest";
 import path from "node:path";
 
-import { installHooks } from "../../tools/hooks-install.mjs";
-import { checkHooksDoctor } from "../../tools/hooks-doctor.mjs";
+import { runHooksInstall } from "../../tools/hooks-install.mjs";
+import { runHooksDoctor } from "../../tools/hooks-doctor.mjs";
 
 const ROOT = process.cwd();
 
@@ -53,7 +53,7 @@ function cleanup(root) {
 
 test("hooks-doctor fails closed on a fresh repo with no hooks configured", () => {
   const root = makeFakeRepo();
-  const result = checkHooksDoctor({ root, print: false });
+  const result = runHooksDoctor({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("hooks:install")));
   cleanup(root);
@@ -61,7 +61,7 @@ test("hooks-doctor fails closed on a fresh repo with no hooks configured", () =>
 
 test("hooks-install configures core.hooksPath and makes pre-push executable", () => {
   const root = makeFakeRepo();
-  const installResult = installHooks({ root, print: false });
+  const installResult = runHooksInstall({ root, print: false });
   assert.equal(installResult.ok, true, installResult.failures.join("\n"));
   const configured = execFileSync("git", ["config", "--get", "core.hooksPath"], {
     cwd: root,
@@ -75,16 +75,16 @@ test("hooks-install configures core.hooksPath and makes pre-push executable", ()
 
 test("hooks-doctor passes once installed", () => {
   const root = makeFakeRepo();
-  installHooks({ root, print: false });
-  const result = checkHooksDoctor({ root, print: false });
+  runHooksInstall({ root, print: false });
+  const result = runHooksDoctor({ root, print: false });
   assert.equal(result.ok, true, result.failures.join("\n"));
   cleanup(root);
 });
 
 test("install is idempotent", () => {
   const root = makeFakeRepo();
-  const first = installHooks({ root, print: false });
-  const second = installHooks({ root, print: false });
+  const first = runHooksInstall({ root, print: false });
+  const second = runHooksInstall({ root, print: false });
   assert.equal(first.ok, true);
   assert.equal(second.ok, true);
   const configured = execFileSync("git", ["config", "--get", "core.hooksPath"], {
@@ -97,9 +97,9 @@ test("install is idempotent", () => {
 
 test("hooks-doctor detects drift after core.hooksPath is changed away", () => {
   const root = makeFakeRepo();
-  installHooks({ root, print: false });
+  runHooksInstall({ root, print: false });
   execFileSync("git", ["config", "core.hooksPath", "other-dir"], { cwd: root });
-  const result = checkHooksDoctor({ root, print: false });
+  const result = runHooksDoctor({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("other-dir")));
   cleanup(root);
@@ -107,9 +107,9 @@ test("hooks-doctor detects drift after core.hooksPath is changed away", () => {
 
 test("hooks-doctor detects a non-executable pre-push", () => {
   const root = makeFakeRepo();
-  installHooks({ root, print: false });
+  runHooksInstall({ root, print: false });
   fs.chmodSync(path.join(root, ".githooks", "pre-push"), 0o644);
-  const result = checkHooksDoctor({ root, print: false });
+  const result = runHooksDoctor({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("not executable")));
   cleanup(root);
@@ -117,7 +117,7 @@ test("hooks-doctor detects a non-executable pre-push", () => {
 
 test("hooks-install fails closed outside a git repository", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-hooks-nogit-"));
-  const result = installHooks({ root, print: false });
+  const result = runHooksInstall({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("Not a git repository")));
   cleanup(root);
@@ -126,7 +126,7 @@ test("hooks-install fails closed outside a git repository", () => {
 test("hooks-install fails closed when pre-push is missing", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-hooks-missing-"));
   execFileSync("git", ["init", "--quiet"], { cwd: root });
-  const result = installHooks({ root, print: false });
+  const result = runHooksInstall({ root, print: false });
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((f) => f.includes("Missing required hook file")));
   cleanup(root);

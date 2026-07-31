@@ -1,15 +1,9 @@
-import { fail } from "../shared.mjs";
-import { getFileData } from "../file-cache.mjs";
-import { stripStrings } from "../source-scan.mjs";
-import {
-  collectAbsolutePathTargets,
-  collectExecPlanReferenceTargets,
-  collectJavaScriptPatternFiles
-} from "../discovery.mjs";
+import { getFileData, scopeFor } from "../shared.mjs";
+import { stripStrings } from "../ast-utils.mjs";
 
 /**
  * @typedef {import("../shared.mjs").Rule} Rule
- * @typedef {import("../shared.mjs").PatternFile} PatternFile
+ * @typedef {import("../shared.mjs").Finding} Finding
  */
 
 // Machine-local home paths must never be committed in source or docs; they
@@ -22,103 +16,114 @@ const EXEC_PLAN_CITATION_PATTERN = /\bPLAN\d+\b(?!\.md)/;
 const EXEC_PLAN_PHASE_PATTERN = /\bPhase\s?\d+[A-Za-z]?\b/;
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runAbsoluteHomePath(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
       const match = HOME_PATH.exec(lines[index]);
-      if (match) {
-        fail(
-          file.rel,
-          index,
-          `absolute home path '${match[0]}' is forbidden; use a project-relative or redacted placeholder`,
-          "absolute-home-path",
-          lines
-        );
-      }
+      if (!match) continue;
+      out.push({
+        file,
+        line: index + 1,
+        message: `absolute home path '${match[0]}' is forbidden; use a project-relative or redacted placeholder`
+      });
     }
   }
+  return out;
 }
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runExecPlanReference(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index];
       const match = EXEC_PLAN_CITATION_PATTERN.exec(line) || EXEC_PLAN_PHASE_PATTERN.exec(line);
-      if (match) {
-        fail(
-          file.rel,
-          index,
-          `'${match[0]}' cites a historical exec-plan/phase; describe the code or config standalone instead`,
-          "exec-plan-reference",
-          lines
-        );
-      }
+      if (!match) continue;
+      out.push({
+        file,
+        line: index + 1,
+        message: `'${match[0]}' cites a historical exec-plan/phase; describe the code or config standalone instead`
+      });
     }
   }
+  return out;
 }
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runNoNulByte(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { content } = getFileData(file);
-    const index = content.indexOf("\u0000");
+    const { text } = getFileData(file);
+    const index = text.indexOf("\u0000");
     if (index === -1) continue;
-    const zeroBasedLine = content.slice(0, index).split(/\r?\n/).length - 1;
-    fail(file.rel, zeroBasedLine, "file contains a literal NUL byte", "no-nul-byte");
+    const line = text.slice(0, index).split(/\r?\n/).length;
+    out.push({ file, line, message: "file contains a literal NUL byte" });
   }
+  return out;
 }
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runInnerHtmlAssignment(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index += 1) {
       const code = stripStrings(lines[index]);
       if (/\.innerHTML\s*=/.test(code)) {
-        fail(file.rel, index, "innerHTML assignment is forbidden", "inner-html-assignment", lines);
+        out.push({ file, line: index + 1, message: "innerHTML assignment is forbidden" });
       }
     }
   }
+  return out;
 }
 
 /**
- * @param {PatternFile[]} files
- * @returns {void}
+ * @param {string[]} files
+ * @returns {Finding[]}
  */
 function runCommentedOutCode(files) {
+  /** @type {Finding[]} */
+  const out = [];
   for (const file of files) {
-    const { lines } = getFileData(file);
+    const { text } = getFileData(file);
+    const lines = text.split(/\r?\n/);
     let commentedCodeRun = 0;
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index];
       if (/^\s*\/\//.test(line) && /[={}(]|\b(function|return)\b/.test(line)) {
         commentedCodeRun += 1;
         if (commentedCodeRun === 3) {
-          fail(file.rel, index, "three or more consecutive commented-out code lines", "commented-out-code", lines);
+          out.push({ file, line: index + 1, message: "three or more consecutive commented-out code lines" });
         }
       } else {
         commentedCodeRun = 0;
       }
     }
   }
+  return out;
 }
-
-const JS_SCOPE = { key: "js-all", collect: collectJavaScriptPatternFiles };
 
 /** @type {Rule[]} */
 export const LINE_GENERIC_RULES = [
@@ -126,35 +131,43 @@ export const LINE_GENERIC_RULES = [
     id: "absolute-home-path",
     name: "absolute-home-path",
     severity: "block",
-    scope: { key: "absolute-path", collect: collectAbsolutePathTargets },
+    scope: scopeFor("absolute-home-path"),
     run: (_rule, files) => runAbsoluteHomePath(files)
   },
   {
     id: "exec-plan-reference",
     name: "exec-plan-reference",
     severity: "block",
-    scope: { key: "exec-plan-reference", collect: collectExecPlanReferenceTargets },
+    scope: scopeFor("exec-plan-reference"),
     run: (_rule, files) => runExecPlanReference(files)
   },
   {
     id: "no-nul-byte",
     name: "no-nul-byte",
     severity: "block",
-    scope: { key: "exec-plan-reference", collect: collectExecPlanReferenceTargets },
+    scope: scopeFor("no-nul-byte"),
     run: (_rule, files) => runNoNulByte(files)
   },
   {
-    id: "inner-html-assignment",
-    name: "inner-html-assignment",
+    id: "unsafe-html-dom-sink",
+    name: "unsafe-html-dom-sink",
     severity: "block",
-    scope: JS_SCOPE,
+    scope: scopeFor("js-runtime-default"),
     run: (_rule, files) => runInnerHtmlAssignment(files)
   },
   {
-    id: "commented-out-code",
-    name: "commented-out-code",
+    id: "dead-code",
+    name: "dead-code",
     severity: "block",
-    scope: JS_SCOPE,
+    scope: scopeFor("js-runtime-default"),
     run: (_rule, files) => runCommentedOutCode(files)
+  },
+  {
+    id: "console-in-runtime",
+    name: "console-in-runtime",
+    severity: "block",
+    scope: scopeFor("console-in-runtime"),
+    detect: /\bconsole\.(?:log|info|warn|error|debug)\s*\(/g,
+    message: () => "console call in shipped runtime is forbidden; use the owned boundary reporting path"
   }
 ];

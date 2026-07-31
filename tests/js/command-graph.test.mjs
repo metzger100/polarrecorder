@@ -1,7 +1,7 @@
 /**
  * Final command-authority contract: `check:core` is exactly the literal
  * target command graph, `check:all`/`check:strict` are exact aliases, `check:fast` is
- * exactly the bounded static/typing/unit graph, `tools/check-all.sh` is a pure root-scoped
+ * exactly the bounded static/typing/unit graph, and the pre-push hook uses
  * wrapper, no forbidden/duplicate/undeclared/cyclic script remains, and deliberate failing
  * fixtures prove both `check:core`'s duplicate-leaf rejection and its per-group failure
  * propagation.
@@ -19,6 +19,7 @@ const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
 
 const REQUIRED_CHECK_CORE_GROUPS = [
   "check:standard",
+  "check:shared-core",
   "typecheck",
   "package:check",
   "test:focus:check",
@@ -46,14 +47,16 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "check:fast",
   "test:unit",
   "check:strict",
-  "dependencies:audit"
+  "dependencies:audit",
+  // Records today's genericness-token finding list (skill files, tools/check-patterns/shared.mjs)
+  // as the Phase C/E work list. It is not gating until those phases resolve the findings.
+  "check:generic-surface"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */
 const CHECK_FAST_EXCLUDED_GROUPS = [
   "test:split",
   "test:tools",
-  "test:contract",
   "check:python-contracts",
   "test:coverage:check",
   "package:check",
@@ -144,29 +147,6 @@ test("no npm-script leaf is reachable more than once from check:core", () => {
   assert.deepEqual(duplicateLeaves(PKG.scripts, "check:core"), []);
 });
 
-test("a fixture restoring test:contract -> check:smells fails duplicate-leaf validation", () => {
-  const fixtureScripts = {
-    ...PKG.scripts,
-    "test:contract": `${PKG.scripts["test:contract"]} && npm run check:smells`
-  };
-  assert.deepEqual(duplicateLeaves(fixtureScripts, "check:core"), ["check:smells"]);
-});
-
-test("tools/check-all.sh is a pure root-scoped compatibility wrapper", () => {
-  const source = fs.readFileSync(path.join(ROOT, "tools", "check-all.sh"), "utf8");
-  const meaningfulLines = source
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"));
-  assert.deepEqual(meaningfulLines, [
-    "set -euo pipefail",
-    'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"',
-    'REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"',
-    'cd "$REPO_ROOT"',
-    "npm run check:all"
-  ]);
-});
-
 test("no forbidden script name is declared", () => {
   for (const name of FORBIDDEN_SCRIPTS) {
     assert.ok(!(name in PKG.scripts), `forbidden script present: ${name}`);
@@ -249,10 +229,6 @@ test("hook and release automation each invoke exactly one npm run check:all", ()
 /** @returns {string} */
 function makeGraphFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-command-graph-"));
-  fs.mkdirSync(path.join(root, "tools"), { recursive: true });
-  fs.copyFileSync(path.join(ROOT, "tools", "check-all.sh"), path.join(root, "tools", "check-all.sh"));
-  fs.chmodSync(path.join(root, "tools", "check-all.sh"), 0o755);
-
   fs.writeFileSync(
     path.join(root, "leaf.mjs"),
     [
@@ -287,25 +263,20 @@ function cleanup(root) {
   fs.rmSync(root, { recursive: true, force: true });
 }
 
-test("a passing fixture graph exits 0 through both check:core and the wrapper", () => {
+test("a passing fixture graph exits 0 through check:core", () => {
   const root = makeGraphFixture();
   const core = spawnSync("npm", ["run", "check:core"], { cwd: root, encoding: "utf8" });
   assert.equal(core.status, 0, core.stderr);
-  const wrapper = spawnSync("bash", ["tools/check-all.sh"], { cwd: root, encoding: "utf8" });
-  assert.equal(wrapper.status, 0, wrapper.stderr);
   cleanup(root);
 });
 
 for (const failingGroup of REQUIRED_CHECK_CORE_GROUPS) {
-  test(`a failing '${failingGroup}' fixture leaf fails check:core and the wrapper`, () => {
+  test(`a failing '${failingGroup}' fixture leaf fails check:core`, () => {
     const root = makeGraphFixture();
     const env = { ...process.env, POLARRECORDER_FAIL_LEAF: failingGroup };
 
     const core = spawnSync("npm", ["run", "check:core"], { cwd: root, encoding: "utf8", env });
     assert.notEqual(core.status, 0, `check:core must fail when ${failingGroup} fails`);
-
-    const wrapper = spawnSync("bash", ["tools/check-all.sh"], { cwd: root, encoding: "utf8", env });
-    assert.notEqual(wrapper.status, 0, `tools/check-all.sh must fail when ${failingGroup} fails`);
 
     cleanup(root);
   });

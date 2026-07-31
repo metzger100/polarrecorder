@@ -8,12 +8,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "vitest";
 
-import { buildFormatScope } from "../../tools/quality-policy/generate-format-scope.mjs";
+import { runFormatScopeGeneration } from "../../tools/quality-policy/generate-format-scope.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
 
 test("every row has a sanctioned owner", () => {
-  const rows = buildFormatScope();
+  const rows = runFormatScopeGeneration();
   const validOwners = new Set(["prettier", "ruff", "unsupported"]);
   for (const row of rows) {
     assert.ok(validOwners.has(row.owner), `${row.path} has unrecognized owner ${row.owner}`);
@@ -21,7 +21,7 @@ test("every row has a sanctioned owner", () => {
 });
 
 test("every unsupported row has a reason and alternate validation", () => {
-  const rows = buildFormatScope();
+  const rows = runFormatScopeGeneration();
   for (const row of rows) {
     if (row.owner === "unsupported") {
       assert.ok(row.reason, `${row.path} is unsupported without a reason`);
@@ -31,7 +31,7 @@ test("every unsupported row has a reason and alternate validation", () => {
 });
 
 test("committed scope matches fresh discovery", () => {
-  const fresh = buildFormatScope();
+  const fresh = runFormatScopeGeneration();
   const committed = JSON.parse(
     fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "format-scope.json"), "utf8")
   );
@@ -50,7 +50,7 @@ function ownerOf(byPath, relativePath) {
 }
 
 test("known families classify as expected", () => {
-  const rows = buildFormatScope();
+  const rows = runFormatScopeGeneration();
   const byPath = new Map(rows.map((row) => [row.path, row]));
   assert.equal(ownerOf(byPath, "plugin.py"), "ruff");
   assert.equal(ownerOf(byPath, "viewer/viewer.js"), "prettier");
@@ -68,10 +68,16 @@ test("known families classify as expected", () => {
 });
 
 test("historical artifacts are excluded, not unsupported", () => {
-  const rows = buildFormatScope();
+  const rows = runFormatScopeGeneration();
   const paths = new Set(rows.map((row) => row.path));
   assert.ok(!paths.has("releases/polarrecorder-1.0.0-beta.1.zip"));
   assert.ok(!paths.has("exec-plans/completed/PLAN1.md"));
   assert.ok(!paths.has("exec-plans/completed/PLAN5.md"));
   assert.ok(!paths.has("exec-plans/completed/PLAN7.md"));
+});
+
+test("deleted tracked files are absent from fresh discovery", () => {
+  const rows = runFormatScopeGeneration();
+  const paths = new Set(rows.map((row) => row.path));
+  assert.ok(!paths.has("tools/check-patterns/discovery.mjs"));
 });

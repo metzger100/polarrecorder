@@ -219,7 +219,7 @@
       "alternateValidation": "none needed"
     },
     {
-      "path": "exec-plans/active/PLAN9.md",
+      "path": "exec-plans/active/PLAN10.md",
       "owner": "prettier"
     },
     {
@@ -451,6 +451,18 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/check-doc-links-proof.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-file-size-submodules.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/check-generic-surface.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/check-patterns-registry.test.mjs",
       "owner": "prettier"
     },
@@ -495,6 +507,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/docs-check-composition-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/documentation-checkers.test.mjs",
       "owner": "prettier"
     },
@@ -527,11 +543,27 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/pattern-suppression.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/plugin-entrypoints.test.mjs",
       "owner": "prettier"
     },
     {
       "path": "tests/js/prettier-config.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/publisher-workflow-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/quality-gates-doc-numbers-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/release-archive.test.mjs",
       "owner": "prettier"
     },
     {
@@ -551,7 +583,15 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/run-format.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/setup.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/shared-core-manifest.test.mjs",
       "owner": "prettier"
     },
     {
@@ -575,6 +615,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/tool-path-existence-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/typecheck-source.test.mjs",
       "owner": "prettier"
     },
@@ -584,6 +628,10 @@
     },
     {
       "path": "tests/js/viewer-advanced.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-dependency-contract.test.mjs",
       "owner": "prettier"
     },
     {
@@ -607,7 +655,15 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/viewer-render-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/viewer-smoke.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/viewer-structure-contract.test.mjs",
       "owner": "prettier"
     },
     {
@@ -707,10 +763,6 @@
       "owner": "ruff"
     },
     {
-      "path": "tests/test_check_release.py",
-      "owner": "ruff"
-    },
-    {
       "path": "tests/test_coerce.py",
       "owner": "ruff"
     },
@@ -795,10 +847,6 @@
       "owner": "ruff"
     },
     {
-      "path": "tests/test_release_manifest.py",
-      "owner": "ruff"
-    },
-    {
       "path": "tests/test_restore.py",
       "owner": "ruff"
     },
@@ -857,26 +905,12 @@
       "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
     },
     {
-      "path": "tools/check-all.sh",
-      "owner": "unsupported",
-      "reason": "no maintained shell formatter in this inventory",
-      "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
-    },
-    {
-      "path": "tools/check-dependencies.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-doc-links-proof.mjs",
       "owner": "prettier"
     },
     {
       "path": "tools/check-doc-links.mjs",
       "owner": "prettier"
-    },
-    {
-      "path": "tools/check-duplication.py",
-      "owner": "ruff"
     },
     {
       "path": "tools/check-file-size.mjs",
@@ -895,15 +929,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-js-duplication.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-js-duplication/clone-detection.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-js-duplication/parse.mjs",
+      "path": "tools/check-generic-surface.mjs",
       "owner": "prettier"
     },
     {
@@ -911,15 +937,11 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/discovery.mjs",
+      "path": "tools/check-patterns/ast-utils.mjs",
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/file-cache.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/generic/line-rules.mjs",
+      "path": "tools/check-patterns/generic/duplication-rules.mjs",
       "owner": "prettier"
     },
     {
@@ -927,11 +949,15 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/generic/structural-rules.mjs",
+      "path": "tools/check-patterns/generic/rules-core-generic-defs.mjs",
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/generic/todo-without-owner.mjs",
+      "path": "tools/check-patterns/generic/rules-failfast-generic-defs.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/generic/rules-regex-generic-defs.mjs",
       "owner": "prettier"
     },
     {
@@ -947,19 +973,19 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-patterns/rules-core.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-patterns/rules.mjs",
       "owner": "prettier"
     },
     {
+      "path": "tools/check-patterns/shared-suppressions.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-patterns/shared.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/source-scan.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-publisher-workflow.mjs",
       "owner": "prettier"
     },
     {
@@ -979,10 +1005,6 @@
       "owner": "ruff"
     },
     {
-      "path": "tools/check-release.py",
-      "owner": "ruff"
-    },
-    {
       "path": "tools/check-runtime-contracts.py",
       "owner": "ruff"
     },
@@ -991,7 +1013,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-smell-contracts.mjs",
+      "path": "tools/check-shared-core.mjs",
       "owner": "prettier"
     },
     {
@@ -1001,10 +1023,6 @@
     {
       "path": "tools/check-test-focus.py",
       "owner": "ruff"
-    },
-    {
-      "path": "tools/check-viewer-contracts.mjs",
-      "owner": "prettier"
     },
     {
       "path": "tools/hooks-doctor.mjs",
@@ -1033,12 +1051,8 @@
     {
       "path": "tools/quality-policy/baseline-coverage-capture.json",
       "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "reason": "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
       "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
-    },
-    {
-      "path": "tools/quality-policy/canonical_json.py",
-      "owner": "ruff"
     },
     {
       "path": "tools/quality-policy/check-coverage-inventory.mjs",
@@ -1085,11 +1099,15 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/generate_baseline_coverage_capture.py",
-      "owner": "ruff"
+      "path": "tools/quality-policy/generate-format-scope.mjs",
+      "owner": "prettier"
     },
     {
-      "path": "tools/quality-policy/generate-format-scope.mjs",
+      "path": "tools/quality-policy/generic-surface-scope.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/generic-tokens.json",
       "owner": "prettier"
     },
     {
@@ -1103,11 +1121,27 @@
     {
       "path": "tools/quality-policy/planned-quality-fixtures.json",
       "owner": "unsupported",
-      "reason": "byte-stable immutable capture owned by its Python generator's canonical_json.dumps_canonical (or hand-authored and reviewed directly), not Prettier's JSON style",
+      "reason": "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
       "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
     },
     {
       "path": "tools/quality-policy/plugin-schema-corpus.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/project-file-size-scope.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/project-hook-environment.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/project-pattern-scopes.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/project-schema-profile.json",
       "owner": "prettier"
     },
     {
@@ -1116,6 +1150,14 @@
     },
     {
       "path": "tools/quality-policy/semver-corpus.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/shared-core-manifest.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/shared-instructions.md",
       "owner": "prettier"
     },
     {
@@ -1131,6 +1173,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/tier1-scan-roots.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/typecheck-source.mjs",
       "owner": "prettier"
     },
@@ -1139,8 +1185,8 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/release_manifest.py",
-      "owner": "ruff"
+      "path": "tools/release-archive.mjs",
+      "owner": "prettier"
     },
     {
       "path": "tools/release-create.mjs",
@@ -1155,19 +1201,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/release-runtime.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/release-version.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/release-zip.py",
-      "owner": "ruff"
-    },
-    {
-      "path": "tools/setup.mjs",
       "owner": "prettier"
     },
     {
@@ -1298,8 +1332,8 @@
     }
   ],
   "countByOwner": {
-    "prettier": 190,
-    "unsupported": 24,
-    "ruff": 98
+    "prettier": 208,
+    "unsupported": 23,
+    "ruff": 90
   }
 }

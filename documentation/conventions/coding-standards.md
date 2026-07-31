@@ -67,8 +67,8 @@ Depends: <list of polarrecorder/ module dependencies>
 - Do not re-implement a canonical domain helper (e.g. `twa_bin`, `circular_distance`, `merge_histograms`) under the same
   name in another module; import it from its owner module. `tools/check-py-contracts.py`
   (`canonical-helper-redefinition`) enforces this against a curated owner map.
-- Do not re-implement a helper that already exists; import the canonical one. `tools/check-duplication.py` blocks
-  cross-file duplicate function bodies and long copied statement blocks.
+- Do not re-implement a helper that already exists; import the canonical one. The generic `duplicate-functions` rule
+  blocks cross-file duplicate function bodies and long copied statement blocks.
 - Lint and type suppressions must name specific codes and carry a reason: `# noqa: <CODES>  # <reason>` and
   `# type: ignore[<code>]  # <reason>`. Blanket `# noqa`, blanket `# type: ignore`, and file-level `# ruff: noqa` /
   `# mypy: ignore-errors` are blocked by `check-patterns.mjs`.
@@ -87,13 +87,13 @@ JavaScript standards:
   named handler, or an intentional boundary fallback.
 - No silent non-empty catch either: a lexical `catch { ... }` must rethrow, route the error to visible state, or carry a
   structured `polarrecorder-boundary-fallback(<owner>): ...` comment for an intentional boundary fallback.
-  `tools/check-patterns.mjs` (`catch-fallback`) blocks casual comment-only swallows.
+  `tools/check-patterns.mjs` (`catch-fallback-without-suppression`) blocks casual comment-only swallows.
 - Do not re-default the result of an internal namespace helper (`Polarrecorder.X.Helper(...) || fb` / `?? fb`); trust
-  the contract and fix caller order instead. `tools/check-patterns.mjs` (`internal-namespace-fallback`) blocks this.
+  the contract and fix caller order instead. `tools/check-patterns.mjs` (`internal-contract-fallback`) blocks this.
   Boundary defaulting on optional API fields (`data.counters || {}`) stays allowed.
 - Do not re-implement a viewer helper that already exists; extract one canonical `window.Polarrecorder` helper and reuse
-  it. `tools/check-js-duplication.mjs` blocks cross-file duplicate function bodies and long copied function blocks (the
-  JS counterpart of `check-duplication.py`).
+  it. The generic `duplicate-functions` rule and `jscpd` block cross-file duplicate function bodies and long copied
+  function blocks.
 - Do not clobber explicit falsy defaults with `x.default || fallback` (use `??` or a presence check), re-sanitize
   producer-guaranteed values (`Array.isArray(x) ? x : []`, `String(x == null ? ... : x)`), duplicate config defaults
   downstream of `Polarrecorder.ConfigCache` (including literal `ConfigCache = { ... }` fallbacks), duplicate placeholder
@@ -103,8 +103,7 @@ JavaScript standards:
   (`if (true)`/`if (false)`, unreferenced top-level functions), keep `fallback`-named bindings that are never used, or
   add speculative `*legacy*`/`*compat*`/`*deprecated*` paths. `tools/check-patterns.mjs` blocks all of these. Boundary
   defaulting on optional API fields (`data.counters || {}`) stays allowed — only owned internal contracts are targeted.
-- Every custom JS checker still implemented as a standalone module (`check-patterns.mjs`, `check-dependencies.mjs`,
-  `check-smell-contracts.mjs`, `check-js-duplication.mjs`, `check-file-size.mjs`, `check-viewer-contracts.mjs`,
+- Every custom JS checker still implemented as a standalone module (`check-patterns.mjs`, `check-file-size.mjs`,
   `check-test-focus.mjs`, `check-doc-links.mjs`, `check-doc-links-proof.mjs`, `check-schema.mjs`,
   `tools/quality-policy/test-inventory.mjs`, and `tools/quality-policy/check-coverage-inventory.mjs`) exports a testable
   `run*` entry point and is exercised by `npm run test:tools` (`tests/js/check-patterns.test.mjs`,
@@ -118,9 +117,9 @@ JavaScript standards:
   `server/polarrecorder/`, the `Polarrecorder` namespace, `ConfigCache`/`Placeholders`, or Python-specific suppression
   forms live under `project/`. A rule may honor the generic `pattern-ignore: <rule-name>` suppression comment (on the
   offending line or the line above) via `fail()`'s optional `lines` argument.
-- `viewer/*.js` behavioral contracts are executed, not just pattern-matched: `tools/check-viewer-contracts.mjs` drives
-  the real scripts through the shared `tools/viewer-harness.mjs` and fails if any contract-valid payload renders a
-  `NaN`/`undefined`/`null` token, clobbers a present `0`, or skips the absent-value placeholder. It is the viewer twin
+- `viewer/*.js` behavioral contracts are executed, not just pattern-matched: `tests/js/viewer-render-contract.test.mjs`
+  drives the real scripts through the shared `tools/viewer-harness.mjs` and fails if any contract-valid payload renders
+  a `NaN`/`undefined`/`null` token, clobbers a present `0`, or skips the absent-value placeholder. It is the viewer twin
   of `check-runtime-contracts.py`.
 - No lint/type suppression comments (`eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `prettier-ignore`,
   `istanbul ignore`); fix the root cause.
@@ -143,7 +142,7 @@ JavaScript standards:
   fail until classified and exercised (they default to an 80 percent line / 65 percent branch floor until given an
   explicit one).
 - Viewer `Depends:` headers must match real cross-file `window.Polarrecorder` references, and `viewer/viewer.html` must
-  load the known viewer scripts in the documented order. `tools/check-smell-contracts.mjs` enforces both.
+  load the known viewer scripts in the documented order. `tests/js/viewer-structure-contract.test.mjs` enforces both.
 - Do not commit machine-local absolute paths (`/home/<user>/...`, `/Users/<user>/...`) in source, docs, workflow files,
   or release metadata; `tools/check-patterns.mjs` blocks them. Use project-relative or redacted placeholders.
 - The pre-push gate must be installed (`npm run hooks:install`); `npm run hooks:doctor` verifies `core.hooksPath` and

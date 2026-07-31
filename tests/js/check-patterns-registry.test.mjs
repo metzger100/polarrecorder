@@ -1,6 +1,5 @@
 /**
- * Contract tests for the declarative check-patterns rule registry (Phase E of the
- * quality-tooling convergence): the registry's rule names must match `PATTERN_RULE_IDS`
+ * Contract tests for the declarative check-patterns rule registry: the registry's rule names must match `PATTERN_RULE_IDS`
  * exactly (the drift assertion the smell catalog also depends on), and every file in the
  * generic rule directory must be free of project-specific tokens, so it can be lifted
  * verbatim into another repository that registers its own configuration.
@@ -8,14 +7,34 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
 import { PATTERN_RULE_IDS, RULES } from "../../tools/check-patterns.mjs";
+import { findMatchingBrace } from "../../tools/check-patterns/ast-utils.mjs";
+import { LINE_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-regex-generic-defs.mjs";
+import { runNamespacePolicyRule } from "../../tools/check-patterns/generic/namespace-policy.mjs";
+import { STRUCTURAL_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-core-generic-defs.mjs";
+import { TODO_WITHOUT_OWNER_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-failfast-generic-defs.mjs";
+import { runRegexRule } from "../../tools/check-patterns/rules-core.mjs";
 import { GENERIC_RULES, PROJECT_RULES } from "../../tools/check-patterns/rules.mjs";
 
-const FORBIDDEN_GENERIC_TOKENS = ["polarrecorder", "avnav", "pluginhandler", "configcache"];
-const GENERIC_DIR = path.join(process.cwd(), "tools", "check-patterns", "generic");
+const ROOT = process.cwd();
+const GENERIC_TOKENS_PATH = path.join(ROOT, "tools", "quality-policy", "generic-tokens.json");
+const PROJECT_SCOPES_PATH = path.join(ROOT, "tools", "quality-policy", "project-pattern-scopes.json");
+
+/**
+ * @param {string} [tokensPath]
+ * @returns {string[]}
+ */
+function readGenericTokens(tokensPath = GENERIC_TOKENS_PATH) {
+  const parsed = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  return [...parsed.projectTokens, ...parsed.domainTokens, ...parsed.hostTokens];
+}
+
+const FORBIDDEN_GENERIC_TOKENS = readGenericTokens();
+const GENERIC_DIR = path.join(ROOT, "tools", "check-patterns", "generic");
 
 /**
  * @param {string} dir
@@ -49,6 +68,40 @@ test("RULES is exactly the concatenation of GENERIC_RULES and PROJECT_RULES", ()
   );
 });
 
+test("the Tier 2 profile fixes every rule's final classification", () => {
+  const { canonicalGenericRuleNames } = JSON.parse(fs.readFileSync(PROJECT_SCOPES_PATH, "utf8"));
+  const genericNames = GENERIC_RULES.map((rule) => rule.name);
+  const projectNames = PROJECT_RULES.map((rule) => rule.name);
+  assert.deepEqual(genericNames, canonicalGenericRuleNames);
+  assert.deepEqual(
+    projectNames.filter((name) => canonicalGenericRuleNames.includes(name)),
+    []
+  );
+  assert.deepEqual(
+    RULES.filter((rule) => !canonicalGenericRuleNames.includes(rule.name)).map((rule) => rule.name),
+    projectNames
+  );
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "avnav-import"));
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "pluginhandler-import"));
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "reverse-plugin-import"));
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-lock-acquisition"));
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-time-sleep"));
+  assert.ok(!PROJECT_RULES.some((rule) => rule.name === "invalid-lint-suppression"));
+});
+
+test("generic engine helpers remain direct-importable manifest targets", () => {
+  assert.equal(findMatchingBrace("{}", 0), 1);
+  assert.equal(typeof runRegexRule, "function");
+  assert.equal(typeof runNamespacePolicyRule, "function");
+  assert.deepEqual(
+    GENERIC_RULES.slice(
+      0,
+      LINE_GENERIC_RULES.length + STRUCTURAL_GENERIC_RULES.length + TODO_WITHOUT_OWNER_GENERIC_RULES.length
+    ),
+    [...LINE_GENERIC_RULES, ...STRUCTURAL_GENERIC_RULES, ...TODO_WITHOUT_OWNER_GENERIC_RULES]
+  );
+});
+
 test("every generic rule-def file is free of project-specific tokens", () => {
   const files = listMjsFiles(GENERIC_DIR);
   assert.ok(files.length > 0, "expected at least one generic rule-def file");
@@ -61,4 +114,16 @@ test("every generic rule-def file is free of project-specific tokens", () => {
     }
   }
   assert.deepEqual(violations, []);
+});
+
+test("a token added to generic-tokens.json is picked up by this call site", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-tokens-single-owner-"));
+  const tokensPath = path.join(dir, "generic-tokens.json");
+  fs.writeFileSync(
+    tokensPath,
+    JSON.stringify({ projectTokens: ["zzz-synthetic-token"], domainTokens: [], hostTokens: [] })
+  );
+  const tokens = readGenericTokens(tokensPath);
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.ok(tokens.includes("zzz-synthetic-token"));
 });

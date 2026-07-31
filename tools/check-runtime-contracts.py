@@ -4,9 +4,8 @@
 The static ``nan-sentinel`` rule in check-py-contracts.py only catches *literal*
 ``float("nan")`` / ``math.nan``. A non-finite value produced at runtime (a
 division, a percentile over an empty band, a projection edge case) is invisible
-to AST scanning. This checker is the behavioral twin of the dyninstruments
-``mapper-output-no-nan`` / ``placeholder-contract`` checks: it populates a real
-model, formats the polar and CSV/Windy boundary responses, and fails if any
+to AST scanning. This checker populates a real model, formats the polar and
+CSV/Windy boundary responses, and fails if any
 number is NaN/Infinity or any export text carries a ``nan``/``inf`` sentinel.
 
 Run from the repo root. Exit 0 when clean, 1 when a non-finite value leaks.

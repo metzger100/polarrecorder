@@ -1,0 +1,21 @@
+{
+  "note": "Genericness token owner for reusable tooling. Matching is case-insensitive against the SHARED_INSTRUCTIONS block, every generic skill file, every Tier 1 tool module's full content, and every generic rule definition's content and rendered semantics.",
+  "projectTokens": ["polarrecorder", "polar recorder", "polar.json", "windy"],
+  "domainTokens": [
+    "widget",
+    "cluster",
+    "gauge",
+    "renderer",
+    "mapper",
+    "viewer",
+    "layout profile",
+    "componentContext",
+    "ClusterWidget",
+    "ResponsiveScaleProfile",
+    "widget-kits",
+    "editable",
+    "pluginhandler",
+    "configcache"
+  ],
+  "hostTokens": ["avnav", "AVNAV_BASE_URL", "avnav_api", "plugin.py", "plugin.js", "plugin.mjs"]
+}

@@ -16,7 +16,7 @@ import { execFileSync } from "node:child_process";
  * @param {{root?: string, print?: boolean}} [options]
  * @returns {{ok: boolean, failures: string[]}}
  */
-export function installHooks(options = {}) {
+export function runHooksInstall(options = {}) {
   const root = options.root || process.cwd();
   const print = options.print !== false;
   /** @type {string[]} */
@@ -51,6 +51,6 @@ export function installHooks(options = {}) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const result = installHooks();
+  const result = runHooksInstall();
   process.exit(result.ok ? 0 : 1);
 }
