@@ -122,7 +122,15 @@ JavaScript standards:
   a `NaN`/`undefined`/`null` token, clobbers a present `0`, or skips the absent-value placeholder. It is the viewer twin
   of `check-runtime-contracts.py`.
 - No lint/type suppression comments (`eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `prettier-ignore`,
-  `istanbul ignore`); fix the root cause.
+  `istanbul ignore`, `pattern-ignore`, or equivalent checker/boundary markers) are permitted in maintained source; fix
+  the root cause. `check:suppressions` scans source, tests, tools, configuration comments, documentation code examples,
+  and active plans, while ESLint independently rejects generated JavaScript suppression fixtures.
+- Reusable quality mechanisms belong behind the versioned portable-core contract. Keep product paths, namespaces, report
+  formats, release payloads, and environment details in local profiles or adapters. The exact-byte manifest and
+  signature must be updated with every Tier 1 implementation change; `npm run portable-core:attest` is an anonymous
+  deterministic evidence output.
+- External host spellings belong at explicit integration adapters. Domain protocols use local naming, and the adapter
+  owns host-only names or keyword arguments; do not spread host API spellings into domain modules or tests.
 - Every shipped JavaScript source file (`plugin.js`, `plugin.mjs`, every `viewer/*.js`) is fully JSDoc-typed and
   strictly no-emit `checkJs`-checked via `tsconfig.checkjs.json` (`strict`, `noEmit`, no runtime build output).
   `npm run typecheck:source` fails if the live shipped-source set drifts from `tsconfig.checkjs.json`'s `include` list
@@ -143,8 +151,8 @@ JavaScript standards:
   explicit one).
 - Viewer `Depends:` headers must match real cross-file `window.Polarrecorder` references, and `viewer/viewer.html` must
   load the known viewer scripts in the documented order. `tests/js/viewer-structure-contract.test.mjs` enforces both.
-- Do not commit machine-local absolute paths (`/home/<user>/...`, `/Users/<user>/...`) in source, docs, workflow files,
-  or release metadata; `tools/check-patterns.mjs` blocks them. Use project-relative or redacted placeholders.
+- Do not commit machine-local absolute paths in source, docs, workflow files, or release metadata;
+  `tools/check-patterns.mjs` blocks them. Use project-relative or redacted placeholders.
 - The pre-push gate must be installed (`npm run hooks:install`); `npm run hooks:doctor` verifies `core.hooksPath` and
   the hook are configured.
 

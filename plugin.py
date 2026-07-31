@@ -71,6 +71,18 @@ class _CurrentValues(NamedTuple):
     stw_timestamp: float
 
 
+class StoreBoundaryAdapter:
+    """Adapt the host store spelling to the domain reader contract."""
+
+    def __init__(self, api: AVNApi) -> None:
+        """Store the host API boundary."""
+        self._api = api
+
+    def get_single_value(self, key: str, include_info: bool = False) -> Any:
+        """Read one host store value using the domain naming contract."""
+        return self._api.getSingleValue(key, includeInfo=include_info)
+
+
 class Plugin:
     """AvNav plugin entry point."""
 
@@ -170,7 +182,9 @@ class Plugin:
         self._user_app_registered = True
 
     def _run_iteration(self, config: Config) -> None:
-        store_reader = StoreReader(self.api, self._clock, self._wall_clock, self._logger, config)
+        store_reader = StoreReader(
+            StoreBoundaryAdapter(self.api), self._clock, self._wall_clock, self._logger, config
+        )
         read_result = store_reader.read()
         data_status = _data_status(read_result)
         if self._paused:

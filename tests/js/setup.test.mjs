@@ -89,7 +89,11 @@ test("actionlint missing cache fails with repair guidance", () => {
 test("actionlint rejects an in-repo cache dir", () => {
   assert.throws(() => {
     execFileSync("bash", [path.join(ROOT, "tools", "actionlint.sh"), "--install"], {
-      env: { ...process.env, ACTIONLINT_CACHE_DIR: path.join(ROOT, "node_modules", ".actionlint") },
+      env: {
+        ...process.env,
+        ACTIONLINT_CACHE_DIR: path.join(ROOT, "node_modules", ".actionlint"),
+        POLARRECORDER_ISOLATED_CHECK: "0"
+      },
       stdio: "pipe"
     });
   }, /must not resolve inside the repository/);

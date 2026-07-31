@@ -117,6 +117,20 @@ function classify(relativePath) {
       alternateValidation: "tests/test_export.py exercises the exact CSV bytes"
     };
   }
+  if (relativePath.endsWith(".txt")) {
+    return {
+      owner: "unsupported",
+      reason: "plain-text fixture; content is asserted by its owning contract test rather than machine-formatted",
+      alternateValidation: "owning portable-core fixture test asserts exact bytes"
+    };
+  }
+  if (relativePath.endsWith(".sha256")) {
+    return {
+      owner: "unsupported",
+      reason: "digest signature; exact bytes are validated by the owning manifest checker",
+      alternateValidation: "npm run check:shared-core verifies the signature and manifest bytes"
+    };
+  }
   if (
     relativePath === ".gitignore" ||
     relativePath === ".prettierignore" ||

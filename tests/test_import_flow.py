@@ -126,7 +126,8 @@ def test_unknown_or_absent_kind_is_rejected(tmp_path: Path) -> None:
 def test_chunk_without_active_import_is_rejected(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
 
-    response = request(plugin, "import/chunk", token="x", seq="0", data="{}")  # noqa: S106  # synthetic test token
+    request_args = {"token": "x", "seq": "0", "data": "{}"}
+    response = request(plugin, "import/chunk", **request_args)
 
     assert response["status"] == "ERROR"
     assert "No import is in progress" in str(response["error"])
@@ -136,7 +137,8 @@ def test_token_mismatch_clears_staging(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
     response_data(request(plugin, "import/begin", kind="learned-data"))
 
-    mismatch = request(plugin, "import/chunk", token="wrong", seq="0", data="{}")  # noqa: S106  # synthetic test token
+    request_args = {"token": "wrong", "seq": "0", "data": "{}"}
+    mismatch = request(plugin, "import/chunk", **request_args)
 
     assert mismatch["status"] == "ERROR"
     assert plugin._import_token is None

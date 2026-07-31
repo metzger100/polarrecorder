@@ -149,6 +149,15 @@ export function main(argv = process.argv.slice(2)) {
 }
 
 /**
+ * Canonical release-preparation entry point for tests and local adapters.
+ * @param {string[]} [argv]
+ * @returns {void}
+ */
+export function runReleasePrepare(argv = process.argv.slice(2)) {
+  main(argv);
+}
+
+/**
  * @param {RunGit} runGit
  * @returns {string | null}
  */

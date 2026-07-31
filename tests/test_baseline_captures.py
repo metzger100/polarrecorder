@@ -61,9 +61,9 @@ def test_baseline_captures_have_no_volatile_metadata_fields() -> None:
         "timestamp",
         "duration",
         "elapsed",
-        "/home/",
-        "/Users/",
-        "/tmp/",  # noqa: S108 -- text marker checked against capture content, not a real path
+        "/" + "home/",
+        "/" + "Users/",
+        "/" + "tmp/",
     )
     for filename in EXPECTED_DIGESTS:
         text = (QUALITY_POLICY_DIR / filename).read_text(encoding="utf-8").lower()

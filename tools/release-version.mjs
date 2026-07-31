@@ -100,6 +100,15 @@ export function main(argv = process.argv.slice(2)) {
   }
 }
 
+/**
+ * Canonical semantic-version checker entry point.
+ * @param {string[]} [argv]
+ * @returns {void}
+ */
+export function runReleaseVersion(argv = process.argv.slice(2)) {
+  main(argv);
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }

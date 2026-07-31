@@ -6,6 +6,7 @@ import { PYTHON_PROJECT_RULES } from "./project/python-rules.mjs";
 import { JS_PROJECT_RULES } from "./project/js-rules.mjs";
 import { NAMESPACE_TOKEN_CONSISTENCY_RULES } from "./project/namespace-token-consistency.mjs";
 import { runRegexRule } from "./rules-core.mjs";
+import { CANONICAL_GENERIC_RULE_IDS } from "./generic/canonical-rule-ids.mjs";
 
 export { runRegexRule };
 
@@ -30,6 +31,10 @@ export const GENERIC_RULES = [
   ...JS_PROJECT_RULES.filter((rule) => RECLASSIFIED_GENERIC_NAMES.has(rule.name)),
   ...PYTHON_PROJECT_RULES.filter((rule) => RECLASSIFIED_GENERIC_NAMES.has(rule.name))
 ];
+
+if (JSON.stringify(GENERIC_RULES.map((rule) => rule.name)) !== JSON.stringify(CANONICAL_GENERIC_RULE_IDS)) {
+  throw new Error("generic rule registry drifted from the canonical portable rule identifiers");
+}
 
 // Rule ids that encode product-specific runtime or namespace contracts.
 /** @type {Rule[]} */

@@ -60,6 +60,14 @@ Polar Recorder actually uses.
   race under concurrent file execution.
 - `npm run test:tools` runs the Vitest `tools` project over the custom JS quality-tooling self-tests, including positive
   and clean cases for `tools/check-patterns.mjs` fail-fast rules.
+- The manifest-listed portable-core self-tests cover path containment, duplicate-key rejection, schema/profile
+  validation, file-size/focus/documentation/hook/format/complexity/coverage/inventory/release policies, generic-rule
+  registry completeness, deterministic anonymous attestation, and standalone-boundary behavior. Their negative cases are
+  product-neutral and fail closed on malformed, stale, duplicate, escaping, or parity-drifting data.
+- `npm run check:suppressions` scans maintained comments lexically without treating directive-like strings as comments.
+  Its negative test writes temporary Python and JavaScript directives; `eslint.config.mjs` independently rejects a
+  generated JavaScript directive through `no-warning-comments` and `noInlineConfig`. The maintained tree therefore
+  contains neither suppressions nor encoded suppression comments in fixtures.
 - `npm run typecheck:source` (`tools/quality-policy/typecheck-source.mjs`) strictly no-emit `checkJs`-types every
   shipped `plugin.js`, `plugin.mjs`, and `viewer/*.js` file against `tsconfig.checkjs.json` and fails if the live
   shipped-source set drifts from that config's `include` list. `tests/js/typecheck-source.test.mjs` proves the
@@ -116,6 +124,9 @@ Polar Recorder actually uses.
   (`allow_nan=False, allow_infinity=False`) so no NaN/Infinity filtering is hidden inside production code; float-bound
   assertions carry a small epsilon where floating-point modulo/rounding can legitimately overshoot an exact mathematical
   bound by a few ULPs.
+- The final reproducibility proof runs `npm run check:all` in the normal checkout and in a fresh isolated copy that
+  contains only this repository. Required gates do not install dependencies or read sibling directories; the portable
+  attestation is emitted twice and the bytes must match exactly.
 
 ## Related
 

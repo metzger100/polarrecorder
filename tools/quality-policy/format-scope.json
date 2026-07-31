@@ -219,10 +219,6 @@
       "alternateValidation": "none needed"
     },
     {
-      "path": "exec-plans/active/PLAN10.md",
-      "owner": "prettier"
-    },
-    {
       "path": "install.sh",
       "owner": "unsupported",
       "reason": "no maintained shell formatter in this inventory",
@@ -300,6 +296,14 @@
     },
     {
       "path": "schemas/polar-plugin-release.schema.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "schemas/portable-core-contract.schema.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "schemas/portable-profile.schema.json",
       "owner": "prettier"
     },
     {
@@ -447,6 +451,16 @@
       "owner": "ruff"
     },
     {
+      "path": "tests/fixtures/portable-core/attestation.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/fixtures/portable-core/clean.txt",
+      "owner": "unsupported",
+      "reason": "plain-text fixture; content is asserted by its owning contract test rather than machine-formatted",
+      "alternateValidation": "owning portable-core fixture test asserts exact bytes"
+    },
+    {
       "path": "tests/js/agents-pointer.test.mjs",
       "owner": "prettier"
     },
@@ -523,6 +537,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tests/js/generic-rule-corpus.test.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/js/header-contract.test.mjs",
       "owner": "prettier"
     },
@@ -548,6 +566,10 @@
     },
     {
       "path": "tests/js/plugin-entrypoints.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/portable-core.test.mjs",
       "owner": "prettier"
     },
     {
@@ -604,6 +626,10 @@
     },
     {
       "path": "tests/js/smell-catalog-contract.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/js/suppression-policy.test.mjs",
       "owner": "prettier"
     },
     {
@@ -941,6 +967,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-patterns/generic/canonical-rule-ids.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-patterns/generic/duplication-rules.mjs",
       "owner": "prettier"
     },
@@ -1017,6 +1047,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-standalone-boundary.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-test-focus.mjs",
       "owner": "prettier"
     },
@@ -1047,6 +1081,66 @@
     {
       "path": "tools/mock-server.py",
       "owner": "ruff"
+    },
+    {
+      "path": "tools/portable-core-attest.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/complexity-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/coverage-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/doc-link-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/file-size-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/focused-test-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/format-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/hook-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/json.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/lint-policy.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/path-policy.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/release-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/schema-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/suppression-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/test-inventory-engine.mjs",
+      "owner": "prettier"
     },
     {
       "path": "tools/quality-policy/baseline-coverage-capture.json",
@@ -1129,6 +1223,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/portable-core-contract.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/project-file-size-scope.json",
       "owner": "prettier"
     },
@@ -1155,6 +1253,12 @@
     {
       "path": "tools/quality-policy/shared-core-manifest.json",
       "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/shared-core-manifest.sha256",
+      "owner": "unsupported",
+      "reason": "digest signature; exact bytes are validated by the owning manifest checker",
+      "alternateValidation": "npm run check:shared-core verifies the signature and manifest bytes"
     },
     {
       "path": "tools/quality-policy/shared-instructions.md",
@@ -1332,8 +1436,8 @@
     }
   ],
   "countByOwner": {
-    "prettier": 208,
-    "unsupported": 23,
+    "prettier": 231,
+    "unsupported": 25,
     "ruff": 90
   }
 }

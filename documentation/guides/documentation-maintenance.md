@@ -40,6 +40,10 @@ npm run docs:check
 npm run check:fast
 python -m pytest tests/ --tb=short
 node tools/release-archive.mjs --dry-run
+node tools/check-shared-core.mjs
+node tools/check-generic-surface.mjs
+node tools/portable-core-attest.mjs
+node tools/portable-core/suppression-engine.mjs
 ```
 
 Touchpoint matrix:
@@ -89,6 +93,14 @@ Related non-Markdown documentation-adjacent checks:
   corpus in `tools/quality-policy/plugin-schema-corpus.json`) in the same change as any `plugin.json` shape change.
 - `npm run dependencies:audit` (`npm audit`) is a maintainer-only, networked advisory check, never part of `check:all`;
   a clean run only reflects the advisory database's current contents, not a guarantee.
+- Portable quality tooling is governed by the versioned contract at `tools/quality-policy/portable-core-contract.json`
+  and the exact-byte signed manifest beside it. Keep reusable mechanisms generic and place product paths, release
+  payloads, and report shapes in local profiles or adapters. Anonymous attestation output is limited to approved digests
+  and must be byte-stable across consecutive runs.
+- Maintained source has a zero-inline-suppression policy. Add negative suppression fixtures only as runtime-generated
+  temporary files, then run both the source scanner and the standard linter proof.
+- Before closing a broad tooling change, copy the repository into a fresh isolated directory with no neighboring inputs,
+  run the complete gate without network access, and compare two attestation outputs byte-for-byte.
 
 AvNav documentation rule:
 

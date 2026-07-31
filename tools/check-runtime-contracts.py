@@ -16,15 +16,11 @@ from __future__ import annotations
 import math
 import re
 import sys
-from pathlib import Path
+from typing import Any
 
-ROOT = Path(__file__).resolve().parent.parent
-SERVER = ROOT / "server"
-sys.path.insert(0, str(SERVER))
-
-from polarrecorder import api_handlers, export  # noqa: E402  # tool path setup precedes imports
-from polarrecorder.polar_model import PolarModel  # noqa: E402  # tool path setup precedes imports
-from polarrecorder.sample import Freshness, Sample  # noqa: E402  # tool path setup precedes imports
+from polarrecorder import api_handlers, export
+from polarrecorder.polar_model import PolarModel
+from polarrecorder.sample import Freshness, Sample
 
 SAMPLE_COUNT = 4000
 KNOTS_PER_METER_PER_SECOND = 1.9438444924406048
@@ -126,7 +122,7 @@ def _csv_text(export_response: dict[str, object]) -> str:
     return csv
 
 
-def sample_for(index: int) -> Sample:
+def sample_for(index: int) -> Any:
     """Return one deterministic accepted sample spread across common bins."""
     twa = float(index % 181)
     tws_kt = float(export.WINDY_TWS[index % len(export.WINDY_TWS)])

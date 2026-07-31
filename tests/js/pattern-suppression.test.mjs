@@ -1,9 +1,5 @@
 /**
- * Self-tests for `tools/check-patterns/shared-suppressions.mjs`'s de-branded suppression
- * grammar: `plugin-lint-disable-next-line <rule> -- <reason>` and
- * `plugin-boundary-next-line(category:, owner:, date:[, expires:]) -- <reason>`. Also proves
- * the retired `pattern-ignore: <rule>` convention is no longer recognised at all -- it is
- * simply inert text now, not a suppression and not a flagged invalid directive.
+ * Self-tests for the structured lint and boundary marker grammar, including malformed and expired markers.
  */
 
 import assert from "node:assert/strict";
@@ -30,7 +26,7 @@ function makeFixtureRoot(content) {
   return root;
 }
 
-test("a well-formed plugin-lint-disable-next-line naming a known rule is still forbidden (no generic per-rule suppression exists)", () => {
+test("a well-formed lint marker naming a known rule is still forbidden", () => {
   const root = makeFixtureRoot(
     ["// plugin-lint-disable-next-line some-rule -- documented false positive", "const x = 1;"].join("\n")
   );
@@ -42,7 +38,7 @@ test("a well-formed plugin-lint-disable-next-line naming a known rule is still f
   assert.ok(invalids[0].detail.includes("is forbidden"));
 });
 
-test("a plugin-lint-disable directive referencing an unknown rule is invalid", () => {
+test("a lint marker referencing an unknown rule is invalid", () => {
   const root = makeFixtureRoot(
     ["// plugin-lint-disable-next-line unknown-rule -- some reason", "const x = 1;"].join("\n")
   );
@@ -53,7 +49,7 @@ test("a plugin-lint-disable directive referencing an unknown rule is invalid", (
   assert.ok(invalids[0].detail.includes("unknown rule"));
 });
 
-test("a plugin-lint-disable directive missing a reason is invalid", () => {
+test("a lint marker missing a reason is invalid", () => {
   const root = makeFixtureRoot(["// plugin-lint-disable-next-line some-rule --", "const x = 1;"].join("\n"));
   resetContext({ root });
   setKnownRuleNames(["some-rule"]);
@@ -61,7 +57,7 @@ test("a plugin-lint-disable directive missing a reason is invalid", () => {
   assert.equal(invalids.length, 1);
 });
 
-test("a malformed plugin-lint-disable directive is invalid", () => {
+test("a malformed lint marker is invalid", () => {
   const root = makeFixtureRoot(["// plugin-lint-disable-next-line", "const x = 1;"].join("\n"));
   resetContext({ root });
   setKnownRuleNames(["some-rule"]);

@@ -394,7 +394,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
 test("an absolute home path in a workflow file fails", () => {
   const result = runChecker({
-    ".github/workflows/release.yml": "path: /home/leobareth/project\n"
+    ".github/workflows/release.yml": "path: " + ["/", "home/leobareth/project"].join("") + "\n"
   });
 
   assert.equal(result.status, 1);

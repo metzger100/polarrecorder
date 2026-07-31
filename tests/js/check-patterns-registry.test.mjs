@@ -2,7 +2,7 @@
  * Contract tests for the declarative check-patterns rule registry: the registry's rule names must match `PATTERN_RULE_IDS`
  * exactly (the drift assertion the smell catalog also depends on), and every file in the
  * generic rule directory must be free of project-specific tokens, so it can be lifted
- * verbatim into another repository that registers its own configuration.
+ * verbatim into an independent repository that registers its own configuration.
  */
 
 import assert from "node:assert/strict";

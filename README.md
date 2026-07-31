@@ -513,6 +513,13 @@ JavaScript tests under Vitest (`npm run test:python`, `npm run test:viewer`, `np
 `npm run test:plugin`). See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and the bounded `check:fast` iteration
 gate.
 
+The developer quality contract is local and fail-closed: `npm run check:shared-core` verifies the versioned exact-byte
+manifest, `npm run check:generic-surface` runs the blocking genericness scan, and `npm run check:suppressions` enforces
+zero inline suppression comments. `npm run portable-core:attest` emits an anonymous deterministic digest record
+containing only the contract version, manifest digest, and entry digests. For reproducibility, the complete
+`npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no network
+access or neighboring-directory inputs.
+
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
 republishes an already-committed local artifact when a `v*` tag is pushed. See the
 [release workflow guide](documentation/guides/release-workflow.md) for the full flow. Before publishing, run the manual

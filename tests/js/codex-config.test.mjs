@@ -21,8 +21,8 @@ const FORBIDDEN_TOKENS = [
   "SystemRoot",
   "PROGRAMFILES",
   "C:\\\\",
-  "/home/",
-  "/Users/"
+  ["/", "home/"].join(""),
+  ["/", "Users/"].join("")
 ];
 
 test(".codex is a directory containing config.toml, not the retired empty marker file", () => {

@@ -158,9 +158,12 @@ def _build_counters(data: dict[str, object]) -> Counters:
     )
 
 
+EXPECTED_ADDRESS_PARTS = 2
+
+
 def _parse_address(raw_address: str) -> tuple[int, int]:
     parts = raw_address.split("_")
-    if len(parts) != 2:  # noqa: PLR2004  # bin keys are exactly "{twa}_{tws}"
+    if len(parts) != EXPECTED_ADDRESS_PARTS:
         msg = f"Bin address {raw_address!r} is malformed"
         raise RestoreError(msg)
     try:
