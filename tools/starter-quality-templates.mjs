@@ -2,10 +2,15 @@
  * Shared deterministic starter quality templates. This module is development tooling only.
  */
 
+const STARTER_COMPLEXITY_LIMIT = "10";
+const STARTER_STATEMENTS_LIMIT = "40";
+const STARTER_DEPTH_LIMIT = "4";
+const STARTER_PARAMS_LIMIT = "6";
+
 /** @returns {string} */
 export function markdownlintConfigText() {
   return `{
-  "globs": ["README.md", "AGENTS.md", ".agents/skills/**/*.md"],
+  "globs": ["**/*.md", "!node_modules/**", "!coverage/**", "!.venv/**", "!.pytest_cache/**", "!.quality-cache/**"],
   "config": { "default": true, "MD013": false, "MD033": false, "MD041": false }
 }\n`;
 }
@@ -72,8 +77,8 @@ export function starterPrettierConfigText() {
     {
       arrowParens: "always",
       bracketSpacing: true,
-      printWidth: 240,
-      proseWrap: "never",
+      printWidth: 120,
+      proseWrap: "always",
       semi: true,
       singleQuote: false,
       tabWidth: 2,
@@ -91,9 +96,9 @@ export function eslintConfigText() {
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/**", "coverage/**"] },
+  { ignores: ["node_modules/**", "coverage/**", "dist/**", ".venv/**", ".quality-cache/**"] },
   {
-    files: ["plugin.js", "tests/**/*.mjs", "tools/**/*.mjs"],
+    files: ["**/*.js", "**/*.mjs"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -104,11 +109,19 @@ export default [
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
-      "no-var": "error",
-      "no-console": "off"
+      "no-var": "error"
     }
   },
-  { files: ["plugin.js"], rules: { "no-console": "error" } }
+  {
+    files: ["plugin.js", "plugin.mjs", "viewer/**/*.js", "viewer/**/*.mjs", "server/**/*.js", "server/**/*.mjs", "src/**/*.js", "src/**/*.mjs"],
+    rules: {
+      "no-console": "error",
+      complexity: ["error", ${STARTER_COMPLEXITY_LIMIT}],
+      "max-statements": ["error", ${STARTER_STATEMENTS_LIMIT}],
+      "max-depth": ["error", ${STARTER_DEPTH_LIMIT}],
+      "max-params": ["error", ${STARTER_PARAMS_LIMIT}]
+    }
+  }
 ];
 `;
 }
@@ -120,12 +133,12 @@ export function vitestConfigText() {
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/plugin-runtime.test.mjs", "tests/portable-core/**/*.test.mjs"],
-    coverage: {
+      include: ["tests/plugin-runtime.test.mjs", "tests/portable-core/**/*.test.mjs"],
+      coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
-      include: ["plugin.js"],
-      exclude: ["tests/**", "tools/**"],
+      include: ["*.js", "*.mjs", "viewer/**/*.js"],
+      exclude: ["tests/**", "tools/**", ".venv/**", ".quality-cache/**", "eslint.config.mjs", "vitest.config.js"],
       thresholds: { lines: 80, functions: 80, statements: 80, branches: 60 }
     }
   }
@@ -148,7 +161,8 @@ export function tsConfigText() {
     "target": "ES2022",
     "types": ["node"]
   },
-  "include": ["plugin.js", "tools/**/*.mjs", "tests/**/*.mjs"]
+  "include": ["**/*.js", "**/*.mjs"],
+  "exclude": ["node_modules", "coverage", ".venv", ".quality-cache"]
 }\n`;
 }
 
@@ -157,7 +171,7 @@ export function jscpdConfigText() {
   return `{
   "absolute": true,
   "format": ["javascript"],
-  "ignore": ["node_modules/**", "coverage/**"],
+  "ignore": ["node_modules/**", "coverage/**", "dist/**", ".quality-cache/**"],
   "minLines": 20,
   "minTokens": 80,
   "reporters": ["console"],
@@ -165,105 +179,74 @@ export function jscpdConfigText() {
 }\n`;
 }
 
-/** @returns {string} */
-export function qualityVitestTestText() {
+/** @param {{id: string}} options @returns {string} */
+export function qualityVitestTestText(options) {
   return `import { expect, test } from "vitest";
 
 test("runtime registers through the host boundary", async () => {
-  const host = /** @type {any} */ (globalThis);
-  const registrations = /** @type {Array<{id: string}>} */ ([]);
-  host.avnav = {
-    api: {
-      /** @param {{id: string}} value */
-      registerPlugin(value) {
-        const registration = /** @type {{id: string}} */ (value);
-        registrations.push(registration);
-      }
-    }
-  };
+  const identity = "${options.id}";
   await import("../plugin.js");
-  expect(registrations).toEqual([{ id: "generated-plugin" }]);
-  delete host.avnav;
-  const missingHostModule = /** @type {string} */ ("../plugin.js?missing-host");
-  await expect(import(missingHostModule)).rejects.toThrow(/plugin API is unavailable/);
+  expect(identity).toMatch(/^[a-z][a-z0-9-]{2,39}$/);
+  const module = await import("../plugin.mjs");
+  const logs = /** @type {string[]} */ ([]);
+  await expect(module.default({ getBaseUrl: () => "https://host/plugin", log: (message) => logs.push(String(message)) })).resolves.toBeUndefined();
+  expect(logs).toEqual([identity + " initialized"]);
+  await expect(module.default({})).rejects.toThrow(/getBaseUrl/);
 });
 `;
 }
 
 /** @returns {string} */
-export function starterQualityChecksText() {
-  return [
-    'import fs from "node:fs";',
-    'import path from "node:path";',
-    'import Ajv2020 from "ajv/dist/2020.js";',
-    'import { runComplexityPolicy, STRICT_LIMITS } from "./portable-core/complexity-engine.mjs";',
-    'import { runDocumentationLinkPolicy } from "./portable-core/doc-link-engine.mjs";',
-    'import { runFileSizePolicy } from "./portable-core/file-size-engine.mjs";',
-    'import { runFocusedTestPolicy } from "./portable-core/focused-test-engine.mjs";',
-    "const command = process.argv[2];",
-    "/** @type {string[]} */",
-    'const files = listFiles(".").filter((file) => !file.startsWith("node_modules/") && !file.startsWith("coverage/"));',
-    'if (command === "schema") checkSchema();',
-    'else if (command === "focus") checkFocus();',
-    'else if (command === "filesize") checkFileSize();',
-    'else if (command === "standalone") checkStandalone();',
-    'else if (command === "complexity") checkComplexity();',
-    'else if (command === "scaling") checkScaling();',
-    'else if (command === "docs") checkDocs();',
-    'else throw new Error("unknown starter quality check: " + command);',
-    "function checkSchema() {",
-    '  const schema = JSON.parse(fs.readFileSync("schemas/plugin.schema.json", "utf8"));',
-    "  const AjvConstructor = /** @type {any} */ (Ajv2020);",
-    "  const validate = new AjvConstructor({ allErrors: true, strict: true }).compile(schema);",
-    '  if (!validate(JSON.parse(fs.readFileSync("plugin.json", "utf8")))) throw new Error("plugin.json schema mismatch: " + JSON.stringify(validate.errors));',
-    '  console.log("Schema check passed.");',
-    "}",
-    "function checkFocus() {",
-    '  const testFiles = Object.fromEntries(files.filter((file) => /^tests\\/.*\\.(?:js|mjs)$/.test(file)).map((file) => [file, stripLiteralsAndComments(fs.readFileSync(file, "utf8"))]));',
-    "  const result = runFocusedTestPolicy({ files: testFiles });",
-    '  if (!result.ok) throw new Error(result.failures.join("\\n"));',
-    '  console.log("Focused-test check passed.");',
-    "}",
-    "function checkFileSize() {",
-    '  const sourceFiles = Object.fromEntries(files.filter((file) => /\\.(?:js|mjs|md|py)$/.test(file)).map((file) => [file, fs.readFileSync(file, "utf8")]));',
-    "  const result = runFileSizePolicy({ files: sourceFiles, limit: 400 });",
-    '  if (!result.ok) throw new Error(result.failures.join("\\n"));',
-    '  console.log("File-size check passed over " + Object.keys(sourceFiles).length + " files.");',
-    "}",
-    "function checkStandalone() {",
-    '  const runtime = fs.readFileSync("plugin.js", "utf8");',
-    '  if (/\\b(?:eval|var)\\b|innerHTML\\s*=|document\\.write|[A-Za-z]:[\\\\/]|(?:^|\\s)\\/(?![/*])/.test(runtime)) throw new Error("runtime boundary violation");',
-    '  if (/\\bimport\\s|\\bexport\\s/.test(runtime)) throw new Error("runtime must remain a classic script");',
-    '  console.log("Standalone runtime check passed.");',
-    "}",
-    "function checkComplexity() {",
-    "  const result = runComplexityPolicy({ limits: STRICT_LIMITS });",
-    '  if (!result.ok) throw new Error(result.failures.join("\\n"));',
-    '  console.log("Complexity policy check passed.");',
-    "}",
-    "function checkScaling() {",
-    '  const source = fs.readFileSync("plugin.js", "utf8");',
-    '  if (/while\\s*\\(\\s*true\\s*\\)/.test(source)) throw new Error("unbounded runtime loop");',
-    '  console.log("Scaling policy check passed.");',
-    "}",
-    "function checkDocs() {",
-    '  const readme = fs.readFileSync("README.md", "utf8");',
-    "  const targets = new Set(files);",
-    "  const links = [...readme.matchAll(/\\[[^]]+\\]\\(([^)#]+)(?:#[^)]+)?\\)/g)].map((match) => match[1]);",
-    '  const result = runDocumentationLinkPolicy({ links: { "README.md": links }, files: [...targets] });',
-    '  if (!result.ok) throw new Error(result.failures.join("\\n"));',
-    '  console.log("Documentation-link check passed.");',
-    "}",
-    "/** @param {string} source @returns {string} */",
-    "function stripLiteralsAndComments(source) {",
-    "  return source.replace(/(\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'|`(?:\\\\.|[^`\\\\])*`|\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\r\\n]*)/g, String.fromCharCode(32));",
-    "}",
-    "/** @param {string} entry @returns {string[]} */",
-    "function listFiles(entry) {",
-    "  if (!fs.existsSync(entry)) return [];",
-    '  if (fs.statSync(entry).isFile()) return [entry.replaceAll(path.sep, "/")];',
-    "  return fs.readdirSync(entry, { withFileTypes: true }).flatMap((item) => listFiles(path.join(entry, item.name)));",
-    "}",
-    ""
-  ].join("\n");
+export function generatedDocumentationIndexText() {
+  return `# Documentation index\n\n**Status:** Current.\n\n## Overview\n\nThis index routes contributors to the generated quality contract.\n\n## Key Details\n\n- [Coding standards](conventions/coding-standards.md) define runtime and file-ownership rules.\n- [Smell prevention](conventions/smell-prevention.md) lists blocking quality failures.\n- [Execution-plan authoring](guides/exec-plan-authoring.md) explains multi-session changes.\n\n## Related\n\n- [Project instructions](../AGENTS.md)\n- [Project README](../README.md)\n`;
+}
+
+/** @returns {string} */
+export function generatedCodingStandardsText() {
+  return `# Coding standards\n\n**Status:** Current.\n\n## Overview\n\nKeep runtime files dependency-free, host-compatible, typed, and covered.\n\n## Key Details\n\n- Use plain scripts for the legacy entry and an explicit module boundary for modern startup.\n- Add every new file under a declared source root and a focused test.\n- Run \`npm run check:all\`; never bypass a failing owner.\n\n## Related\n\n- [Smell prevention](smell-prevention.md)\n- [Documentation index](../TABLEOFCONTENTS.md)\n`;
+}
+
+/** @returns {string} */
+export function generatedSmellPreventionText() {
+  return `# Smell prevention\n\n**Status:** Current.\n\n## Overview\n\nQuality checks reject unsafe evaluation, unsafe DOM sinks, truthy default clobbering, duplicate logic, focused tests, unclassified files, and invalid documentation.\n\n## Key Details\n\n- Fix the owning source or configuration; do not add skips, ignored paths, or suppressions.\n- The generated policy scans runtime and test sources with the signed generic rules.\n- Coverage and file inventory checks fail when a new maintained file is not exercised or classified.\n\n## Related\n\n- [Coding standards](coding-standards.md)\n- [Documentation index](../TABLEOFCONTENTS.md)\n`;
+}
+
+/** @returns {string} */
+export function generatedPlanGuideText() {
+  return `# Execution-plan authoring\n\n**Status:** Current.\n\n## Overview\n\nUse one active plan for complex changes that cross runtime, tests, or quality policy.\n\n## Key Details\n\n- Record a verified baseline, ordered phases, executable exit conditions, and final evidence.\n- Keep permanent code and documentation independent of plan-number authority.\n- Run the full gate after each meaningful phase.\n\n## Related\n\n- [Documentation index](../TABLEOFCONTENTS.md)\n- [Project instructions](../../AGENTS.md)\n`;
+}
+
+/** @returns {string} */
+export function generatedPyprojectText() {
+  return `[tool.pytest.ini_options]\npython_files = ["test_*.py", "*_test.py"]\npythonpath = ["."]\n\n[tool.ruff]\ntarget-version = "py39"\nline-length = 100\n\n[tool.ruff.lint]\nselect = ["E", "F", "I", "UP", "B", "S", "C90", "RUF", "T20"]\nignore = ["S101"]\n\n[tool.mypy]\npython_version = "3.10"\nstrict = true\n`;
+}
+
+/** @returns {string} */
+export function generatedPythonRequirementsText() {
+  return "ruff==0.16.0\nmypy==2.3.0\npytest==9.1.1\npytest-cov==7.1.0\n";
+}
+
+export {
+  packageStarterText,
+  starterQualityChecksText,
+  generatedQualityCheckText
+} from "./starter-quality-template-parts.mjs";
+
+/** @returns {string} */
+export function hooksDoctorText() {
+  return `#!/usr/bin/env node
+
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+
+if (!fs.existsSync(".githooks/pre-push")) throw new Error(".githooks/pre-push is missing");
+let configured;
+try {
+  configured = execFileSync("git", ["config", "core.hooksPath"], { encoding: "utf8" }).trim();
+} catch (error) {
+  throw new Error("git hook configuration is unavailable: " + (error instanceof Error ? error.message : String(error)), { cause: error });
+}
+if (configured !== ".githooks") throw new Error("core.hooksPath must be .githooks; run npm run hooks:install");
+console.log("Pre-push hook is installed and points at .githooks.");
+`;
 }

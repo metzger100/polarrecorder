@@ -13,6 +13,9 @@
     "typeRoots": ["node_modules/@types"]
   },
   "files": [
+    "tools/check-alignment.mjs",
+    "tools/check-distribution.mjs",
+    "tools/regenerate-distribution-manifest.mjs",
     "tools/check-doc-links-proof.mjs",
     "tools/check-doc-links.mjs",
     "tools/check-file-size.mjs",
@@ -40,6 +43,7 @@
     "tools/check-test-focus.mjs",
     "tools/create-avnav-plugin-starter.mjs",
     "tools/starter-templates.mjs",
+    "tools/starter-quality-template-parts.mjs",
     "tools/starter-quality-templates.mjs",
     "tools/hooks-doctor.mjs",
     "tools/hooks-install.mjs",

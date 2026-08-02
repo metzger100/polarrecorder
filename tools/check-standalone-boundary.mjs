@@ -10,7 +10,18 @@ import { pathToFileURL } from "node:url";
 
 import { listRegularFiles, relativePath } from "./portable-core/path-policy.mjs";
 
-const SKIP_DIRS = new Set([".git", ".claude", ".vscode", "node_modules", "venv", "coverage", "releases"]);
+const SKIP_DIRS = new Set([
+  ".git",
+  ".claude",
+  ".vscode",
+  "node_modules",
+  "venv",
+  ".quality-cache",
+  "coverage",
+  "releases"
+]);
+// The distribution verifier must name rejected product tokens to detect them in neutral metadata.
+const SKIP_FILES = new Set(["tools/check-distribution.mjs", "tools/regenerate-distribution-manifest.mjs"]);
 const TEXT_EXTENSIONS = new Set([
   ".md",
   ".js",
@@ -41,7 +52,7 @@ function listMaintainedFiles(root) {
   return listRegularFiles(root).filter((file) => {
     const rel = relativePath(root, file);
     const first = rel.split("/")[0];
-    return !SKIP_DIRS.has(first) && TEXT_EXTENSIONS.has(path.extname(rel));
+    return !SKIP_DIRS.has(first) && !SKIP_FILES.has(rel) && TEXT_EXTENSIONS.has(path.extname(rel));
   });
 }
 

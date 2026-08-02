@@ -26,7 +26,7 @@ export {
  * }} Rule
  */
 
-const SKIP_DIRS = new Set(["node_modules", "coverage", "artifacts", "venv", "__pycache__"]);
+const SKIP_DIRS = new Set(["node_modules", "coverage", "artifacts", "venv", ".quality-cache", "__pycache__"]);
 const DEFAULT_INCLUDED_DOT_DIRS = new Set([".github", ".githooks"]);
 const PROJECT_PATTERN_SCOPES_PATH = path.join(
   path.dirname(new URL(import.meta.url).pathname),

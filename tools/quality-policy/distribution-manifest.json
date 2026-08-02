@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "distributionVersion": "1.0.0",
+  "sourceOwner": "avnav-plugin-ai-environment",
+  "materialization": "vendored-contract-output",
+  "portableCore": {
+    "coreVersion": "3.2.0",
+    "manifestSha256": "316222f0492f265fbe671b6c8585f6898eac37dee3474193b9bc245f2229fc16",
+    "genericRulesSha256": "a3b6a22066d4fa19dadd86e64cc821f1549eb9f471afd124346b6360e165c313"
+  },
+  "paths": {
+    "tools/check-alignment.mjs": "7d73f085d395f478678fc94ac240d09308c856a27da21f296a742d17e5a862ef",
+    "tools/check-distribution.mjs": "ef8933339171ab3861ed9c33ecd45e30f6b162b77dd40d924e46e697315d150f",
+    "tools/check-patterns/generic/namespace-policy.mjs": "d29681678850b4a760a3039bab05d4eb03d52226eb1f5cbad1c5f0479bfadabc",
+    "tools/check-quality-profile.mjs": "fd0199921f0d1d46e6e330d5c522208412fda5de62f09375c3ad5792c136efdd",
+    "tools/create-avnav-plugin-starter.mjs": "02db27accd4bbeaf586acf4ef2f135627c1bd3249baa312bc817db2b5cc18f9e",
+    "tools/portable-core/gate-role-engine.mjs": "58c5d274afada0cec50f54aaa6f467c60ef177a24ffd39008630a16f2e3ac92e",
+    "tools/portable-core/suppression-engine.mjs": "5dca9a94354d52746e1d14a0c65f1830063fc72d4bfee1ed9e9fc41fd31b1e2b",
+    "tools/quality-policy/alignment-inventory.json": "3769a80da23ee55dd663aafdcad9277a8d5612a1de64d038de6d78377d2b3eb5",
+    "tools/quality-policy/distribution-source.json": "adda40439ccb3fa21dc3e80df2bad09bbe2e35606f9762ad226b61bb4028a06f",
+    "tools/quality-policy/shared-core-manifest.json": "316222f0492f265fbe671b6c8585f6898eac37dee3474193b9bc245f2229fc16",
+    "tools/quality-policy/shared-core-manifest.sha256": "cff119c115fc8b7d3bf19c3b7a1a5582caf20f52bbddc9587ba03d7bb6e5b765",
+    "tools/regenerate-distribution-manifest.mjs": "82dd3ae5ae1bf551fdf45e67c631098e27b0f244d271500ccde8a5c2f7525518",
+    "tools/starter-quality-template-parts.mjs": "b7eca6d1ea5d109b8f8c17113578ab5f19a7b3ae494b238133d7fef61be5e6f8",
+    "tools/starter-quality-templates.mjs": "738ad02f65c232992e4db5507027e7910e527a8c8db9e7fd5610f90f11896fff",
+    "tools/starter-quality/package-lock-template.json": "80da70cc288f741af7e890b89dee134656202bd5ec1372ee5f02eb3fc0b1357b",
+    "tools/starter-templates.mjs": "51e937bc25c4ede8891043b6480018f3c07eccd5391a8e24b0ead06c5a572abc"
+  }
+}

@@ -25,7 +25,7 @@ export function runQualityProfileCheck(options = {}) {
   try {
     const { graph, profile } = readQualityBoundary(root);
     findings.push(...runGateRoleGraphCheck(graph).findings);
-    findings.push(...runProfileContractCheck(profile).findings);
+    findings.push(...runProfileContractCheck(profile, { root }).findings);
     const contract = readPortableCoreContract(root);
     if (profile.portableCore.coreVersion !== contract.coreVersion) {
       findings.push({

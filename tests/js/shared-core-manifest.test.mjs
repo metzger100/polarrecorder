@@ -14,7 +14,7 @@ import { runManifestPreconditionCheck, runSharedCoreCheck } from "../../tools/ch
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, "tools", "quality-policy", "shared-core-manifest.json");
-const ANCHORED_MANIFEST_DIGEST = "063b6043b352c0c69f4e8a0185c916c40abaa9a9b283307188d9a28082710a00";
+const ANCHORED_MANIFEST_DIGEST = "316222f0492f265fbe671b6c8585f6898eac37dee3474193b9bc245f2229fc16";
 
 /**
  * @returns {string}
