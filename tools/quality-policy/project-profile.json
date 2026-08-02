@@ -27,7 +27,7 @@
   ],
   "policies": {
     "coverage": "tools/quality-policy/coverage-floors.json",
-    "complexity": "tools/quality-policy/complexity-budget.mjs",
+    "complexity": "tools/quality-policy/eslint.complexity.config.mjs",
     "fileSize": "tools/quality-policy/project-file-size-scope.json"
   },
   "documentation": {

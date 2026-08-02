@@ -72,10 +72,12 @@ export function runGateRoleGraphCheck(graph) {
 /**
  * Validate a product profile's boundary fields and role adapter commands.
  * @param {unknown} profile
+ * @param {{root?: string}} [options]
  * @returns {{ok: boolean, findings: RoleFinding[]}}
  */
-export function runProfileContractCheck(profile) {
+export function runProfileContractCheck(profile, options = {}) {
   const value = /** @type {any} */ (profile);
+  const root = path.resolve(options.root || process.cwd());
   /** @type {RoleFinding[]} */
   const findings = [];
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -96,6 +98,24 @@ export function runProfileContractCheck(profile) {
   }
   if (!Array.isArray(value.sourceScopes) || value.sourceScopes.length === 0) {
     findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "sourceScopes must be non-empty" });
+  } else {
+    const scopeIds = value.sourceScopes.map((/** @type {any} */ scope) => scope && scope.id);
+    if (
+      scopeIds.some((/** @type {any} */ id) => typeof id !== "string" || !ROLE_ID.test(id)) ||
+      new Set(scopeIds).size !== scopeIds.length
+    ) {
+      findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "source scope ids must be unique role ids" });
+    }
+    for (const scope of value.sourceScopes) {
+      if (!scope || !Array.isArray(scope.roots) || scope.roots.length === 0) {
+        findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "each source scope needs roots" });
+        continue;
+      }
+      if (new Set(scope.roots).size !== scope.roots.length) {
+        findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: `scope '${scope.id}' has duplicate roots` });
+      }
+      for (const relativePath of scope.roots) checkRepositoryPath(root, relativePath, "source-scope", findings);
+    }
   }
   if (!Array.isArray(value.testProjects) || value.testProjects.length === 0) {
     findings.push({ path: PROFILE_PATH, kind: "test-project", detail: "testProjects must be non-empty" });
@@ -111,6 +131,28 @@ export function runProfileContractCheck(profile) {
       if (!project || !isCommand(project.command)) {
         findings.push({ path: PROFILE_PATH, kind: "command", detail: "test project command must be local" });
       }
+      for (const relativePath of project?.paths || []) {
+        checkRepositoryPath(root, relativePath, "test-project", findings);
+      }
+    }
+  }
+  if (!value.product || typeof value.product !== "object" || Array.isArray(value.product)) {
+    findings.push({ path: PROFILE_PATH, kind: "product", detail: "product identity is required" });
+  } else if (!ROLE_ID.test(value.product.id) || !["browser", "python-plus-browser"].includes(value.product.runtime)) {
+    findings.push({ path: PROFILE_PATH, kind: "product", detail: "product id/runtime is unsupported" });
+  }
+  if (!value.policies || typeof value.policies !== "object" || Array.isArray(value.policies)) {
+    findings.push({ path: PROFILE_PATH, kind: "policy", detail: "policies are required" });
+  } else {
+    for (const [policy, relativePath] of Object.entries(value.policies)) {
+      checkRepositoryPath(root, relativePath, `policy:${policy}`, findings, "file");
+    }
+  }
+  if (!value.documentation || !Array.isArray(value.documentation.roots) || value.documentation.roots.length === 0) {
+    findings.push({ path: PROFILE_PATH, kind: "documentation", detail: "documentation roots are required" });
+  } else {
+    for (const relativePath of value.documentation.roots) {
+      checkRepositoryPath(root, relativePath, "documentation", findings);
     }
   }
   if (!value.adapters || typeof value.adapters !== "object" || Array.isArray(value.adapters)) {
@@ -125,6 +167,30 @@ export function runProfileContractCheck(profile) {
   return { ok: findings.length === 0, findings };
 }
 
+/** @param {string} root @param {unknown} relativePath @param {string} kind @param {RoleFinding[]} findings @param {"file"|"directory"} [expectedKind] @returns {void} */
+function checkRepositoryPath(root, relativePath, kind, findings, expectedKind) {
+  if (!isRelativePath(relativePath)) {
+    findings.push({ path: PROFILE_PATH, kind: "path", detail: `${kind} path must be repository-relative` });
+    return;
+  }
+  const absolutePath = path.resolve(root, relativePath);
+  const relative = path.relative(root, absolutePath);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    findings.push({ path: PROFILE_PATH, kind: "path", detail: `${kind} path escapes repository root` });
+    return;
+  }
+  if (!fs.existsSync(absolutePath)) {
+    findings.push({ path: relativePath, kind: "stale-path", detail: `${kind} path does not exist` });
+    return;
+  }
+  if (expectedKind === "file" && !fs.statSync(absolutePath).isFile()) {
+    findings.push({ path: relativePath, kind: "path-kind", detail: `${kind} path must be a file` });
+  }
+  if (expectedKind === "directory" && !fs.statSync(absolutePath).isDirectory()) {
+    findings.push({ path: relativePath, kind: "path-kind", detail: `${kind} path must be a directory` });
+  }
+}
+
 /** @param {string} filePath @returns {unknown} */
 export function readPortableRoleGraph(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -135,7 +201,7 @@ export function readProjectProfile(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-/** @param {unknown} value @returns {boolean} */
+/** @param {unknown} value @returns {value is string} */
 function isRelativePath(value) {
   return typeof value === "string" && RELATIVE_PATH.test(value);
 }

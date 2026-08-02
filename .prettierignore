@@ -3,6 +3,7 @@
 # never Prettier's concern.
 node_modules/
 venv/
+.quality-cache/
 coverage/
 .hypothesis/
 releases/

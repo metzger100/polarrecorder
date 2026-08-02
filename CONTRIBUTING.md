@@ -88,6 +88,11 @@ path.
 - `npm run dependencies:audit` (`npm audit`) is a maintainer-only, networked advisory check; it is never part of
   `check:all` or any required gate, and a clean run is not evidence of anything beyond the advisory database's current
   contents.
+- `npm run distribution:source:check` verifies the neutral vendored distribution without Git, a sibling checkout, or
+  network; only maintainers should use `npm run distribution:source:write`. Pair it with `npm run check:distribution`
+  and `npm run check:alignment -- --peer /path/to/the/peer-repository` when changing shared quality sources. The
+  generated `viewer-only` and `python-plus-viewer` profiles are both required to pass their own complete
+  `npm run check:all` gate from archive-only copies.
 
 ## Change workflow
 

@@ -52,7 +52,9 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "check:strict",
   "dependencies:audit",
   "portable-core:attest",
-  "starter:create"
+  "starter:create",
+  "distribution:source:check",
+  "distribution:source:write"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */
@@ -281,11 +283,13 @@ function makeGraphFixture() {
     JSON.stringify({
       schemaVersion: 1,
       profileType: "product-quality-profile",
-      product: { id: "fixture", runtime: "node" },
+      product: { id: "fixture", runtime: "browser" },
       portableCore: { coreVersion: "3.2.0", roleGraph: "tools/quality-policy/portable-role-graph.json" },
       sourceScopes: [{ id: "fixture", roots: ["leaf.mjs"] }],
       languages: { javascript: true },
       testProjects: [{ id: "fixture", command: "node leaf.mjs fixture", paths: ["leaf.mjs"] }],
+      policies: { fixture: "leaf.mjs" },
+      documentation: { roots: ["tools"] },
       adapters
     })
   );

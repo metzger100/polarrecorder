@@ -3,17 +3,14 @@
 /**
  * Machine-readable disposition of every maintained file: `prettier`, `ruff`, or
  * `unsupported` (with an exact reason and alternate validation owner).
- * Discovers files via `git ls-files --cached --others --exclude-standard` (tracked plus
- * untracked-but-not-`.gitignore`d) rather than a hand-maintained list, so a new file --
- * committed or not yet staged -- is classified automatically and the format-scope
- * contract test fails loudly on anything genuinely unmatched.
+ * Discovers files from the filesystem rather than a hand-maintained list, so a new file
+ * is classified automatically even in an archive-only copy without a `.git` directory.
  *
  * Historical/generated exclusions (release ZIPs/notes, completed plans) are a separate,
  * narrow exclusion list, not "unsupported maintained files" -- they are not maintained
  * inputs at all.
  */
 
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -21,6 +18,25 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..",
 const OUTPUT_PATH = path.join(ROOT, "tools", "quality-policy", "format-scope.json");
 
 const HISTORICAL_EXCLUSION_PATTERNS = [/^releases\/.*\.(zip|md)$/, /^exec-plans\/completed\//];
+const GENERATED_STATE_DIRS = new Set([
+  ".cache",
+  ".claude",
+  ".git",
+  ".hypothesis",
+  ".mypy_cache",
+  ".pytest_cache",
+  ".quality-cache",
+  ".ruff_cache",
+  ".tox",
+  ".venv",
+  ".vscode",
+  "__pycache__",
+  "artifacts",
+  "coverage",
+  "data",
+  "node_modules",
+  "venv"
+]);
 
 const IMMUTABLE_CAPTURE_JSON_FILES = new Set([
   "tools/quality-policy/baseline-coverage-capture.json",
@@ -155,18 +171,7 @@ function classify(relativePath) {
  * @returns {{path: string, owner: string, reason?: string, alternateValidation?: string}[]}
  */
 export function runFormatScopeGeneration() {
-  // Tracked plus untracked-but-not-ignored files: mid-migration, several genuinely
-  // maintained files (a fresh package-lock.json, newly authored tools) are not yet
-  // staged/committed, and `git ls-files` alone would silently miss them.
-  const discovered = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], {
-    cwd: ROOT,
-    encoding: "utf8"
-  })
-    .split("\n")
-    .filter(Boolean);
-  const tracked = [...new Set(discovered)]
-    .filter((relativePath) => fs.existsSync(path.join(ROOT, relativePath)))
-    .sort();
+  const tracked = discoverFiles(ROOT).sort();
   /** @type {{path: string, owner: string, reason?: string, alternateValidation?: string}[]} */
   const rows = [];
   for (const relativePath of tracked) {
@@ -176,6 +181,17 @@ export function runFormatScopeGeneration() {
     rows.push({ path: relativePath, ...entry });
   }
   return rows.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+/** @param {string} directory @returns {string[]} */
+function discoverFiles(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory() && GENERATED_STATE_DIRS.has(entry.name)) return [];
+    if (!entry.isDirectory() && (entry.name === ".coverage" || entry.name.endsWith(".pyc"))) return [];
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) return discoverFiles(absolute);
+    return [path.relative(ROOT, absolute).split(path.sep).join("/")];
+  });
 }
 
 function main() {

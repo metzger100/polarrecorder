@@ -45,6 +45,18 @@ test("the profile rejects unsafe paths, recursive commands, and duplicate test p
   );
 });
 
+test("the profile rejects stale repository paths and duplicate source roots", function () {
+  const { profile } = readQualityBoundary(ROOT);
+  const invalid = structuredClone(profile);
+  invalid.sourceScopes[0].roots.push(invalid.sourceScopes[0].roots[0]);
+  invalid.policies.coverage = "tools/quality-policy/missing-policy.json";
+  const result = runProfileContractCheck(invalid, { root: ROOT });
+  expect(result.ok).toBe(false);
+  expect(result.findings.map((finding) => finding.kind)).toEqual(
+    expect.arrayContaining(["source-scope", "stale-path"])
+  );
+});
+
 test("the orchestrator executes canonical roles once and stops at the first failure", function () {
   const { graph, profile } = readQualityBoundary(ROOT);
   /** @type {string[]} */

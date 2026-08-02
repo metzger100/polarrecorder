@@ -21,7 +21,17 @@ const SOURCE_EXTENSIONS = new Set([
   ".yaml",
   ".yml"
 ]);
-const SKIP_DIRS = new Set([".git", ".claude", ".vscode", "coverage", "node_modules", "releases", "venv"]);
+const SKIP_DIRS = new Set([
+  ".git",
+  ".claude",
+  ".vscode",
+  "coverage",
+  "node_modules",
+  "releases",
+  "venv",
+  ".venv",
+  ".quality-cache"
+]);
 const DIRECTIVE_PATTERN =
   /eslint-disable|@ts-(?:ignore|nocheck|expect-error)|prettier-ignore|(?:c8|istanbul)\s+ignore|(?:#\s*)?(?:noqa|type:\s*ignore|mypy:)|pattern-ignore|plugin-(?:lint-disable|boundary)-/i;
 const MARKDOWN_FENCE_LANGUAGES = new Set([

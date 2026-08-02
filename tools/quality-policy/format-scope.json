@@ -963,6 +963,14 @@
       "alternateValidation": "bash -n syntax check (see check:filesize/test:tools shell smoke)"
     },
     {
+      "path": "tools/check-alignment.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-distribution.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-doc-links-proof.mjs",
       "owner": "prettier"
     },
@@ -1203,6 +1211,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/alignment-inventory.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/baseline-coverage-capture.json",
       "owner": "unsupported",
       "reason": "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
@@ -1238,6 +1250,14 @@
     },
     {
       "path": "tools/quality-policy/developer-python.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/distribution-manifest.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/distribution-source.json",
       "owner": "prettier"
     },
     {
@@ -1373,6 +1393,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/regenerate-distribution-manifest.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/release-archive.mjs",
       "owner": "prettier"
     },
@@ -1390,6 +1414,10 @@
     },
     {
       "path": "tools/release-version.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/starter-quality-template-parts.mjs",
       "owner": "prettier"
     },
     {
@@ -1534,7 +1562,7 @@
     }
   ],
   "countByOwner": {
-    "prettier": 254,
+    "prettier": 261,
     "unsupported": 26,
     "ruff": 90
   }

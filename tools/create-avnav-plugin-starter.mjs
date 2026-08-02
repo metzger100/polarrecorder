@@ -7,7 +7,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { buildStarterFiles } from "./starter-templates.mjs";
 
@@ -32,16 +33,33 @@ export function createStarter(options) {
     fs.writeFileSync(absolutePath, content, "utf8");
   }
   if (normalized.level === "quality" && normalized.profile === "python-plus-viewer") {
-    fs.writeFileSync(path.join(output, "plugin.py"), pythonPluginText(), "utf8");
-    fs.writeFileSync(path.join(output, "tests/plugin_python.test.py"), pythonTestText(), "utf8");
+    const pythonSource = pythonPluginText(normalized)
+      .replace("    def getBaseUrl(self) -> str:\n        ...", "    def getBaseUrl(self) -> str: ...")
+      .replace(
+        "    def registerUserApp(self, url: str, icon: str, title: str) -> None:\n        ...",
+        "    def registerUserApp(self, url: str, icon: str, title: str) -> None: ..."
+      );
+    fs.writeFileSync(path.join(output, "plugin.py"), pythonSource, "utf8");
+    fs.writeFileSync(path.join(output, "tests/test_plugin.py"), pythonTestText(normalized), "utf8");
   }
+  if (normalized.level === "quality") formatGeneratedFiles(output);
   return Object.keys(files)
     .concat(
       normalized.level === "quality" && normalized.profile === "python-plus-viewer"
-        ? ["plugin.py", "tests/plugin_python.test.py"]
+        ? ["plugin.py", "tests/test_plugin.py"]
         : []
     )
     .sort();
+}
+
+/** @param {string} output */
+function formatGeneratedFiles(output) {
+  const prettierCli = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../node_modules/prettier/bin/prettier.cjs"
+  );
+  if (!fs.existsSync(prettierCli)) throw new Error("Prettier is required to generate a formatted quality starter.");
+  execFileSync(process.execPath, [prettierCli, "--write", "."], { cwd: output, stdio: "ignore" });
 }
 
 /** @param {StarterOptions} options @returns {Required<StarterOptions>} */
@@ -81,14 +99,14 @@ function isSafeRelativePath(relativePath) {
   );
 }
 
-/** @returns {string} */
-function pythonPluginText() {
-  return `"""Python-plus-viewer AvNav plugin boundary."""\n\n\ndef plugin_name() -> str:\n    return "generated-plugin"\n`;
+/** @param {Required<StarterOptions>} options @returns {string} */
+function pythonPluginText(options) {
+  return `"""Thin AvNav Python integration boundary for the generated static viewer."""\n\nfrom __future__ import annotations\n\nfrom typing import Protocol\n\nPLUGIN_ID = "${options.id}"\nPLUGIN_TITLE = "${options.name.replace(/"/g, '\\"')}"\nUSER_APP_ICON = ""\n\n\nclass AvNavAPI(Protocol):\n    """Documented subset used by the registration boundary."""\n\n    def getBaseUrl(self) -> str:\n        ...\n\n    def registerUserApp(self, url: str, icon: str, title: str) -> None:\n        ...\n\n\nclass Plugin:\n    """Register the packaged static viewer through AvNav's user-app API."""\n\n    def __init__(self, api: AvNavAPI) -> None:\n        self.api = api\n\n    def run(self) -> None:\n        """Register the viewer once when AvNav starts the plugin."""\n        base_url = self.api.getBaseUrl()\n        if not isinstance(base_url, str) or not base_url.strip():\n            raise ValueError("AvNav base URL is invalid")\n        self.api.registerUserApp(f"{base_url.rstrip('/')}/viewer", USER_APP_ICON, PLUGIN_TITLE)\n\n\ndef plugin_name() -> str:\n    """Return the generated plugin identifier."""\n    return PLUGIN_ID\n\n\ndef plugin_title() -> str:\n    """Return the generated display title."""\n    return PLUGIN_TITLE\n`;
 }
 
-/** @returns {string} */
-function pythonTestText() {
-  return `import importlib.util\nfrom pathlib import Path\n\n\ndef test_plugin_boundary() -> None:\n    spec = importlib.util.spec_from_file_location("plugin", Path(__file__).parents[1] / "plugin.py")\n    assert spec is not None\n`;
+/** @param {Required<StarterOptions>} options @returns {string} */
+function pythonTestText(options) {
+  return `from __future__ import annotations\n\nimport importlib.util\nfrom pathlib import Path\n\n\nclass FakeAvNavAPI:\n    def __init__(self) -> None:\n        self.apps: list[tuple[str, str, str]] = []\n\n    def getBaseUrl(self) -> str:\n        return "/plugins/${options.id}"\n\n    def registerUserApp(self, url: str, icon: str, title: str) -> None:\n        self.apps.append((url, icon, title))\n\n\ndef test_plugin_boundary() -> None:\n    spec = importlib.util.spec_from_file_location("plugin", Path(__file__).parents[1] / "plugin.py")\n    assert spec is not None\n    module = importlib.util.module_from_spec(spec)\n    assert spec.loader is not None\n    spec.loader.exec_module(module)\n    assert module.plugin_name() == "${options.id}"\n    assert module.plugin_title() == "${options.name.replace(/"/g, '\\"')}"\n    api = FakeAvNavAPI()\n    module.Plugin(api).run()\n    assert api.apps == [("/plugins/${options.id}/viewer", "", "${options.name.replace(/"/g, '\\"')}")]\n`;
 }
 
 /** @param {string[]} argv @returns {StarterOptions} */
