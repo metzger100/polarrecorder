@@ -291,6 +291,10 @@
       "owner": "prettier"
     },
     {
+      "path": "schemas/generic-rule-corpus.schema.json",
+      "owner": "prettier"
+    },
+    {
       "path": "schemas/polar-plugin-dev.schema.json",
       "owner": "prettier"
     },
@@ -761,7 +765,27 @@
       "owner": "ruff"
     },
     {
+      "path": "tests/portable-core/generic-rule-conformance.golden.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/portable-core/generic-rule-conformance.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/portable-core/generic-rule-corpus.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/portable-core/portable-core-attest.golden.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tests/portable-core/portable-policy-engines.test.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tests/portable-core/portable-role-graph.test.mjs",
       "owner": "prettier"
     },
     {
@@ -963,6 +987,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/check-generic-conformance.mjs",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/check-generic-surface.mjs",
       "owner": "prettier"
     },
@@ -975,27 +1003,7 @@
       "owner": "prettier"
     },
     {
-      "path": "tools/check-patterns/generic/canonical-rule-ids.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/generic/duplication-rules.mjs",
-      "owner": "prettier"
-    },
-    {
       "path": "tools/check-patterns/generic/namespace-policy.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/generic/rules-core-generic-defs.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/generic/rules-failfast-generic-defs.mjs",
-      "owner": "prettier"
-    },
-    {
-      "path": "tools/check-patterns/generic/rules-regex-generic-defs.mjs",
       "owner": "prettier"
     },
     {
@@ -1004,6 +1012,10 @@
     },
     {
       "path": "tools/check-patterns/project/namespace-token-consistency.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/project/pattern-context.mjs",
       "owner": "prettier"
     },
     {
@@ -1016,6 +1028,10 @@
     },
     {
       "path": "tools/check-patterns/rules.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/check-patterns/runner.mjs",
       "owner": "prettier"
     },
     {
@@ -1041,6 +1057,10 @@
     {
       "path": "tools/check-python-filesize.py",
       "owner": "ruff"
+    },
+    {
+      "path": "tools/check-quality-profile.mjs",
+      "owner": "prettier"
     },
     {
       "path": "tools/check-runtime-contracts.py",
@@ -1120,6 +1140,34 @@
     },
     {
       "path": "tools/portable-core/format-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/gate-orchestrator.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/gate-role-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/generic-rule-common.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/generic-rule-contracts.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/generic-rule-duplicates.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/generic-rule-engine.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/portable-core/generic-rule-structural.mjs",
       "owner": "prettier"
     },
     {
@@ -1243,6 +1291,10 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/portable-role-graph.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/profile-schema.mjs",
       "owner": "prettier"
     },
@@ -1255,7 +1307,15 @@
       "owner": "prettier"
     },
     {
+      "path": "tools/quality-policy/project-pattern-context.json",
+      "owner": "prettier"
+    },
+    {
       "path": "tools/quality-policy/project-pattern-scopes.json",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/quality-policy/project-profile.json",
       "owner": "prettier"
     },
     {
@@ -1330,6 +1390,20 @@
     },
     {
       "path": "tools/release-version.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/starter-quality-templates.mjs",
+      "owner": "prettier"
+    },
+    {
+      "path": "tools/starter-quality/package-lock-template.json",
+      "owner": "unsupported",
+      "reason": "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
+      "alternateValidation": "tests/test_baseline_captures.py digest anchors and regeneration proofs"
+    },
+    {
+      "path": "tools/starter-templates.mjs",
       "owner": "prettier"
     },
     {
@@ -1460,8 +1534,8 @@
     }
   ],
   "countByOwner": {
-    "prettier": 237,
-    "unsupported": 25,
+    "prettier": 254,
+    "unsupported": 26,
     "ruff": 90
   }
 }

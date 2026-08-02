@@ -85,9 +85,9 @@ JavaScript standards:
 - Use `Number.isFinite(x)`; bare global `isFinite(x)` coerces its argument and is forbidden.
 - No empty `try { ... } catch (e) {}` or empty Promise `.catch(function () {})`: route errors to visible UI state, a
   named handler, or an intentional boundary fallback.
-- No silent non-empty catch either: a lexical `catch { ... }` must rethrow, route the error to visible state, or carry a
-  structured `polarrecorder-boundary-fallback(<owner>): ...` comment for an intentional boundary fallback.
-  `tools/check-patterns.mjs` (`catch-fallback-without-suppression`) blocks casual comment-only swallows.
+- No silent non-empty catch either: a lexical `catch { ... }` must rethrow, route the error to visible state, or handle
+  the external `window.parent` boundary by returning the documented absent value. `tools/check-patterns.mjs`
+  (`catch-fallback-without-suppression`) blocks casual comment-only swallows.
 - Do not re-default the result of an internal namespace helper (`Polarrecorder.X.Helper(...) || fb` / `?? fb`); trust
   the contract and fix caller order instead. `tools/check-patterns.mjs` (`internal-contract-fallback`) blocks this.
   Boundary defaulting on optional API fields (`data.counters || {}`) stays allowed.

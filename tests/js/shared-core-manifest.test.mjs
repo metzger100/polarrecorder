@@ -14,7 +14,7 @@ import { runManifestPreconditionCheck, runSharedCoreCheck } from "../../tools/ch
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, "tools", "quality-policy", "shared-core-manifest.json");
-const ANCHORED_MANIFEST_DIGEST = "fa86af9cf2457ab9b247cb60790cb639cb64db9f369a6634234ab6ce1aa31998";
+const ANCHORED_MANIFEST_DIGEST = "063b6043b352c0c69f4e8a0185c916c40abaa9a9b283307188d9a28082710a00";
 
 /**
  * @returns {string}
@@ -51,6 +51,9 @@ function writeManifest(root, entries) {
       ],
       profileSchemas: [Object.keys(entries)[0]],
       canonicalRuleIds: Array.from({ length: 21 }, (_unused, index) => `rule-${index}`),
+      canonicalRuleOwners: Object.fromEntries(
+        Array.from({ length: 21 }, (_unused, index) => [`rule-${index}`, Object.keys(entries)[0]])
+      ),
       requiredCheckerExports: {},
       requiredSelfTestRoles: { fixture: "tests/js/fixture.test.mjs" }
     })

@@ -57,6 +57,18 @@ test("canonical filesystem policy engines accept clean input and reject failing 
   expect(resolveContainedPath(root, "../hook").ok).toBe(false);
   fs.writeFileSync(path.join(root, "clean.js"), "const value = 1;\n");
   expect(runSuppressionCheck({ root, print: false }).ok).toBe(true);
+  fs.writeFileSync(path.join(root, "string.js"), 'const text = "eslint-disable-next-line";\n');
+  expect(runSuppressionCheck({ root, print: false }).ok).toBe(true);
+  fs.writeFileSync(
+    path.join(root, "fenced.md"),
+    ["```js\n", "const value = 1; // ", "eslint-disable-next-line no-alert\n", "```\n"].join("")
+  );
+  expect(runSuppressionCheck({ root, print: false }).ok).toBe(false);
+  fs.rmSync(path.join(root, "fenced.md"));
+  fs.writeFileSync(path.join(root, "clean.py"), "value = 1\n");
+  expect(runSuppressionCheck({ root, print: false }).ok).toBe(true);
+  fs.writeFileSync(path.join(root, "bad.py"), ["value = 1  # ", "noqa\n"].join(""));
+  expect(runSuppressionCheck({ root, print: false }).ok).toBe(false);
   fs.writeFileSync(path.join(root, "bad.js"), ["// eslint", "-disable\n"].join(""));
   expect(runSuppressionCheck({ root, print: false }).ok).toBe(false);
   fs.rmSync(root, { recursive: true, force: true });

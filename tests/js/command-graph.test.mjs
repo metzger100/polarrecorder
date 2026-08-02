@@ -18,21 +18,21 @@ const ROOT = process.cwd();
 const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 
 const REQUIRED_CHECK_CORE_GROUPS = [
-  "check:standard",
-  "check:shared-core",
-  "check:generic-surface",
-  "check:standalone",
-  "check:suppressions",
-  "typecheck",
-  "package:check",
-  "test:focus:check",
-  "check:smells",
-  "check:python-contracts",
-  "test:split",
-  "check:complexity",
-  "check:scaling",
-  "docs:check",
-  "check:filesize"
+  "standard",
+  "portable-core",
+  "generic-surface",
+  "standalone",
+  "suppressions",
+  "typing",
+  "packaging",
+  "focus",
+  "smells",
+  "product-contracts",
+  "test-split",
+  "complexity",
+  "scaling",
+  "documentation",
+  "file-size"
 ];
 
 const FORBIDDEN_SCRIPTS = ["check:migration", "check:ci", "check:js:core", "check:js:all"];
@@ -72,12 +72,20 @@ const CHECK_FAST_EXCLUDED_GROUPS = [
  * @param {string} scriptBody
  * @returns {Set<string>}
  */
-function npmRunTokens(scriptBody) {
+function npmRunTokens(scriptBody, scriptName = "") {
   const tokens = new Set();
   const re = /npm run ([\w:-]+)/g;
   let match;
   while ((match = re.exec(scriptBody)) !== null) {
     tokens.add(match[1]);
+  }
+  if (scriptName === "check:core" && scriptBody.includes("gate-orchestrator.mjs")) {
+    const profile = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/quality-policy/project-profile.json"), "utf8"));
+    const roles = scriptBody.split("--roles ")[1].split(/\s+/)[0].split(",");
+    for (const role of roles) {
+      const adapter = profile.adapters[role];
+      for (const nested of npmRunTokens(adapter || "")) tokens.add(nested);
+    }
   }
   return tokens;
 }
@@ -96,7 +104,7 @@ function walkFrom(scripts, rootName) {
   function visit(name) {
     if (reachable.has(name) || !(name in scripts)) return;
     reachable.add(name);
-    for (const token of npmRunTokens(scripts[name])) {
+    for (const token of npmRunTokens(scripts[name], name)) {
       if (!parents.has(token)) parents.set(token, new Set());
       parents.get(token)?.add(name);
       visit(token);
@@ -122,7 +130,7 @@ function duplicateLeaves(scripts, rootName) {
 test("check:core is exactly the literal target ordered graph", () => {
   const body = PKG.scripts["check:core"];
   assert.ok(body, "check:core must be defined");
-  const orderedTokens = [...body.matchAll(/npm run ([\w:-]+)/g)].map((m) => m[1]);
+  const orderedTokens = body.split("--roles ")[1].split(/\s+/)[0].split(",");
   assert.deepEqual(orderedTokens, REQUIRED_CHECK_CORE_GROUPS);
 });
 
@@ -157,7 +165,8 @@ test("no forbidden script name is declared", () => {
 
 test("docs:check is reached by check:core", () => {
   assert.ok("docs:check" in PKG.scripts, "docs:check must be defined");
-  assert.ok(npmRunTokens(PKG.scripts["check:core"]).has("docs:check"), "check:core must run docs:check");
+  const profile = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/quality-policy/project-profile.json"), "utf8"));
+  assert.equal(profile.adapters.documentation, "npm run docs:check");
 });
 
 test("schema:check is a real leaf reached by package:check", () => {
@@ -206,7 +215,7 @@ test("the script reference graph has no recursive cycle", () => {
       throw new Error(`cycle detected: ${[...chain, name].join(" -> ")}`);
     }
     visiting.add(name);
-    for (const token of npmRunTokens(PKG.scripts[name] || "")) {
+    for (const token of npmRunTokens(PKG.scripts[name] || "", name)) {
       visit(token, [...chain, name]);
     }
     visiting.delete(name);
@@ -245,14 +254,51 @@ function makeGraphFixture() {
     ].join("\n")
   );
 
-  const leafScripts = Object.fromEntries(REQUIRED_CHECK_CORE_GROUPS.map((group) => [group, `node leaf.mjs ${group}`]));
+  fs.mkdirSync(path.join(root, "tools/portable-core"), { recursive: true });
+  fs.mkdirSync(path.join(root, "tools/quality-policy"), { recursive: true });
+  for (const file of ["gate-orchestrator.mjs", "gate-role-engine.mjs"]) {
+    fs.copyFileSync(path.join(ROOT, "tools/portable-core", file), path.join(root, "tools/portable-core", file));
+  }
+  const graph = {
+    schemaVersion: 1,
+    graphVersion: 1,
+    requiredOrder: ["setup", ...REQUIRED_CHECK_CORE_GROUPS, "coverage"],
+    roles: Object.fromEntries(
+      ["setup", ...REQUIRED_CHECK_CORE_GROUPS, "coverage"].map((role) => [role, { required: true, exactlyOnce: true }])
+    ),
+    extensionPolicy: {
+      allowProfileExtensions: true,
+      unknownRole: "reject",
+      duplicateRole: "reject",
+      recursiveCommand: "reject",
+      failure: "stop"
+    }
+  };
+  const adapters = Object.fromEntries(REQUIRED_CHECK_CORE_GROUPS.map((role) => [role, `npm run leaf-${role}`]));
+  fs.writeFileSync(path.join(root, "tools/quality-policy/portable-role-graph.json"), JSON.stringify(graph));
+  fs.writeFileSync(
+    path.join(root, "tools/quality-policy/project-profile.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      profileType: "product-quality-profile",
+      product: { id: "fixture", runtime: "node" },
+      portableCore: { coreVersion: "3.2.0", roleGraph: "tools/quality-policy/portable-role-graph.json" },
+      sourceScopes: [{ id: "fixture", roots: ["leaf.mjs"] }],
+      languages: { javascript: true },
+      testProjects: [{ id: "fixture", command: "node leaf.mjs fixture", paths: ["leaf.mjs"] }],
+      adapters
+    })
+  );
+  const leafScripts = Object.fromEntries(
+    REQUIRED_CHECK_CORE_GROUPS.map((group) => [`leaf-${group}`, `node leaf.mjs ${group}`])
+  );
   const pkg = {
     name: "command-graph-fixture",
     private: true,
     scripts: {
       ...leafScripts,
       "test:coverage:check": "node leaf.mjs test:coverage:check",
-      "check:core": `npm run ${REQUIRED_CHECK_CORE_GROUPS.join(" && npm run ")}`,
+      "check:core": `node ${path.join(ROOT, "tools/portable-core/gate-orchestrator.mjs")} --roles ${REQUIRED_CHECK_CORE_GROUPS.join(",")}`,
       "check:all": "npm run check:core && npm run test:coverage:check"
     }
   };

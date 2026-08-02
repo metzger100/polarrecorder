@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "coreVersion": "3.0.0",
+  "coreVersion": "3.2.0",
   "mandatoryRoles": {
     "portable-role-1": ["tools/portable-core/complexity-engine.mjs"],
     "portable-role-2": ["tools/portable-core/coverage-engine.mjs"],
@@ -27,7 +27,27 @@
       "tools/quality-policy/portable-core-contract.mjs",
       "tools/quality-policy/profile-schema.mjs",
       "tools/quality-policy/read-json-policy.mjs"
-    ]
+    ],
+    "portable-role-18": [
+      "tools/check-quality-profile.mjs",
+      "schemas/portable-profile.schema.json",
+      "tests/portable-core/portable-role-graph.test.mjs",
+      "tools/portable-core/gate-role-engine.mjs",
+      "tools/quality-policy/portable-role-graph.json"
+    ],
+    "portable-role-19": [
+      "schemas/generic-rule-corpus.schema.json",
+      "tests/portable-core/generic-rule-corpus.json",
+      "tests/portable-core/generic-rule-conformance.test.mjs",
+      "tools/portable-core/generic-rule-common.mjs",
+      "tools/portable-core/generic-rule-contracts.mjs",
+      "tools/portable-core/generic-rule-duplicates.mjs",
+      "tools/portable-core/generic-rule-engine.mjs",
+      "tools/portable-core/generic-rule-structural.mjs",
+      "tests/portable-core/generic-rule-conformance.golden.json"
+    ],
+    "portable-role-20": ["tools/check-generic-conformance.mjs"],
+    "portable-role-21": ["tools/portable-core/gate-orchestrator.mjs"]
   },
   "mandatoryPaths": [
     ".agents/skills/create-plan/SKILL.md",
@@ -35,9 +55,18 @@
     ".agents/skills/grill-me-repo/SKILL.md",
     ".agents/skills/preflight/SKILL.md",
     ".agents/skills/scan-smells/SKILL.md",
+    "schemas/generic-rule-corpus.schema.json",
     "schemas/portable-core-contract.schema.json",
+    "schemas/portable-profile.schema.json",
+    "tests/portable-core/generic-rule-conformance.golden.json",
+    "tests/portable-core/generic-rule-conformance.test.mjs",
+    "tests/portable-core/generic-rule-corpus.json",
     "tests/portable-core/portable-policy-engines.test.mjs",
+    "tests/portable-core/portable-role-graph.test.mjs",
     "tools/check-generic-surface.mjs",
+    "tools/check-generic-conformance.mjs",
+    "tools/portable-core/gate-orchestrator.mjs",
+    "tools/check-quality-profile.mjs",
     "tools/check-shared-core.mjs",
     "tools/portable-core-attest.mjs",
     "tools/portable-core/complexity-engine.mjs",
@@ -46,6 +75,12 @@
     "tools/portable-core/file-size-engine.mjs",
     "tools/portable-core/focused-test-engine.mjs",
     "tools/portable-core/format-engine.mjs",
+    "tools/portable-core/gate-role-engine.mjs",
+    "tools/portable-core/generic-rule-engine.mjs",
+    "tools/portable-core/generic-rule-common.mjs",
+    "tools/portable-core/generic-rule-contracts.mjs",
+    "tools/portable-core/generic-rule-duplicates.mjs",
+    "tools/portable-core/generic-rule-structural.mjs",
     "tools/portable-core/hook-engine.mjs",
     "tools/portable-core/json.mjs",
     "tools/portable-core/lint-policy.mjs",
@@ -56,6 +91,7 @@
     "tools/portable-core/test-inventory-engine.mjs",
     "tools/quality-policy/portable-core-contract.json",
     "tools/quality-policy/portable-core-contract.mjs",
+    "tools/quality-policy/portable-role-graph.json",
     "tools/quality-policy/profile-schema.mjs",
     "tools/quality-policy/read-json-policy.mjs"
   ],
@@ -64,7 +100,11 @@
     "tools/quality-policy/shared-core-manifest.json",
     "tools/quality-policy/shared-core-manifest.sha256"
   ],
-  "profileSchemas": ["tools/quality-policy/generic-tokens.json"],
+  "profileSchemas": [
+    "schemas/generic-rule-corpus.schema.json",
+    "schemas/portable-profile.schema.json",
+    "tools/quality-policy/generic-tokens.json"
+  ],
   "canonicalRuleIds": [
     "absolute-home-path",
     "exec-plan-reference",
@@ -88,6 +128,36 @@
     "framework-method-typeof-guard",
     "invalid-lint-suppression"
   ],
+  "canonicalRuleOwners": {
+    "absolute-home-path": "tools/portable-core/generic-rule-engine.mjs",
+    "exec-plan-reference": "tools/portable-core/generic-rule-engine.mjs",
+    "no-nul-byte": "tools/portable-core/generic-rule-engine.mjs",
+    "unsafe-html-dom-sink": "tools/portable-core/generic-rule-engine.mjs",
+    "dead-code": "tools/portable-core/generic-rule-engine.mjs",
+    "console-in-runtime": "tools/portable-core/generic-rule-engine.mjs",
+    "default-truthy-fallback": "tools/portable-core/generic-rule-engine.mjs",
+    "redundant-null-type-guard": "tools/portable-core/generic-rule-engine.mjs",
+    "empty-catch": "tools/portable-core/generic-rule-engine.mjs",
+    "premature-legacy-support": "tools/portable-core/generic-rule-engine.mjs",
+    "unused-fallback": "tools/portable-core/generic-rule-engine.mjs",
+    "responsive-layout-hard-floor": "tools/portable-core/generic-rule-engine.mjs",
+    "canvas-api-typeof-guard": "tools/portable-core/generic-rule-engine.mjs",
+    "try-finally-canvas-drawing": "tools/portable-core/generic-rule-engine.mjs",
+    "todo-without-owner": "tools/portable-core/generic-rule-engine.mjs",
+    "duplicate-functions": "tools/portable-core/generic-rule-engine.mjs",
+    "duplicate-block-clones": "tools/portable-core/generic-rule-engine.mjs",
+    "catch-fallback-without-suppression": "tools/portable-core/generic-rule-engine.mjs",
+    "internal-contract-fallback": "tools/portable-core/generic-rule-engine.mjs",
+    "framework-method-typeof-guard": "tools/portable-core/generic-rule-engine.mjs",
+    "invalid-lint-suppression": "tools/portable-core/generic-rule-engine.mjs"
+  },
+  "canonicalRuleImplementationPaths": [
+    "tools/portable-core/generic-rule-common.mjs",
+    "tools/portable-core/generic-rule-contracts.mjs",
+    "tools/portable-core/generic-rule-duplicates.mjs",
+    "tools/portable-core/generic-rule-engine.mjs",
+    "tools/portable-core/generic-rule-structural.mjs"
+  ],
   "requiredCheckerExports": {
     "tools/portable-core/complexity-engine.mjs": ["runComplexityPolicy"],
     "tools/portable-core/coverage-engine.mjs": ["runCoveragePolicy"],
@@ -99,10 +169,17 @@
     "tools/portable-core/release-engine.mjs": ["runReleasePolicy"],
     "tools/portable-core/schema-engine.mjs": ["runProfileSchemaCheck"],
     "tools/portable-core/suppression-engine.mjs": ["runSuppressionCheck"],
-    "tools/portable-core/test-inventory-engine.mjs": ["runTestInventoryPolicy"]
+    "tools/portable-core/test-inventory-engine.mjs": ["runTestInventoryPolicy"],
+    "tools/portable-core/gate-role-engine.mjs": ["runGateRoleGraphCheck", "runProfileContractCheck"],
+    "tools/portable-core/generic-rule-engine.mjs": ["runGenericRule", "runGenericConformance"],
+    "tools/check-quality-profile.mjs": ["runQualityProfileCheck"],
+    "tools/check-generic-conformance.mjs": ["runGenericConformanceCheck"],
+    "tools/portable-core/gate-orchestrator.mjs": ["runQualityRoleGraph"]
   },
   "requiredSelfTestRoles": {
     "engines": "tests/portable-core/portable-policy-engines.test.mjs",
-    "attestation": "tests/portable-core/portable-policy-engines.test.mjs"
+    "attestation": "tests/portable-core/portable-policy-engines.test.mjs",
+    "gateGraph": "tests/portable-core/portable-role-graph.test.mjs",
+    "genericConformance": "tests/portable-core/generic-rule-conformance.test.mjs"
   }
 }

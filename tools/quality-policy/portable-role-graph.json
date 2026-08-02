@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "graphVersion": 1,
+  "requiredOrder": [
+    "setup",
+    "standard",
+    "portable-core",
+    "generic-surface",
+    "standalone",
+    "suppressions",
+    "typing",
+    "packaging",
+    "focus",
+    "smells",
+    "product-contracts",
+    "test-split",
+    "complexity",
+    "scaling",
+    "documentation",
+    "file-size",
+    "coverage"
+  ],
+  "roles": {
+    "setup": { "required": true, "exactlyOnce": true, "portable": false },
+    "standard": { "required": true, "exactlyOnce": true, "portable": false },
+    "portable-core": { "required": true, "exactlyOnce": true, "portable": true },
+    "generic-surface": { "required": true, "exactlyOnce": true, "portable": false },
+    "standalone": { "required": true, "exactlyOnce": true, "portable": false },
+    "suppressions": { "required": true, "exactlyOnce": true, "portable": true },
+    "typing": { "required": true, "exactlyOnce": true, "portable": false },
+    "packaging": { "required": true, "exactlyOnce": true, "portable": false },
+    "focus": { "required": true, "exactlyOnce": true, "portable": true },
+    "smells": { "required": true, "exactlyOnce": true, "portable": false },
+    "product-contracts": { "required": true, "exactlyOnce": true, "portable": false },
+    "test-split": { "required": true, "exactlyOnce": true, "portable": false },
+    "complexity": { "required": true, "exactlyOnce": true, "portable": false },
+    "scaling": { "required": true, "exactlyOnce": true, "portable": true },
+    "documentation": { "required": true, "exactlyOnce": true, "portable": true },
+    "file-size": { "required": true, "exactlyOnce": true, "portable": true },
+    "coverage": { "required": true, "exactlyOnce": true, "portable": true }
+  },
+  "extensionPolicy": {
+    "allowProfileExtensions": true,
+    "unknownRole": "reject",
+    "duplicateRole": "reject",
+    "recursiveCommand": "reject",
+    "failure": "stop"
+  }
+}

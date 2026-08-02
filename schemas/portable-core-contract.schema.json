@@ -11,6 +11,8 @@
     "metadataPaths",
     "profileSchemas",
     "canonicalRuleIds",
+    "canonicalRuleOwners",
+    "canonicalRuleImplementationPaths",
     "requiredCheckerExports",
     "requiredSelfTestRoles"
   ],
@@ -50,6 +52,17 @@
       "maxItems": 21,
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "canonicalRuleOwners": {
+      "type": "object",
+      "minProperties": 21,
+      "additionalProperties": { "$ref": "#/definitions/relativePath" }
+    },
+    "canonicalRuleImplementationPaths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/relativePath" }
     },
     "requiredCheckerExports": {
       "type": "object",

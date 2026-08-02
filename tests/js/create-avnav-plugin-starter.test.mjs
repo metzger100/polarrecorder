@@ -23,3 +23,71 @@ test("starter output is deterministic and passes its dependency-free quality che
 test("starter rejects an unsafe plugin identifier", () => {
   assert.throws(() => createStarter({ output: "/tmp/unused", id: "../bad", name: "Bad" }), /--id/);
 });
+
+test("starter supports both CLI forms and quality profiles", () => {
+  const script = path.resolve("tools/create-avnav-plugin-starter.mjs");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "plugin-starter-cli-"));
+  const viewer = path.join(root, "viewer");
+  const python = path.join(root, "python");
+  const equals = childProcess.spawnSync(
+    process.execPath,
+    [
+      script,
+      `--output=${viewer}`,
+      "--id",
+      "sample-plugin",
+      "--name=Sample Plugin",
+      "--level",
+      "quality",
+      "--profile=viewer-only"
+    ],
+    { encoding: "utf8" }
+  );
+  const pairs = childProcess.spawnSync(
+    process.execPath,
+    [
+      script,
+      "--output",
+      python,
+      "--id=sample-plugin",
+      "--name",
+      "Sample Plugin",
+      "--level=quality",
+      "--profile",
+      "python-plus-viewer"
+    ],
+    { encoding: "utf8" }
+  );
+  assert.equal(equals.status, 0, equals.stderr);
+  assert.equal(pairs.status, 0, pairs.stderr);
+  assert.ok(fs.existsSync(path.join(viewer, "tools/quality-policy/portable-role-graph.json")));
+  assert.ok(fs.existsSync(path.join(python, "plugin.py")));
+  assert.throws(
+    () =>
+      createStarter({
+        output: path.join(root, "bad"),
+        id: "sample-plugin",
+        name: "Bad",
+        level: "quality",
+        profile: /** @type {any} */ ("unknown")
+      }),
+    /--profile/
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("starter rejects a representative quality mutation", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "plugin-starter-mutation-"));
+  const output = path.join(root, "sample");
+  createStarter({
+    output,
+    id: "sample-plugin",
+    name: "Sample Plugin",
+    level: "quality",
+    profile: "viewer-only"
+  });
+  fs.appendFileSync(path.join(output, "plugin.js"), '\nvar unsafe = eval("1");\n');
+  const result = childProcess.spawnSync(process.execPath, ["tools/check.mjs"], { cwd: output, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  fs.rmSync(root, { recursive: true, force: true });
+});

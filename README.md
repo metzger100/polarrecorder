@@ -518,9 +518,9 @@ containing only the contract version, manifest digest, generic-rule-tree digest,
 the complete `npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no
 network access or neighboring-directory inputs.
 
-For a product-neutral learning project, run
-`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"`; its dependency-free host boundary
-and Node test are checked by its own `npm run check:all`.
+Starter: `npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"`; this is the minimal
+lesson. Quality profiles use `--level quality --profile viewer-only` or `--profile python-plus-viewer`; each has a
+signed role graph, portable contract/profile, mutation-resistant quality check, and its own `check:all`.
 
 Releases are prepared and created locally (`npm run release:prepare`, `npm run release:create`); GitHub Releases only
 republishes an already-committed local artifact when a `v*` tag is pushed. See the

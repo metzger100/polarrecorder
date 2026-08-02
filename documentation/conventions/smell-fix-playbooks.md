@@ -49,9 +49,8 @@ move the problem. Each playbook names the rule, the checker that raises it, and 
 - **Why it fires:** A `catch` block is empty, or it neither rethrows nor marks a real boundary fallback; or a Promise
   `.catch()` swallows the rejection.
 - **Fix:** Route the error to visible UI state or a named handler, rethrow it, or — when the catch is a deliberate
-  boundary fallback (for example a cross-origin access that is expected to throw) — add a short
-  `polarrecorder-boundary-fallback(<owner>): ...` comment explaining why the silent fallback is correct. A casual
-  comment is not the escape hatch.
+  boundary fallback (for example a cross-origin access that is expected to throw) — return the documented absent value
+  from the explicit external-boundary path. A casual comment is not the escape hatch.
 
 ### Re-defaulting an internal contract result (`internal-contract-fallback`, `default-truthy-fallback`, `redundant-null-type-guard`)
 

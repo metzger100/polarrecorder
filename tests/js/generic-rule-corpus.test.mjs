@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 
 import { GENERIC_RULES } from "../../tools/check-patterns/rules.mjs";
-import { CANONICAL_GENERIC_RULE_IDS } from "../../tools/check-patterns/generic/canonical-rule-ids.mjs";
+import { CANONICAL_GENERIC_RULE_IDS } from "../../tools/portable-core/generic-rule-engine.mjs";
 import { runRegexRule } from "../../tools/check-patterns/rules-core.mjs";
 
 test("the generic registry has the canonical order and classification", () => {
