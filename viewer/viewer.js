@@ -196,10 +196,10 @@ window.Polarrecorder = window.Polarrecorder || {};
       polar.appendChild(option);
     });
     polar.value = state.polarFormat;
-    polar.onchange = function () {
+    polar.addEventListener("change", function () {
       state.polarFormat = polar.value;
       fetchPolar(true);
-    };
+    });
     if (Polarrecorder.ExportUI) Polarrecorder.ExportUI.RefreshPresets();
   }
 

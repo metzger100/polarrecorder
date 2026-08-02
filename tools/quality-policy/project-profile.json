@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "profileType": "product-quality-profile",
+  "product": {
+    "id": "python-plus-browser",
+    "runtime": "python-plus-browser"
+  },
+  "portableCore": {
+    "coreVersion": "3.2.0",
+    "roleGraph": "tools/quality-policy/portable-role-graph.json"
+  },
+  "sourceScopes": [
+    { "id": "python", "roots": ["server", "plugin.py", "tests"] },
+    { "id": "viewer", "roots": ["viewer", "plugin.js", "plugin.mjs"] }
+  ],
+  "languages": {
+    "javascript": true,
+    "typescript": true,
+    "css": true,
+    "markdown": true,
+    "python": true
+  },
+  "testProjects": [
+    { "id": "python", "command": "npm run test:python", "paths": ["tests"] },
+    { "id": "viewer", "command": "npm run test:viewer", "paths": ["tests/js"] },
+    { "id": "plugin", "command": "npm run test:plugin", "paths": ["tests/js"] }
+  ],
+  "policies": {
+    "coverage": "tools/quality-policy/coverage-floors.json",
+    "complexity": "tools/quality-policy/complexity-budget.mjs",
+    "fileSize": "tools/quality-policy/project-file-size-scope.json"
+  },
+  "documentation": {
+    "roots": ["README.md", "documentation", "CONTRIBUTING.md"]
+  },
+  "adapters": {
+    "setup": "npm run setup",
+    "standard": "npm run check:standard",
+    "portable-core": "npm run check:shared-core && npm run check:profile",
+    "generic-surface": "npm run check:generic-surface",
+    "standalone": "npm run check:standalone",
+    "suppressions": "npm run check:suppressions",
+    "typing": "npm run typecheck",
+    "packaging": "npm run package:check",
+    "focus": "npm run test:focus:check",
+    "smells": "npm run check:smells",
+    "product-contracts": "npm run check:python-contracts",
+    "test-split": "npm run test:split",
+    "complexity": "npm run check:complexity",
+    "scaling": "npm run check:scaling",
+    "documentation": "npm run docs:check",
+    "file-size": "npm run check:filesize",
+    "coverage": "npm run test:coverage:check"
+  }
+}

@@ -78,6 +78,8 @@ export function validateContractShape(contract) {
     "metadataPaths",
     "profileSchemas",
     "canonicalRuleIds",
+    "canonicalRuleOwners",
+    "canonicalRuleImplementationPaths",
     "requiredCheckerExports",
     "requiredSelfTestRoles"
   ]);
@@ -108,6 +110,31 @@ export function validateContractShape(contract) {
   assertUnique(contract.canonicalRuleIds, "canonicalRuleIds");
   if (contract.canonicalRuleIds.length !== 21) {
     throw new Error("Portable-core contract must declare exactly 21 canonical rule identifiers.");
+  }
+  if (!contract.canonicalRuleOwners || typeof contract.canonicalRuleOwners !== "object") {
+    if (!["1.0.0", "3.0.0"].includes(contract.coreVersion)) {
+      throw new Error("Portable-core contract must declare canonical rule owners.");
+    }
+  } else {
+    const ownerIds = Object.keys(contract.canonicalRuleOwners);
+    if (ownerIds.length !== contract.canonicalRuleIds.length) {
+      throw new Error("Portable-core canonical rule owners must cover every canonical rule.");
+    }
+    for (const ruleId of contract.canonicalRuleIds) {
+      const owner = contract.canonicalRuleOwners[ruleId];
+      if (typeof owner !== "string") throw new Error(`Canonical rule '${ruleId}' has no implementation owner.`);
+      assertPortableRelativePath(owner, `canonicalRuleOwners.${ruleId}`);
+    }
+  }
+  if (contract.canonicalRuleImplementationPaths !== undefined) {
+    if (
+      !Array.isArray(contract.canonicalRuleImplementationPaths) ||
+      contract.canonicalRuleImplementationPaths.length === 0
+    )
+      throw new Error("Portable-core canonical rule implementation paths must be a non-empty array.");
+    assertUnique(contract.canonicalRuleImplementationPaths, "canonicalRuleImplementationPaths");
+    for (const relativePath of contract.canonicalRuleImplementationPaths)
+      assertPortableRelativePath(relativePath, "canonicalRuleImplementationPaths");
   }
   if (!contract.requiredCheckerExports || typeof contract.requiredCheckerExports !== "object") {
     throw new Error("Portable-core contract must declare checker exports.");
@@ -154,30 +181,25 @@ export function buildAttestation(root, entries) {
   return {
     coreVersion: contract.coreVersion,
     manifestSha256,
-    genericRulesSha256: hashGenericRules(root),
+    genericRulesSha256: hashCanonicalRuleOwners(root, contract),
     entries
   };
 }
 
-/** @param {string} root @returns {string} */
-function hashGenericRules(root) {
-  const genericRoot = resolveContainedPath(root, "tools/check-patterns/generic");
-  if (!fs.statSync(genericRoot).isDirectory()) throw new Error("Generic rule path must be a directory.");
-  /** @type {string[]} */
-  const files = [];
-  /** @param {string} directory */
-  function visit(directory) {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const absolutePath = path.join(directory, entry.name);
-      if (entry.isDirectory()) visit(absolutePath);
-      else if (entry.isFile()) files.push(absolutePath);
-    }
-  }
-  visit(genericRoot);
-  if (files.length === 0) throw new Error("Generic rule directory must not be empty.");
+/** @param {string} root @param {any} contract @returns {string} */
+function hashCanonicalRuleOwners(root, contract) {
+  if (!contract.canonicalRuleOwners) return "legacy-contract";
+  const paths = contract.canonicalRuleImplementationPaths || Object.values(contract.canonicalRuleOwners);
+  const files = [...new Set(paths)].map((relativePath) => ({
+    relativePath,
+    absolutePath: resolveContainedPath(root, relativePath)
+  }));
+  if (files.length === 0) throw new Error("Canonical rule owners must not be empty.");
   const hash = createHash("sha256");
-  for (const absolutePath of files.sort()) {
-    hash.update(path.relative(genericRoot, absolutePath).split(path.sep).join("/"));
+  for (const { relativePath, absolutePath } of files.sort((left, right) =>
+    left.relativePath.localeCompare(right.relativePath)
+  )) {
+    hash.update(relativePath);
     hash.update("\0");
     hash.update(fs.readFileSync(absolutePath));
     hash.update("\0");

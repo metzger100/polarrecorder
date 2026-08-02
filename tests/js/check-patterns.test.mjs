@@ -319,8 +319,8 @@ window.Polarrecorder = window.Polarrecorder || {};
   function load() {
     try {
       return JSON.parse(window.name);
+    // plugin-boundary-next-line(category: host-window-name, owner: polarrecorder-maintainers, date: 2026-08-01) -- host window may be unavailable across browsing contexts
     } catch (error) {
-      // polarrecorder-boundary-fallback(host-window-name): window.name may be absent.
       return {};
     }
   }
@@ -464,11 +464,17 @@ test("a clean tool file with no NUL byte passes", () => {
   assert.equal(result.status, 0, result.failures.join("\n"));
 });
 
-/** @param {Record<string, string>} files */
+/** @param {Record<string, string>} files @returns {{failures: string[], status: number, summary: any}} */
 function runChecker(files) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "polarrecorder-patterns-"));
   fs.mkdirSync(path.join(workspace, "server", "polarrecorder"), { recursive: true });
   fs.mkdirSync(path.join(workspace, "viewer"), { recursive: true });
+  fs.mkdirSync(path.join(workspace, "tools", "quality-policy"), { recursive: true });
+  fs.writeFileSync(
+    path.join(workspace, "tools", "quality-policy", "project-pattern-context.json"),
+    JSON.stringify({ schemaVersion: 1, catchFallbackExceptions: [] }),
+    "utf8"
+  );
   for (const [rel, content] of Object.entries(files)) {
     const target = path.join(workspace, rel);
     fs.mkdirSync(path.dirname(target), { recursive: true });

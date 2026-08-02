@@ -24,7 +24,8 @@ const HISTORICAL_EXCLUSION_PATTERNS = [/^releases\/.*\.(zip|md)$/, /^exec-plans\
 
 const IMMUTABLE_CAPTURE_JSON_FILES = new Set([
   "tools/quality-policy/baseline-coverage-capture.json",
-  "tools/quality-policy/planned-quality-fixtures.json"
+  "tools/quality-policy/planned-quality-fixtures.json",
+  "tools/starter-quality/package-lock-template.json"
 ]);
 
 /**

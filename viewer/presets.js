@@ -21,7 +21,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @typedef {{name: string, builtin: boolean, twa: number[], tws: number[]}} Preset */
 
   /** @returns {Preset[]} */
-  function fallbackPresets() {
+  function presetDefaults() {
     return [
       {
         name: "DefaultStarboard180",
@@ -63,5 +63,5 @@ window.Polarrecorder = window.Polarrecorder || {};
     return LABELS[preset.name] || preset.name;
   }
 
-  Polarrecorder.Presets = { Fallback: fallbackPresets, Label: presetLabel };
+  Polarrecorder.Presets = { Fallback: presetDefaults, Label: presetLabel };
 })();

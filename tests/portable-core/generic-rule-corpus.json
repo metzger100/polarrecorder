@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "absolute-home-path",
+      "clean": [{ "path": "clean.js", "content": "const path = './file';\n" }],
+      "failing": [{ "path": "bad.js", "fragments": ["const path = '", "/", "home/user/file';\n"] }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "exec-plan-reference",
+      "clean": [{ "path": "clean.md", "content": "Describe the rule directly.\n" }],
+      "failing": [{ "path": "bad.md", "fragments": ["See PLAN", "42 for details.\n"] }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "no-nul-byte",
+      "clean": [{ "path": "clean.txt", "content": "plain text\n" }],
+      "failing": [{ "path": "bad.txt", "content": "bad\u0000text\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "unsafe-html-dom-sink",
+      "clean": [{ "path": "clean.js", "content": "return '<p>text</p>';\n" }],
+      "failing": [{ "path": "bad.js", "content": "node.innerHTML = value;\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "dead-code",
+      "clean": [{ "path": "clean.js", "content": "const live = 1;\n" }],
+      "failing": [{ "path": "bad.js", "content": "// const stale = 1;\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "console-in-runtime",
+      "clean": [{ "path": "clean.js", "content": "report(value);\n" }],
+      "failing": [{ "path": "bad.js", "content": "console.log(value);\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "default-truthy-fallback",
+      "clean": [{ "path": "clean.js", "content": "const value = config.default ?? 0;\n" }],
+      "failing": [{ "path": "bad.js", "content": "const value = config.default || 0;\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "redundant-null-type-guard",
+      "clean": [{ "path": "clean.js", "content": "const value = input;\n" }],
+      "failing": [{ "path": "bad.js", "content": "const value = Array.isArray(input) ? input : [];\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "empty-catch",
+      "clean": [{ "path": "clean.js", "content": "try { run(); } catch (error) { report(error); }\n" }],
+      "failing": [{ "path": "bad.js", "content": "try { run(); } catch (error) {}\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "premature-legacy-support",
+      "clean": [{ "path": "clean.js", "content": "const currentMode = true;\n" }],
+      "failing": [{ "path": "bad.js", "content": "const legacyMode = true;\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "unused-fallback",
+      "clean": [{ "path": "clean.js", "content": "const fallbackValue = read(); use(fallbackValue);\n" }],
+      "failing": [{ "path": "bad.js", "content": "const staleFallback = read();\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "responsive-layout-hard-floor",
+      "clean": [{ "path": "clean.js", "content": "const size = Math.max(2, width);\n" }],
+      "failing": [{ "path": "bad.js", "content": "const size = Math.max(8, width);\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "canvas-api-typeof-guard",
+      "clean": [{ "path": "clean.js", "content": "ctx.arc(0, 0, 1, 0, 1);\n" }],
+      "failing": [{ "path": "bad.js", "content": "if (typeof ctx.arc === \"function\") ctx.arc(0, 0, 1, 0, 1);\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "try-finally-canvas-drawing",
+      "clean": [{ "path": "clean.js", "content": "ctx.save(); draw(); ctx.restore();\n" }],
+      "failing": [{ "path": "bad.js", "content": "try { ctx.save(); draw(); } finally { ctx.restore(); }\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "todo-without-owner",
+      "clean": [{ "path": "clean.js", "content": "// TODO(alice, 2026-01-01): tracked work\n" }],
+      "failing": [{ "path": "bad.js", "content": "// TODO: unowned work\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "duplicate-functions",
+      "clean": [{ "path": "one.js", "content": "function first() { return 1; }\n" }],
+      "failing": [
+        { "path": "one.js", "content": "function duplicate() { return 1; }\n" },
+        { "path": "two.js", "content": "function other() { return 1; }\n" }
+      ],
+      "expectedFailingCount": 2
+    },
+    {
+      "id": "duplicate-block-clones",
+      "clean": [{ "path": "one.js", "content": "const uniqueValue = calculate(input);\n" }],
+      "failing": [
+        { "path": "one.js", "content": "const sharedValue = calculate(input);\n" },
+        { "path": "two.js", "content": "const sharedValue = calculate(input);\n" }
+      ],
+      "expectedFailingCount": 2
+    },
+    {
+      "id": "catch-fallback-without-suppression",
+      "clean": [{ "path": "clean.js", "content": "try { run(); } catch (error) { throw error; }\n" }],
+      "failing": [{ "path": "bad.js", "content": "try { run(); } catch (error) { recover(); }\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "internal-contract-fallback",
+      "clean": [{ "path": "clean.js", "content": "const result = value;\n" }],
+      "failing": [{ "path": "bad.js", "content": "const result = value || {};\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "framework-method-typeof-guard",
+      "clean": [{ "path": "clean.js", "content": "service.run();\n" }],
+      "failing": [{ "path": "bad.js", "content": "if (typeof service.run === \"function\") service.run();\n" }],
+      "expectedFailingCount": 1
+    },
+    {
+      "id": "invalid-lint-suppression",
+      "clean": [{ "path": "clean.js", "content": "// suppression policy is documented here\n" }],
+      "failing": [{ "path": "bad.js", "content": "// eslint-disable-next-line no-alert\n" }],
+      "expectedFailingCount": 1
+    }
+  ]
+}

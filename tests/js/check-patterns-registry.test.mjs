@@ -13,10 +13,8 @@ import { test } from "vitest";
 
 import { PATTERN_RULE_IDS, RULES } from "../../tools/check-patterns.mjs";
 import { findMatchingBrace } from "../../tools/check-patterns/ast-utils.mjs";
-import { LINE_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-regex-generic-defs.mjs";
 import { runNamespacePolicyRule } from "../../tools/check-patterns/generic/namespace-policy.mjs";
-import { STRUCTURAL_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-core-generic-defs.mjs";
-import { TODO_WITHOUT_OWNER_GENERIC_RULES } from "../../tools/check-patterns/generic/rules-failfast-generic-defs.mjs";
+import { CANONICAL_GENERIC_RULE_IDS, runGenericRule } from "../../tools/portable-core/generic-rule-engine.mjs";
 import { runRegexRule } from "../../tools/check-patterns/rules-core.mjs";
 import { GENERIC_RULES, PROJECT_RULES } from "../../tools/check-patterns/rules.mjs";
 
@@ -94,12 +92,10 @@ test("generic engine helpers remain direct-importable manifest targets", () => {
   assert.equal(typeof runRegexRule, "function");
   assert.equal(typeof runNamespacePolicyRule, "function");
   assert.deepEqual(
-    GENERIC_RULES.slice(
-      0,
-      LINE_GENERIC_RULES.length + STRUCTURAL_GENERIC_RULES.length + TODO_WITHOUT_OWNER_GENERIC_RULES.length
-    ),
-    [...LINE_GENERIC_RULES, ...STRUCTURAL_GENERIC_RULES, ...TODO_WITHOUT_OWNER_GENERIC_RULES]
+    GENERIC_RULES.map((rule) => rule.name),
+    CANONICAL_GENERIC_RULE_IDS
   );
+  assert.deepEqual(runGenericRule(CANONICAL_GENERIC_RULE_IDS[0], []), []);
 });
 
 test("every generic rule-def file is free of project-specific tokens", () => {

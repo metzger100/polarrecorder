@@ -156,9 +156,9 @@ window.Polarrecorder = window.Polarrecorder || {};
       return;
     }
     const reader = new FileReader();
-    reader.onload = function () {
+    reader.addEventListener("load", function () {
       runUpload(kind, String(reader.result), field);
-    };
+    });
     reader.readAsText(file);
   }
 

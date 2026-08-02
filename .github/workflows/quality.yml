@@ -36,9 +36,6 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install dependencies
-        run: npm ci
-
       - name: Provision toolchain
         env:
           POLARRECORDER_PYTHON: python

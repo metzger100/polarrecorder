@@ -83,8 +83,42 @@ export function runSharedCoreCheck(options = {}) {
   }
 
   checkRoleCompleteness(root, contract, findings);
+  checkCanonicalRuleOwners(root, contract, findings);
   const summary = report(findings, entries, contractPaths.size, options.print !== false);
   return summary;
+}
+
+/** @param {string} root @param {any} contract @param {SharedCoreFinding[]} findings @returns {void} */
+function checkCanonicalRuleOwners(root, contract, findings) {
+  const mandatory = new Set(contract.mandatoryPaths);
+  const ruleIds = new Set(contract.canonicalRuleIds);
+  const owners = contract.canonicalRuleOwners;
+  if (!owners || typeof owners !== "object" || Array.isArray(owners)) {
+    findings.push({ path: CONTRACT_PATH, kind: "rule-owner", detail: "canonicalRuleOwners is required" });
+    return;
+  }
+  const ownerIds = Object.keys(owners);
+  if (ownerIds.length !== ruleIds.size || ownerIds.some((ruleId) => !ruleIds.has(ruleId))) {
+    findings.push({
+      path: CONTRACT_PATH,
+      kind: "rule-owner",
+      detail: "rule owners must exactly match canonicalRuleIds"
+    });
+  }
+  for (const [ruleId, relativePath] of Object.entries(owners)) {
+    if (!mandatory.has(relativePath)) {
+      findings.push({ path: relativePath, kind: "rule-owner", detail: `owner for '${ruleId}' is not mandatory` });
+      continue;
+    }
+    try {
+      const absolutePath = resolveContainedPath(root, relativePath);
+      if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) {
+        findings.push({ path: relativePath, kind: "rule-owner", detail: `owner for '${ruleId}' is not a file` });
+      }
+    } catch (error) {
+      findings.push({ path: relativePath, kind: "escaping", detail: errorMessage(error) });
+    }
+  }
 }
 
 /** @param {any} manifest @param {SharedCoreFinding[]} findings @returns {Record<string, string>} */

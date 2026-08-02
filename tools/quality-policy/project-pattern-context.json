@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "catchFallbackExceptions": [
+    {
+      "file": "viewer/theme.js",
+      "line": 61,
+      "rule": "catch-fallback-without-suppression",
+      "owner": "host-theme-boundary",
+      "reason": "Cross-origin parent access is optional; the theme bridge fails closed to local styling."
+    }
+  ]
+}

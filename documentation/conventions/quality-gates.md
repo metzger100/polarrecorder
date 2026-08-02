@@ -17,15 +17,13 @@ npm run check:all
 
 `npm run check:strict` is an exact alias of `check:all`.
 
-`check:all` is exactly `check:core` plus `test:coverage:check`, the sole coverage half of the gate. `check:core` is the
-literal, locked group order:
+`check:all` is exactly `check:core` plus `test:coverage:check`, the sole coverage half of the gate. `check:core` is
+executed by the signed `tools/portable-core/gate-orchestrator.mjs` role graph, with the local profile supplying product
+adapters in this canonical order:
 
 ```text
-check:core = check:standard && check:shared-core && check:generic-surface &&
-             check:standalone && check:suppressions && typecheck && package:check &&
-             test:focus:check && check:smells &&
-             check:python-contracts && test:split && check:complexity &&
-             check:scaling && docs:check && check:filesize
+standard, portable-core, generic-surface, standalone, suppressions, typing, packaging,
+focus, smells, product-contracts, test-split, complexity, scaling, documentation, file-size
 ```
 
 | Group                            | Composition                                                                                                                                                                                                                                                         |
@@ -112,8 +110,9 @@ includes the contract schema/loaders plus the verifier, generic-surface, and att
 `npm run check:suppressions` provide blocking genericness and zero-inline-suppression owners. A fresh copy containing
 only this repository must pass `npm run check:all` without network access or neighboring-directory inputs.
 
-`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"` creates a product-neutral,
-dependency-free learning project with a minimal host boundary, a Node contract test, and its own `npm run check:all`.
+`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"` creates the explicitly minimal
+lesson. Add `--level quality --profile viewer-only` or `--profile python-plus-viewer` for the quality-grade profile,
+which includes the portable contract/profile, role graph, mutation-resistant check, and its own `check:all`.
 
 ## Related
 
