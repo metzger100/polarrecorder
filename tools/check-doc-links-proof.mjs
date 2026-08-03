@@ -34,15 +34,6 @@ function makeFixtureRoot({ broken }) {
     ].join("\n")
   );
   fs.writeFileSync(path.join(root, "documentation", "other.md"), "# Other\n");
-  fs.writeFileSync(
-    path.join(root, "tools", "quality-policy", "format-scope.json"),
-    JSON.stringify({
-      rows: [
-        { path: "README.md", owner: "prettier" },
-        { path: "documentation/other.md", owner: "prettier" }
-      ]
-    })
-  );
   return root;
 }
 

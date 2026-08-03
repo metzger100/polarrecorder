@@ -8,17 +8,12 @@
     "tools/check-distribution.mjs",
     "tools/check-patterns/generic/namespace-policy.mjs",
     "tools/check-quality-profile.mjs",
-    "tools/create-avnav-plugin-starter.mjs",
     "tools/portable-core/gate-role-engine.mjs",
     "tools/portable-core/suppression-engine.mjs",
     "tools/quality-policy/alignment-inventory.json",
     "tools/quality-policy/distribution-source.json",
     "tools/quality-policy/shared-core-manifest.json",
     "tools/quality-policy/shared-core-manifest.sha256",
-    "tools/regenerate-distribution-manifest.mjs",
-    "tools/starter-quality-template-parts.mjs",
-    "tools/starter-quality-templates.mjs",
-    "tools/starter-quality/package-lock-template.json",
-    "tools/starter-templates.mjs"
+    "tools/regenerate-distribution-manifest.mjs"
   ]
 }

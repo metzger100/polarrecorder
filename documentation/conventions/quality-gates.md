@@ -110,10 +110,6 @@ includes the contract schema/loaders plus the verifier, generic-surface, and att
 `npm run check:suppressions` provide blocking genericness and zero-inline-suppression owners. A fresh copy containing
 only this repository must pass `npm run check:all` without network access or neighboring-directory inputs.
 
-`npm run starter:create -- --output=/absolute/path --id=my-plugin --name="My Plugin"` creates the explicitly minimal
-lesson. Add `--level quality --profile viewer-only` or `--profile python-plus-viewer` for the quality-grade profile,
-which includes the portable contract/profile, role graph, mutation-resistant check, and its own `check:all`.
-
 ## Related
 
 - [Documentation index](../TABLEOFCONTENTS.md)

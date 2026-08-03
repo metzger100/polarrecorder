@@ -17,10 +17,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { check } from "linkinator";
 import { runDocumentationLinkPolicy } from "./portable-core/doc-link-engine.mjs";
+import { runFormatScopeGeneration } from "./quality-policy/generate-format-scope.mjs";
 
 /**
  * Every maintained Markdown file that Prettier owns, sourced directly from the single
- * `format-scope.json` inventory (not a second hand-rolled directory walk) so the
+ * in-process `format-scope` classification (not a second hand-rolled directory walk) so the
  * maintained-Markdown set behind `docs:lint`, `format:check`, and this Linkinator scan can
  * never drift apart. Historical files (completed plans, release notes) are already excluded
  * there.
@@ -29,11 +30,9 @@ import { runDocumentationLinkPolicy } from "./portable-core/doc-link-engine.mjs"
  * @returns {string[]}
  */
 export function discoverSeedMarkdownFiles(root) {
-  const scopePath = path.join(root, "tools", "quality-policy", "format-scope.json");
-  const scope = JSON.parse(fs.readFileSync(scopePath, "utf8"));
-  return scope.rows
-    .filter((/** @type {{owner: string, path: string}} */ row) => row.owner === "prettier" && row.path.endsWith(".md"))
-    .map((/** @type {{path: string}} */ row) => row.path)
+  return runFormatScopeGeneration(root)
+    .filter((row) => row.owner === "prettier" && row.path.endsWith(".md"))
+    .map((row) => row.path)
     .sort();
 }
 

@@ -71,8 +71,8 @@ Documentation checks reached through `npm run docs:check`, in this order:
 - `tools/check-doc-links.mjs` root-seeds Linkinator (`linkinator`) over every Prettier-owned Markdown file and fails on
   a broken local link or fragment; the static Linkinator options, including the host-aware skip pattern that keeps
   Linkinator's own ephemeral local serving origin from being mistaken for an external link, live in
-  `linkinator.config.json`, the converged owner. Seed selection stays in `check-doc-links.mjs`, derived from
-  `format-scope.json`.
+  `linkinator.config.json`, the converged owner. Seed selection stays in `check-doc-links.mjs`, derived from the
+  in-process `format-scope` classification.
 
 The documentation-shape checks that used to run here as standalone `tools/check-*.mjs` CLIs are now Vitest contract
 tests, reached instead through `npm run test:tools` (part of `test:node`, part of `test:split`, part of `check:core`):

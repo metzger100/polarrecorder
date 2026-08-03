@@ -14,14 +14,14 @@ import path from "node:path";
 import { test } from "vitest";
 
 import { discoverSeedMarkdownFiles, runDocLinksCheck } from "../../tools/check-doc-links.mjs";
+import { runFormatScopeGeneration } from "../../tools/quality-policy/generate-format-scope.mjs";
 
 const ROOT = process.cwd();
 
 test("every Prettier-owned Markdown file is a Linkinator seed", () => {
-  const scope = JSON.parse(fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "format-scope.json"), "utf8"));
-  const prettierMarkdown = scope.rows
-    .filter((/** @type {{owner: string, path: string}} */ row) => row.owner === "prettier" && row.path.endsWith(".md"))
-    .map((/** @type {{path: string}} */ row) => row.path)
+  const prettierMarkdown = runFormatScopeGeneration(ROOT)
+    .filter((row) => row.owner === "prettier" && row.path.endsWith(".md"))
+    .map((row) => row.path)
     .sort();
   assert.deepEqual(discoverSeedMarkdownFiles(ROOT), prettierMarkdown);
 });
@@ -72,16 +72,6 @@ function writeValidDocTree(root) {
   fs.writeFileSync(
     path.join(root, "documentation", "guide.md"),
     ["# Guide", "", "**Status:** Current.", "", "## Overview", "", "## Key Details", "", "## Related", ""].join("\n")
-  );
-  fs.writeFileSync(
-    path.join(root, "tools", "quality-policy", "format-scope.json"),
-    JSON.stringify({
-      rows: [
-        { path: "AGENTS.md", owner: "prettier" },
-        { path: "documentation/TABLEOFCONTENTS.md", owner: "prettier" },
-        { path: "documentation/guide.md", owner: "prettier" }
-      ]
-    })
   );
 }
 
