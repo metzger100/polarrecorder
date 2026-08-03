@@ -2,7 +2,7 @@
 
 /**
  * `format`/`format:check` runner. Both modes iterate the exact same
- * `format-scope.json` classification; the only difference is Prettier/Ruff write vs.
+ * in-process `format-scope` classification; the only difference is Prettier/Ruff write vs.
  * check mode, so the write and check inventories can never drift apart.
  *
  * Usage:
@@ -15,6 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { runFormatPolicy } from "../portable-core/format-engine.mjs";
+import { runFormatScopeGeneration } from "./generate-format-scope.mjs";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
 const HOOK_ENVIRONMENT_PATH = path.join(ROOT, "tools", "quality-policy", "project-hook-environment.json");
@@ -37,25 +38,16 @@ function resolveRuff() {
 }
 
 /**
- * @param {string} root
- * @returns {{rows: {path: string, owner: string}[]}}
- */
-function loadScope(root) {
-  const scopePath = path.join(root, "tools", "quality-policy", "format-scope.json");
-  return JSON.parse(fs.readFileSync(scopePath, "utf8"));
-}
-
-/**
- * Run Prettier/Ruff over `format-scope.json`'s classification in either check or write mode.
+ * Run Prettier/Ruff over the in-process format-scope classification in either check or write mode.
  * @param {{mode?: "check"|"write", root?: string}} [options]
  * @returns {{ok: boolean}}
  */
 export function runFormat({ mode = "check", root = ROOT } = {}) {
-  const scope = loadScope(root);
-  const owners = [...new Set(scope.rows.map((row) => row.owner))];
-  if (!runFormatPolicy({ rows: scope.rows, owners }).ok) return { ok: false };
-  const prettierPaths = scope.rows.filter((row) => row.owner === "prettier").map((row) => row.path);
-  const ruffPaths = scope.rows.filter((row) => row.owner === "ruff").map((row) => row.path);
+  const rows = runFormatScopeGeneration(root);
+  const owners = [...new Set(rows.map((row) => row.owner))];
+  if (!runFormatPolicy({ rows, owners }).ok) return { ok: false };
+  const prettierPaths = rows.filter((row) => row.owner === "prettier").map((row) => row.path);
+  const ruffPaths = rows.filter((row) => row.owner === "ruff").map((row) => row.path);
 
   let failed = false;
 

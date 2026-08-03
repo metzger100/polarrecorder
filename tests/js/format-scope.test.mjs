@@ -4,13 +4,12 @@
  */
 
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import { test } from "vitest";
 
-import { runFormatScopeGeneration } from "../../tools/quality-policy/generate-format-scope.mjs";
-
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
+import {
+  HISTORICAL_EXCLUSION_PATTERNS,
+  runFormatScopeGeneration
+} from "../../tools/quality-policy/generate-format-scope.mjs";
 
 test("every row has a sanctioned owner", () => {
   const rows = runFormatScopeGeneration();
@@ -28,14 +27,6 @@ test("every unsupported row has a reason and alternate validation", () => {
       assert.ok(row.alternateValidation, `${row.path} is unsupported without an alternate validation owner`);
     }
   }
-});
-
-test("committed scope matches fresh discovery", () => {
-  const fresh = runFormatScopeGeneration();
-  const committed = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "format-scope.json"), "utf8")
-  );
-  assert.deepEqual(committed.rows, fresh, "format-scope.json is stale; rerun npm run format:scope");
 });
 
 /**
@@ -71,9 +62,10 @@ test("historical artifacts are excluded, not unsupported", () => {
   const rows = runFormatScopeGeneration();
   const paths = new Set(rows.map((row) => row.path));
   assert.ok(!paths.has("releases/polarrecorder-1.0.0-beta.1.zip"));
-  assert.ok(!paths.has("exec-plans/completed/PLAN1.md"));
-  assert.ok(!paths.has("exec-plans/completed/PLAN5.md"));
-  assert.ok(!paths.has("exec-plans/completed/PLAN7.md"));
+  assert.ok(
+    HISTORICAL_EXCLUSION_PATTERNS.some((pattern) => pattern.test("exec-plans/completed/PLAN9001.md")),
+    "a seeded completed-plan path must match the historical exclusion pattern"
+  );
 });
 
 test("deleted tracked files are absent from fresh discovery", () => {

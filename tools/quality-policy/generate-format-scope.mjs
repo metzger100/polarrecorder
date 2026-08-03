@@ -15,9 +15,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
-const OUTPUT_PATH = path.join(ROOT, "tools", "quality-policy", "format-scope.json");
 
-const HISTORICAL_EXCLUSION_PATTERNS = [/^releases\/.*\.(zip|md)$/, /^exec-plans\/completed\//];
+export const HISTORICAL_EXCLUSION_PATTERNS = [/^releases\/.*\.(zip|md)$/, /^exec-plans\/completed\//];
 const GENERATED_STATE_DIRS = new Set([
   ".cache",
   ".claude",
@@ -40,8 +39,7 @@ const GENERATED_STATE_DIRS = new Set([
 
 const IMMUTABLE_CAPTURE_JSON_FILES = new Set([
   "tools/quality-policy/baseline-coverage-capture.json",
-  "tools/quality-policy/planned-quality-fixtures.json",
-  "tools/starter-quality/package-lock-template.json"
+  "tools/quality-policy/planned-quality-fixtures.json"
 ]);
 
 /**
@@ -168,10 +166,11 @@ function classify(relativePath) {
 /**
  * Build the canonical format-scope classification for every tracked file.
  *
+ * @param {string} [projectRoot]
  * @returns {{path: string, owner: string, reason?: string, alternateValidation?: string}[]}
  */
-export function runFormatScopeGeneration() {
-  const tracked = discoverFiles(ROOT).sort();
+export function runFormatScopeGeneration(projectRoot = ROOT) {
+  const tracked = discoverFiles(projectRoot, projectRoot).sort();
   /** @type {{path: string, owner: string, reason?: string, alternateValidation?: string}[]} */
   const rows = [];
   for (const relativePath of tracked) {
@@ -183,33 +182,28 @@ export function runFormatScopeGeneration() {
   return rows.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-/** @param {string} directory @returns {string[]} */
-function discoverFiles(directory) {
+/** @param {string} directory @param {string} projectRoot @returns {string[]} */
+function discoverFiles(directory, projectRoot) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory() && GENERATED_STATE_DIRS.has(entry.name)) return [];
     if (!entry.isDirectory() && (entry.name === ".coverage" || entry.name.endsWith(".pyc"))) return [];
     const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) return discoverFiles(absolute);
-    return [path.relative(ROOT, absolute).split(path.sep).join("/")];
+    if (entry.isDirectory()) return discoverFiles(absolute, projectRoot);
+    return [path.relative(projectRoot, absolute).split(path.sep).join("/")];
   });
 }
 
-function main() {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const rows = runFormatScopeGeneration();
   const unclassified = rows.filter((row) => row.owner === "unsupported" && !row.reason);
   if (unclassified.length > 0) {
     console.error("format-scope: unclassified files require an explicit disposition:");
     for (const row of unclassified) console.error(`  ${row.path}`);
     process.exitCode = 1;
-    return;
+  } else {
+    /** @type {Record<string, number>} */
+    const byOwner = {};
+    for (const row of rows) byOwner[row.owner] = (byOwner[row.owner] || 0) + 1;
+    console.log(`format-scope: ${rows.length} rows (${JSON.stringify(byOwner)})`);
   }
-  /** @type {Record<string, number>} */
-  const byOwner = {};
-  for (const row of rows) byOwner[row.owner] = (byOwner[row.owner] || 0) + 1;
-  fs.writeFileSync(OUTPUT_PATH, JSON.stringify({ rows, countByOwner: byOwner }, null, 2) + "\n");
-  console.log(`format-scope: wrote ${rows.length} rows (${JSON.stringify(byOwner)}) to ${OUTPUT_PATH}`);
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
 }

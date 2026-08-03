@@ -1,8 +1,8 @@
 /**
- * Self-test for `tools/quality-policy/run-format.mjs`'s `runFormat()`: it iterates
- * `format-scope.json`'s classification only (no project-specific value beyond the venv
+ * Self-test for `tools/quality-policy/run-format.mjs`'s `runFormat()`: it iterates the
+ * in-process `format-scope` classification only (no project-specific value beyond the venv
  * environment variable name it already reads from `project-hook-environment.json`), so a
- * fixture root with a symlinked `node_modules/.bin/prettier` and its own scope file can prove
+ * fixture root with a symlinked `node_modules/.bin/prettier` and its own sample file can prove
  * both a clean pass and a check-mode failure without touching the real repository tree.
  */
 
@@ -24,11 +24,6 @@ function makeFixtureRoot(sampleContent) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "run-format-fixture-"));
   fs.symlinkSync(path.join(ROOT, "node_modules"), path.join(root, "node_modules"));
   fs.writeFileSync(path.join(root, "sample.mjs"), sampleContent);
-  fs.mkdirSync(path.join(root, "tools", "quality-policy"), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, "tools", "quality-policy", "format-scope.json"),
-    JSON.stringify({ rows: [{ path: "sample.mjs", owner: "prettier" }] })
-  );
   return root;
 }
 

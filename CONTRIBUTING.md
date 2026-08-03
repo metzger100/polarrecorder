@@ -66,8 +66,7 @@ path.
   `plugin`, `tools`); Python tests stay on pytest. Add a JavaScript test simply by creating `tests/js/<name>.test.mjs`
   -- the matching project picks it up with no `package.json` edit, and `tests/js/vitest-projects.test.mjs` fails if a
   test file is ever claimed by no project. Register the new file with
-  `node tools/quality-policy/test-inventory.mjs --write`, add it to `tsconfig.tests.json`, and run
-  `npm run format:scope`.
+  `node tools/quality-policy/test-inventory.mjs --write` and add it to `tsconfig.tests.json`.
 - Standard maintained tools (Ruff, mypy, ESLint, Stylelint, jscpd, markdownlint-cli2, Linkinator, actionlint, Vitest)
   own every rule they can express; a focused custom checker is added only when no maintained tool covers the rule, and
   it ships with its own self-test in the same change.
@@ -79,8 +78,7 @@ path.
   `npm run check:all` (`check:core` plus coverage, required before handoff/push/release) are documented in full in
   [quality gates](documentation/conventions/quality-gates.md).
 - Polar Recorder is a Python/JavaScript product profile and an extraction example for a future generic AvNav plugin
-  environment. Its command graph is signed and profile-driven; use `npm run starter:create` for the minimal lesson or
-  `--level quality --profile python-plus-viewer` for the quality-grade greenfield profile.
+  environment. Its command graph is signed and profile-driven.
 - Releases are prepared, validated, and created locally (`npm run release:prepare`, manual notes/version review,
   `npm run release:create -- --version=X.Y.Z`, then `git push --tags`); before pushing the tag, run the manual
   [manual AvNav validation checklist](documentation/guides/manual-avnav-validation.md) against a real AvNav host and

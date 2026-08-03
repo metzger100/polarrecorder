@@ -6,20 +6,10 @@
     "tools/quality-policy/distribution-source.json",
     "tools/check-alignment.mjs",
     "tools/regenerate-distribution-manifest.mjs",
-    "tools/create-avnav-plugin-starter.mjs",
-    "tools/starter-templates.mjs",
-    "tools/starter-quality-template-parts.mjs",
-    "tools/starter-quality-templates.mjs",
-    "tools/starter-quality/package-lock-template.json",
     "tools/portable-core/suppression-engine.mjs",
     "tools/check-patterns/generic/namespace-policy.mjs"
   ],
-  "profile-owned": [
-    "package.json",
-    "package-lock.json",
-    "tools/quality-policy/project-profile.json",
-    "tools/quality-policy/format-scope.json"
-  ],
+  "profile-owned": ["package.json", "package-lock.json", "tools/quality-policy/project-profile.json"],
   "adapter-owned": ["tools/quality-policy/generate-format-scope.mjs"],
   "remove": []
 }

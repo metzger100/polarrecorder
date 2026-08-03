@@ -43,7 +43,6 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "hooks:install",
   "hooks:doctor",
   "format",
-  "format:scope",
   "requirements:lock",
   "release:prepare",
   "release:create",
@@ -52,7 +51,6 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "check:strict",
   "dependencies:audit",
   "portable-core:attest",
-  "starter:create",
   "distribution:source:check",
   "distribution:source:write"
 ];
