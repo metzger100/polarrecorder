@@ -62,8 +62,8 @@ path.
 - JavaScript tests run under Vitest, configured in `vitest.config.mjs` as three include-pattern projects (`viewer`,
   `plugin`, `tools`); Python tests stay on pytest. Add a JavaScript test simply by creating `tests/js/<name>.test.mjs`
   -- the matching project picks it up with no `package.json` edit, and `tests/js/vitest-projects.test.mjs` fails if a
-  test file is ever claimed by no project. Register the new file with
-  `node tools/quality-policy/test-inventory.mjs --write` and add it to `tsconfig.tests.json`.
+  test file is ever claimed by no project. Run `npm run inventory:write` to register the new file in the committed
+  inventory and `tsconfig.tests.json`.
 - Standard maintained tools (Ruff, mypy, ESLint, Stylelint, jscpd, markdownlint-cli2, Linkinator, actionlint, Vitest)
   own every rule they can express; a focused custom checker is added only when no maintained tool covers the rule, and
   it ships with its own self-test in the same change.

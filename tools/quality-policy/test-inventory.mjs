@@ -319,15 +319,24 @@ export function writeInventory({ root = ROOT, tsconfigPath = TSCONFIG_PATH } = {
   const payload = {
     note:
       "Committed executable JS test/helper inventory. Regenerate with " +
-      "`node tools/quality-policy/test-inventory.mjs --write` whenever a test/helper file " +
+      "`npm run inventory:write` whenever a test/helper file " +
       "is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
     entries
   };
   fs.writeFileSync(inventoryPath(root), JSON.stringify(payload, null, 2) + "\n");
-  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+  const configText = fs.readFileSync(tsconfigPath, "utf8");
+  const config = JSON.parse(configText);
   const preserved = config.files.filter((/** @type {string} */ entry) => entry.endsWith(".d.ts"));
-  config.files = [...new Set([...discoverExecutableTestHelpers(root), ...preserved])].sort();
-  fs.writeFileSync(tsconfigPath, JSON.stringify(config, null, 2) + "\n");
+  const files = [...new Set([...discoverExecutableTestHelpers(root), ...preserved])].sort();
+  const filesMatch = /^([ \t]*)"files"\s*:\s*\[[\s\S]*?^([ \t]*)\](?=\s*[},])/m.exec(configText);
+  if (!filesMatch) throw new Error(`Could not locate the files array in ${tsconfigPath}`);
+  const [, propertyIndent, closingIndent] = filesMatch;
+  const entriesText = files
+    .map((entry, index) => `${closingIndent}  ${JSON.stringify(entry)}${index < files.length - 1 ? "," : ""}`)
+    .join("\n");
+  const replacement = `${propertyIndent}"files": [\n${entriesText}${entriesText ? "\n" : ""}${closingIndent}]`;
+  const updatedConfigText = configText.replace(filesMatch[0], replacement);
+  fs.writeFileSync(tsconfigPath, updatedConfigText);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -58,6 +58,11 @@ Coverage half of the gate:
 | `npm run check:coverage-inventory` | Full Python + viewer/plugin JS coverage classification (measured/contract-owned), family and per-file floors, and the floor-vs-baseline ratchet (`check-coverage-inventory.mjs`)                                               |
 | `npm run test:coverage:check`      | `test:coverage:python` then `test:coverage:viewer` then `check:coverage-inventory`; the sole coverage half of `check:all`                                                                                                      |
 
+Coverage policy uses family floors plus defaults for new production files. A newly added production file inherits
+`defaultNewFileLinePercent` and `defaultNewFileBranchPercent` from `coverage-floors.json`; it does not need a new
+per-file entry unless it is an intentional exception. `contractOwned` remains reserved for files with a real owner test
+rather than serving as a way to bypass measured coverage.
+
 Optional maintainer gates:
 
 | Command                                     | Purpose                                                                                   |

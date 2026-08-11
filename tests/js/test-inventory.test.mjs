@@ -21,7 +21,8 @@ import {
   diffTsconfigTestsInventory,
   discoverExecutableTestHelpers,
   runTestInventoryCheck,
-  runTypecheckTests
+  runTypecheckTests,
+  writeInventory
 } from "../../tools/quality-policy/test-inventory.mjs";
 
 const ROOT = process.cwd();
@@ -71,6 +72,53 @@ test("detects a stale tsconfig.tests.json include entry", () => {
   const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory(root, tsconfigPath);
   assert.deepEqual(missingFromTsconfig, []);
   assert.deepEqual(extraInTsconfig, ["tests/js/removed.test.mjs"]);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("inventory writer is idempotent and preserves compilerOptions formatting", () => {
+  const { root, tsconfigPath } = makeWriterRoot({
+    live: ["tests/js/a.test.mjs"],
+    files: ["tests/js/a.test.mjs", "types/preserve.d.ts"]
+  });
+  const beforeWrite = fs.readFileSync(tsconfigPath, "utf8");
+  const filesPropertyStart = beforeWrite.indexOf('  "files":');
+  const compilerOptionsText = beforeWrite.slice(0, filesPropertyStart);
+  writeInventory({ root, tsconfigPath });
+  const firstWrite = fs.readFileSync(tsconfigPath, "utf8");
+  assert.match(firstWrite, /"lib": \["ES2020"\]/);
+  assert.equal(firstWrite.slice(0, firstWrite.indexOf('  "files":')), compilerOptionsText);
+  writeInventory({ root, tsconfigPath });
+  assert.equal(fs.readFileSync(tsconfigPath, "utf8"), firstWrite);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("inventory writer removes stale test entries", () => {
+  const { root, tsconfigPath } = makeWriterRoot({
+    live: ["tests/js/current.test.mjs"],
+    files: ["tests/js/current.test.mjs", "tests/js/removed.test.mjs"]
+  });
+  writeInventory({ root, tsconfigPath });
+  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+  assert.deepEqual(config.files, ["tests/js/current.test.mjs"]);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("inventory writer adds newly discovered test entries", () => {
+  const { root, tsconfigPath } = makeWriterRoot({ live: ["tests/js/new.test.mjs"], files: [] });
+  writeInventory({ root, tsconfigPath });
+  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+  assert.deepEqual(config.files, ["tests/js/new.test.mjs"]);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("inventory writer preserves seeded declaration files", () => {
+  const { root, tsconfigPath } = makeWriterRoot({
+    live: ["tests/js/current.test.mjs"],
+    files: ["types/preserve.d.ts"]
+  });
+  writeInventory({ root, tsconfigPath });
+  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+  assert.deepEqual(config.files, ["tests/js/current.test.mjs", "types/preserve.d.ts"]);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -255,6 +303,31 @@ function makeFakeRoot({ inventory, live }) {
   writeExceptionBaseline(root, []);
   writePlannedFixtures(root, []);
   return root;
+}
+
+/**
+ * @param {{live: string[], files: string[]}} options
+ * @returns {{root: string, tsconfigPath: string}}
+ */
+function makeWriterRoot({ live, files }) {
+  const root = makeFakeRoot({ inventory: [], live });
+  const tsconfigPath = path.join(root, "tsconfig.tests.json");
+  fs.writeFileSync(
+    tsconfigPath,
+    `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "es2020",
+    "lib": ["ES2020"],
+    "types": ["node"]
+  },
+  "files": [
+${files.map((entry, index) => `    ${JSON.stringify(entry)}${index < files.length - 1 ? "," : ""}`).join("\n")}
+  ]
+}
+`
+  );
+  return { root, tsconfigPath };
 }
 
 /**

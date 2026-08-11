@@ -76,16 +76,19 @@ Polar Recorder actually uses.
   incompatible mock payload), each shown to fail on the bad shape and pass on the clean one.
 - `npm run typecheck:tests` (`tools/quality-policy/test-inventory.mjs`) is the permanent owner for every executable JS
   test/helper: it verifies the committed `tools/quality-policy/test-inventory.json` (every entry classified `strict`;
-  there is no harness exception class) and `tsconfig.tests.json`'s `include` list both match live discovery with no
-  drift, verifies `tools/quality-policy/test-exception-baseline.json`'s exception list stays empty (independently
+  there is no harness exception class) and `tsconfig.tests.json`'s `files` list both match live discovery with no drift,
+  verifies `tools/quality-policy/test-exception-baseline.json`'s exception list stays empty (independently
   digest-anchored in `tests/js/test-inventory.test.mjs`), verifies any file under `tests/fixtures/quality/` matches a
   planned, non-executable, referenced entry in `tools/quality-policy/planned-quality-fixtures.json`, then strictly
   no-emit `checkJs`-types the whole set against `tsconfig.tests.json`.
 - `npm run typecheck:tools` (`tools/quality-policy/typecheck-tools.mjs`) is the `typecheck:source`/`typecheck:tests`
-  twin for maintained JavaScript quality tooling: it verifies the committed `tsconfig.tools.json`'s `include` list
-  matches live discovery of every `tools/**/*.mjs` file with no drift, then strictly no-emit `checkJs`-types the whole
-  set. `tests/js/typecheck-tools.test.mjs` proves the inventory-drift detection (a live tool file missing from the list,
-  a stale listed entry) and that the real repo's tool source typechecks clean.
+  twin for maintained JavaScript quality tooling: it verifies the committed `tsconfig.tools.json`'s `files` list matches
+  live discovery of every `tools/**/*.mjs` file with no drift, then strictly no-emit `checkJs`-types the whole set.
+  `tests/js/typecheck-tools.test.mjs` proves the inventory-drift detection (a live tool file missing from the list, a
+  stale listed entry) and that the real repo's tool source typechecks clean.
+- `npm run inventory:write` regenerates both the committed executable-test inventory and the `files` list in
+  `tsconfig.tests.json`; run it after adding, removing, or renaming a test/helper instead of editing either list by
+  hand.
 - `npm run test:focus:check` blocks focused or disabled tests before they merge: `tools/check-test-focus.mjs` parses
   every executable JS test/helper with `acorn` (so string/comment content can never trigger a false positive) for
   `.only(`/`.skip(`/`.todo(` calls, Jasmine-style bare aliases (`fdescribe`/`fit`/`xdescribe`/`xit`/`xtest`), Vitest's
