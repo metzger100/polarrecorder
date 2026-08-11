@@ -127,6 +127,8 @@ function printResult(findings, warnings, summary) {
   if (findings.length || warnings.length) print("SUMMARY_JSON=" + JSON.stringify(summary));
   else {
     console.log("Pattern check passed.");
-    console.log("SUMMARY_JSON=" + JSON.stringify(summary));
+    console.log(
+      "SUMMARY_JSON=" + JSON.stringify({ ok: true, checkedFiles: summary.checkedFiles, failures: 0, warnings: 0 })
+    );
   }
 }
