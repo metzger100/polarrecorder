@@ -85,6 +85,11 @@ or builds.
 
 Before `typecheck`, `check:core` runs `check:suppressions` to enforce zero inline suppressions.
 
+The JavaScript and Python focused-test scanners remain separate front ends because JavaScript uses the AST-based
+`tools/portable-core/focused-test-engine.mjs` through `tools/check-test-focus.mjs`, while Python uses CPython's AST in
+`tools/check-test-focus.py`; sharing a parser would require a hand-rolled cross-language parser. The shared-reporting
+layer was rejected for the same reason: the Python marker vocabulary and diagnostics are language-specific.
+
 Rule ownership:
 
 - [Smell prevention](smell-prevention.md) lists every blocking rule enforced by these commands.

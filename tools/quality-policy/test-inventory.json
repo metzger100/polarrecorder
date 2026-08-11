@@ -70,6 +70,9 @@
     "tests/js/js-checkers.test.mjs": {
       "classification": "strict"
     },
+    "tests/js/new-guide-contract.test.mjs": {
+      "classification": "strict"
+    },
     "tests/js/pattern-suppression.test.mjs": {
       "classification": "strict"
     },

@@ -36,6 +36,7 @@
     "tests/js/hotspot-budgets.test.mjs",
     "tests/js/install-script.test.mjs",
     "tests/js/js-checkers.test.mjs",
+    "tests/js/new-guide-contract.test.mjs",
     "tests/js/pattern-suppression.test.mjs",
     "tests/js/plugin-entrypoints.test.mjs",
     "tests/js/prettier-config.test.mjs",
