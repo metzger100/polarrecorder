@@ -35,6 +35,11 @@
       "source": ".agents/skills/review-validation/SKILL.md",
       "sourceType": "project-local",
       "computedHash": "5ed7d2e248fe5608ad60a38c6bb6e148ad94ba368788bec2cf6dad6a3e69a4ec"
+    },
+    "create-release": {
+      "source": ".agents/skills/create-release/SKILL.md",
+      "sourceType": "project-local",
+      "computedHash": "49a5a40f9b132ee5b264e5ed81dc6dfa1e31f4d964af2234b74e93c30a5f5c11"
     }
   }
 }
