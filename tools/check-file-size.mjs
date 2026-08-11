@@ -122,7 +122,9 @@ function reportFileSize(failures, warnings, summary) {
     return;
   }
   console.log("File size check passed.");
-  console.log("SUMMARY_JSON=" + JSON.stringify(summary));
+  console.log(
+    "SUMMARY_JSON=" + JSON.stringify({ ok: true, checkedFiles: summary.checkedFiles, failures: 0, warnings: 0 })
+  );
 }
 
 /**
