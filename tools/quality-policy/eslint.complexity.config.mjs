@@ -1,13 +1,13 @@
 /**
  * Focused ESLint flat configuration enforcing the strict shipped-JavaScript complexity
  * budget directly, at error severity, from the single shared limit source in
- * `eslint-complexity-config.mjs`. Every violation is an error; there is no baseline,
+ * `complexity-limits.mjs`. Every violation is an error; there is no baseline,
  * scanner, or budget ledger for ESLint to read, so a coordinated edit to policy data
  * alone can never authorize a violation. `npm run check:complexity` runs ESLint with
  * only this config against the shipped `viewer/*.js`, `plugin.js`, and `plugin.mjs`
  * files.
  */
-import { STRICT_LIMITS } from "./eslint-complexity-config.mjs";
+import { STRICT_LIMITS } from "./complexity-limits.mjs";
 
 const STRICT_COMPLEXITY_RULES = {
   complexity: ["error", STRICT_LIMITS.complexity],

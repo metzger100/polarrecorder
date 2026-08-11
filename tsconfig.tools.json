@@ -40,7 +40,7 @@
     "tools/quality-policy/coverage-inventory/python-coverage.mjs",
     "tools/quality-policy/coverage-inventory/shared.mjs",
     "tools/quality-policy/coverage-inventory/viewer-coverage.mjs",
-    "tools/quality-policy/eslint-complexity-config.mjs",
+    "tools/quality-policy/complexity-limits.mjs",
     "tools/quality-policy/eslint.complexity.config.mjs",
     "tools/quality-policy/generate-format-scope.mjs",
     "tools/quality-policy/profile-schema.mjs",
