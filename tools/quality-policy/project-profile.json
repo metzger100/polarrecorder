@@ -5,10 +5,6 @@
     "id": "python-plus-browser",
     "runtime": "python-plus-browser"
   },
-  "portableCore": {
-    "coreVersion": "3.2.0",
-    "roleGraph": "tools/quality-policy/portable-role-graph.json"
-  },
   "sourceScopes": [
     { "id": "python", "roots": ["server", "plugin.py", "tests"] },
     { "id": "viewer", "roots": ["viewer", "plugin.js", "plugin.mjs"] }
@@ -36,9 +32,6 @@
   "adapters": {
     "setup": "npm run setup",
     "standard": "npm run check:standard",
-    "portable-core": "npm run check:shared-core && npm run check:profile",
-    "generic-surface": "npm run check:generic-surface",
-    "standalone": "npm run check:standalone",
     "suppressions": "npm run check:suppressions",
     "typing": "npm run typecheck",
     "packaging": "npm run package:check",

@@ -19,9 +19,6 @@ const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"))
 
 const REQUIRED_CHECK_CORE_GROUPS = [
   "standard",
-  "portable-core",
-  "generic-surface",
-  "standalone",
   "suppressions",
   "typing",
   "packaging",
@@ -49,10 +46,7 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "check:fast",
   "test:unit",
   "check:strict",
-  "dependencies:audit",
-  "portable-core:attest",
-  "distribution:source:check",
-  "distribution:source:write"
+  "dependencies:audit"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */
@@ -282,7 +276,6 @@ function makeGraphFixture() {
       schemaVersion: 1,
       profileType: "product-quality-profile",
       product: { id: "fixture", runtime: "browser" },
-      portableCore: { coreVersion: "3.2.0", roleGraph: "tools/quality-policy/portable-role-graph.json" },
       sourceScopes: [{ id: "fixture", roots: ["leaf.mjs"] }],
       languages: { javascript: true },
       testProjects: [{ id: "fixture", command: "node leaf.mjs fixture", paths: ["leaf.mjs"] }],

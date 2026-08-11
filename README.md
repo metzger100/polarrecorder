@@ -511,12 +511,9 @@ Runtime code remains dependency-free on target devices. Run `npm run check:all` 
 [CONTRIBUTING.md](CONTRIBUTING.md) for setup, Python/JavaScript test commands, and the bounded `check:fast` iteration
 gate.
 
-The developer quality contract is local and fail-closed: `npm run check:shared-core` verifies the versioned exact-byte
-manifest, `npm run check:generic-surface` runs the blocking genericness scan, and `npm run check:suppressions` enforces
-zero inline suppression comments. `npm run portable-core:attest` emits an anonymous deterministic digest record
-containing only the contract version, manifest digest, generic-rule-tree digest, and entry digests. For reproducibility,
-the complete `npm run check:all` gate must also pass from a fresh isolated copy containing only this repository, with no
-network access or neighboring-directory inputs.
+The developer quality contract is local and fail-closed: `npm run check:suppressions` enforces zero inline suppression
+comments. For reproducibility, the complete `npm run check:all` gate must also pass from a fresh isolated copy
+containing only this repository, with no network access or neighboring-directory inputs.
 
 See `CONTRIBUTING.md` for the source-owned distribution and archive/peer-copy workflow.
 

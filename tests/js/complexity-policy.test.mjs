@@ -100,6 +100,7 @@ function execErrorOutput(error) {
  */
 function runComplexityEslintOnFixture(relativePath, content) {
   const absolutePath = path.join(ROOT, relativePath);
+  const original = fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, "utf8") : undefined;
   fs.writeFileSync(absolutePath, content);
   try {
     execFileSync(ESLINT_BIN, ["--config", COMPLEXITY_CONFIG, relativePath], {
@@ -110,7 +111,8 @@ function runComplexityEslintOnFixture(relativePath, content) {
   } catch (error) {
     return { ok: false, output: execErrorOutput(error) };
   } finally {
-    fs.rmSync(absolutePath, { force: true });
+    if (original === undefined) fs.rmSync(absolutePath, { force: true });
+    else fs.writeFileSync(absolutePath, original);
   }
 }
 

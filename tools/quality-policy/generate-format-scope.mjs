@@ -139,13 +139,6 @@ function classify(relativePath) {
       alternateValidation: "owning portable-core fixture test asserts exact bytes"
     };
   }
-  if (relativePath.endsWith(".sha256")) {
-    return {
-      owner: "unsupported",
-      reason: "digest signature; exact bytes are validated by the owning manifest checker",
-      alternateValidation: "npm run check:shared-core verifies the signature and manifest bytes"
-    };
-  }
   if (
     relativePath === ".gitignore" ||
     relativePath === ".prettierignore" ||
