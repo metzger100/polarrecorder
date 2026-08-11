@@ -9,6 +9,16 @@ working as designed but the learned polar, status display, or export workflow ma
 
 ## Key Details
 
+### No Data immediately after startup
+
+Polar Recorder shows No Data until AvNav supplies a complete, fresh TWA, TWS, and STW set. It remains active while
+waiting. The startup loop also tolerates AvNav's short plugin-thread registration window, so a transient host stop
+signal during startup does not end recording.
+
+If No Data remains after the instruments are online, check those three AvNav store values and their timestamps. If AvNav
+marks the plugin INACTIVE immediately after STARTED, update Polar Recorder and inspect the AvNav log for a plugin
+exception or an explicit disable event.
+
 ### Conditions the plugin cannot reliably detect
 
 Polar Recorder learns from true wind angle, true wind speed, and speed through water. With only those signals, some
