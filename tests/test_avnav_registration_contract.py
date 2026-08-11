@@ -64,6 +64,26 @@ class PartialAvNavAPIWithUserApp(PartialAvNavAPI):
         return "partial-user-app-id"
 
 
+class ThreadRegistrationRaceAvNavAPI(FakeAvNavAPI):
+    def __init__(self) -> None:
+        super().__init__()
+        self.fetches = 0
+
+    def fetchFromQueue(
+        self,
+        sequence: int,
+        number: int = 10,
+        includeSource: bool = False,
+        waitTime: float = 0.5,
+        filter_values: str | list[str] | None = None,
+    ) -> tuple[int, list[str]]:
+        self.fetches += 1
+        return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter_values)
+
+    def shouldStopMainThread(self) -> bool:
+        return self.fetches == 0 or self.fetches >= 2
+
+
 def test_plugin_json_does_not_declare_duplicate_user_apps() -> None:
     data = json.loads(Path("plugin.json").read_text(encoding="utf-8"))
 
@@ -104,6 +124,15 @@ def test_python_skips_user_app_when_base_url_method_is_missing(tmp_path: Path) -
 
     assert plugin._user_app_registered is False
     assert api.user_apps == []
+
+
+def test_run_waits_out_avnav_thread_registration_race(tmp_path: Path) -> None:
+    api = ThreadRegistrationRaceAvNavAPI()
+    plugin = _make_plugin(tmp_path, api)
+
+    plugin.run()
+
+    assert api.fetches == 2
 
 
 def _make_plugin(tmp_path: Path, api: object) -> plugin_module.Plugin:

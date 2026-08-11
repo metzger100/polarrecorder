@@ -26,6 +26,8 @@ Python lifecycle contract:
 - `Plugin.__init__(api)` receives the AvNav API object and registers callbacks. It should not start worker threads.
 - `Plugin.run()` executes in AvNav's plugin thread until AvNav asks the plugin to stop.
 - `api.shouldStopMainThread()` is the loop's stop signal and is meaningful only from the plugin run thread.
+- AvNav can briefly report that stop signal while it is still publishing a newly started plugin thread. Polar Recorder
+  yields through one bounded queue wait and re-checks; a persistent stop signal still ends the run.
 - `api.registerRestart(callback)` makes the plugin restartable from AvNav and gives AvNav a callback that must cause
   `run()` to exit.
 - AvNav may reuse a plugin instance across disable/re-enable cycles, so per-run stop flags must be reset at the start of

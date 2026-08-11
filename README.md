@@ -483,6 +483,10 @@ Common causes:
 
 Open the Status tab and look at the current decision and top rejection reasons.
 
+After an AvNav restart, Polar Recorder remains active through the host's short plugin-thread registration window while
+it waits for TWA, TWS, and STW. If AvNav marks it INACTIVE immediately after STARTED, update Polar Recorder and inspect
+the AvNav log; a normal missing-data case stays active and reports No Data.
+
 ### I see many rejected samples
 
 That can be normal. The plugin samples often, and it is intentionally picky. Look for accepted samples during steady

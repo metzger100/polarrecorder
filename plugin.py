@@ -122,8 +122,6 @@ class Plugin:
         self._last_flush_wall = 0.0
         self._last_flush_size_bytes = 0
         self._created_wall: float | None = None
-        self._pending_flush_wall = 0.0
-        self._pending_created_wall = 0.0
         self._model = PolarModel()
         self._counters = Counters()
         self._import_token: str | None = None
@@ -146,6 +144,8 @@ class Plugin:
         sequence = 0
         last_sample_monotonic = self._run_start_monotonic - self.config.sample_interval
         last_flush_monotonic = self._run_start_monotonic
+        if self.api.shouldStopMainThread() and not self._stop_requested:
+            sequence, _data = self.api.fetchFromQueue(sequence, waitTime=QUEUE_WAIT_SECONDS)
         while not self.api.shouldStopMainThread() and not self._stop_requested:
             sequence, _data = self.api.fetchFromQueue(sequence, waitTime=QUEUE_WAIT_SECONDS)
             now = self._clock()
