@@ -78,3 +78,31 @@ test("a tampered skill file is detected as drift", () => {
   const tampered = readSkillFile("preflight") + "\nextra line\n";
   assert.notEqual(sha256(tampered), lock.skills.preflight.computedHash);
 });
+
+test("every skill has repository depth and executable routing", () => {
+  const lock = JSON.parse(fs.readFileSync(LOCK_PATH, "utf8"));
+  const scripts = Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).scripts);
+  for (const [name, entry] of Object.entries(lock.skills)) {
+    const content = readSkillFile(name);
+    assert.ok(content.split("\n").filter((line) => line.trim()).length >= 100, `${name}: skill is too short`);
+    const paths = [
+      "documentation/TABLEOFCONTENTS.md",
+      "documentation/conventions/coding-standards.md",
+      "documentation/conventions/smell-prevention.md",
+      "AGENTS.md",
+      "server/polarrecorder",
+      "plugin.py",
+      "viewer/viewer.html",
+      "tests"
+    ];
+    assert.ok(
+      paths.filter((candidate) => content.includes(candidate) && fs.existsSync(path.join(ROOT, candidate))).length >= 3,
+      `${name}: needs three real paths`
+    );
+    assert.ok(
+      scripts.some((script) => content.includes(`npm run ${script}`)),
+      `${name}: needs a real npm script`
+    );
+    assert.equal(entry.sourceType === "project-local" || entry.sourceType === "vendored-generic", true);
+  }
+});
