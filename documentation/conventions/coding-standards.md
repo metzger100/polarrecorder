@@ -125,10 +125,6 @@ JavaScript standards:
   `istanbul ignore`, `pattern-ignore`, or equivalent checker/boundary markers) are permitted in maintained source; fix
   the root cause. `check:suppressions` scans source, tests, tools, configuration comments, documentation code examples,
   and active plans, while ESLint independently rejects generated JavaScript suppression fixtures.
-- Reusable quality mechanisms belong behind the versioned portable-core contract. Keep product paths, namespaces, report
-  formats, release payloads, and environment details in local profiles or adapters. The exact-byte manifest and
-  signature must be updated with every Tier 1 implementation change; `npm run portable-core:attest` is an anonymous
-  deterministic evidence output.
 - External host spellings belong at explicit integration adapters. Domain protocols use local naming, and the adapter
   owns host-only names or keyword arguments; do not spread host API spellings into domain modules or tests.
 - Every shipped JavaScript source file (`plugin.js`, `plugin.mjs`, every `viewer/*.js`) is fully JSDoc-typed and

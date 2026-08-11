@@ -55,10 +55,7 @@ path.
   `documentation/conventions/smell-prevention.md` before changing code or docs.
 - For complex multi-session work, write a fresh execution plan using `documentation/guides/exec-plan-authoring.md`.
 - Run `npm run check:all` before handing off changes.
-- For quality-tooling changes, run `npm run check:shared-core`, `npm run check:generic-surface`, and
-  `npm run check:suppressions`; use `npm run portable-core:attest` for deterministic anonymous evidence.
-- Keep reusable mechanisms behind the versioned portable-core contract. Product paths, release payloads, and report
-  formats belong in local profiles or adapters, and external host spellings belong at integration boundaries.
+- For quality-tooling changes, run `npm run check:suppressions` as part of `npm run check:all`.
 - A broad tooling change is complete only after `npm run check:all` passes from a fresh isolated copy containing only
   this repository and no network access.
 - Do not add runtime dependencies, generated build artifacts, unrelated product logic, or raw reference-source copies.
@@ -86,11 +83,6 @@ path.
 - `npm run dependencies:audit` (`npm audit`) is a maintainer-only, networked advisory check; it is never part of
   `check:all` or any required gate, and a clean run is not evidence of anything beyond the advisory database's current
   contents.
-- `npm run distribution:source:check` verifies the neutral vendored distribution without Git, a sibling checkout, or
-  network; only maintainers should use `npm run distribution:source:write`. Pair it with `npm run check:distribution`
-  and `npm run check:alignment -- --peer /path/to/the/peer-repository` when changing shared quality sources. The
-  generated `viewer-only` and `python-plus-viewer` profiles are both required to pass their own complete
-  `npm run check:all` gate from archive-only copies.
 
 ## Change workflow
 

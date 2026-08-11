@@ -161,9 +161,7 @@ State and threading:
   unsafe browser patterns, dead commented-out code, and citing a plan or phase number outside `exec-plans/` (see section
   2 above and `documentation/guides/exec-plan-authoring.md`).
 - Required completion gate: `npm run check:all`.
-- The portable-core contract and exact-byte manifest own reusable quality mechanisms; local product paths and release
-  payloads stay in profiles or adapters. `check:shared-core`, blocking `check:generic-surface`, and `check:suppressions`
-  are required portions of `check:core`, and `portable-core:attest` emits anonymous digest-only evidence.
+- `check:core` includes the independent `check:suppressions` scan.
 - Maintained source has zero inline suppression comments. Negative suppression fixtures are generated at runtime, and
   broad tooling changes require a full gate from an isolated copy containing only this repository.
 - Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run docs:check`.

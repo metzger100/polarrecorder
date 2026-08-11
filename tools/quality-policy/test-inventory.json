@@ -10,9 +10,6 @@
     "tests/js/check-file-size-submodules.test.mjs": {
       "classification": "strict"
     },
-    "tests/js/check-generic-surface.test.mjs": {
-      "classification": "strict"
-    },
     "tests/js/check-patterns-registry.test.mjs": {
       "classification": "strict"
     },
@@ -58,9 +55,6 @@
     "tests/js/format-scope.test.mjs": {
       "classification": "strict"
     },
-    "tests/js/generic-rule-corpus.test.mjs": {
-      "classification": "strict"
-    },
     "tests/js/header-contract.test.mjs": {
       "classification": "strict"
     },
@@ -80,9 +74,6 @@
       "classification": "strict"
     },
     "tests/js/plugin-entrypoints.test.mjs": {
-      "classification": "strict"
-    },
-    "tests/js/portable-core.test.mjs": {
       "classification": "strict"
     },
     "tests/js/prettier-config.test.mjs": {
@@ -113,12 +104,6 @@
       "classification": "strict"
     },
     "tests/js/setup.test.mjs": {
-      "classification": "strict"
-    },
-    "tests/js/shared-core-manifest.test.mjs": {
-      "classification": "strict"
-    },
-    "tests/js/shared-instructions.test.mjs": {
       "classification": "strict"
     },
     "tests/js/skills-lock.test.mjs": {
