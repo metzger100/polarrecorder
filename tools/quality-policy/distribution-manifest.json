@@ -5,7 +5,7 @@
   "materialization": "vendored-contract-output",
   "portableCore": {
     "coreVersion": "3.2.0",
-    "manifestSha256": "316222f0492f265fbe671b6c8585f6898eac37dee3474193b9bc245f2229fc16",
+    "manifestSha256": "a127efa381b411d8b842a7a54ee4fa6d96ad60d607b474191ea2efbbe680c6bf",
     "genericRulesSha256": "a3b6a22066d4fa19dadd86e64cc821f1549eb9f471afd124346b6360e165c313"
   },
   "paths": {
@@ -13,12 +13,12 @@
     "tools/check-distribution.mjs": "ef8933339171ab3861ed9c33ecd45e30f6b162b77dd40d924e46e697315d150f",
     "tools/check-patterns/generic/namespace-policy.mjs": "d29681678850b4a760a3039bab05d4eb03d52226eb1f5cbad1c5f0479bfadabc",
     "tools/check-quality-profile.mjs": "fd0199921f0d1d46e6e330d5c522208412fda5de62f09375c3ad5792c136efdd",
-    "tools/portable-core/gate-role-engine.mjs": "58c5d274afada0cec50f54aaa6f467c60ef177a24ffd39008630a16f2e3ac92e",
+    "tools/portable-core/gate-role-engine.mjs": "7bd704cf83cf02fca19bcf419aed2053dbb4bcfb5b4373b227d2b225987d08ab",
     "tools/portable-core/suppression-engine.mjs": "5dca9a94354d52746e1d14a0c65f1830063fc72d4bfee1ed9e9fc41fd31b1e2b",
     "tools/quality-policy/alignment-inventory.json": "c7f3dc179cb0014e7b14346281018a678c83634cd2e986431c5f64f7bd476bea",
     "tools/quality-policy/distribution-source.json": "647925f206f5566a6a624d3cae84135f5dbb7fbf6386e2fc7323f4199fe5f17b",
-    "tools/quality-policy/shared-core-manifest.json": "316222f0492f265fbe671b6c8585f6898eac37dee3474193b9bc245f2229fc16",
-    "tools/quality-policy/shared-core-manifest.sha256": "cff119c115fc8b7d3bf19c3b7a1a5582caf20f52bbddc9587ba03d7bb6e5b765",
+    "tools/quality-policy/shared-core-manifest.json": "a127efa381b411d8b842a7a54ee4fa6d96ad60d607b474191ea2efbbe680c6bf",
+    "tools/quality-policy/shared-core-manifest.sha256": "35bcf0997595212f2af347ec908a1e342bbdd53d18768489728f1b1774ceb59c",
     "tools/regenerate-distribution-manifest.mjs": "82dd3ae5ae1bf551fdf45e67c631098e27b0f244d271500ccde8a5c2f7525518"
   }
 }

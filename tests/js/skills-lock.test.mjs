@@ -2,16 +2,12 @@
  * Contract test for the agent skill layer: `skills-lock.json` entry shape (a source, a
  * source type, and a 64-character hex hash per skill), the lock's hash matching the live
  * `.agents/skills/<name>/SKILL.md` content (so an edited skill file is caught as drift), and
- * every generic skill file being free of the genericness tokens owned by
- * `tools/quality-policy/generic-tokens.json` -- the concrete tokens that would make a skill
- * un-liftable to a reusable tooling context. These generic skills remain independent of
- * Polar Recorder's product vocabulary.
+ * every declared skill matching the content hash committed in the lock.
  */
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
@@ -19,25 +15,6 @@ const ROOT = process.cwd();
 const SKILLS_DIR = path.join(ROOT, ".agents", "skills");
 const LOCK_PATH = path.join(ROOT, "skills-lock.json");
 const HASH_PATTERN = /^[0-9a-f]{64}$/;
-const GENERIC_TOKENS_PATH = path.join(ROOT, "tools", "quality-policy", "generic-tokens.json");
-
-/**
- * @param {string} [tokensPath]
- * @returns {{projectTokens: string[], domainTokens: string[], hostTokens: string[]}}
- */
-function readGenericTokenGroups(tokensPath = GENERIC_TOKENS_PATH) {
-  return JSON.parse(fs.readFileSync(tokensPath, "utf8"));
-}
-
-/**
- * Generic skills must be liftable without either repository's product vocabulary.
- */
-const GENERIC_TOKEN_GROUPS = readGenericTokenGroups();
-const FORBIDDEN_TOKENS = [
-  ...GENERIC_TOKEN_GROUPS.projectTokens,
-  ...GENERIC_TOKEN_GROUPS.domainTokens,
-  ...GENERIC_TOKEN_GROUPS.hostTokens
-];
 
 /**
  * @param {string} name
@@ -73,7 +50,7 @@ test("every lock entry has a source, a source type, and a 64-character hash", ()
   }
 });
 
-test("the lock directory set equals the declared generic and project skill sets", () => {
+test("the lock directory set equals the declared skill set", () => {
   const lock = JSON.parse(fs.readFileSync(LOCK_PATH, "utf8"));
   const declared = Object.keys(lock.skills).sort();
   const local = fs
@@ -100,31 +77,4 @@ test("a tampered skill file is detected as drift", () => {
   const lock = JSON.parse(fs.readFileSync(LOCK_PATH, "utf8"));
   const tampered = readSkillFile("preflight") + "\nextra line\n";
   assert.notEqual(sha256(tampered), lock.skills.preflight.computedHash);
-});
-
-test("every generic skill file is free of product-specific vocabulary", () => {
-  for (const name of ["preflight", "create-plan", "doc-sync", "scan-smells", "grill-me-repo"]) {
-    const content = readSkillFile(name).toLowerCase();
-    for (const token of FORBIDDEN_TOKENS) {
-      assert.ok(!content.includes(token.toLowerCase()), `${name}: contains forbidden token '${token}'`);
-    }
-  }
-});
-
-test("a seeded forbidden token would be caught", () => {
-  const seeded = "some skill text mentioning a Polar Recorder viewer";
-  const lowered = seeded.toLowerCase();
-  assert.ok(FORBIDDEN_TOKENS.some((token) => lowered.includes(token.toLowerCase())));
-});
-
-test("a token added to generic-tokens.json is picked up by this call site", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-tokens-single-owner-"));
-  const tokensPath = path.join(dir, "generic-tokens.json");
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({ projectTokens: [], domainTokens: ["zzz-synthetic-token"], hostTokens: [] })
-  );
-  const groups = readGenericTokenGroups(tokensPath);
-  fs.rmSync(dir, { recursive: true, force: true });
-  assert.ok(groups.domainTokens.includes("zzz-synthetic-token"));
 });

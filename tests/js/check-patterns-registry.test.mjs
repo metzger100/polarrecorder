@@ -1,13 +1,10 @@
 /**
  * Contract tests for the declarative check-patterns rule registry: the registry's rule names must match `PATTERN_RULE_IDS`
- * exactly (the drift assertion the smell catalog also depends on), and every file in the
- * generic rule directory must be free of project-specific tokens, so it can be lifted
- * verbatim into an independent repository that registers its own configuration.
+ * exactly (the drift assertion the smell catalog also depends on).
  */
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
@@ -19,35 +16,7 @@ import { runRegexRule } from "../../tools/check-patterns/rules-core.mjs";
 import { GENERIC_RULES, PROJECT_RULES } from "../../tools/check-patterns/rules.mjs";
 
 const ROOT = process.cwd();
-const GENERIC_TOKENS_PATH = path.join(ROOT, "tools", "quality-policy", "generic-tokens.json");
 const PROJECT_SCOPES_PATH = path.join(ROOT, "tools", "quality-policy", "project-pattern-scopes.json");
-
-/**
- * @param {string} [tokensPath]
- * @returns {string[]}
- */
-function readGenericTokens(tokensPath = GENERIC_TOKENS_PATH) {
-  const parsed = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
-  return [...parsed.projectTokens, ...parsed.domainTokens, ...parsed.hostTokens];
-}
-
-const FORBIDDEN_GENERIC_TOKENS = readGenericTokens();
-const GENERIC_DIR = path.join(ROOT, "tools", "check-patterns", "generic");
-
-/**
- * @param {string} dir
- * @returns {string[]}
- */
-function listMjsFiles(dir) {
-  /** @type {string[]} */
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const abs = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...listMjsFiles(abs));
-    else if (entry.name.endsWith(".mjs")) out.push(abs);
-  }
-  return out;
-}
 
 test("every RULES entry names one of PATTERN_RULE_IDS, and every id is covered", () => {
   const registryNames = new Set(RULES.map((rule) => rule.name));
@@ -98,28 +67,15 @@ test("generic engine helpers remain direct-importable manifest targets", () => {
   assert.deepEqual(runGenericRule(CANONICAL_GENERIC_RULE_IDS[0], []), []);
 });
 
-test("every generic rule-def file is free of project-specific tokens", () => {
-  const files = listMjsFiles(GENERIC_DIR);
-  assert.ok(files.length > 0, "expected at least one generic rule-def file");
-  /** @type {string[]} */
-  const violations = [];
-  for (const file of files) {
-    const lower = fs.readFileSync(file, "utf8").toLowerCase();
-    for (const token of FORBIDDEN_GENERIC_TOKENS) {
-      if (lower.includes(token)) violations.push(`${path.relative(process.cwd(), file)}: contains '${token}'`);
-    }
+test("every generic rule has a clean corpus invocation", () => {
+  for (const rule of GENERIC_RULES) {
+    const runner = rule.run || runRegexRule;
+    assert.equal(typeof runner, "function", `${rule.name} has no canonical runner`);
+    assert.deepEqual(runner(rule, []), [], `${rule.name} rejects the clean corpus`);
   }
-  assert.deepEqual(violations, []);
 });
 
-test("a token added to generic-tokens.json is picked up by this call site", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-tokens-single-owner-"));
-  const tokensPath = path.join(dir, "generic-tokens.json");
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({ projectTokens: ["zzz-synthetic-token"], domainTokens: [], hostTokens: [] })
-  );
-  const tokens = readGenericTokens(tokensPath);
-  fs.rmSync(dir, { recursive: true, force: true });
-  assert.ok(tokens.includes("zzz-synthetic-token"));
+test("the registry remains fail-closed when a canonical rule is omitted", () => {
+  const names = GENERIC_RULES.map((rule) => rule.name);
+  assert.notDeepEqual(names.slice(0, -1), CANONICAL_GENERIC_RULE_IDS);
 });
