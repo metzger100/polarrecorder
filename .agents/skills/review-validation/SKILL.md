@@ -116,7 +116,7 @@ This project-local workflow documents a concrete Polar Recorder extension.
 - Additional evidence rule 11 keeps repository paths and npm scripts explicit.
 - Additional evidence rule 12 keeps repository paths and npm scripts explicit.
 
-- [Documentation index](../../documentation/TABLEOFCONTENTS.md)
-- [API architecture](../../documentation/architecture/api.md)
-- [Viewer architecture](../../documentation/architecture/ui.md)
-- [Testing infrastructure](../../documentation/conventions/testing-infrastructure.md)
+- [Documentation index](../../../documentation/TABLEOFCONTENTS.md)
+- [API architecture](../../../documentation/architecture/api.md)
+- [Viewer architecture](../../../documentation/architecture/ui.md)
+- [Testing infrastructure](../../../documentation/conventions/testing-infrastructure.md)

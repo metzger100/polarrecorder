@@ -74,6 +74,9 @@ Start here for project documentation. Use the questions below to open the smalle
 
 ## Maintenance Guides
 
+- **How do I add an API endpoint?** -> [guides/add-new-api-endpoint.md](guides/add-new-api-endpoint.md)
+- **How do I add a viewer panel?** -> [guides/add-new-viewer-panel.md](guides/add-new-viewer-panel.md)
+
 - **How do docs stay synchronized with behavior?** ->
   [guides/documentation-maintenance.md](guides/documentation-maintenance.md)
 - **How do I write a multi-session execution plan?** -> [guides/exec-plan-authoring.md](guides/exec-plan-authoring.md)

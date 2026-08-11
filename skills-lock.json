@@ -29,12 +29,12 @@
     "add-api-endpoint": {
       "source": ".agents/skills/add-api-endpoint/SKILL.md",
       "sourceType": "project-local",
-      "computedHash": "ccee90e2a9fac649e36f63af4298799aa8b21e53535716a2e6bbb8d4b8a83140"
+      "computedHash": "6f65063783c11ad1219e047248cca08d93f142968110ceb3b595e312d815ec22"
     },
     "review-validation": {
       "source": ".agents/skills/review-validation/SKILL.md",
       "sourceType": "project-local",
-      "computedHash": "6c795d7c1b1131887c83fdbfa00a10c177c1206d2f48827678c09f96cda8abba"
+      "computedHash": "5ed7d2e248fe5608ad60a38c6bb6e148ad94ba368788bec2cf6dad6a3e69a4ec"
     }
   }
 }
