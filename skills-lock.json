@@ -4,27 +4,37 @@
     "preflight": {
       "source": ".agents/skills/preflight/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "0f499961c56210c47a9eb5d95309615981f9bb46e642c83eb3a897c406f4d2d5"
+      "computedHash": "bae26054439f3d858bdc833b8efbd8d02d09ea75000ed4a3ac55b75356db7b24"
     },
     "create-plan": {
       "source": ".agents/skills/create-plan/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "67e91f8fe4a614d9d755023a4e5f33f1b36eeeda817336f1e19c40af57f51e37"
+      "computedHash": "0d5a9c7e8dcffda375cfc4c2675d00d9b37cae7a473a155fa64993374c90154c"
     },
     "doc-sync": {
       "source": ".agents/skills/doc-sync/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "9be9eb94f87bf31d2a893f89a566114aff7e11894492906ec3454630a79152a2"
+      "computedHash": "12d1f3a3422669ac9a1cced136da4ccca3fd27382def1aad4286e78f9c9758fc"
     },
     "scan-smells": {
       "source": ".agents/skills/scan-smells/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "2b8ca3666e809adff6ba91f6f50879684743e36c564f9bccb9b5e32884f2f005"
+      "computedHash": "56965a9da2f44cb63f842e0c4b2d5f8c231fda48f834e216026fe68588de61c9"
     },
     "grill-me-repo": {
       "source": ".agents/skills/grill-me-repo/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "01dbea2ec180f575a51458bb012147c2f8859796d3ede608f8a18067cf9ddad6"
+      "computedHash": "cec3e5db98ba1e885b359468d3730a0c21344bbf3cde84da4ec583f69cd2eaea"
+    },
+    "add-api-endpoint": {
+      "source": ".agents/skills/add-api-endpoint/SKILL.md",
+      "sourceType": "project-local",
+      "computedHash": "ccee90e2a9fac649e36f63af4298799aa8b21e53535716a2e6bbb8d4b8a83140"
+    },
+    "review-validation": {
+      "source": ".agents/skills/review-validation/SKILL.md",
+      "sourceType": "project-local",
+      "computedHash": "6c795d7c1b1131887c83fdbfa00a10c177c1206d2f48827678c09f96cda8abba"
     }
   }
 }
