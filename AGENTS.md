@@ -7,7 +7,7 @@ a short pointer to it, not a copy.
 
 ---
 
-<!-- BEGIN SHARED_INSTRUCTIONS -->**Critical:** This file is a routing map. Use it to find focused documentation, not to store implementation details.
+**Critical:** This file is a routing map. Use it to find focused documentation, not to store implementation details.
 
 ---
 
@@ -78,7 +78,6 @@ explicit README deliverables and exit conditions for these categories.
 Every maintained documentation page has a title, a plain `**Status:** Current.` line, and `## Overview`,
 `## Key Details`, and `## Related` sections. Additional interface material is optional when it helps explain a public
 contract. Keep documentation concise, concrete, and linked from the navigation index when it is new.
-<!-- END SHARED_INSTRUCTIONS -->
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "note": "Committed executable JS test/helper inventory. Regenerate with `node tools/quality-policy/test-inventory.mjs --write` whenever a test/helper file is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
+  "note": "Committed executable JS test/helper inventory. Regenerate with `npm run inventory:write` whenever a test/helper file is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
   "entries": {
     "tests/js/agents-pointer.test.mjs": {
       "classification": "strict"
