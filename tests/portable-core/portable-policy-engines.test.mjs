@@ -2,6 +2,7 @@
  * Executable clean and failing cases for every canonical portable policy engine.
  */
 
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -9,6 +10,7 @@ import { expect, test } from "vitest";
 
 import { STRICT_LIMITS, runComplexityPolicy } from "../../tools/portable-core/complexity-engine.mjs";
 import { runCoveragePolicy } from "../../tools/portable-core/coverage-engine.mjs";
+import { normalizeCoverageSummary } from "../../tools/portable-core/coverage-engine.mjs";
 import { runDocumentationLinkPolicy } from "../../tools/portable-core/doc-link-engine.mjs";
 import { runFileSizePolicy } from "../../tools/portable-core/file-size-engine.mjs";
 import { runFocusedTestPolicy } from "../../tools/portable-core/focused-test-engine.mjs";
@@ -20,6 +22,8 @@ import { runReleasePolicy } from "../../tools/portable-core/release-engine.mjs";
 import { runProfileSchemaCheck } from "../../tools/portable-core/schema-engine.mjs";
 import { runSuppressionCheck } from "../../tools/portable-core/suppression-engine.mjs";
 import { runTestInventoryPolicy } from "../../tools/portable-core/test-inventory-engine.mjs";
+
+const ROOT = process.cwd();
 
 test("canonical pure policy engines accept clean input and reject failing input", function () {
   expect(runFileSizePolicy({ files: { a: "x\n" }, limit: 1 }).ok).toBe(true);
@@ -72,4 +76,22 @@ test("canonical filesystem policy engines accept clean input and reject failing 
   fs.writeFileSync(path.join(root, "bad.js"), ["// eslint", "-disable\n"].join(""));
   expect(runSuppressionCheck({ root, print: false }).ok).toBe(false);
   fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("canonical policy engine edge cases remain covered", () => {
+  assert.deepEqual(duplicateJsonKeys('{"a": 1, "a": 2}'), ["a"]);
+  assert.deepEqual(duplicateJsonKeys('{"a": 1, "b": 2}'), []);
+  assert.equal(resolveContainedPath(ROOT, "/tmp/out").ok, false);
+  assert.equal(resolveContainedPath(ROOT, "../out").ok, false);
+  assert.equal(resolveContainedPath(ROOT, "tests/portable-core/fixtures/clean.txt").ok, true);
+  assert.equal(runComplexityPolicy({ limits: STRICT_LIMITS, findings: { fresh: 1 } }).ok, false);
+  assert.equal(normalizeCoverageSummary({ lines: 101, functions: 90, statements: 90, branches: 90 }).ok, false);
+  assert.equal(runCoveragePolicy({ summary: {}, floors: {} }).ok, false);
+  assert.equal(runReleasePolicy({ version: "1.2.3", payload: ["a", "b"] }).ok, true);
+  assert.equal(runReleasePolicy({ version: "1.2.3", payload: ["b", "a"], baselinePayload: ["a", "b"] }).ok, true);
+  assert.equal(runReleasePolicy({ version: "1.2.3", payload: ["../outside"] }).ok, false);
+  assert.equal(
+    fs.readFileSync(path.join(ROOT, "tests", "portable-core", "fixtures", "clean.txt"), "utf8"),
+    "portable core fixture\n"
+  );
 });

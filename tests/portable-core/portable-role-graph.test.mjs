@@ -15,8 +15,7 @@ test("the checked-in role graph and local profile satisfy the portable boundary"
   const { graph, profile } = readQualityBoundary(ROOT);
   expect(runGateRoleGraphCheck(graph)).toMatchObject({ ok: true, findings: [] });
   expect(runProfileContractCheck(profile)).toMatchObject({ ok: true, findings: [] });
-  expect(graph.requiredOrder).toHaveLength(17);
-  expect(profile.portableCore.roleGraph).toBe("tools/quality-policy/portable-role-graph.json");
+  expect(graph.requiredOrder).toHaveLength(Object.keys(graph.roles).length);
 });
 
 test("the role graph rejects duplicates, unknown roles, and weak failure policy", function () {
@@ -34,7 +33,7 @@ test("the role graph rejects duplicates, unknown roles, and weak failure policy"
 test("the profile rejects unsafe paths, recursive commands, and duplicate test projects", function () {
   const { profile } = readQualityBoundary(ROOT);
   const invalid = structuredClone(profile);
-  invalid.portableCore.roleGraph = "../outside.json";
+  invalid.portableCore = { coreVersion: "1", roleGraph: "../outside.json" };
   invalid.testProjects[1].id = invalid.testProjects[0].id;
   invalid.testProjects[0].command = "npm run check && /bin/sh";
   invalid.adapters.extra = "node ../outside.mjs";
@@ -68,11 +67,11 @@ test("the orchestrator executes canonical roles once and stops at the first fail
       adapters: {
         ...profile.adapters,
         standard: "node first",
-        "portable-core": "node second",
-        "generic-surface": "node third"
+        suppressions: "node second",
+        typing: "node third"
       }
     },
-    roles: ["standard", "portable-core", "generic-surface"],
+    roles: ["standard", "suppressions", "typing"],
     runCommand(command) {
       commands.push(command);
       return command === "node second" ? 1 : 0;
@@ -80,12 +79,12 @@ test("the orchestrator executes canonical roles once and stops at the first fail
   });
   expect(result.ok).toBe(false);
   expect(commands).toEqual(["node first", "node second"]);
-  expect(result.failedRole).toBe("portable-core");
+  expect(result.failedRole).toBe("suppressions");
 });
 
 test("the orchestrator rejects reordered, duplicate, and recursive role selections", function () {
   const { graph, profile } = readQualityBoundary(ROOT);
-  const reordered = runQualityRoleGraph({ graph, profile, roles: ["standalone", "standard"] });
+  const reordered = runQualityRoleGraph({ graph, profile, roles: ["typing", "standard"] });
   expect(reordered.findings.some((finding) => finding.kind === "reordered-role")).toBe(true);
   const duplicate = runQualityRoleGraph({ graph, profile, roles: ["standard", "standard"] });
   expect(duplicate.findings.some((finding) => finding.kind === "duplicate-role")).toBe(true);

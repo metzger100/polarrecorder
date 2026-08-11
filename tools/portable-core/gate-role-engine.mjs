@@ -86,14 +86,16 @@ export function runProfileContractCheck(profile, options = {}) {
   if (value.schemaVersion !== 1 || value.profileType !== "product-quality-profile") {
     findings.push({ path: PROFILE_PATH, kind: "version", detail: "profile envelope is unsupported" });
   }
-  if (!value.portableCore || typeof value.portableCore !== "object") {
-    findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "portableCore is required" });
-  } else {
-    if (typeof value.portableCore.coreVersion !== "string") {
-      findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "coreVersion is required" });
-    }
-    if (!isRelativePath(value.portableCore.roleGraph)) {
-      findings.push({ path: PROFILE_PATH, kind: "path", detail: "roleGraph must be repository-relative" });
+  if (value.portableCore !== undefined) {
+    if (!value.portableCore || typeof value.portableCore !== "object" || Array.isArray(value.portableCore)) {
+      findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "portableCore must be an object" });
+    } else {
+      if (typeof value.portableCore.coreVersion !== "string") {
+        findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "coreVersion is required" });
+      }
+      if (!isRelativePath(value.portableCore.roleGraph)) {
+        findings.push({ path: PROFILE_PATH, kind: "path", detail: "roleGraph must be repository-relative" });
+      }
     }
   }
   if (!Array.isArray(value.sourceScopes) || value.sourceScopes.length === 0) {

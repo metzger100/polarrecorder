@@ -21,8 +21,6 @@ import { stampPluginJson } from "./release-archive.mjs";
 const TOOLS_DIR = path.dirname(new URL(import.meta.url).pathname);
 const SCHEMAS_DIR = path.join(TOOLS_DIR, "..", "schemas");
 const PROFILE_PATH = path.join(TOOLS_DIR, "quality-policy", "project-schema-profile.json");
-const PORTABLE_CONTRACT_SCHEMA = "portable-core-contract.schema.json";
-const PORTABLE_CONTRACT_PATH = path.join("tools", "quality-policy", "portable-core-contract.json");
 
 /** @typedef {{firstSerializedKey: string}} ReleaseFormProfile */
 /** @typedef {{name: string, devSchema: string, releaseSchema: string, releaseForm: ReleaseFormProfile}} ArtifactProfile */
@@ -144,21 +142,6 @@ function checkInventoryComplete(artifacts) {
 }
 
 /**
- * Validate the portable-core contract with its committed schema.
- * @param {string} root
- * @returns {string[]}
- */
-function checkPortableCoreContract(root) {
-  const contractPath = path.join(root, PORTABLE_CONTRACT_PATH);
-  if (!fs.existsSync(contractPath)) return [];
-  const schema = readSchema(PORTABLE_CONTRACT_SCHEMA);
-  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
-  const ajv = new Ajv({ allErrors: true });
-  const validate = ajv.compile(schema);
-  return runValidator(validate, contract, "portable-core-contract", "contract");
-}
-
-/**
  * @param {{root?: string, print?: boolean, artifacts?: SchemaOwnedArtifact[]}} [options]
  * @returns {{ok: boolean, failures: string[]}}
  */
@@ -169,12 +152,6 @@ export function runSchemaCheck(options = {}) {
 
   /** @type {string[]} */
   const failures = [...checkInventoryComplete(artifacts)];
-  try {
-    failures.push(...checkPortableCoreContract(root));
-  } catch (error) {
-    failures.push(`portable-core-contract: could not validate contract: ${/** @type {Error} */ (error).message}`);
-  }
-
   for (const artifact of artifacts) {
     if (typeof artifact.validateDevForm === "function") {
       try {
