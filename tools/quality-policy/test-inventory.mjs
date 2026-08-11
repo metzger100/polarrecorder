@@ -314,8 +314,8 @@ export function runTypecheckTests({ root = ROOT, print = true } = {}) {
   }
 }
 
-function writeInventory() {
-  const entries = buildTestInventory();
+export function writeInventory({ root = ROOT, tsconfigPath = TSCONFIG_PATH } = {}) {
+  const entries = buildTestInventory(root);
   const payload = {
     note:
       "Committed executable JS test/helper inventory. Regenerate with " +
@@ -323,7 +323,11 @@ function writeInventory() {
       "is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
     entries
   };
-  fs.writeFileSync(inventoryPath(ROOT), JSON.stringify(payload, null, 2) + "\n");
+  fs.writeFileSync(inventoryPath(root), JSON.stringify(payload, null, 2) + "\n");
+  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+  const preserved = config.files.filter((/** @type {string} */ entry) => entry.endsWith(".d.ts"));
+  config.files = [...new Set([...discoverExecutableTestHelpers(root), ...preserved])].sort();
+  fs.writeFileSync(tsconfigPath, JSON.stringify(config, null, 2) + "\n");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

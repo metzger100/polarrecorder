@@ -26,6 +26,7 @@
     "check:scaling": "bash -c 'PATH=\"$PWD/venv/bin:$PATH\"; python -m pytest tests/test_operation_count_evaluator.py tests/test_polar_model.py tests/test_projection_scaling_contract.py tests/test_api_handlers_scaling_contract.py -q'",
     "typecheck:source": "node tools/quality-policy/typecheck-source.mjs",
     "typecheck:tests": "node tools/quality-policy/test-inventory.mjs",
+    "inventory:write": "node tools/quality-policy/test-inventory.mjs --write",
     "typecheck:tools": "node tools/quality-policy/typecheck-tools.mjs",
     "typecheck:python": "bash -c 'cache_dir=\"${MYPY_CACHE_DIR:-.quality-cache/mypy}\"; mkdir -p \"$cache_dir\"; PATH=\"$PWD/venv/bin:$PATH\"; python -m mypy server/polarrecorder tests plugin.py --strict --cache-dir \"$cache_dir\"'",
     "typecheck": "npm run typecheck:source && npm run typecheck:tests && npm run typecheck:tools && npm run typecheck:python",

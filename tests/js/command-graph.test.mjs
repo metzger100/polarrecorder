@@ -43,6 +43,7 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "requirements:lock",
   "release:prepare",
   "release:create",
+  "inventory:write",
   "check:fast",
   "test:unit",
   "check:strict",

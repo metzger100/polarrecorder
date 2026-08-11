@@ -13,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "vitest";
 
-import { STRICT_LIMITS } from "../../tools/quality-policy/eslint-complexity-config.mjs";
+import { STRICT_LIMITS } from "../../tools/quality-policy/complexity-limits.mjs";
 
 const ROOT = process.cwd();
 const DOC_PATH = path.join(ROOT, "documentation", "conventions", "quality-gates.md");

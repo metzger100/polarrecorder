@@ -117,7 +117,7 @@ function runComplexityEslintOnFixture(relativePath, content) {
 }
 
 const OWNER_RELATIVE_PATH = "tools/portable-core/complexity-engine.mjs";
-const ADAPTER_RELATIVE_PATH = "tools/quality-policy/eslint-complexity-config.mjs";
+const ADAPTER_RELATIVE_PATH = "tools/quality-policy/complexity-limits.mjs";
 const LIMIT_PATTERNS = {
   complexity: /\bcomplexity["']?\s*:\s*(?:\[[^,]*,\s*)?10\b/,
   statements: /\bstatements["']?\s*:\s*(?:\[[^,]*,\s*)?40\b/,
