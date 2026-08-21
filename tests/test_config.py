@@ -16,6 +16,9 @@ def test_logger_module_smoke_import_for_coverage() -> None:
 def test_default_config_matches_phase_3_defaults() -> None:
     config = default_config()
 
+    assert config.twa_key == "gps.trueWindAngle"
+    assert config.tws_key == "gps.trueWindSpeed"
+    assert config.stw_key == "gps.waterSpeed"
     assert config.sample_interval == 1.0
     assert config.percentile == 65
     assert config.flush_interval == 300
@@ -35,6 +38,20 @@ def test_parse_config_values_uses_avnav_string_conventions() -> None:
     assert config.debug_logging is True
     assert config.percentile == 75
     assert config.sample_interval == 2.5
+
+
+def test_core_source_keys_pass_through_unchanged() -> None:
+    config = parse_config_values(
+        {
+            "twa_key": "gps.signalk.environment.wind.angleTrueWater",
+            "tws_key": "gps.signalk.environment.wind.speedTrue",
+            "stw_key": "gps.signalk.navigation.speedThroughWater",
+        }
+    )
+
+    assert config.twa_key == "gps.signalk.environment.wind.angleTrueWater"
+    assert config.tws_key == "gps.signalk.environment.wind.speedTrue"
+    assert config.stw_key == "gps.signalk.navigation.speedThroughWater"
 
 
 def test_parse_config_values_clamps_numeric_ranges_from_params() -> None:

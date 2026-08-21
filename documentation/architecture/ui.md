@@ -45,23 +45,27 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   logic stays under the file-size budget. `viewer/export-presets.js` adds `ExportPresets`, owning the selected-preset
   name and the TWA/TWS `GridEditor` instances (`Configure`, `All`, `Sorted`, `Selected`, `SetSelected`,
   `SelectedPreset`, `Editors`, `LoadSelected`, `IsValid`) so `export-ui.js` stays under its file-size budget.
-  `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's third card, mounted by `settings-ui.js` so
-  the transport-heavy markup stays out of the Settings budget. `viewer/presets.js` adds `Presets`, owning the built-in
-  fallback list and display labels so `viewer.js` stays within its line budget. `viewer/import-upload.js` adds
-  `ImportUpload`, the shared chunked-upload helper (`UploadBackup(kind, text, onSummary, onError)`) used by both
-  Settings restore cards, keeping the transport in one place and `settings-ui.js` under its budget.
+  `viewer/advanced-settings.js` adds `SourceSettings`, the Settings tab's first card, and `AdvancedSettings`, its fifth
+  card. `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's fourth card, mounted by
+  `settings-ui.js` so the transport-heavy markup stays out of the Settings budget. `viewer/presets.js` adds `Presets`,
+  owning the built-in fallback list and display labels so `viewer.js` stays within its line budget.
+  `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload helper
+  (`UploadBackup(kind, text, onSummary, onError)`) used by both Settings restore cards, keeping the transport in one
+  place and `settings-ui.js` under its budget.
 - The viewer defaults to the `DefaultStarboard180` preset (label "Default (Starboard 180°)"). The preset selector also
   offers `DefaultPort180` ("Default (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"), and
   the legacy `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all four when the `presets` fetch fails.
   The pre-rename `Default180` selection still resolves to the starboard half server-side.
 - The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited to CSV and preset workflows. Settings
-  starts with two maintenance cards: a **Learned Data** card with Download, Restore, and Reset subsections, and a
-  **Presets** card with Download and Restore subsections. Each subsection is a `.settings-group` (the Reset one carries
-  `.settings-group-danger`). Each restore subsection has a hidden file input behind a "Choose Backup File" button, a
-  chosen-filename label, a "Type RESTORE to confirm" field, and a danger button; on confirmation it reads the file and
-  drives `ImportUpload.UploadBackup(kind, ...)`, which uploads the JSON in chunks and shows the server's summary or its
-  precise rejection. Reset still requires the `RESET` confirmation.
-- Settings also owns a third **Enhanced Rules** card (`EnhancedSettings.Render()`), rendered from `GET enhanced/keys`
+  starts with a **Data Sources** card whose TWA, TWS, and STW selectors default to `gps.trueWindAngle`,
+  `gps.trueWindSpeed`, and `gps.waterSpeed`. The selected keys are saved through the runtime-config endpoint and apply
+  on the next sampling cycle. Two maintenance cards follow: a **Learned Data** card with Download, Restore, and Reset
+  subsections, and a **Presets** card with Download and Restore subsections. Each subsection is a `.settings-group` (the
+  Reset one carries `.settings-group-danger`). Each restore subsection has a hidden file input behind a "Choose Backup
+  File" button, a chosen-filename label, a "Type RESTORE to confirm" field, and a danger button; on confirmation it
+  reads the file and drives `ImportUpload.UploadBackup(kind, ...)`, which uploads the JSON in chunks and shows the
+  server's summary or its precise rejection. Reset still requires the `RESET` confirmation.
+- Settings also owns a fourth **Enhanced Rules** card (`EnhancedSettings.Render()`), rendered from `GET enhanced/keys`
   and `GET enhanced/status`. Each rule shows an Enabled switch (the shared `.switch-field` control also used by the
   Export tab), one `<select>` per configured key field listing the currently-present store keys (SignalK keys appear as
   `gps.signalk.*`; an already-configured key stays selected even when it is not publishing), the rule's threshold
@@ -71,7 +75,7 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   non-numeric threshold blocks the save with a visible error. The badge classes are `.enhanced-badge-<status>`, each
   with its own `--polarrecorder-*` treatment: `active` reads accepted-green, `value stale` quarantined-amber,
   `key not in store` rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted second-color.
-- A fourth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below Enhanced Rules and is rendered from
+- A fifth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below Enhanced Rules and is rendered from
   `GET advanced/settings`. It exposes the safe runtime-tuning settings from the server allowlist, grouped as Sampling
   and Persistence, Sensor Freshness, Core Filters, Stability and Maneuvers, and Engine Heuristic. Numeric fields use
   readable labels, short descriptions, and the server's min/max bounds; `debug_logging` renders as a switch. Internal

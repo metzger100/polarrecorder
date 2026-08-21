@@ -9,7 +9,7 @@ document records the self-contained key, unit, and timestamp behavior the plugin
 
 ## Key Details
 
-Core learning keys:
+Core learning keys (defaults):
 
 | Polar field | AvNav store key     | AvNav unit | Polar Recorder unit after read | Code owner                       |
 | ----------- | ------------------- | ---------: | -----------------------------: | -------------------------------- |
@@ -19,7 +19,9 @@ Core learning keys:
 
 Store read contract:
 
-- `StoreReader` calls `api.getSingleValue(key, includeInfo=True)` for all three keys.
+- The Settings tab's **Data Sources** card persists alternative `twa_key`, `tws_key`, and `stw_key` values in AvNav
+  plugin configuration. The table above remains the default selection.
+- `StoreReader` calls `api.getSingleValue(key, includeInfo=True)` for all three configured keys.
 - With `includeInfo=True`, Polar Recorder expects an entry object with `value` and `timestamp`.
 - Missing, expired, or unavailable store entries are represented as `None`.
 - R1 and R2 run before `Sample` construction so missing and non-finite values can produce granular reason codes.

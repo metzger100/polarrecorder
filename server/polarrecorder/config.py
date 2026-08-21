@@ -1,7 +1,7 @@
 """Module: Config - Runtime configuration parsing.
 
 Documentation: documentation/user/configuration.md
-Depends: polarrecorder.logger, polarrecorder.params
+Depends: polarrecorder.logger, polarrecorder.params, polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder.params import CONFIG_PARAMETERS
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -21,6 +22,9 @@ if TYPE_CHECKING:
 class Config:
     """Parsed runtime configuration."""
 
+    twa_key: str = TWA_KEY_DEFAULT
+    tws_key: str = TWS_KEY_DEFAULT
+    stw_key: str = STW_KEY_DEFAULT
     sample_interval: float = 1.0
     percentile: int = 65
     flush_interval: int = 300

@@ -106,7 +106,11 @@ test("viewer API base override", async () => {
 async function testSettingsActions(env) {
   const panel = env.elements["settings-panel"];
   panel.querySelectorAll(".secondary-action")[0].click();
-  panel.querySelectorAll(".primary-action")[1].click();
+  const presetsDownload = panel.querySelectorAll(".primary-action").find(function (button) {
+    return button.textContent === "Download Presets";
+  });
+  assert.ok(presetsDownload, "expected the Download Presets button");
+  presetsDownload.click();
   await flushViewer();
   assert.ok(textTree(panel).includes("Presets downloaded."));
 

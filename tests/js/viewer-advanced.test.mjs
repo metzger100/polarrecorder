@@ -77,6 +77,7 @@ test("advanced settings render and save", async () => {
 
   const panel = env.elements["settings-panel"];
   const tree = textTree(panel);
+  assert.ok(tree.includes("Data Sources"), tree);
   assert.ok(tree.includes("Advanced Settings"), tree);
   assert.ok(tree.includes("Core Filters"), tree);
   assert.ok(tree.includes("Minimum true wind"), tree);
@@ -102,6 +103,42 @@ test("advanced settings render and save", async () => {
   assert.ok(saveRequests[0].includes("head_to_wind_threshold=10"), saveRequests[0]);
   assert.ok(saveRequests[0].includes("debug_logging=true"), saveRequests[0]);
   assert.ok(textTree(panel).includes("Advanced settings saved."), textTree(panel));
+});
+
+test("core data sources render defaults and save all three keys", async () => {
+  const env = createEnvironment({ responder });
+  loadSettingsViewer(env);
+
+  env.fireDOMContentLoaded();
+  await flushViewer();
+  env.clickTab("settings");
+  await flushViewer();
+
+  const panel = env.elements["settings-panel"];
+  const sourceFields = panel.querySelectorAll(".source-key");
+  assert.ok(textTree(panel.children[0]).includes("Data Sources"), "Data Sources card must be first");
+  assert.equal(sourceFields.length, 3);
+  const selects = sourceFields.map(function (field) {
+    return field.children.find((child) => child.tagName === "select");
+  });
+  assert.equal(selects[0]?.value, "gps.trueWindAngle");
+  assert.equal(selects[1]?.value, "gps.trueWindSpeed");
+  assert.equal(selects[2]?.value, "gps.waterSpeed");
+  assert.ok(selects[2], "expected the STW source select");
+  selects[2].value = "gps.signalk.navigation.speedThroughWater";
+
+  const before = saveRequests.length;
+  const saveButton = sourceSaveButton(panel);
+  assert.ok(saveButton, "expected the Save Data Sources button");
+  saveButton.click();
+  await flushViewer();
+
+  assert.equal(saveRequests.length, before + 1);
+  const request = saveRequests[saveRequests.length - 1];
+  assert.ok(request.includes("twa_key=gps.trueWindAngle"), request);
+  assert.ok(request.includes("tws_key=gps.trueWindSpeed"), request);
+  assert.ok(request.includes("stw_key=gps.signalk.navigation.speedThroughWater"), request);
+  assert.ok(textTree(panel).includes("Data sources saved."), textTree(panel));
 });
 
 test("advanced settings validates range", async () => {
@@ -155,5 +192,15 @@ function loadSettingsViewer(env) {
 function advancedSaveButton(panel) {
   return panel.querySelectorAll(".primary-action").find(function (item) {
     return item.textContent === "Save Advanced Settings";
+  });
+}
+
+/**
+ * @param {FakeElement} panel
+ * @returns {FakeElement | undefined}
+ */
+function sourceSaveButton(panel) {
+  return panel.querySelectorAll(".primary-action").find(function (item) {
+    return item.textContent === "Save Data Sources";
   });
 }

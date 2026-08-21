@@ -1,7 +1,8 @@
 """Module: Reader - AvNav store value reader.
 
 Documentation: documentation/avnav/keys-and-units.md
-Depends: polarrecorder.config, polarrecorder.logger, polarrecorder.sample
+Depends: polarrecorder.config, polarrecorder.logger, polarrecorder.sample,
+polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -11,14 +12,15 @@ import time
 from typing import TYPE_CHECKING, Protocol
 
 from polarrecorder.sample import ENHANCED_SIGNAL_SPECS, ClockFn, ReadResult, WallClockFn
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
     from polarrecorder.logger import Logger
 
-TWA_KEY = "gps.trueWindAngle"
-TWS_KEY = "gps.trueWindSpeed"
-STW_KEY = "gps.waterSpeed"
+TWA_KEY = TWA_KEY_DEFAULT
+TWS_KEY = TWS_KEY_DEFAULT
+STW_KEY = STW_KEY_DEFAULT
 
 
 class DataEntryLike(Protocol):
@@ -69,9 +71,13 @@ class StoreReader:
     def read(self) -> ReadResult:
         """Read the core values, plus any configured optional signals."""
         now_monotonic = self._clock()
-        twa_entry = self._read_entry(TWA_KEY)
-        tws_entry = self._read_entry(TWS_KEY)
-        stw_entry = self._read_entry(STW_KEY)
+        config = self._config
+        twa_key = TWA_KEY if config is None else config.twa_key
+        tws_key = TWS_KEY if config is None else config.tws_key
+        stw_key = STW_KEY if config is None else config.stw_key
+        twa_entry = self._read_entry(twa_key)
+        tws_entry = self._read_entry(tws_key)
+        stw_entry = self._read_entry(stw_key)
         return ReadResult(
             timestamp_monotonic=now_monotonic,
             timestamp_wall=self._wall_clock(),

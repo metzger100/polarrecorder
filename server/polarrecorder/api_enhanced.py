@@ -2,7 +2,7 @@
 
 Documentation: documentation/architecture/api.md
 Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.enhanced_status,
-polarrecorder.params
+polarrecorder.params, polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from polarrecorder import api_handlers, enhanced_status
 from polarrecorder.config import parse_config_values
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS, KeyProbe
 from polarrecorder.params import CONFIG_PARAMETERS
+from polarrecorder.source_params import CORE_KEY_FIELDS
 
 ENHANCED_PARAM_NAMES = frozenset(
     str(spec["name"]) for spec in CONFIG_PARAMETERS if str(spec["name"]).startswith("enh_")
@@ -58,6 +59,8 @@ def enhanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
 
 def _key_prefixes(config: Any) -> list[str]:
     prefixes = {"gps"}
+    for field in CORE_KEY_FIELDS:
+        prefixes.add(str(getattr(config, field)).split(".", 1)[0])
     for spec in ENHANCED_RULE_SPECS:
         for field in spec.key_fields:
             key = str(getattr(config, field))

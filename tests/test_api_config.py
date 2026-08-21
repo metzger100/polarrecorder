@@ -69,3 +69,34 @@ def test_advanced_settings_endpoint_groups_and_saves_safe_values() -> None:
     ]
     assert cast("dict[str, object]", saved["config"])["debug_logging"] is True
     assert cast("dict[str, object]", saved["config"])["low_wind_threshold"] == 4.2
+
+
+def test_advanced_save_persists_nonempty_core_source_keys() -> None:
+    api = FakeAvNavAPI()
+    plugin = plugin_module.Plugin(api)
+
+    blank = plugin._handle_request("advanced/save", object(), {"twa_key": [""]})
+    saved = response_data(
+        plugin._handle_request(
+            "advanced/save",
+            object(),
+            {
+                "twa_key": ["custom.twa"],
+                "tws_key": ["custom.tws"],
+                "stw_key": ["custom.stw"],
+            },
+        )
+    )
+
+    assert blank["status"] == "ERROR"
+    assert plugin.config.twa_key == "custom.twa"
+    assert plugin.config.tws_key == "custom.tws"
+    assert plugin.config.stw_key == "custom.stw"
+    assert api.saved_configs == [
+        {"twa_key": "custom.twa", "tws_key": "custom.tws", "stw_key": "custom.stw"}
+    ]
+    assert cast("dict[str, object]", saved["config"]) == {
+        "stw_key": "custom.stw",
+        "twa_key": "custom.twa",
+        "tws_key": "custom.tws",
+    }

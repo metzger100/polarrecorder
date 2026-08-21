@@ -1,5 +1,5 @@
 /**
- * @file Advanced Settings
+ * @file Data Source and Advanced Settings
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js
  */
@@ -34,6 +34,8 @@ window.Polarrecorder = window.Polarrecorder || {};
    * }} NumberControlItem
    */
   /** @typedef {BoolControlItem | NumberControlItem} ControlItem */
+  /** @typedef {{field: string, label: string, description: string}} SourceField */
+  /** @typedef {{field: string, control: HTMLSelectElement}} SourceControl */
   /**
    * @typedef {{
    *   body: HTMLElement,
@@ -48,6 +50,115 @@ window.Polarrecorder = window.Polarrecorder || {};
     messageNode: document.createElement("p"),
     controls: []
   };
+  /** @type {{body: HTMLElement, messageNode: HTMLElement, controls: SourceControl[]}} */
+  const sourceState = {
+    body: document.createElement("div"),
+    messageNode: document.createElement("p"),
+    controls: []
+  };
+  /** @type {SourceField[]} */
+  const SOURCE_FIELDS = [
+    {
+      field: "twa_key",
+      label: "True wind angle (TWA)",
+      description: "AvNav store key providing degrees relative to the boat."
+    },
+    {
+      field: "tws_key",
+      label: "True wind speed (TWS)",
+      description: "AvNav store key providing meters per second."
+    },
+    {
+      field: "stw_key",
+      label: "Speed through water (STW)",
+      description: "AvNav store key providing meters per second."
+    }
+  ];
+
+  /** @returns {HTMLElement} */
+  function renderSources() {
+    const card = Polarrecorder.Dom.Node("section", "card export-card");
+    const head = Polarrecorder.Dom.Node("div", "section-head");
+    head.appendChild(Polarrecorder.Dom.Node("h2", null, "Data Sources"));
+    card.appendChild(head);
+    card.appendChild(
+      Polarrecorder.Dom.Node(
+        "p",
+        "helper",
+        "Choose the AvNav store values used to learn the polar. The standard AvNav keys are selected by default."
+      )
+    );
+    sourceState.body = Polarrecorder.Dom.Node("div", "advanced-fields");
+    card.appendChild(sourceState.body);
+    card.appendChild(
+      Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button("Save Data Sources", saveSources, "primary-action")])
+    );
+    sourceState.messageNode = Polarrecorder.Dom.Node("p", "helper");
+    card.appendChild(sourceState.messageNode);
+    reloadSources();
+    return card;
+  }
+
+  function reloadSources() {
+    Promise.all([action("config"), action("enhanced/keys")])
+      .then(function (results) {
+        renderSourceFields(results[0], results[1].keys);
+      })
+      .catch(function (error) {
+        setMessage(sourceState.messageNode, error.message, "error");
+      });
+  }
+
+  /**
+   * @param {Record<string, string>} config
+   * @param {string[]} keys
+   */
+  function renderSourceFields(config, keys) {
+    sourceState.controls = [];
+    Polarrecorder.Dom.Clear(sourceState.body);
+    SOURCE_FIELDS.forEach(function (field) {
+      const wrap = Polarrecorder.Dom.Node("label", "field source-key");
+      wrap.appendChild(Polarrecorder.Dom.Node("span", null, field.label));
+      wrap.appendChild(Polarrecorder.Dom.Node("span", "helper", field.description));
+      const select = document.createElement("select");
+      const current = config[field.field];
+      const options = keys.filter(function (key) {
+        return key !== current;
+      });
+      options.unshift(current);
+      options.forEach(function (key) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = key;
+        select.appendChild(option);
+      });
+      select.value = current;
+      wrap.appendChild(select);
+      sourceState.controls.push({ field: field.field, control: select });
+      sourceState.body.appendChild(wrap);
+    });
+  }
+
+  function saveSources() {
+    if (
+      sourceState.controls.some(function (item) {
+        return String(item.control.value).trim() === "";
+      })
+    ) {
+      setMessage(sourceState.messageNode, "Select a store key for TWA, TWS, and STW.", "error");
+      return;
+    }
+    const params = sourceState.controls.map(function (item) {
+      return encodeURIComponent(item.field) + "=" + encodeURIComponent(item.control.value);
+    });
+    action("advanced/save?" + params.join("&"))
+      .then(function () {
+        setMessage(sourceState.messageNode, "Data sources saved.", "info");
+      })
+      .catch(function (error) {
+        setMessage(sourceState.messageNode, error.message, "error");
+      });
+  }
 
   /** @returns {HTMLElement} */
   function render() {
@@ -79,7 +190,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         renderGroups(data.groups);
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        setMessage(state.messageNode, error.message, "error");
       });
   }
 
@@ -189,7 +300,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function save() {
     const error = firstError();
     if (error) {
-      setMessage(error, "error");
+      setMessage(state.messageNode, error, "error");
       return;
     }
     const params = state.controls.map(function (item) {
@@ -197,11 +308,11 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
     action("advanced/save?" + params.join("&"))
       .then(function () {
-        setMessage("Advanced settings saved.", "info");
+        setMessage(state.messageNode, "Advanced settings saved.", "info");
         reload();
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        setMessage(state.messageNode, error.message, "error");
       });
   }
 
@@ -228,12 +339,13 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
+   * @param {HTMLElement} node
    * @param {string} text
    * @param {"error" | "info"} kind
    */
-  function setMessage(text, kind) {
-    state.messageNode.className = kind === "error" ? "error-text" : "helper";
-    state.messageNode.textContent = text;
+  function setMessage(node, text, kind) {
+    node.className = kind === "error" ? "error-text" : "helper";
+    node.textContent = text;
   }
 
   /**
@@ -244,5 +356,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     return Polarrecorder["FetchJson"](endpoint, { action: true });
   }
 
+  Polarrecorder.SourceSettings = { Render: renderSources };
   Polarrecorder.AdvancedSettings = { Render: render };
 })();

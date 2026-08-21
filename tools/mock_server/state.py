@@ -55,6 +55,11 @@ class MockState:
         self.reset_model = False
         self.generation = 4527
         self.presets = [copy_preset(preset) for preset in INITIAL_PRESETS]
+        self.source_config = {
+            "twa_key": "gps.trueWindAngle",
+            "tws_key": "gps.trueWindSpeed",
+            "stw_key": "gps.waterSpeed",
+        }
 
 
 STATE = MockState()

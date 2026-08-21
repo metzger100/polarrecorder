@@ -96,7 +96,18 @@ export function defaultResponseBody(endpoint) {
     });
   }
   if (endpoint.startsWith("config")) {
-    return ok({ min_samples_for_export: 8, percentile: 65 });
+    return ok({
+      min_samples_for_export: 8,
+      percentile: 65,
+      stw_key: "gps.waterSpeed",
+      twa_key: "gps.trueWindAngle",
+      tws_key: "gps.trueWindSpeed"
+    });
+  }
+  if (endpoint.startsWith("enhanced/keys")) {
+    return ok({
+      keys: ["gps.trueWindAngle", "gps.trueWindSpeed", "gps.waterSpeed", "gps.signalk.navigation.speedThroughWater"]
+    });
   }
   if (endpoint.startsWith("advanced/settings")) {
     return ok({

@@ -33,35 +33,39 @@ AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or 
 does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
 Pause/Resume control), tracked by the transient `_paused` flag rather than a persisted setting.
 
-| Name                       |    Type | Default |    Range | Behavior                                                                           |
-| -------------------------- | ------: | ------: | -------: | ---------------------------------------------------------------------------------- |
-| `sample_interval`          |   FLOAT |   `1.0` |  0.5-5.0 | Seconds between store reads after NMEA queue wakeups.                              |
-| `percentile`               |  NUMBER |    `65` |     1-99 | Percentile used when extracting learned speed from each histogram.                 |
-| `flush_interval`           |  NUMBER |   `300` |  60-3600 | Seconds between periodic `polar.json` flushes.                                     |
-| `stale_threshold`          |   FLOAT |   `3.0` | 1.0-30.0 | Maximum monotonic age for each store value before R3 rejects it as stale.          |
-| `age_skew_threshold`       |   FLOAT |   `2.0` | 0.5-10.0 | Maximum timestamp spread between TWA, TWS, and STW before R4 rejects.              |
-| `max_tws`                  |  NUMBER |    `60` |    20-60 | Maximum plausible true wind speed in knots for R6. Capped at the bin-grid ceiling. |
-| `max_stw`                  |  NUMBER |    `40` |    10-80 | Maximum plausible speed through water in knots for R7.                             |
-| `low_wind_threshold`       |   FLOAT |   `3.0` | 0.5-10.0 | TWS below this threshold is rejected by R9.                                        |
-| `head_to_wind_threshold`   |  NUMBER |    `10` |     5-30 | Absolute TWA below this threshold is rejected by R8.                               |
-| `anchored_stw_threshold`   |   FLOAT |   `0.3` |  0.1-1.0 | STW below this value with nonzero wind is rejected by R10.                         |
-| `twa_roc_threshold`        |   FLOAT |  `15.0` | 5.0-45.0 | Maximum TWA change in degrees per second before R11 detects a maneuver.            |
-| `tws_roc_threshold`        |   FLOAT |  `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike.                 |
-| `stw_roc_threshold`        |   FLOAT |   `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects.                   |
-| `cooldown_seconds`         |  NUMBER |    `30` |    5-120 | Time R14 rejects after a TWA maneuver detection.                                   |
-| `stability_window_seconds` |  NUMBER |    `15` |     5-60 | Time span of stable prior samples required by R15.                                 |
-| `stability_twa_range`      |   FLOAT |  `20.0` | 5.0-45.0 | Maximum TWA range in the stability window.                                         |
-| `stability_tws_range`      |   FLOAT |  `10.0` | 3.0-20.0 | Maximum TWS range in the stability window.                                         |
-| `stability_stw_range`      |   FLOAT |   `4.0` | 1.0-10.0 | Maximum STW range in the stability window.                                         |
-| `engine_tws_ceil`          |   FLOAT |   `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
-| `engine_stw_floor`         |   FLOAT |   `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
-| `min_samples_for_export`   |  NUMBER |    `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
-| `debug_logging`            | BOOLEAN | `false` |        - | Enables one debug log line per pipeline iteration with decision and reason codes.  |
+| Name                       |    Type |             Default |    Range | Behavior                                                                           |
+| -------------------------- | ------: | ------------------: | -------: | ---------------------------------------------------------------------------------- |
+| `twa_key`                  |  STRING | `gps.trueWindAngle` |        - | AvNav store key for TWA in degrees.                                                |
+| `tws_key`                  |  STRING | `gps.trueWindSpeed` |        - | AvNav store key for TWS in m/s.                                                    |
+| `stw_key`                  |  STRING |    `gps.waterSpeed` |        - | AvNav store key for STW in m/s.                                                    |
+| `sample_interval`          |   FLOAT |               `1.0` |  0.5-5.0 | Seconds between store reads after NMEA queue wakeups.                              |
+| `percentile`               |  NUMBER |                `65` |     1-99 | Percentile used when extracting learned speed from each histogram.                 |
+| `flush_interval`           |  NUMBER |               `300` |  60-3600 | Seconds between periodic `polar.json` flushes.                                     |
+| `stale_threshold`          |   FLOAT |               `3.0` | 1.0-30.0 | Maximum monotonic age for each store value before R3 rejects it as stale.          |
+| `age_skew_threshold`       |   FLOAT |               `2.0` | 0.5-10.0 | Maximum timestamp spread between TWA, TWS, and STW before R4 rejects.              |
+| `max_tws`                  |  NUMBER |                `60` |    20-60 | Maximum plausible true wind speed in knots for R6. Capped at the bin-grid ceiling. |
+| `max_stw`                  |  NUMBER |                `40` |    10-80 | Maximum plausible speed through water in knots for R7.                             |
+| `low_wind_threshold`       |   FLOAT |               `3.0` | 0.5-10.0 | TWS below this threshold is rejected by R9.                                        |
+| `head_to_wind_threshold`   |  NUMBER |                `10` |     5-30 | Absolute TWA below this threshold is rejected by R8.                               |
+| `anchored_stw_threshold`   |   FLOAT |               `0.3` |  0.1-1.0 | STW below this value with nonzero wind is rejected by R10.                         |
+| `twa_roc_threshold`        |   FLOAT |              `15.0` | 5.0-45.0 | Maximum TWA change in degrees per second before R11 detects a maneuver.            |
+| `tws_roc_threshold`        |   FLOAT |              `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike.                 |
+| `stw_roc_threshold`        |   FLOAT |               `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects.                   |
+| `cooldown_seconds`         |  NUMBER |                `30` |    5-120 | Time R14 rejects after a TWA maneuver detection.                                   |
+| `stability_window_seconds` |  NUMBER |                `15` |     5-60 | Time span of stable prior samples required by R15.                                 |
+| `stability_twa_range`      |   FLOAT |              `20.0` | 5.0-45.0 | Maximum TWA range in the stability window.                                         |
+| `stability_tws_range`      |   FLOAT |              `10.0` | 3.0-20.0 | Maximum TWS range in the stability window.                                         |
+| `stability_stw_range`      |   FLOAT |               `4.0` | 1.0-10.0 | Maximum STW range in the stability window.                                         |
+| `engine_tws_ceil`          |   FLOAT |               `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
+| `engine_stw_floor`         |   FLOAT |               `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
+| `min_samples_for_export`   |  NUMBER |                `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
+| `debug_logging`            | BOOLEAN |             `false` |        - | Enables one debug log line per pipeline iteration with decision and reason codes.  |
 
-The Settings tab's **Advanced Settings** card exposes the safe runtime-tuning subset from this table: sampling cadence,
-flush cadence, sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_stw`, the engine
-heuristic, and debug logging. Export percentile and high-confidence export floors remain in the Export tab; plugin
-enablement stays on AvNav's built-in switch and pause/resume stays in the viewer.
+The Settings tab's top **Data Sources** card exposes `twa_key`, `tws_key`, and `stw_key` as store-key selectors. Its
+**Advanced Settings** card exposes the safe runtime-tuning subset from this table: sampling cadence, flush cadence,
+sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_stw`, the engine heuristic, and debug
+logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
+AvNav's built-in switch and pause/resume stays in the viewer.
 
 ### Enhanced (optional-signal) rule settings
 
