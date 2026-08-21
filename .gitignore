@@ -14,3 +14,4 @@ misc/
 venv/
 .hypothesis/
 coverage/
+.vscode/
