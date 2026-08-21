@@ -32,6 +32,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     if (!state.host) return;
     const host = state.host;
     Polarrecorder.Dom.Clear(host);
+    host.appendChild(Polarrecorder.SourceSettings.Render());
     host.appendChild(learnedDataCard());
     host.appendChild(presetsCard());
     host.appendChild(Polarrecorder.EnhancedSettings.Render());

@@ -281,9 +281,12 @@ def bucket_for(index: int) -> dict[str, object]:
 
 
 def config_response() -> dict[str, object]:
+    with STATE.lock:
+        source_config = dict(STATE.source_config)
     return {
         "status": "OK",
         "data": {
+            **source_config,
             "sample_interval": 1.0,
             "percentile": 65,
             "flush_interval": 300,
@@ -291,6 +294,31 @@ def config_response() -> dict[str, object]:
             "max_tws": 60,
         },
     }
+
+
+def _store_keys_response() -> dict[str, object]:
+    return ok_response(
+        {
+            "keys": [
+                "gps.trueWindAngle",
+                "gps.trueWindSpeed",
+                "gps.waterSpeed",
+                "gps.signalk.environment.wind.angleTrueWater",
+                "gps.signalk.environment.wind.speedTrue",
+                "gps.signalk.navigation.speedThroughWater",
+            ]
+        }
+    )
+
+
+def _save_settings_response(query: dict[str, list[str]]) -> dict[str, object]:
+    source_fields = ("twa_key", "tws_key", "stw_key")
+    updates = {field: scalar(query, field, "").strip() for field in source_fields if field in query}
+    if updates and any(not value for value in updates.values()):
+        raise MockError("Select a store key for every core data source")
+    with STATE.lock:
+        STATE.source_config.update(updates)
+    return ok_response({"config": updates})
 
 
 def _polar_endpoint(query: dict[str, list[str]]) -> dict[str, object]:
@@ -311,6 +339,8 @@ ROUTES: dict[str, Callable[[dict[str, list[str]]], dict[str, object]]] = {
     "rejections": lambda _query: rejections_response(),
     "timeline": lambda query: timeline_response(int_arg(query, "minutes", 240)),
     "config": lambda _query: config_response(),
+    "enhanced/keys": lambda _query: _store_keys_response(),
+    "advanced/save": _save_settings_response,
     "presets": lambda _query: presets_response(),
     "polar": _polar_endpoint,
     "export/json": lambda _query: backup_response(),

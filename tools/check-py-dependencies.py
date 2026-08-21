@@ -54,6 +54,7 @@ _LAYER_RANK = {
     "coerce": 0,
     "logger": 0,
     "params": 0,
+    "source_params": 0,
     "bins": 0,
     "histogram": 0,
     "import_common": 0,

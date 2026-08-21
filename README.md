@@ -36,7 +36,8 @@ Polar Recorder uses three AvNav values:
 | TWS        | True wind speed. The real wind speed after AvNav has calculated true wind. | `gps.trueWindSpeed` |
 | STW        | Speed through water. Usually from the log or paddlewheel.                  | `gps.waterSpeed`    |
 
-TWS and STW are shown and stored in knots. TWA is shown in degrees.
+Change these defaults in **Settings > Data Sources**; TWA uses degrees, while TWS and STW use m/s before Polar Recorder
+converts and displays the speeds in knots.
 
 For core learning the plugin uses only true wind angle/speed and speed through water. Speed over ground, apparent wind,
 engine RPM, and depth are read only by the optional Enhanced Rules (see
@@ -207,7 +208,8 @@ Windy import.
 
 ### Settings
 
-The Settings tab groups maintenance and configuration actions into four cards:
+The Settings tab starts with **Data Sources**. Choose the AvNav keys for TWA, TWS, and STW; the standard keys remain
+selected by default, and saved changes apply on the next sampling cycle.
 
 #### Learned Data
 

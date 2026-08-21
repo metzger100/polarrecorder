@@ -48,6 +48,36 @@ def test_reader_extracts_values_timestamps_and_uses_include_info() -> None:
     assert api.calls == [(TWA_KEY, True), (TWS_KEY, True), (STW_KEY, True)]
 
 
+def test_reader_uses_configured_core_source_keys() -> None:
+    api = FakeStoreAPI()
+    config = parse_config_values(
+        {
+            "twa_key": "custom.twa",
+            "tws_key": "custom.tws",
+            "stw_key": "custom.stw",
+        }
+    )
+    api.set_entry("custom.twa", 75.0, 99.5)
+    api.set_entry("custom.tws", 7.0, 99.4)
+    api.set_entry("custom.stw", 4.0, 99.3)
+
+    read_result = StoreReader(
+        api,
+        FakeClock(100.0),
+        FakeClock(1000.0),
+        config=config,
+    ).read()
+
+    assert read_result.twa_raw == 75.0
+    assert read_result.tws_raw == 7.0
+    assert read_result.stw_raw == 4.0
+    assert api.calls[:3] == [
+        ("custom.twa", True),
+        ("custom.tws", True),
+        ("custom.stw", True),
+    ]
+
+
 def test_reader_maps_missing_or_expired_entries_to_none() -> None:
     api = FakeStoreAPI()
     api.set_entry(TWA_KEY, 90.0, 99.5)

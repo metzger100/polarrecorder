@@ -1,12 +1,15 @@
 """Module: Params - AvNav-shaped editable parameter specifications.
 
 Documentation: documentation/user/configuration.md
-Depends: none
+Depends: polarrecorder.source_params
 """
 
 from __future__ import annotations
 
+from polarrecorder.source_params import CORE_SOURCE_PARAMETERS
+
 CONFIG_PARAMETERS: list[dict[str, object]] = [
+    *CORE_SOURCE_PARAMETERS,
     {
         "name": "sample_interval",
         "type": "FLOAT",

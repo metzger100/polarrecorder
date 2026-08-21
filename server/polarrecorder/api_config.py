@@ -1,7 +1,8 @@
 """Module: API Config - Runtime configuration settings API handlers.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.params
+Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.params,
+polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, Any, cast
 from polarrecorder import api_handlers
 from polarrecorder.config import parse_config_values
 from polarrecorder.params import CONFIG_PARAMETERS
+from polarrecorder.source_params import CORE_KEY_FIELDS
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -193,6 +195,8 @@ ADVANCED_GROUPS = (
     ),
 )
 ADVANCED_PARAM_NAMES = frozenset(field.name for group in ADVANCED_GROUPS for field in group.fields)
+SOURCE_PARAM_NAMES = frozenset(CORE_KEY_FIELDS)
+SAVABLE_PARAM_NAMES = ADVANCED_PARAM_NAMES | SOURCE_PARAM_NAMES
 _PARAM_SPECS = {str(spec["name"]): spec for spec in CONFIG_PARAMETERS}
 
 
@@ -204,11 +208,11 @@ def advanced_settings(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
 
 
 def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
-    """Persist safe advanced settings, self-applying before saving to AvNav config."""
-    unknown = sorted(name for name in args if name not in ADVANCED_PARAM_NAMES)
+    """Persist safe viewer settings, self-applying before saving to AvNav config."""
+    unknown = sorted(name for name in args if name not in SAVABLE_PARAM_NAMES)
     if unknown:
         return api_handlers.error(f"Unknown advanced parameter(s): {', '.join(unknown)}")
-    updates = {name: value for name, value in args.items() if name in ADVANCED_PARAM_NAMES}
+    updates = {name: value for name, value in args.items() if name in SAVABLE_PARAM_NAMES}
     if not updates:
         return api_handlers.error("No advanced parameters supplied")
     validation_error = _first_validation_error(updates)
@@ -267,6 +271,17 @@ def _validation_error(name: str, raw_value: str) -> str:
     value_type = cast("str", spec["type"])
     if value_type == "BOOLEAN":
         return _boolean_validation_error(name, raw_value)
+    if value_type == "STRING":
+        return _string_validation_error(name, raw_value)
+    return _numeric_validation_error(name, raw_value, value_type, spec)
+
+
+def _numeric_validation_error(
+    name: str,
+    raw_value: str,
+    value_type: str,
+    spec: Mapping[str, object],
+) -> str:
     lower, upper = _bounds(spec)
     try:
         value = _parse_numeric(value_type, raw_value)
@@ -281,6 +296,12 @@ def _boolean_validation_error(name: str, raw_value: str) -> str:
     if raw_value.strip().lower() in {"true", "false"}:
         return ""
     return f"Invalid advanced parameter '{name}': expected boolean"
+
+
+def _string_validation_error(name: str, raw_value: str) -> str:
+    if raw_value.strip():
+        return ""
+    return f"Invalid advanced parameter '{name}': expected a store key"
 
 
 def _parse_numeric(value_type: str, raw_value: str) -> int | float:

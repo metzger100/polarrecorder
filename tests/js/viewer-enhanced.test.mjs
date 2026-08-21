@@ -105,14 +105,14 @@ test("enhanced settings render and save", async () => {
   assert.ok(!tree.includes("null"), tree);
 
   // Focusing a key dropdown pulls a fresh key list without a viewer reload.
-  assert.equal(keysRequests, 1, "initial keys fetch");
+  assert.equal(keysRequests, 2, "source and enhanced cards fetch keys");
   const keyWrap = panel.querySelectorAll(".enhanced-key")[0];
   const select = keyWrap.children.find((child) => child.tagName === "select");
   assert.ok(select, "expected a key <select>");
   assert.ok(select.onfocus, "expected a focus handler");
   select.onfocus();
   await flushViewer();
-  assert.equal(keysRequests, 2, "focus re-fetched keys");
+  assert.equal(keysRequests, 3, "focus re-fetched keys");
   const optionLabels = select.children.map((option) => option.textContent);
   assert.ok(optionLabels.includes("gps.signalk.propulsion.0.revolutions"), optionLabels.join(","));
 
