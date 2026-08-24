@@ -261,6 +261,7 @@ def _status_snapshot(plugin: Any) -> api_handlers.StatusSnapshot:
     now = plugin._clock()
     counters = plugin._counters.to_dict()
     rejection_histogram = dict(counters["rejection_histogram"])
+    predicate_histogram = dict(counters["predicate_histogram"])
     return api_handlers.StatusSnapshot(
         recording=not plugin._paused,
         data_status=plugin._last_data_status,
@@ -275,6 +276,7 @@ def _status_snapshot(plugin: Any) -> api_handlers.StatusSnapshot:
             "total_quarantined": counters["total_quarantined"],
         },
         top_rejections=_top_rejections(rejection_histogram),
+        top_predicates=_top_predicates(predicate_histogram),
         last_flush_wall=plugin._last_flush_wall,
         file_size_bytes=plugin._last_flush_size_bytes,
         bins_with_data=len(plugin._model.snapshot_bins()),
@@ -338,6 +340,14 @@ def _top_rejections(histogram: dict[str, int]) -> list[dict[str, object]]:
     return [
         {"reason": reason, "count": count}
         for reason, count in sorted(histogram.items(), key=_rejection_sort_key)[:5]
+    ]
+
+
+def _top_predicates(histogram: dict[str, int]) -> list[dict[str, object]]:
+    """Return the bounded triggered-predicate status summary."""
+    return [
+        {"predicate": predicate, "count": count}
+        for predicate, count in sorted(histogram.items(), key=_rejection_sort_key)[:5]
     ]
 
 

@@ -34,6 +34,15 @@ def test_non_candidate_reasons_do_not_change_sailing_totals() -> None:
     assert counters.rejection_histogram == {"reject_low_wind": 2}
 
 
+def test_predicates_are_recorded_separately_from_decision_reasons() -> None:
+    counters = Counters()
+
+    counters.record_predicates(["unstable_twa", "unstable_tws", "unstable_twa"])
+
+    assert counters.rejection_histogram == {}
+    assert counters.predicate_histogram == {"unstable_twa": 2, "unstable_tws": 1}
+
+
 def test_reset_clears_all_counter_state() -> None:
     counters = Counters(total_seen=1, total_accepted=1, rejection_histogram={"reject": 2})
 
@@ -45,6 +54,7 @@ def test_reset_clears_all_counter_state() -> None:
         "total_rejected": 0,
         "total_quarantined": 0,
         "rejection_histogram": {},
+        "predicate_histogram": {},
     }
 
 
@@ -61,4 +71,5 @@ def test_counter_dict_round_trip_copies_histogram() -> None:
         "total_rejected": 1,
         "total_quarantined": 0,
         "rejection_histogram": {"reject_unstable": 1},
+        "predicate_histogram": {},
     }

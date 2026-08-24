@@ -163,14 +163,7 @@ class Plugin:
         self._flush()
 
     def _register_user_app(self) -> None:
-        """Publish the viewer as an AvNav user app through the Python plugin API.
-
-        This is the registration path every AvNav core honors, including cores
-        that neither read ``plugin.json`` nor load ``plugin.mjs``. The frontend
-        adapters stay no-ops so they cannot duplicate this server AddOn, and
-        older cores without the complete API skip registration instead of
-        failing.
-        """
+        """Publish the viewer as an AvNav user app through the Python API."""
         if self._user_app_registered:
             return
         register = getattr(self.api, "registerUserApp", None)
@@ -226,13 +219,19 @@ class Plugin:
 
     def _record_counters(self, pipeline_result: PipelineResult) -> None:
         if pipeline_result.decision == "accepted":
-            self._counters.record_accepted()
+            self._counters.record_accepted(pipeline_result.failed_predicates)
         elif pipeline_result.decision == "quarantined":
-            self._counters.record_quarantined(pipeline_result.reason_codes[0])
+            self._counters.record_quarantined(
+                pipeline_result.reason_codes[0], pipeline_result.failed_predicates
+            )
         elif pipeline_result.is_sailing_candidate:
-            self._counters.record_rejected(pipeline_result.reason_codes)
+            self._counters.record_rejected(
+                pipeline_result.reason_codes, pipeline_result.failed_predicates
+            )
         else:
-            self._counters.record_non_candidate(pipeline_result.reason_codes)
+            self._counters.record_non_candidate(
+                pipeline_result.reason_codes, pipeline_result.failed_predicates
+            )
 
     def _write_status_scalars(
         self,

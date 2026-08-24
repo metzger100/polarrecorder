@@ -4,10 +4,10 @@
 
 Active execution plan. Implementation has not started.
 
-This plan is the implementation source of truth for the data-quality changes derived from findings **#2, #6, #9,
-#10, #11, #17, #18, #19, #22, #23, #25, and #28**. Observable behavior, compatibility requirements, and the
-validation semantics below are prescriptive. Internal helper names and small file-local refactors are flexible when
-needed to satisfy repository layering, complexity, duplication, and file-size gates.
+This plan is the implementation source of truth for the data-quality changes derived from findings **#2, #6, #9, #10,
+#11, #17, #18, #19, #22, #23, #25, and #28**. Observable behavior, compatibility requirements, and the validation
+semantics below are prescriptive. Internal helper names and small file-local refactors are flexible when needed to
+satisfy repository layering, complexity, duplication, and file-size gates.
 
 Explicit exclusions are also prescriptive: finding #12 does not change the head-to-wind rule; finding #6 does not add a
 new slow-sample reject; finding #22 does not implement segment-based learning; finding #24 is only a prior summary and
@@ -17,8 +17,8 @@ creates no separate work item.
 
 After completion, Polar Recorder will:
 
-1. Make it clear in the Status UI that `total_seen` means sailing **Candidates**, not every reader iteration, and explain
-   that non-candidate diagnostics such as missing inputs are outside the candidate denominator.
+1. Make it clear in the Status UI that `total_seen` means sailing **Candidates**, not every reader iteration, and
+   explain that non-candidate diagnostics such as missing inputs are outside the candidate denominator.
 2. Preserve the current primary decision/reason behavior while additionally recording every triggered validation
    predicate, including `unstable_twa`, `unstable_tws`, and `unstable_stw` for R15.
 3. Evaluate the current sample as part of the R15 stability window before accepting it.
@@ -39,28 +39,28 @@ After completion, Polar Recorder will:
 
 ## Finding-to-Deliverable Map
 
-| Finding | Planned result |
-| --- | --- |
-| #2 | Rename `Seen` to `Candidates`, clarify denominator/diagnostic semantics, and surface triggered-check diagnostics. |
-| #6 | No new reject rule. Add a ROADMAP **Investigation** for multi-day evidence on isolated slow accepted samples; P65 remains the protection now. |
-| #9 | R15 stability ranges include the current sample before the decision is made. |
-| #10 | R15 emits diagnostic predicate codes `unstable_twa`, `unstable_tws`, and/or `unstable_stw` while its primary reason remains `reject_unstable`. |
-| #11 | Prefer fresh SOG for R10 anchoring; otherwise use STW. Change `anchored_stw_threshold` default to `0.5` kn. |
-| #17 | Startup engine-protection popup with **Close** and **Never show again**. |
-| #18 | Enhanced rule rows expose `active` / `disabled` / `unavailable` availability and the Status tab displays all rules. |
-| #19 | R20 becomes a symmetric SOG/STW mismatch check using the existing ratio, movement floor, and current-drift input. |
-| #22 | Do not implement segment learning. Add it to `ROADMAP.md`. |
-| #23 | Apply only the STW fallback default change (`0.3` -> `0.5` kn); keep head-to-wind at `10` degrees. |
-| #25 | Keep current primary reason semantics and additionally record all triggered predicates globally and per candidate bin. |
-| #28 | Implement structured raw diagnostic logging through the existing `debug_logging` switch; no separate unbounded log file. |
+| Finding | Planned result                                                                                                                                 |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| #2      | Rename `Seen` to `Candidates`, clarify denominator/diagnostic semantics, and surface triggered-check diagnostics.                              |
+| #6      | No new reject rule. Add a ROADMAP **Investigation** for multi-day evidence on isolated slow accepted samples; P65 remains the protection now.  |
+| #9      | R15 stability ranges include the current sample before the decision is made.                                                                   |
+| #10     | R15 emits diagnostic predicate codes `unstable_twa`, `unstable_tws`, and/or `unstable_stw` while its primary reason remains `reject_unstable`. |
+| #11     | Prefer fresh SOG for R10 anchoring; otherwise use STW. Change `anchored_stw_threshold` default to `0.5` kn.                                    |
+| #17     | Startup engine-protection popup with **Close** and **Never show again**.                                                                       |
+| #18     | Enhanced rule rows expose `active` / `disabled` / `unavailable` availability and the Status tab displays all rules.                            |
+| #19     | R20 becomes a symmetric SOG/STW mismatch check using the existing ratio, movement floor, and current-drift input.                              |
+| #22     | Do not implement segment learning. Add it to `ROADMAP.md`.                                                                                     |
+| #23     | Apply only the STW fallback default change (`0.3` -> `0.5` kn); keep head-to-wind at `10` degrees.                                             |
+| #25     | Keep current primary reason semantics and additionally record all triggered predicates globally and per candidate bin.                         |
+| #28     | Implement structured raw diagnostic logging through the existing `debug_logging` switch; no separate unbounded log file.                       |
 
 ## Verified Baseline
 
 1. `exec-plans/active/` contains no numbered plan, so this is the next plan as `PLAN1.md`.
-2. `server/polarrecorder/config.py` currently defaults `head_to_wind_threshold=10`,
-   `anchored_stw_threshold=0.3`, and `debug_logging=False`.
-3. `server/polarrecorder/params.py` independently declares the persisted/default value of
-   `anchored_stw_threshold` as `0.3` with an allowed range of `0.1` to `1.0`; the head-to-wind default there is `10`.
+2. `server/polarrecorder/config.py` currently defaults `head_to_wind_threshold=10`, `anchored_stw_threshold=0.3`, and
+   `debug_logging=False`.
+3. `server/polarrecorder/params.py` independently declares the persisted/default value of `anchored_stw_threshold` as
+   `0.3` with an allowed range of `0.1` to `1.0`; the head-to-wind default there is `10`.
 4. `server/polarrecorder/validation/rules_core.py::anchored_heuristic` currently classifies anchoring only from
    `STW < anchored_stw_threshold` while wind is present; it does not inspect SOG.
 5. Fresh optional SOG and current-drift values already enter `Sample.enhanced` through `StoreReader`; stale optional
@@ -94,8 +94,8 @@ After completion, Polar Recorder will:
     nested fields through default construction. Any new predicate histogram must therefore be additive and default to
     empty for existing backups; this plan does not require a schema-version bump.
 18. The viewer currently has no popup/modal module and no local-storage preference for engine warnings.
-19. The engine RPM and engine-state rules already have live enhanced-status rows. On default config their keys are empty,
-    so a fresh install can have those rules enabled but unavailable.
+19. The engine RPM and engine-state rules already have live enhanced-status rows. On default config their keys are
+    empty, so a fresh install can have those rules enabled but unavailable.
 20. `debug_logging` currently emits one short line per iteration containing only decision and reason codes. User
     configuration documentation explicitly describes one debug line per pipeline iteration.
 21. `viewer/viewer.html` statically orders all viewer scripts and styles; any new viewer module must be added there and
@@ -107,8 +107,8 @@ After completion, Polar Recorder will:
     coverage.
 24. `ROADMAP.md` currently contains neither the isolated-slow-sample investigation nor stable-segment learning.
 25. `README.md` and maintained docs currently describe R10 as STW-only, R15 as using the prior window, R20 as
-    STW-implausibly-low, the anchor default as `0.3` kn, and `debug_logging` as decision/reason-only logging; all must be
-    synchronized with the implementation.
+    STW-implausibly-low, the anchor default as `0.3` kn, and `debug_logging` as decision/reason-only logging; all must
+    be synchronized with the implementation.
 
 ## Hard Constraints
 
@@ -163,8 +163,8 @@ After completion, Polar Recorder will:
 19. Keep runtime Python 3.9+ stdlib-only and maintain the single-lock boundary in `plugin.py`.
 20. New domain modules must receive the mandatory module header and a valid layer assignment in
     `tools/check-py-dependencies.py`; no AvNav imports may enter `server/polarrecorder/`.
-21. New viewer code is plain JavaScript under `window.Polarrecorder`, no modules, no unsafe DOM APIs, no extra timer, and
-    no duplicated helper implementation.
+21. New viewer code is plain JavaScript under `window.Polarrecorder`, no modules, no unsafe DOM APIs, no extra timer,
+    and no duplicated helper implementation.
 22. No release/version bump or release artifact creation is part of this plan. Packaging validation is required because
     viewer runtime files change.
 23. No suppression comments, skipped/focused tests, lowered coverage floors, or threshold relaxations may be used to get
@@ -248,6 +248,13 @@ No new maintained documentation page is planned, so `documentation/TABLEOFCONTEN
 
 ## Implementation Order
 
+## Execution Prerequisite
+
+The required targeted Python commands invoke `python -m pytest`. On 2026-08-24, the repository execution environment's
+`/usr/bin/python` reported `No module named pytest`. Before Phase 1 may begin, provision the project's approved
+development test environment so that this exact command resolves `pytest`; do not replace the targeted commands with an
+unplanned alternative. Re-run the Phase 1 targeted command successfully as the prerequisite evidence.
+
 ### Phase 1 — Add parallel predicate diagnostics without changing primary decisions
 
 **Intent:** Implement findings #10 and #25 first, and the status clarity part of #2, so later validation changes can be
@@ -287,9 +294,9 @@ observed without replacing existing reason-code contracts.
     - label the current primary reason list as diagnostic/decision reasons and state explicitly that non-candidate input
       and sailing exclusions are not part of the candidate denominator, so their counts can exceed Candidates;
     - render the new top triggered predicates separately so R15 causes become visible.
-11. Do **not** invent a historical `total_read_attempts` counter in this phase. Existing persisted data cannot reconstruct
-    it exactly because one read can produce multiple non-candidate reason codes. The UI clarification must not present a
-    synthetic count as fact.
+11. Do **not** invent a historical `total_read_attempts` counter in this phase. Existing persisted data cannot
+    reconstruct it exactly because one read can produce multiple non-candidate reason codes. The UI clarification must
+    not present a synthetic count as fact.
 
 **Tests/evidence:**
 
@@ -324,8 +331,9 @@ round-trip through backup/restore, Status clearly says Candidates, and `npm run 
    - TWS linear range;
    - STW linear range;
    - which of `unstable_twa`, `unstable_tws`, `unstable_stw` are triggered.
-2. R15 must build its evaluation from the retained prior window **plus the current sample** without appending the current
-   sample to live state. The subsequent `ValidationState.observe(sample)` call remains the only commit of that sample.
+2. R15 must build its evaluation from the retained prior window **plus the current sample** without appending the
+   current sample to live state. The subsequent `ValidationState.observe(sample)` call remains the only commit of that
+   sample.
 3. Keep the existing warm-up duration and threshold comparisons (`>=` threshold is unstable). The only R15 behavioral
    change is that the current sample participates in the ranges.
 4. Update R10 anchoring:
@@ -380,11 +388,11 @@ than inventing another polling system.
 1. Extend each enhanced-status row with normalized `availability`:
    - detailed `active` -> `active`;
    - detailed `disabled` -> `disabled`;
-   - every detailed `inactive_*` state -> `unavailable`.
-   Keep the existing detailed `status` field unchanged for Settings and troubleshooting.
-2. Update `viewer/enhanced-settings.js` so the primary badge vocabulary is **active**, **disabled**, or
-   **unavailable**, while the existing detailed cause remains visible as supporting text/title (for example no key set,
-   key missing, or stale value).
+   - every detailed `inactive_*` state -> `unavailable`. Keep the existing detailed `status` field unchanged for
+     Settings and troubleshooting.
+2. Update `viewer/enhanced-settings.js` so the primary badge vocabulary is **active**, **disabled**, or **unavailable**,
+   while the existing detailed cause remains visible as supporting text/title (for example no key set, key missing, or
+   stale value).
 3. Add an Enhanced Rule Availability card/section to the Status tab listing every enhanced rule. It must show the
    normalized availability and enough detailed cause text to explain `unavailable` without requiring the user to infer
    it from a zero reject count.
@@ -448,13 +456,13 @@ new persistence subsystem.
    - `timestamp_wall` and `timestamp_monotonic`;
    - core values sufficient for replay/inspection: TWA degrees plus TWS/STW in knots when a normalized sample exists,
      and explicit `null` for unavailable normalized values;
-   - available normalized enhanced roles from the sample (SOG, current drift, AWA, AWS, heading, COG, RPM,
-     engine-state, depth, heel) without inventing absent keys/values;
+   - available normalized enhanced roles from the sample (SOG, current drift, AWA, AWS, heading, COG, RPM, engine-state,
+     depth, heel) without inventing absent keys/values;
    - pipeline `decision`, `reason_codes`, `failed_predicates`, and `is_sailing_candidate`;
    - R15 metrics evaluated with the same current-sample-inclusive helper used by the live rule: filled state, window
      span, TWA range, TWS range, STW range;
-   - enough config context to interpret the R15/R10/R20 diagnostics if those thresholds are changed during a session
-     (at minimum the stability ranges/window, anchoring threshold, R20 movement floor, and R20 ratio).
+   - enough config context to interpret the R15/R10/R20 diagnostics if those thresholds are changed during a session (at
+     minimum the stability ranges/window, anchoring threshold, R20 movement floor, and R20 ratio).
 3. Replace the existing simple `debug_logging` message with exactly one prefixed compact structured line per iteration,
    for example `diagnostic_sample=<json>`. Do not emit an additional second per-sample line.
 4. Missing/non-finite core reads must still be loggable without calling `build_sample` unsafely or serializing NaN/Inf;
@@ -497,8 +505,8 @@ accurate in README/docs.
 2. Add a separate `ROADMAP.md` post-MVP item for finding #22: stable-segment/block learning. It must describe the
    possible future approach without implying it is implemented or scheduled.
 3. Update `README.md` for all user-visible changes: Candidates terminology, triggered predicates, current-sample R15,
-   SOG-preferred anchoring, `0.5` kn default, symmetric R20, enhanced availability, startup engine warning, and structured
-   debug logging.
+   SOG-preferred anchoring, `0.5` kn default, symmetric R20, enhanced availability, startup engine warning, and
+   structured debug logging.
 4. Update `documentation/filters/rejection-rules.md`:
    - R10 SOG-preferred/STW-fallback semantics and `0.5` default;
    - R15 current-sample-inclusive window and diagnostic sub-predicates;
@@ -528,8 +536,8 @@ accurate in README/docs.
   low-STW-only, or anchor default as `0.3`.
 - Search evidence confirms all maintained configuration references still state head-to-wind default `10`.
 
-**Exit condition:** ROADMAP contains exactly the two requested non-implementation items, all maintained public docs match
-shipped behavior, documentation/file-size gates pass, and `npm run check:all` is green.
+**Exit condition:** ROADMAP contains exactly the two requested non-implementation items, all maintained public docs
+match shipped behavior, documentation/file-size gates pass, and `npm run check:all` is green.
 
 ### Phase 6 — Final integration and quality gate
 
@@ -553,17 +561,17 @@ packaging drift, documentation failures, or unplanned behavior changes.
 
 The following documentation updates are required because behavior/defaults/UI change:
 
-| File | Required synchronization |
-| --- | --- |
-| `README.md` | Candidate terminology; R10/R15/R20 behavior; `0.5` anchor default; predicate diagnostics; engine popup; enhanced availability; structured debug logging. |
-| `ROADMAP.md` | Finding #6 Investigation and finding #22 stable-segment/block-learning item only. |
-| `documentation/filters/rejection-rules.md` | Exact R10, R15, R20 contracts; predicate-vs-reason semantics. |
-| `documentation/filters/poisoning-resistance.md` | Data-quality consequences and remaining engine limitation. |
-| `documentation/architecture/data-pipeline.md` | Current-sample R15, primary decision + all predicates, state observation order. |
-| `documentation/architecture/persistence.md` | Additive predicate histograms and old-backup behavior. |
-| `documentation/architecture/api.md` | `top_predicates`, enhanced `availability`, compatibility fields. |
-| `documentation/architecture/ui.md` | Candidates wording, enhanced status card, popup/storage behavior, heartbeat contract. |
-| `documentation/user/configuration.md` | `anchored_stw_threshold=0.5`, SOG/STW semantics, head-to-wind remains 10, structured `debug_logging`. |
+| File                                            | Required synchronization                                                                                                                                 |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                     | Candidate terminology; R10/R15/R20 behavior; `0.5` anchor default; predicate diagnostics; engine popup; enhanced availability; structured debug logging. |
+| `ROADMAP.md`                                    | Finding #6 Investigation and finding #22 stable-segment/block-learning item only.                                                                        |
+| `documentation/filters/rejection-rules.md`      | Exact R10, R15, R20 contracts; predicate-vs-reason semantics.                                                                                            |
+| `documentation/filters/poisoning-resistance.md` | Data-quality consequences and remaining engine limitation.                                                                                               |
+| `documentation/architecture/data-pipeline.md`   | Current-sample R15, primary decision + all predicates, state observation order.                                                                          |
+| `documentation/architecture/persistence.md`     | Additive predicate histograms and old-backup behavior.                                                                                                   |
+| `documentation/architecture/api.md`             | `top_predicates`, enhanced `availability`, compatibility fields.                                                                                         |
+| `documentation/architecture/ui.md`              | Candidates wording, enhanced status card, popup/storage behavior, heartbeat contract.                                                                    |
+| `documentation/user/configuration.md`           | `anchored_stw_threshold=0.5`, SOG/STW semantics, head-to-wind remains 10, structured `debug_logging`.                                                    |
 
 `documentation/TABLEOFCONTENTS.md` needs no new entry because no new maintained documentation page is planned.
 

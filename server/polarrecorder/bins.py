@@ -25,6 +25,7 @@ class Bin:
     total_quarantined: int = 0
     last_update_wall: float = 0.0
     rejection_histogram: dict[str, int] = field(default_factory=dict)
+    predicate_histogram: dict[str, int] = field(default_factory=dict)
 
 
 def twa_bin(twa_deg_raw: float) -> int:

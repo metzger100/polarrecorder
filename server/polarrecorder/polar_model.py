@@ -26,6 +26,7 @@ class SnapshotBin(TypedDict):
     total_quarantined: int
     last_update_wall: float
     rejection_histogram: dict[str, int]
+    predicate_histogram: dict[str, int]
 
 
 class PolarModel:
@@ -53,18 +54,26 @@ class PolarModel:
         model_bin.last_update_wall = sample.timestamp_wall
         self.generation += 1
 
-    def record_rejection(self, sample: Sample, reason_codes: Sequence[str]) -> None:
+    def record_rejection(
+        self, sample: Sample, reason_codes: Sequence[str], predicate_codes: Sequence[str] = ()
+    ) -> None:
         """Record a quality-gate rejection at the sample's bin."""
         model_bin = self._bin_for_sample(sample)
         model_bin.total_rejected += 1
         for reason_code in reason_codes:
             _increment_reason(model_bin.rejection_histogram, reason_code)
+        for predicate_code in predicate_codes:
+            _increment_reason(model_bin.predicate_histogram, predicate_code)
 
-    def record_quarantine(self, sample: Sample, reason_code: str) -> None:
+    def record_quarantine(
+        self, sample: Sample, reason_code: str, predicate_codes: Sequence[str] = ()
+    ) -> None:
         """Record a quarantined sample at the sample's bin."""
         model_bin = self._bin_for_sample(sample)
         model_bin.total_quarantined += 1
         _increment_reason(model_bin.rejection_histogram, reason_code)
+        for predicate_code in predicate_codes:
+            _increment_reason(model_bin.predicate_histogram, predicate_code)
 
     def reset(self) -> None:
         """Clear all bins and bump the model generation."""
@@ -90,6 +99,7 @@ class PolarModel:
                 "total_quarantined": model_bin.total_quarantined,
                 "last_update_wall": model_bin.last_update_wall,
                 "rejection_histogram": dict(model_bin.rejection_histogram),
+                "predicate_histogram": dict(model_bin.predicate_histogram),
             }
             for address, model_bin in self._bins.items()
         }

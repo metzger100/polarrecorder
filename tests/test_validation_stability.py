@@ -150,6 +150,7 @@ def test_r14_reads_maneuver_cooldown() -> None:
 
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_maneuver_cooldown"]
+    assert result.predicate_codes == ["reject_maneuver_cooldown"]
 
 
 def test_r15_rejects_warming_up_and_matches_state_status() -> None:
@@ -171,6 +172,21 @@ def test_r15_rejects_unstable_filled_window() -> None:
 
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_unstable"]
+    assert result.predicate_codes == ["unstable_twa"]
+
+
+def test_r15_records_all_independent_instability_predicates() -> None:
+    state = make_warmed_state(
+        now=100.0,
+        twa_values=(90.0, 120.0, 90.0),
+        tws_values=(10.0, 20.0, 10.0),
+        stw_values=(4.0, 12.0, 4.0),
+    )
+
+    result = rules_stability.stability_window(make_sample(now=100.0), state, default_config())
+
+    assert result.reason_codes == ["reject_unstable"]
+    assert result.predicate_codes == ["unstable_twa", "unstable_tws", "unstable_stw"]
 
 
 def test_r15_passes_stable_filled_window() -> None:

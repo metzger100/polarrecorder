@@ -115,12 +115,13 @@ def stability_window(sample: Sample, state: ValidationState, config: Config) -> 
     twa_values = [entry.twa_deg_raw for entry in state.window]
     tws_values = [entry.tws_kt for entry in state.window]
     stw_values = [entry.stw_kt for entry in state.window]
-    if (
-        circular_range(twa_values) >= config.stability_twa_range
-        or _linear_range(tws_values) >= config.stability_tws_range
-        or _linear_range(stw_values) >= config.stability_stw_range
-    ):
-        return _reject("reject_unstable")
+    predicate_codes = _unstable_predicates(twa_values, tws_values, stw_values, config)
+    if predicate_codes:
+        return RuleResult(
+            decision="reject",
+            reason_codes=["reject_unstable"],
+            predicate_codes=predicate_codes,
+        )
     return _pass()
 
 
@@ -130,9 +131,22 @@ def _linear_range(values: list[float]) -> float:
     return max(values) - min(values)
 
 
+def _unstable_predicates(
+    twa_values: list[float], tws_values: list[float], stw_values: list[float], config: Config
+) -> list[str]:
+    codes: list[str] = []
+    if circular_range(twa_values) >= config.stability_twa_range:
+        codes.append("unstable_twa")
+    if _linear_range(tws_values) >= config.stability_tws_range:
+        codes.append("unstable_tws")
+    if _linear_range(stw_values) >= config.stability_stw_range:
+        codes.append("unstable_stw")
+    return codes
+
+
 def _pass() -> RuleResult:
     return RuleResult(decision="pass", reason_codes=[])
 
 
 def _reject(code: str) -> RuleResult:
-    return RuleResult(decision="reject", reason_codes=[code])
+    return RuleResult(decision="reject", reason_codes=[code], predicate_codes=[code])

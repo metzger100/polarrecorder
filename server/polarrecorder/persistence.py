@@ -236,6 +236,7 @@ def _payload_to_dict(
 
 def _bin_to_dict(model_bin: Bin) -> SerializedDict:
     return {
+        "predicate_histogram": dict(model_bin.predicate_histogram),
         "histogram": dict(model_bin.histogram),
         "total_accepted": model_bin.total_accepted,
         "total_rejected": model_bin.total_rejected,
@@ -355,6 +356,7 @@ def _model_from_dict(data: object) -> PolarModel:
             total_quarantined=_int_field(bin_data, "total_quarantined"),
             last_update_wall=to_float(bin_data.get("last_update_wall", 0.0)),
             rejection_histogram=_str_int_histogram(bin_data.get("rejection_histogram", {})),
+            predicate_histogram=_str_int_histogram(bin_data.get("predicate_histogram", {})),
         )
     return model
 

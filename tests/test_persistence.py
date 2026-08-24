@@ -59,8 +59,12 @@ def populated_model() -> PolarModel:
     model = PolarModel()
     model.update_accepted(make_sample(stw_kt=5.8, timestamp_wall=1000.0))
     model.update_accepted(make_sample(stw_kt=6.0, timestamp_wall=1001.0))
-    model.record_rejection(make_sample(), ["reject_unstable"])
-    model.record_quarantine(make_sample(twa_deg_raw=120.0), "quarantine_engine_suspected")
+    model.record_rejection(make_sample(), ["reject_unstable"], ["unstable_twa"])
+    model.record_quarantine(
+        make_sample(twa_deg_raw=120.0),
+        "quarantine_engine_suspected",
+        ["quarantine_engine_suspected"],
+    )
     return model
 
 
@@ -70,6 +74,7 @@ def populated_counters() -> Counters:
     counters.record_rejected(["reject_unstable"])
     counters.record_quarantined("quarantine_engine_suspected")
     counters.record_non_candidate(["reject_low_wind"])
+    counters.record_predicates(["unstable_twa", "reject_low_wind"])
     return counters
 
 
