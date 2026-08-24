@@ -6,7 +6,7 @@ from polarrecorder.validation.state import ValidationState
 
 
 def make_read_result(
-    twa_raw: float | None = 90.0,
+    twa_raw: object | None = 90.0,
     tws_kt: float | None = 12.0,
     stw_kt: float | None = 6.0,
     now: float = 100.0,
@@ -55,14 +55,16 @@ def make_warmed_state(
     stw_values: tuple[float, ...] = (6.0, 6.0, 6.0),
 ) -> ValidationState:
     state = ValidationState(stability_window_seconds=15.0)
-    timestamps = (now - 15.0, now - 10.0, now - 5.0)
+    timestamps = tuple(now - offset for offset in range(15, 0, -1))
     for index, timestamp in enumerate(timestamps):
+        value_index = min(index // 5, 2)
         state.observe(
             make_sample(
-                twa_raw=twa_values[index],
-                tws_kt=tws_values[index],
-                stw_kt=stw_values[index],
+                twa_raw=twa_values[value_index],
+                tws_kt=tws_values[value_index],
+                stw_kt=stw_values[value_index],
                 now=timestamp,
             )
         )
+    state.previous_sample = state.window[-5]
     return state

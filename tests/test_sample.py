@@ -6,9 +6,9 @@ from polarrecorder.sample import ReadResult, RuleResult, build_sample
 
 
 def make_read_result(
-    twa_raw: float | None = 270.0,
-    tws_raw: float | None = 2.0,
-    stw_raw: float | None = 3.0,
+    twa_raw: object | None = 270.0,
+    tws_raw: object | None = 2.0,
+    stw_raw: object | None = 3.0,
     enhanced_raw: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     return ReadResult(
@@ -69,6 +69,12 @@ def test_build_sample_returns_none_for_non_finite_core_values() -> None:
     assert build_sample(make_read_result(twa_raw=math.nan)) is None
     assert build_sample(make_read_result(tws_raw=math.inf)) is None
     assert build_sample(make_read_result(stw_raw=-math.inf)) is None
+
+
+def test_build_sample_returns_none_for_nonnumeric_boolean_and_huge_integer_values() -> None:
+    assert build_sample(make_read_result(twa_raw="bad")) is None
+    assert build_sample(make_read_result(tws_raw=True)) is None
+    assert build_sample(make_read_result(stw_raw=10**10_000)) is None
 
 
 def test_build_sample_converts_enhanced_speeds_and_passes_through_other_roles() -> None:

@@ -1,13 +1,15 @@
 """Module: Enhanced Status - Pure live-status state machine for enhanced rules.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.config, polarrecorder.enhanced_input
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from polarrecorder.sample import ENHANCED_SIGNAL_BY_ROLE, EnhancedSignalSpec
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -25,7 +27,7 @@ class EnhancedRuleSpec:
 
     rule: str
     enable_field: str
-    key_fields: tuple[str, ...]
+    source_roles: tuple[str, ...]
     combinator: str
     threshold_fields: tuple[str, ...]
 
@@ -34,49 +36,49 @@ ENHANCED_RULE_SPECS: tuple[EnhancedRuleSpec, ...] = (
     EnhancedRuleSpec(
         "reject_engine_rpm",
         "enh_rpm_enabled",
-        ("enh_rpm_key",),
+        ("rpm",),
         COMBINATOR_ALL,
         ("enh_rpm_idle_max",),
     ),
     EnhancedRuleSpec(
         "reject_engine_on",
         "enh_engine_state_enabled",
-        ("enh_engine_state_key",),
+        ("engine_signal",),
         COMBINATOR_ALL,
         ("enh_engine_state_on_threshold",),
     ),
     EnhancedRuleSpec(
         "reject_shallow",
         "enh_depth_enabled",
-        ("enh_depth_key",),
+        ("depth_m",),
         COMBINATOR_ALL,
         ("enh_depth_floor_m",),
     ),
     EnhancedRuleSpec(
         "reject_sog_stw_mismatch",
         "enh_slip_enabled",
-        ("enh_sog_key", "enh_current_drift_key"),
+        ("sog_kt", "current_drift_kt"),
         COMBINATOR_ALL,
         ("enh_slip_sog_floor_kt", "enh_slip_ratio"),
     ),
     EnhancedRuleSpec(
         "reject_true_wind_crosscheck",
         "enh_tw_crosscheck_enabled",
-        ("enh_awa_key", "enh_aws_key"),
+        ("awa_deg", "aws_kt"),
         COMBINATOR_ALL,
         ("enh_tw_twa_tol_deg", "enh_tw_tws_tol_kt"),
     ),
     EnhancedRuleSpec(
         "reject_heel_out_of_band",
         "enh_heel_enabled",
-        ("enh_heel_key",),
+        ("heel_deg",),
         COMBINATOR_ALL,
         ("enh_heel_min_deg", "enh_heel_max_deg"),
     ),
     EnhancedRuleSpec(
         "turn_confirm",
         "enh_turnconfirm_enabled",
-        ("enh_heading_key", "enh_cog_key"),
+        ("heading_deg", "cog_deg"),
         COMBINATOR_ANY,
         ("enh_turn_min_roc",),
     ),
@@ -91,7 +93,7 @@ def compute_enhanced_status(
 
     Args:
         config: Current parsed runtime configuration.
-        probes: Per-store-key acquisition state computed by the canonical input contract.
+        probes: Per-source-role acquisition state from the canonical input contract.
 
     Returns:
         One status row per rule with its keys, thresholds, and resolved state.
@@ -106,12 +108,16 @@ def _rule_row(
 ) -> dict[str, object]:
     enabled = bool(getattr(config, spec.enable_field))
     status = _resolve_status(config, spec, probes, enabled=enabled)
+    signals = _signals(spec)
     return {
         "rule": spec.rule,
         "enable_field": spec.enable_field,
         "enabled": enabled,
         "combinator": spec.combinator,
-        "keys": [{"field": field, "key": str(getattr(config, field))} for field in spec.key_fields],
+        "keys": [
+            {"field": signal.key_field, "key": str(getattr(config, signal.key_field))}
+            for signal in signals
+        ],
         "thresholds": {field: getattr(config, field) for field in spec.threshold_fields},
         "status": status,
         "availability": _availability(status),
@@ -133,16 +139,17 @@ def _resolve_status(
 ) -> str:
     if not enabled:
         return "disabled"
-    configured_keys = [str(getattr(config, field)) for field in spec.key_fields]
-    configured_keys = [key for key in configured_keys if key]
-    if not _configuration_satisfies(spec, len(configured_keys)):
+    configured_roles = [
+        signal.role for signal in _signals(spec) if str(getattr(config, signal.key_field))
+    ]
+    if not _configuration_satisfies(spec, len(configured_roles)):
         return "inactive_key_not_configured"
-    states = [_key_state(probes.get(key)) for key in configured_keys]
+    states = [_key_state(probes.get(role)) for role in configured_roles]
     return _status_from_states(spec, states)
 
 
 def _status_from_states(spec: EnhancedRuleSpec, states: list[str]) -> str:
-    if _is_active(spec.combinator, len(spec.key_fields), states):
+    if _is_active(spec.combinator, len(spec.source_roles), states):
         return "active"
     if "missing" in states:
         return "inactive_key_missing"
@@ -153,7 +160,7 @@ def _status_from_states(spec: EnhancedRuleSpec, states: list[str]) -> str:
 
 def _configuration_satisfies(spec: EnhancedRuleSpec, configured_count: int) -> bool:
     if spec.combinator == COMBINATOR_ALL:
-        return configured_count == len(spec.key_fields)
+        return configured_count == len(spec.source_roles)
     return configured_count >= 1
 
 
@@ -168,3 +175,7 @@ def _key_state(probe: EnhancedInput | None) -> str:
     if probe is None:
         return "missing"
     return probe.state
+
+
+def _signals(spec: EnhancedRuleSpec) -> tuple[EnhancedSignalSpec, ...]:
+    return tuple(ENHANCED_SIGNAL_BY_ROLE[role] for role in spec.source_roles)

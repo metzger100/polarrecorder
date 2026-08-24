@@ -25,8 +25,7 @@ def drive_read_results(
     results: list[tuple[PipelineResult, Sample | None]] = []
     for read_result in read_results:
         pipeline_result, sample = pipeline.run(read_result, state, config)
-        if sample is not None:
-            state.observe(sample)
+        state.observe_iteration(sample, eligible=pipeline_result.stability_eligible)
         commit_sample(pipeline_result, sample, model)
         results.append((pipeline_result, sample))
     return results
@@ -35,7 +34,7 @@ def drive_read_results(
 class FakeDataEntry:
     def __init__(
         self,
-        value: float,
+        value: object,
         timestamp: float,
         source: str = "fake",
         priority: int = 60,
@@ -95,10 +94,10 @@ class FakeAvNavAPI:
         self.sequence = 0
         self.user_apps: list[tuple[str, str, str | None]] = []
 
-    def set_value(self, key: str, value: float, timestamp: float) -> None:
+    def set_value(self, key: str, value: object, timestamp: float) -> None:
         self.values[key] = FakeDataEntry(value=value, timestamp=timestamp)
 
-    def getSingleValue(self, key: str, includeInfo: bool = False) -> float | FakeDataEntry | None:
+    def getSingleValue(self, key: str, includeInfo: bool = False) -> object | None:
         entry = self.values.get(key)
         if entry is None:
             return None

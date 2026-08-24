@@ -8,7 +8,7 @@ polarrecorder.sample, polarrecorder.source_params
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol
 
 from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input, coerce_finite_float
 from polarrecorder.sample import ENHANCED_SIGNAL_SPECS, ClockFn, ReadResult, WallClockFn
@@ -119,7 +119,10 @@ class StoreReader:
             if not key:
                 continue
             acquisition = assess_enhanced_input(
-                self._read_entry(key), now_monotonic, config.stale_threshold
+                self._read_entry(key),
+                now_monotonic,
+                config.stale_threshold,
+                accepts_bool=spec.accepts_bool,
             )
             enhanced_inputs[spec.role] = acquisition
             if acquisition.state == "invalid":
@@ -161,22 +164,23 @@ def read_store(
     return StoreReader(api, clock, wall_clock, logger, config).read()
 
 
-def _coerce_float(value: object) -> float | None:
+def _coerce_float(value: object, *, accepts_bool: bool = False) -> float | None:
     """Coerce a raw store value to a finite float, or ``None`` if not numeric.
 
     Args:
         value: Raw store value (bool, int, float, or string).
+        accepts_bool: Whether boolean input maps to zero or one.
 
     Returns:
         The coerced finite float, or ``None`` for non-numeric or non-finite input.
     """
-    return coerce_finite_float(value)
+    return coerce_finite_float(value, accepts_bool=accepts_bool)
 
 
-def _entry_value(entry: DataEntryLike | None) -> float | None:
+def _entry_value(entry: DataEntryLike | None) -> object | None:
     if entry is None:
         return None
-    return cast("float", entry.value)
+    return entry.value
 
 
 def _entry_timestamp(entry: DataEntryLike | None) -> float | None:

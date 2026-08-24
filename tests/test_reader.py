@@ -19,7 +19,7 @@ class FakeStoreAPI:
         self.entries: dict[str, FakeDataEntry] = {}
         self.calls: list[tuple[str, bool]] = []
 
-    def set_entry(self, key: str, value: float, timestamp: float) -> None:
+    def set_entry(self, key: str, value: object, timestamp: float) -> None:
         self.entries[key] = FakeDataEntry(value, timestamp)
 
     def get_single_value(self, key: str, include_info: bool = False) -> DataEntryLike | None:
@@ -289,11 +289,13 @@ def test_reader_retains_missing_stale_and_usable_acquisition_states() -> None:
     assert read_result.enhanced_inputs["awa_deg"].state == "missing"
 
 
-def test_coerce_float_handles_bool_number_string_and_non_numeric() -> None:
+def test_coerce_float_is_role_aware_and_total() -> None:
     true_value: object = True
     false_value: object = False
-    assert _coerce_float(true_value) == 1.0
-    assert _coerce_float(false_value) == 0.0
+    assert _coerce_float(true_value) is None
+    assert _coerce_float(false_value) is None
+    assert _coerce_float(true_value, accepts_bool=True) == 1.0
+    assert _coerce_float(false_value, accepts_bool=True) == 0.0
     assert _coerce_float(50) == 50.0
     assert _coerce_float(13.2) == 13.2
     assert _coerce_float("47.5") == 47.5
@@ -302,3 +304,20 @@ def test_coerce_float_handles_bool_number_string_and_non_numeric() -> None:
     assert _coerce_float(None) is None
     assert _coerce_float(math.nan) is None
     assert _coerce_float(math.inf) is None
+    assert _coerce_float(10**10_000) is None
+
+
+def test_reader_rejects_boolean_physical_signal_but_accepts_boolean_engine_state() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    physical_bool: object = True
+    engine_bool: object = True
+    api.set_entry("gps.depthBelowKeel", physical_bool, 99.5)
+    api.set_entry("engine.state", engine_bool, 99.5)
+    config = parse_config_values({"enh_engine_state_key": "engine.state"})
+
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
+
+    assert read_result.enhanced_inputs is not None
+    assert read_result.enhanced_inputs["depth_m"].state == "invalid"
+    assert read_result.enhanced_inputs["engine_signal"].state == "usable"

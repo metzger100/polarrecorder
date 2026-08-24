@@ -2,7 +2,8 @@
 
 Documentation: documentation/architecture/api.md
 Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.enhanced_input,
-polarrecorder.enhanced_status, polarrecorder.params, polarrecorder.source_params
+polarrecorder.enhanced_status, polarrecorder.params, polarrecorder.sample,
+polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from polarrecorder.config import parse_config_values
 from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS
 from polarrecorder.params import CONFIG_PARAMETERS
+from polarrecorder.sample import ENHANCED_SIGNAL_BY_ROLE
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
 ENHANCED_PARAM_NAMES = frozenset(
@@ -63,8 +65,9 @@ def _key_prefixes(config: Any) -> list[str]:
     for field in CORE_KEY_FIELDS:
         prefixes.add(str(getattr(config, field)).split(".", 1)[0])
     for spec in ENHANCED_RULE_SPECS:
-        for field in spec.key_fields:
-            key = str(getattr(config, field))
+        for role in spec.source_roles:
+            signal = ENHANCED_SIGNAL_BY_ROLE[role]
+            key = str(getattr(config, signal.key_field))
             if key:
                 prefixes.add(key.split(".", 1)[0])
     return sorted(prefixes)
@@ -86,13 +89,27 @@ def _probe_keys(
 ) -> dict[str, EnhancedInput]:
     probes: dict[str, EnhancedInput] = {}
     for spec in ENHANCED_RULE_SPECS:
-        for field in spec.key_fields:
-            key = str(getattr(config, field))
-            if key and key not in probes:
-                probes[key] = _probe(plugin, key, now, stale_threshold)
+        for role in spec.source_roles:
+            signal = ENHANCED_SIGNAL_BY_ROLE[role]
+            key = str(getattr(config, signal.key_field))
+            if key and role not in probes:
+                probes[role] = _probe(
+                    plugin,
+                    key,
+                    now,
+                    stale_threshold,
+                    accepts_bool=signal.accepts_bool,
+                )
     return probes
 
 
-def _probe(plugin: Any, key: str, now: float, stale_threshold: float) -> EnhancedInput:
+def _probe(
+    plugin: Any,
+    key: str,
+    now: float,
+    stale_threshold: float,
+    *,
+    accepts_bool: bool,
+) -> EnhancedInput:
     entry = plugin.get_single_value(key, include_info=True)
-    return assess_enhanced_input(entry, now, stale_threshold)
+    return assess_enhanced_input(entry, now, stale_threshold, accepts_bool=accepts_bool)

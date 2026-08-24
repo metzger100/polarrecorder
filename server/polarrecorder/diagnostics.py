@@ -10,6 +10,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, NamedTuple
 
+from polarrecorder.sample import is_finite_core_value
+
 if TYPE_CHECKING:
     from polarrecorder.config import Config
     from polarrecorder.sample import ReadResult, Sample
@@ -30,16 +32,23 @@ class CurrentValues(NamedTuple):
     stw_timestamp: float
 
 
-def data_status(read_result: ReadResult) -> str:
-    """Classify the core-read presence for host status reporting."""
-    present = (
-        read_result.twa_raw is not None,
-        read_result.tws_raw is not None,
-        read_result.stw_raw is not None,
+def data_status(read_result: ReadResult, stale_threshold: float) -> str:
+    """Classify whether core inputs are complete, finite, timestamped, and fresh."""
+    values = (read_result.twa_raw, read_result.tws_raw, read_result.stw_raw)
+    timestamps = (
+        read_result.twa_timestamp,
+        read_result.tws_timestamp,
+        read_result.stw_timestamp,
     )
-    if all(present):
+    usable = tuple(
+        is_finite_core_value(value)
+        and timestamp is not None
+        and read_result.timestamp_monotonic - timestamp <= stale_threshold
+        for value, timestamp in zip(values, timestamps)
+    )
+    if all(usable):
         return "receiving"
-    if any(present):
+    if any(value is not None for value in values):
         return "partial"
     return "no_data"
 
@@ -167,6 +176,11 @@ def _diagnostic_config(config: Config) -> dict[str, float]:
 
 
 def _finite_or_none(value: object) -> float | None:
-    if not isinstance(value, (int, float)) or not math.isfinite(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        if not math.isfinite(value):
+            return None
+    except OverflowError:
         return None
     return float(value)

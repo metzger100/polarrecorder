@@ -77,8 +77,8 @@ degrees.
 
 Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and uses them to reject
 samples those signals prove unrepresentative. Each rule fires only when its switch is on, its store key(s) are
-configured, and the value is present and fresh; otherwise the rule is a no-op (fail-open per signal). Every switch
-defaults on.
+configured, and the value is present, fresh, finite, and valid for its role; otherwise the rule is a no-op (fail-open
+per signal). Boolean values are valid only for the engine-state role. Every switch defaults on.
 
 The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, so those rules
 (R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the heading/COG turn confirmation) **activate
@@ -97,11 +97,11 @@ key in the Settings tab's Enhanced Rules section. The genuinely custom signals (
 | `enh_depth_enabled`             | BOOLEAN |                 `true` |           - | Enable the shallow-water reject (R19).                                               |
 | `enh_depth_key`                 |  STRING | `"gps.depthBelowKeel"` |           - | Store key for depth in meters (keel clearance).                                      |
 | `enh_depth_floor_m`             |   FLOAT |                  `1.0` |    0.5-50.0 | Clearance below this rejects the sample (shallow-water squat).                       |
-| `enh_slip_enabled`              | BOOLEAN |                 `true` |           - | Enable the STW-implausibly-low reject (R20).                                         |
+| `enh_slip_enabled`              | BOOLEAN |                 `true` |           - | Enable the symmetric SOG/STW mismatch reject (R20).                                  |
 | `enh_sog_key`                   |  STRING |          `"gps.speed"` |           - | Shared SOG source for R10 anchoring and R20 consistency.                             |
 | `enh_current_drift_key`         |  STRING |   `"gps.currentDrift"` |           - | Store key for current drift; corroborates R20.                                       |
-| `enh_slip_sog_floor_kt`         |   FLOAT |                  `1.0` |    0.3-10.0 | SOG must exceed this for R20 to apply.                                               |
-| `enh_slip_ratio`                |   FLOAT |                  `0.5` |     0.1-0.9 | Reject when STW < SOG * ratio and current cannot explain the gap.                    |
+| `enh_slip_sog_floor_kt`         |   FLOAT |                  `1.0` |    0.3-10.0 | Faster of SOG/STW must exceed this for R20 to apply.                                 |
+| `enh_slip_ratio`                |   FLOAT |                  `0.5` |     0.1-0.9 | Reject when slower < faster × ratio and current drift cannot explain the gap.        |
 | `enh_tw_crosscheck_enabled`     | BOOLEAN |                 `true` |           - | Enable the true-wind cross-check reject (R21).                                       |
 | `enh_awa_key`                   |  STRING |      `"gps.windAngle"` |           - | Store key for apparent wind angle.                                                   |
 | `enh_aws_key`                   |  STRING |      `"gps.windSpeed"` |           - | Store key for apparent wind speed.                                                   |

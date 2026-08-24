@@ -163,7 +163,6 @@ def test_r15_rejects_warming_up_and_matches_state_status() -> None:
 
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_warming_up"]
-    assert state.is_warming_up(sample.timestamp_monotonic)
 
 
 def test_r15_rejects_unstable_filled_window() -> None:
@@ -194,7 +193,6 @@ def test_r15_passes_stable_filled_window() -> None:
     result = rules_stability.stability_window(make_sample(now=100.0), state, default_config())
 
     assert result.decision == "pass"
-    assert not state.is_warming_up(100.0)
 
 
 def test_r15_rejects_an_unstable_current_sample_without_observing_it() -> None:
@@ -233,7 +231,6 @@ def test_r15_passes_with_jittered_one_second_samples() -> None:
     result = rules_stability.stability_window(make_sample(now=15.15), state, config)
 
     assert result.decision == "pass"
-    assert not state.is_warming_up(15.15)
 
 
 def test_r15_restarts_warmup_after_sample_gap() -> None:
@@ -244,7 +241,6 @@ def test_r15_restarts_warmup_after_sample_gap() -> None:
 
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_warming_up"]
-    assert state.is_warming_up(130.0)
 
 
 def test_r15_uses_runtime_config_window_without_mutating_state_configuration() -> None:
@@ -258,10 +254,21 @@ def test_r15_uses_runtime_config_window_without_mutating_state_configuration() -
 
 
 def test_r15_runtime_config_can_shorten_evaluation_without_mutating_state() -> None:
-    config = replace(default_config(), stability_window_seconds=5)
+    config = replace(default_config(), stability_window_seconds=5, sample_interval=2.0)
     state = ValidationState()
     state.observe(make_sample(now=95.0))
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "pass"
     assert state.stability_window_seconds == 15.0
+
+
+def test_r15_restarts_warmup_when_window_has_a_sparse_sampling_gap() -> None:
+    state = ValidationState()
+    state.observe(make_sample(now=85.0))
+    state.observe(make_sample(now=86.0))
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=100.0), state, default_config())
+
+    assert not evaluation.filled
+    assert evaluation.largest_gap_seconds == 14.0

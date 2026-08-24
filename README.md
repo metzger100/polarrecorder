@@ -148,7 +148,7 @@ limited to 4 MiB. See [Export and import](documentation/user/export-import.md) f
 ### Enhanced Rules (optional signals)
 
 Enhanced Rules use optional boat signals to reject unrepresentative samples. A rule acts only when enabled and all of
-its configured inputs are fresh.
+its configured inputs are fresh, finite, and valid for their signal role. Only engine state accepts boolean values.
 
 The six rules are:
 
@@ -276,6 +276,9 @@ Common causes:
 - recording is paused, or the plugin is disabled in AvNav
 - the boat has mostly been motoring, maneuvering, drifting, or sailing in very low wind
 - the plugin is still warming up its stability checks
+
+Pause/Resume, loss of fresh usable core data, and non-sailing conditions restart the stability warm-up. Status reports
+data as present only when all three core readings are finite, timestamped, and fresh.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

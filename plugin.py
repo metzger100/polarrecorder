@@ -82,7 +82,7 @@ class Plugin:
         self.plugin_version = str(self.pluginInfo().get("version", FALLBACK_VERSION))
         self._clock = time.monotonic
         self._wall_clock = time.time
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._logger = AvNavLogger(api)
         self._status_value = ""
         self._status_info = ""
@@ -169,16 +169,17 @@ class Plugin:
     def _run_iteration(self, config: Config) -> None:
         store_reader = StoreReader(self, self._clock, self._wall_clock, self._logger, config)
         read_result = store_reader.read()
-        data_status = diagnostics.data_status(read_result)
-        if self._paused:
-            self._record_suppressed(read_result, data_status, "reject_user_paused", config)
-            return
-        pipeline_result, sample = pipeline.run(read_result, self._state, config)
-        warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
-        warming_up = self._state.is_warming_up(warming_now)
-        if sample is not None:
-            self._state.observe(sample)
+        data_status = diagnostics.data_status(read_result, config.stale_threshold)
         with self._lock:
+            if self._paused:
+                self._record_suppressed(read_result, data_status, "reject_user_paused", config)
+                return
+            pipeline_result, sample = pipeline.run(read_result, self._state, config)
+            self._state.observe_iteration(sample, eligible=pipeline_result.stability_eligible)
+            warming_up = (
+                pipeline_result.stability_evaluation is None
+                or not pipeline_result.stability_evaluation.filled
+            )
             commit_sample(pipeline_result, sample, self._model)
             self._record_counters(pipeline_result)
             self._timeline.record(pipeline_result.decision, pipeline_result.reason_codes)
@@ -194,20 +195,17 @@ class Plugin:
         self, read_result: ReadResult, data_status: str, reason: str, config: Config
     ) -> None:
         sample = build_sample(read_result)
-        warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
-        warming_up = self._state.is_warming_up(warming_now)
         result = pipeline.PipelineResult(
             decision="rejected",
             reason_codes=[reason],
             is_sailing_candidate=False,
             failed_predicates=[reason],
         )
-        if sample is not None:
-            self._state.observe(sample)
         with self._lock:
+            self._state.observe_iteration(sample, eligible=False)
             self._record_counters(result)
             self._timeline.record("rejected", [reason])
-            self._write_status_scalars(read_result, sample, data_status, warming_up)
+            self._write_status_scalars(read_result, sample, data_status, warming_up=True)
         self._update_avnav_status(data_status, None)
         self._log_diagnostic(read_result, sample, result, config)
 
@@ -378,6 +376,10 @@ class Plugin:
 
     def _restart(self) -> None:
         self._stop_requested = True
+
+    def _set_paused(self, *, paused: bool) -> None:
+        self._paused, self._warming_up = paused, True
+        self._state.reset_stability()
 
     def _set_status(self, value: str, info: str) -> None:
         if self._status_value != value or self._status_info != info:

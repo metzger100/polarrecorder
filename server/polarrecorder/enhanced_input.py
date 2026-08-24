@@ -41,6 +41,8 @@ def assess_enhanced_input(
     entry: StoreEntryLike | None,
     now_monotonic: float,
     stale_threshold: float,
+    *,
+    accepts_bool: bool = False,
 ) -> EnhancedInput:
     """Classify one store entry exactly as the sampling path consumes it.
 
@@ -48,13 +50,14 @@ def assess_enhanced_input(
         entry: Store entry, or ``None`` when the key is unavailable.
         now_monotonic: Current monotonic timestamp.
         stale_threshold: Maximum usable source age in seconds.
+        accepts_bool: Whether this signal role permits boolean input.
 
     Returns:
         A complete missing, stale, invalid, or usable acquisition result.
     """
     if entry is None:
         return EnhancedInput("missing", None, None, None)
-    numeric = coerce_finite_float(entry.value)
+    numeric = coerce_finite_float(entry.value, accepts_bool=accepts_bool)
     if numeric is None:
         return EnhancedInput("invalid", entry.value, entry.timestamp, None)
     if now_monotonic - entry.timestamp > stale_threshold:
@@ -62,21 +65,25 @@ def assess_enhanced_input(
     return EnhancedInput("usable", entry.value, entry.timestamp, numeric)
 
 
-def coerce_finite_float(value: object) -> float | None:
+def coerce_finite_float(value: object, *, accepts_bool: bool = False) -> float | None:
     """Coerce a supported scalar to a finite float.
 
     Args:
         value: Raw bool, number, or numeric string.
+        accepts_bool: Whether boolean input maps to zero or one.
 
     Returns:
         The finite float, or ``None`` for unsupported or non-finite input.
     """
+    coerced: float | None = None
     if isinstance(value, bool):
-        return 1.0 if value else 0.0
-    try:
-        coerced = float(value) if isinstance(value, (int, float, str)) else None
-    except ValueError:
-        return None
+        if accepts_bool:
+            coerced = 1.0 if value else 0.0
+    elif isinstance(value, (int, float, str)):
+        try:
+            coerced = float(value)
+        except (OverflowError, ValueError):
+            coerced = None
     if coerced is None or not math.isfinite(coerced):
         return None
     return coerced

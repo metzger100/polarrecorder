@@ -6,10 +6,9 @@ Depends: polarrecorder.config, polarrecorder.sample
 
 from __future__ import annotations
 
-import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from polarrecorder.sample import RuleResult, enhanced_value
+from polarrecorder.sample import RuleResult, enhanced_value, is_finite_core_value
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -126,10 +125,10 @@ def anchored_heuristic(sample: Sample, config: Config) -> RuleResult:
     return _pass()
 
 
-def _add_non_finite_code(codes: list[str], value: Any, code: str) -> None:
+def _add_non_finite_code(codes: list[str], value: object | None, code: str) -> None:
     if value is None:
         return
-    if not isinstance(value, (int, float)) or not math.isfinite(value):
+    if not is_finite_core_value(value):
         codes.append(code)
 
 

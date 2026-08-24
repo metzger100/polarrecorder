@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, cast
 
-from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
+from conftest import FakeAvNavAPI, FakeClock
 from polarrecorder import reader
 from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.timeline import Timeline
@@ -63,7 +63,7 @@ class LoopAvNavAPI(FakeAvNavAPI):
         """Stop after the configured fetch count."""
         return self.fetches >= self.max_fetches
 
-    def getSingleValue(self, key: str, includeInfo: bool = False) -> float | FakeDataEntry | None:
+    def getSingleValue(self, key: str, includeInfo: bool = False) -> object | None:
         """Inject one optional store read failure."""
         if self.fetches == self.fail_read_at_fetch and self.failed_reads == 0:
             self.failed_reads += 1

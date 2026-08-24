@@ -133,13 +133,13 @@ def _reset(plugin: Any, args: dict[str, str]) -> dict[str, object]:
 
 def _pause(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
-        plugin._paused = True
+        plugin._set_paused(paused=True)
     return api_handlers.ok({"recording": False})
 
 
 def _resume(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
-        plugin._paused = False
+        plugin._set_paused(paused=False)
     return api_handlers.ok({"recording": True})
 
 
