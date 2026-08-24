@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import cast
 
 from conftest import FakeLogger
-from polarrecorder.config import default_config
+from polarrecorder.config import default_config, parse_config_values
 from polarrecorder.sample import ReadResult
 from polarrecorder.validation.pipeline import run
 from polarrecorder.validation.state import ValidationState
@@ -30,6 +30,34 @@ def test_runner_returns_none_sample_for_r1_and_r2_rejections() -> None:
     assert missing.reason_codes == ("reject_missing_twa",)
     assert not missing.is_sailing_candidate
     assert missing_sample is None
+
+
+def test_non_finite_config_text_cannot_disable_r3_r10_r15_or_r20() -> None:
+    config = parse_config_values(
+        {
+            "stale_threshold": "nan",
+            "anchored_stw_threshold": "nan",
+            "sample_interval": "nan",
+            "enh_slip_ratio": "nan",
+        }
+    )
+
+    stale, _ = run(make_read_result(ages=(100.0, 100.0, 100.0)), make_warmed_state(), config)
+    anchored, _ = run(make_read_result(stw_kt=0.2), make_warmed_state(), config)
+    warming, _ = run(make_read_result(), ValidationState(), config)
+    mismatch, _ = run(
+        make_read_result(
+            stw_kt=1.0,
+            enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
+        ),
+        make_warmed_state(stw_values=(1.0, 1.0, 1.0)),
+        config,
+    )
+
+    assert stale.reason_codes == ("reject_stale_twa", "reject_stale_tws", "reject_stale_stw")
+    assert anchored.reason_codes == ("reject_anchored",)
+    assert warming.reason_codes == ("reject_warming_up",)
+    assert mismatch.reason_codes == ("reject_sog_stw_mismatch",)
 
 
 def test_runner_emits_optional_debug_hook_after_decision() -> None:
@@ -257,6 +285,69 @@ def test_enhanced_quality_gate_reject_precedes_r16_quarantine() -> None:
     assert result.decision == "rejected"
     assert result.reason_codes == ("reject_heel_out_of_band",)
     assert sample is not None
+
+
+def test_secondary_quality_predicates_break_stability_history() -> None:
+    cases = (
+        (
+            make_read_result(
+                stw_kt=0.5,
+                enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
+            ),
+            make_warmed_state(stw_values=(5.0, 5.0, 5.0)),
+            "reject_sog_stw_mismatch",
+        ),
+        (
+            make_read_result(
+                twa_raw=120.0,
+                enhanced_raw={"awa_deg": (0.0, 99.5), "aws_kt": (12.0, 99.5)},
+            ),
+            make_warmed_state(),
+            "reject_true_wind_crosscheck",
+        ),
+        (
+            make_read_result(twa_raw=120.0, enhanced_raw={"heel_deg": (60.0, 99.5)}),
+            make_warmed_state(),
+            "reject_heel_out_of_band",
+        ),
+        (
+            make_read_result(tws_kt=4.0, stw_kt=4.0),
+            make_warmed_state(stw_values=(9.0, 9.0, 9.0)),
+            "quarantine_engine_suspected",
+        ),
+    )
+    for read_result, state, poison_code in cases:
+        current = run(read_result, ValidationState(), default_config())[1]
+        assert current is not None
+        state.observe_transition(current)
+
+        result, sample = run(read_result, state, default_config())
+
+        assert result.reason_codes == ("reject_unstable",)
+        assert poison_code in result.failed_predicates
+        assert not result.retain_stability_history
+        assert sample is not None
+
+
+def test_rate_rejections_with_secondary_r20_break_stability_history() -> None:
+    mismatch = {"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)}
+    cases = (
+        (make_read_result(twa_raw=120.0, stw_kt=1.0, enhanced_raw=mismatch), "reject_twa_roc"),
+        (make_read_result(tws_kt=30.0, stw_kt=1.0, enhanced_raw=mismatch), "reject_tws_roc"),
+        (make_read_result(stw_kt=1.0, enhanced_raw=mismatch), "reject_stw_roc"),
+    )
+    for read_result, primary_code in cases:
+        state = make_warmed_state()
+        previous = state.previous_sample
+        assert previous is not None
+        state.previous_sample = replace(previous, timestamp_monotonic=99.0)
+
+        result, sample = run(read_result, state, default_config())
+
+        assert result.reason_codes == (primary_code,)
+        assert "reject_sog_stw_mismatch" in result.failed_predicates
+        assert not result.retain_stability_history
+        assert sample is not None
 
 
 def test_engine_off_signal_suppresses_r16_quarantine_end_to_end() -> None:

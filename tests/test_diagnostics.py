@@ -29,7 +29,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     payload = format_sample_diagnostic(read_result, sample, result, config)
 
     assert state == before
-    assert payload["schema_version"] == 3
+    assert payload["schema_version"] == 4
     assert payload["core_raw"] == {
         "twa": 90.0,
         "tws_ms": read_result.tws_raw,
@@ -161,17 +161,40 @@ def test_formatter_is_total_for_rejected_nonnumeric_core_and_enhanced_values() -
     payload = format_sample_diagnostic(read_result, sample, result, config)
     core_raw = cast("dict[str, object]", payload["core_raw"])
 
-    assert core_raw["twa"] is None
+    assert core_raw["twa"] == "bad"
     assert payload["enhanced"] == {
         "rpm": {
             "state": "invalid",
-            "raw": None,
+            "raw": "off",
             "normalized": None,
             "timestamp": 99.5,
             "age_seconds": 0.5,
         }
     }
     assert json.dumps(payload, allow_nan=False)
+
+
+def test_formatter_preserves_supported_string_and_boolean_raw_values() -> None:
+    config = default_config()
+    read_result = replace(
+        make_read_result(),
+        enhanced_inputs={
+            "rpm": EnhancedInput("usable", "1200", 99.5, 1200.0),
+            "engine_signal": EnhancedInput(
+                state="usable",
+                raw_value=True,
+                timestamp=99.5,
+                numeric_value=1.0,
+            ),
+        },
+    )
+    result, sample = run(read_result, make_warmed_state(), config)
+
+    payload = format_sample_diagnostic(read_result, sample, result, config)
+    enhanced = cast("dict[str, dict[str, object]]", payload["enhanced"])
+
+    assert enhanced["rpm"]["raw"] == "1200"
+    assert enhanced["engine_signal"]["raw"] is True
 
 
 def test_formatter_uses_the_pipeline_current_sample_r15_evaluation() -> None:

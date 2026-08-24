@@ -1,4 +1,4 @@
-"""Module: API Handlers - Pure API response formatting.
+"""Module: API Handlers - Pure API request and response formatting.
 
 Documentation: documentation/architecture/api.md
 Depends: polarrecorder.config, polarrecorder.export
@@ -17,6 +17,17 @@ if TYPE_CHECKING:
     from polarrecorder.config import Config
 
 Response = dict[str, object]
+
+
+def normalize_args(args: Mapping[str, object]) -> dict[str, str]:
+    """Normalize AvNav request argument lists to scalar strings."""
+    normalized: dict[str, str] = {}
+    for key, value in args.items():
+        if isinstance(value, list):
+            normalized[key] = str(value[0]) if value else ""
+        else:
+            normalized[key] = str(value)
+    return normalized
 
 
 @dataclass(frozen=True)

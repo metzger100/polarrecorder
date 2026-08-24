@@ -126,7 +126,7 @@ class StoreReader:
             )
             enhanced_inputs[spec.role] = acquisition
             if acquisition.state == "invalid":
-                self._log_uncoercible(spec.role, key, acquisition.raw_value)
+                self._log_invalid(spec.role, key, acquisition)
             if acquisition.state == "usable":
                 assert acquisition.numeric_value is not None
                 assert acquisition.timestamp is not None
@@ -136,9 +136,12 @@ class StoreReader:
                 )
         return enhanced_raw or None, enhanced_inputs or None
 
-    def _log_uncoercible(self, role: str, key: str, value: object) -> None:
+    def _log_invalid(self, role: str, key: str, acquisition: EnhancedInput) -> None:
         if self._logger is not None:
-            message = f"enhanced signal {role} key {key!r} value {value!r} is not numeric; omitting"
+            message = (
+                f"enhanced signal {role} key {key!r} has invalid "
+                f"{acquisition.invalid_cause}; omitting"
+            )
             self._logger.debug(message)
 
 

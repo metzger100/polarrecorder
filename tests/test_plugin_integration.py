@@ -411,6 +411,8 @@ def test_debug_logging_does_not_change_malformed_input_accounting(tmp_path: Path
         api.set_value(reader.STW_KEY, 3.0, 99.5)
         plugin = make_plugin(tmp_path / str(enabled), api)
         config = replace(plugin.config, debug_logging=enabled)
+        with plugin._lock:
+            plugin.config = config
 
         plugin._run_iteration(config)
 

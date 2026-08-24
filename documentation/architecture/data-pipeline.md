@@ -11,9 +11,11 @@ updates model bins, counters, timeline state, persistence, and AvNav-visible sta
 
 The reader produces `ReadResult`, whose raw core values and source timestamps are untrusted objects and may be missing,
 nonnumeric, boolean, non-finite, or too large to convert safely. One total timestamp coercer accepts only finite numeric
-timestamps (not booleans or strings) before freshness arithmetic. Invalid core timestamps reject in R1/R2 and invalid
-enhanced timestamps make that optional acquisition unusable. If R1 or R2 rejects, the runner returns a rejected
-`PipelineResult` and `Sample` is `None`.
+timestamps (not booleans or strings) before freshness arithmetic. A shared classifier permits at most 0.5 seconds of
+future skew, matching the lowest supported sampling cadence; larger offsets fail freshness. Invalid core timestamps
+reject in R1/R2, implausibly future core timestamps reject in R3, and invalid or future enhanced timestamps make that
+optional acquisition unusable. If R1 or R2 rejects, the runner returns a rejected `PipelineResult` and `Sample` is
+`None`.
 
 After R1 and R2 pass, the runner calls `build_sample(read_result)`. The resulting `Sample` has non-optional float
 fields, TWS/STW converted to knots, TWA normalized for model use, and freshness ages computed from the store timestamps.
@@ -29,13 +31,16 @@ each built numeric sample separately as the previous observation for R11-R13, bu
 the pre-candidate gates pass. Missing, malformed, stale, out-of-range, head-to-wind, low-wind, anchored, motoring, and
 shallow observations break R15 continuity. Pausing or resuming also clears R15 history, so recovery always requires a
 fresh stability warm-up. Accepted samples, R11-R14 failures, and R15 warm-up/instability retain history. R16 quarantine
-and R20-R22 sensor-quality failures clear it so a bad episode cannot pre-prove stability for its recovery sample.
+and R20-R22 sensor-quality failures clear it so a bad episode cannot pre-prove stability for its recovery sample. This
+history policy examines every triggered predicate, independently of which earlier rule supplies the public primary
+reason.
 
 R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
 the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
-reconfigures, or otherwise mutates live validation state. Diagnostic records also retain individually available raw core
+reconfigures, or otherwise mutates live validation state. Diagnostic records also retain JSON-safe raw core scalar
 values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages and acquisition states, and a
-record schema. Schema 3 includes R15's largest observed gap, allowed gap, observed/required sample counts, and the
+record schema. Schema 4 preserves strings and booleans as actually received while replacing unsupported or non-finite
+objects with `null`; it also includes R15's largest observed gap, allowed gap, observed/required sample counts, and the
 active sample interval, making the continuity decision replayable. Diagnostic emission follows canonical state, model,
 counter, timeline, and status accounting, so logging cannot change the recorded decision.
 
@@ -48,14 +53,14 @@ Optional signal hooks read a bounded set of configured store keys alongside the 
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
 is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
 through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
-contract parses finite values and finite numeric timestamps and is shared by the live enhanced-status endpoint. Boolean
-values are accepted only for the `engine_signal` role; physical measurements reject them. Numeric strings are accepted
-as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains every acquisition state for diagnostics,
-while `ReadResult.enhanced_raw` contains only usable values in store units with timestamps. `build_sample` converts each
-usable role to its canonical unit once (`units.py`) and stores it in `Sample.enhanced`; absent or stale roles are
-omitted, and `Sample.enhanced` is `None` when nothing was read. Enhanced rules read only from `Sample.enhanced` (and
-`Config`), return `RuleResult`, and keep the same no-AvNav, no-I/O, no-threading purity as the core rules. The role/unit
-table lives in [AvNav keys and units](../avnav/keys-and-units.md).
+contract parses finite values and finite numeric timestamps, applies the bounded future-skew policy, and is shared by
+the live enhanced-status endpoint. Boolean values are accepted only for the `engine_signal` role; physical measurements
+reject them. Numeric strings are accepted as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains
+every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains only usable values in store units with
+timestamps. `build_sample` converts each usable role to its canonical unit once (`units.py`) and stores it in
+`Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when nothing was read. Enhanced
+rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same no-AvNav, no-I/O,
+no-threading purity as the core rules. The role/unit table lives in [AvNav keys and units](../avnav/keys-and-units.md).
 
 Implemented enhanced rules and candidacy:
 

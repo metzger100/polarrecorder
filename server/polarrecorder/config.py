@@ -6,6 +6,7 @@ Depends: polarrecorder.logger, polarrecorder.params, polarrecorder.source_params
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -115,7 +116,11 @@ def _parse_spec_value(
 ) -> object:
     value_type = _spec_string(spec, "type")
     if value_type == "BOOLEAN":
-        return raw_value.strip().upper() == "TRUE"
+        normalized = raw_value.strip().upper()
+        if normalized not in {"TRUE", "FALSE"}:
+            message = f"Invalid boolean value {raw_value!r}"
+            raise ValueError(message)
+        return normalized == "TRUE"
     if value_type == "NUMBER":
         return int(_clamp(float(int(raw_value)), spec, logger))
     if value_type == "FLOAT":
@@ -131,7 +136,7 @@ def _parse_supplied_value(
 ) -> object:
     try:
         return _parse_spec_value(spec, raw_value, logger)
-    except (AttributeError, TypeError, ValueError):
+    except (AttributeError, OverflowError, TypeError, ValueError):
         name = _spec_string(spec, "name")
         if logger is not None:
             message = f"Invalid config {name}={raw_value!r}; keeping previous/default value"
@@ -142,6 +147,9 @@ def _parse_supplied_value(
 
 
 def _clamp(value: float, spec: Mapping[str, object], logger: Logger | None) -> float:
+    if not math.isfinite(value):
+        message = f"Non-finite config value {value!r}"
+        raise ValueError(message)
     bounds = cast("list[int | float]", spec["rangeOrList"])
     lower = float(bounds[0])
     upper = float(bounds[1])

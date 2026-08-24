@@ -14,7 +14,7 @@ R17 through R22 are optional enhanced rules that read additional signals from `S
 | ---- | ----------------------------- | ---------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | R1   | `finite_values`               | reject     | `reject_non_finite_twa`, `reject_non_finite_tws`, `reject_non_finite_stw` | Each non-None raw value and source timestamp must be numeric and finite; timestamps reject booleans and strings.                                                                       | D-TWA/TWS/STW                 |
 | R2   | `required_keys`               | reject     | `reject_missing_twa`, `reject_missing_tws`, `reject_missing_stw`          | All three raw core values and their source timestamps must be present.                                                                                                                 | D-TWA/TWS/STW                 |
-| R3   | `stale_values`                | reject     | `reject_stale_twa`, `reject_stale_tws`, `reject_stale_stw`                | Each value age must be `<= stale_threshold`, default 3.0 s.                                                                                                                            | D-TWA/TWS/STW                 |
+| R3   | `stale_values`                | reject     | `reject_stale_twa`, `reject_stale_tws`, `reject_stale_stw`                | Each value age must be `<= stale_threshold`, default 3.0 s, and no more than 0.5 s in the future.                                                                                      | D-TWA/TWS/STW                 |
 | R4   | `age_skew`                    | reject     | `reject_age_skew`                                                         | Core timestamp age skew must be `< age_skew_threshold`, default 2.0 s.                                                                                                                 | D-TWA/TWS/STW                 |
 | R5   | `twa_range`                   | reject     | `reject_twa_range`                                                        | Raw TWA must be from 0 to 360 deg inclusive.                                                                                                                                           | D-TWA/TWS/STW                 |
 | R6   | `tws_range`                   | reject     | `reject_tws_range`                                                        | TWS must be from 0 to `max_tws`, default 60 kt.                                                                                                                                        | D-TWA/TWS/STW                 |
@@ -70,7 +70,9 @@ A warming-up result is not a sailing candidate; `reject_unstable` is a quality-g
 candidate.
 
 The pipeline preserves the first rule's reason code(s) as the primary explanation and records every triggered predicate
-in deterministic rule order for diagnostics. A predicate is evidence, not a replacement public decision.
+in deterministic rule order for diagnostics. A predicate is evidence, not a replacement public decision. Stability
+history eligibility uses all that evidence: any R16/R20/R21/R22 poison predicate clears history even when R11-R15 is the
+primary reason.
 
 R10 acquires configured SOG even when R20 is disabled. Fresh SOG is authoritative for anchor detection; this avoids
 treating a stopped paddlewheel as anchored while the boat moves over ground. The tradeoff is that genuine sailing

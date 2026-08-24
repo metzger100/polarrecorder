@@ -11,6 +11,9 @@ from dataclasses import dataclass
 from typing import Literal, Protocol
 
 EnhancedInputState = Literal["missing", "stale", "invalid", "usable"]
+TimestampState = Literal["invalid", "stale", "future", "usable"]
+InvalidInputCause = Literal["value", "timestamp", "future_timestamp"]
+MAX_FUTURE_TIMESTAMP_SKEW_SECONDS = 0.5
 
 
 class StoreEntryLike(Protocol):
@@ -35,6 +38,7 @@ class EnhancedInput:
     raw_value: object | None
     timestamp: float | None
     numeric_value: float | None
+    invalid_cause: InvalidInputCause | None = None
 
 
 def assess_enhanced_input(
@@ -57,13 +61,42 @@ def assess_enhanced_input(
     """
     if entry is None:
         return EnhancedInput("missing", None, None, None)
-    timestamp = coerce_finite_timestamp(entry.timestamp)
+    timestamp_state, timestamp = classify_timestamp(entry.timestamp, now_monotonic, stale_threshold)
     numeric = coerce_finite_float(entry.value, accepts_bool=accepts_bool)
-    if timestamp is None or numeric is None:
-        return EnhancedInput("invalid", entry.value, timestamp, None)
-    if now_monotonic - timestamp > stale_threshold:
+    invalid_cause: InvalidInputCause | None = None
+    if timestamp_state == "invalid":
+        invalid_cause = "timestamp"
+        timestamp = None
+    elif timestamp_state == "future":
+        invalid_cause = "future_timestamp"
+    elif numeric is None:
+        invalid_cause = "value"
+    if invalid_cause is not None:
+        return EnhancedInput("invalid", entry.value, timestamp, None, invalid_cause)
+    if timestamp_state == "stale":
         return EnhancedInput("stale", entry.value, timestamp, numeric)
     return EnhancedInput("usable", entry.value, timestamp, numeric)
+
+
+def classify_timestamp(
+    value: object,
+    now_monotonic: float,
+    stale_threshold: float,
+) -> tuple[TimestampState, float | None]:
+    """Classify a raw store timestamp against freshness and future-skew bounds."""
+    timestamp = coerce_finite_timestamp(value)
+    if timestamp is None:
+        return "invalid", None
+    return classify_timestamp_age(now_monotonic - timestamp, stale_threshold), timestamp
+
+
+def classify_timestamp_age(age_seconds: float, stale_threshold: float) -> TimestampState:
+    """Classify a finite timestamp age using the canonical temporal policy."""
+    if age_seconds < -MAX_FUTURE_TIMESTAMP_SKEW_SECONDS:
+        return "future"
+    if age_seconds > stale_threshold:
+        return "stale"
+    return "usable"
 
 
 def coerce_finite_timestamp(value: object) -> float | None:
