@@ -115,6 +115,12 @@ test("direct status-card headings use the shared card inset", () => {
   assert.ok(source.includes(".card > h2 {\n  margin: 1rem 1rem 0.5rem;\n}"));
 });
 
+test("export grid fields accommodate three-digit TWA values", () => {
+  const source = fs.readFileSync(path.join(process.cwd(), "viewer", "viewer-settings-and-responsive.css"), "utf8");
+
+  assert.ok(source.includes(".grid-token input {\n  width: 5.7143rem;\n  text-align: center;\n}"));
+});
+
 /** @param {Environment} env */
 async function testSettingsActions(env) {
   const panel = env.elements["settings-panel"];
