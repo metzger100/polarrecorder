@@ -200,7 +200,8 @@ function smellContractsWorkspace() {
     "import-upload.js",
     "enhanced-settings.js",
     "advanced-settings.js",
-    "settings-ui.js"
+    "settings-ui.js",
+    "engine-warning.js"
   ];
   /** @type {Record<string, string>} */
   const files = {};

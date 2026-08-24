@@ -11,6 +11,11 @@ def _status(config: Config, probes: dict[str, KeyProbe], rule: str) -> str:
     return next(str(row["status"]) for row in rows if row["rule"] == rule)
 
 
+def _availability(config: Config, probes: dict[str, KeyProbe], rule: str) -> str:
+    rows = compute_enhanced_status(config, probes)
+    return next(str(row["availability"]) for row in rows if row["rule"] == rule)
+
+
 _FRESH = KeyProbe(present=True, fresh=True)
 _STALE = KeyProbe(present=True, fresh=False)
 _MISSING = KeyProbe(present=False, fresh=False)
@@ -37,12 +42,14 @@ def test_disabled_when_switch_off() -> None:
     config = replace(default_config(), enh_depth_enabled=False)
 
     assert _status(config, {}, "reject_shallow") == "disabled"
+    assert _availability(config, {}, "reject_shallow") == "disabled"
 
 
 def test_inactive_key_not_configured_for_empty_required_key() -> None:
     config = default_config()  # enh_rpm_key defaults to ""
 
     assert _status(config, {}, "reject_engine_rpm") == "inactive_key_not_configured"
+    assert _availability(config, {}, "reject_engine_rpm") == "unavailable"
 
 
 def test_inactive_key_not_configured_for_any_combinator_all_empty() -> None:
@@ -56,6 +63,7 @@ def test_active_single_key_when_fresh() -> None:
     probes = {config.enh_depth_key: _FRESH}
 
     assert _status(config, probes, "reject_shallow") == "active"
+    assert _availability(config, probes, "reject_shallow") == "active"
 
 
 def test_inactive_key_missing_when_read_returns_none() -> None:

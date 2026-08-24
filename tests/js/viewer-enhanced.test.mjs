@@ -26,7 +26,8 @@ function enhancedRules() {
       combinator: "all",
       keys: [{ field: "enh_rpm_key", key: "" }],
       thresholds: { enh_rpm_idle_max: 900 },
-      status: "inactive_key_not_configured"
+      status: "inactive_key_not_configured",
+      availability: "unavailable"
     },
     {
       rule: "reject_sog_stw_mismatch",
@@ -38,7 +39,8 @@ function enhancedRules() {
         { field: "enh_current_drift_key", key: "gps.currentDrift" }
       ],
       thresholds: { enh_slip_sog_floor_kt: 1, enh_slip_ratio: 0.5 },
-      status: "active"
+      status: "active",
+      availability: "active"
     }
   ];
 }

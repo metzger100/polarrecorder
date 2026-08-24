@@ -59,6 +59,7 @@
     "tests/js/typecheck-tools.test.mjs",
     "tests/js/viewer-advanced.test.mjs",
     "tests/js/viewer-dependency-contract.test.mjs",
+    "tests/js/viewer-engine-warning.test.mjs",
     "tests/js/viewer-enhanced.test.mjs",
     "tests/js/viewer-export.test.mjs",
     "tests/js/viewer-grid-editor.test.mjs",

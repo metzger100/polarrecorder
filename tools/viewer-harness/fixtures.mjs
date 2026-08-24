@@ -1,5 +1,5 @@
 /**
- * @typedef {{ data: unknown, status: string }} ApiResponse
+ * @typedef {{ data: unknown, error?: string, status: string }} ApiResponse
  */
 
 /**
@@ -108,6 +108,15 @@ export function defaultResponseBody(endpoint) {
   if (endpoint.startsWith("enhanced/keys")) {
     return ok({
       keys: ["gps.trueWindAngle", "gps.trueWindSpeed", "gps.waterSpeed", "gps.signalk.navigation.speedThroughWater"]
+    });
+  }
+  if (endpoint.startsWith("enhanced/status")) {
+    return ok({
+      rules: [
+        { rule: "reject_engine_rpm", availability: "unavailable", status: "inactive_key_not_configured" },
+        { rule: "reject_engine_on", availability: "disabled", status: "disabled" },
+        { rule: "reject_shallow", availability: "active", status: "active" }
+      ]
     });
   }
   if (endpoint.startsWith("advanced/settings")) {

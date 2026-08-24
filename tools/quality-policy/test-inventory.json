@@ -139,6 +139,9 @@
     "tests/js/viewer-dependency-contract.test.mjs": {
       "classification": "strict"
     },
+    "tests/js/viewer-engine-warning.test.mjs": {
+      "classification": "strict"
+    },
     "tests/js/viewer-enhanced.test.mjs": {
       "classification": "strict"
     },

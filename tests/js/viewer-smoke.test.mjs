@@ -54,6 +54,8 @@ test("viewer modules work together", async () => {
   assert.ok(textTree(env.elements["status-panel"]).includes("Candidates"));
   assert.ok(textTree(env.elements["status-panel"]).includes("Triggered predicates"));
   assert.ok(textTree(env.elements["status-panel"]).includes("unstable_twa"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("Enhanced Rule Availability"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("unavailable"));
 
   env.clickTab("timeline");
   await flushViewer();
