@@ -111,7 +111,7 @@ test("enhanced settings render and save", async () => {
   const tree = textTree(panel);
   assert.ok(tree.includes("Enhanced Rules"), tree);
   assert.ok(tree.includes("Speed-log sanity (SOG vs STW)"), tree);
-  assert.ok(tree.includes("Speed over ground source"), tree);
+  assert.ok(tree.includes("Shared SOG source (anchoring and consistency)"), tree);
   assert.ok(tree.includes("SOG/STW consistency ratio"), tree);
   assert.ok(tree.includes("Active"), tree);
   assert.ok(tree.includes("No source configured"), tree);

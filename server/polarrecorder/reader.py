@@ -1,16 +1,16 @@
 """Module: Reader - AvNav store value reader.
 
 Documentation: documentation/avnav/keys-and-units.md
-Depends: polarrecorder.config, polarrecorder.logger, polarrecorder.sample,
-polarrecorder.source_params
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.logger,
+polarrecorder.sample, polarrecorder.source_params
 """
 
 from __future__ import annotations
 
-import math
 import time
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
+from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input, coerce_finite_float
 from polarrecorder.sample import ENHANCED_SIGNAL_SPECS, ClockFn, ReadResult, WallClockFn
 from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 
@@ -26,8 +26,15 @@ STW_KEY = STW_KEY_DEFAULT
 class DataEntryLike(Protocol):
     """Store entry shape returned by AvNav with includeInfo enabled."""
 
-    value: float
-    timestamp: float
+    @property
+    def value(self) -> object:
+        """Return the raw store value."""
+        ...
+
+    @property
+    def timestamp(self) -> float:
+        """Return the monotonic store timestamp."""
+        ...
 
 
 class StoreAPI(Protocol):
@@ -78,6 +85,7 @@ class StoreReader:
         twa_entry = self._read_entry(twa_key)
         tws_entry = self._read_entry(tws_key)
         stw_entry = self._read_entry(stw_key)
+        enhanced_raw, enhanced_inputs = self._read_enhanced(now_monotonic)
         return ReadResult(
             timestamp_monotonic=now_monotonic,
             timestamp_wall=self._wall_clock(),
@@ -87,17 +95,21 @@ class StoreReader:
             twa_timestamp=_entry_timestamp(twa_entry),
             tws_timestamp=_entry_timestamp(tws_entry),
             stw_timestamp=_entry_timestamp(stw_entry),
-            enhanced_raw=self._read_enhanced(now_monotonic),
+            enhanced_raw=enhanced_raw,
+            enhanced_inputs=enhanced_inputs,
         )
 
     def _read_entry(self, key: str) -> DataEntryLike | None:
         return self._api.get_single_value(key, include_info=True)
 
-    def _read_enhanced(self, now_monotonic: float) -> dict[str, tuple[float, float]] | None:
+    def _read_enhanced(
+        self, now_monotonic: float
+    ) -> tuple[dict[str, tuple[float, float]] | None, dict[str, EnhancedInput] | None]:
         config = self._config
         if config is None:
-            return None
+            return None, None
         enhanced_raw: dict[str, tuple[float, float]] = {}
+        enhanced_inputs: dict[str, EnhancedInput] = {}
         for spec in ENHANCED_SIGNAL_SPECS:
             if spec.enable_fields and not any(
                 getattr(config, field) for field in spec.enable_fields
@@ -106,31 +118,20 @@ class StoreReader:
             key = getattr(config, spec.key_field)
             if not key:
                 continue
-            coerced = self._read_enhanced_entry(
-                spec.role, key, now_monotonic, config.stale_threshold
+            acquisition = assess_enhanced_input(
+                self._read_entry(key), now_monotonic, config.stale_threshold
             )
-            if coerced is not None:
-                enhanced_raw[spec.role] = coerced
-        return enhanced_raw or None
-
-    def _read_enhanced_entry(
-        self,
-        role: str,
-        key: str,
-        now_monotonic: float,
-        stale_threshold: float,
-    ) -> tuple[float, float] | None:
-        entry = self._read_entry(key)
-        if entry is None:
-            return None
-        coerced = _coerce_float(entry.value)
-        if coerced is None:
-            self._log_uncoercible(role, key, entry.value)
-            return None
-        timestamp = entry.timestamp
-        if now_monotonic - timestamp > stale_threshold:
-            return None
-        return coerced, timestamp
+            enhanced_inputs[spec.role] = acquisition
+            if acquisition.state == "invalid":
+                self._log_uncoercible(spec.role, key, acquisition.raw_value)
+            if acquisition.state == "usable":
+                assert acquisition.numeric_value is not None
+                assert acquisition.timestamp is not None
+                enhanced_raw[spec.role] = (
+                    acquisition.numeric_value,
+                    acquisition.timestamp,
+                )
+        return enhanced_raw or None, enhanced_inputs or None
 
     def _log_uncoercible(self, role: str, key: str, value: object) -> None:
         if self._logger is not None:
@@ -169,31 +170,13 @@ def _coerce_float(value: object) -> float | None:
     Returns:
         The coerced finite float, or ``None`` for non-numeric or non-finite input.
     """
-    if isinstance(value, bool):
-        return 1.0 if value else 0.0
-    coerced: float | None
-    if isinstance(value, (int, float)):
-        coerced = float(value)
-    elif isinstance(value, str):
-        coerced = _parse_float_string(value)
-    else:
-        coerced = None
-    if coerced is None or not math.isfinite(coerced):
-        return None
-    return coerced
-
-
-def _parse_float_string(value: str) -> float | None:
-    try:
-        return float(value.strip())
-    except ValueError:
-        return None
+    return coerce_finite_float(value)
 
 
 def _entry_value(entry: DataEntryLike | None) -> float | None:
     if entry is None:
         return None
-    return entry.value
+    return cast("float", entry.value)
 
 
 def _entry_timestamp(entry: DataEntryLike | None) -> float | None:

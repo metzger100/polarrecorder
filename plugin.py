@@ -79,6 +79,7 @@ class Plugin:
     def __init__(self, api: AVNApi) -> None:
         """Register AvNav callbacks and initialize in-memory state."""
         self.api: AVNApi = api
+        self.plugin_version = str(self.pluginInfo().get("version", FALLBACK_VERSION))
         self._clock = time.monotonic
         self._wall_clock = time.time
         self._lock = threading.Lock()
@@ -175,7 +176,6 @@ class Plugin:
         pipeline_result, sample = pipeline.run(read_result, self._state, config)
         warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
         warming_up = self._state.is_warming_up(warming_now)
-        self._log_diagnostic(read_result, sample, pipeline_result, config)
         if sample is not None:
             self._state.observe(sample)
         with self._lock:
@@ -188,6 +188,7 @@ class Plugin:
                 "reason_codes": list(pipeline_result.reason_codes),
             }
         self._update_avnav_status(data_status, pipeline_result)
+        self._log_diagnostic(read_result, sample, pipeline_result, config)
 
     def _record_suppressed(
         self, read_result: ReadResult, data_status: str, reason: str, config: Config
@@ -201,7 +202,6 @@ class Plugin:
             is_sailing_candidate=False,
             failed_predicates=[reason],
         )
-        self._log_diagnostic(read_result, sample, result, config)
         if sample is not None:
             self._state.observe(sample)
         with self._lock:
@@ -209,6 +209,7 @@ class Plugin:
             self._timeline.record("rejected", [reason])
             self._write_status_scalars(read_result, sample, data_status, warming_up)
         self._update_avnav_status(data_status, None)
+        self._log_diagnostic(read_result, sample, result, config)
 
     def _log_diagnostic(
         self,

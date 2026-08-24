@@ -230,7 +230,7 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
         "name": "enh_sog_key",
         "type": "STRING",
         "default": "gps.speed",
-        "description": "Store key for speed over ground",
+        "description": "SOG source for R10 anchoring and the R20 consistency check",
     },
     {
         "name": "enh_current_drift_key",

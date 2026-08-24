@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 import threading
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from conftest import FakeAvNavAPI, FakeClock
@@ -398,6 +399,27 @@ def test_debug_logging_emits_no_diagnostics_when_disabled(tmp_path: Path) -> Non
     plugin.run()
 
     assert [message for level, message in api.logs if level == "debug"] == []
+
+
+def test_debug_logging_does_not_change_malformed_input_accounting(tmp_path: Path) -> None:
+    snapshots: list[tuple[dict[str, object], dict[str, object] | None]] = []
+    for enabled in (False, True):
+        api = FakeAvNavAPI()
+        api.set_value(reader.TWA_KEY, cast("float", "bad"), 99.5)
+        api.set_value(reader.TWS_KEY, 6.0, 99.5)
+        api.set_value(reader.STW_KEY, 3.0, 99.5)
+        plugin = make_plugin(tmp_path / str(enabled), api)
+        config = replace(plugin.config, debug_logging=enabled)
+
+        plugin._run_iteration(config)
+
+        snapshots.append(
+            (cast("dict[str, object]", plugin._counters.to_dict()), plugin._last_decision)
+        )
+
+    assert snapshots[0] == snapshots[1]
+    assert snapshots[0][0]["rejection_histogram"] == {"reject_non_finite_twa": 1}
+    assert snapshots[0][0]["predicate_histogram"] == {"reject_non_finite_twa": 1}
 
 
 def test_incomplete_data_demotes_status_even_when_paused(tmp_path: Path) -> None:

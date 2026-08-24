@@ -52,10 +52,10 @@ Pause/Resume control), tracked by the transient `_paused` flag rather than a per
 | `tws_roc_threshold`        |   FLOAT |              `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike.                 |
 | `stw_roc_threshold`        |   FLOAT |               `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects.                   |
 | `cooldown_seconds`         |  NUMBER |                `30` |    5-120 | Time R14 rejects after a TWA maneuver detection.                                   |
-| `stability_window_seconds` |  NUMBER |                `15` |     5-60 | Time span of stable prior samples required by R15.                                 |
-| `stability_twa_range`      |   FLOAT |              `20.0` | 5.0-45.0 | Maximum TWA range in the stability window.                                         |
-| `stability_tws_range`      |   FLOAT |              `10.0` | 3.0-20.0 | Maximum TWS range in the stability window.                                         |
-| `stability_stw_range`      |   FLOAT |               `4.0` | 1.0-10.0 | Maximum STW range in the stability window.                                         |
+| `stability_window_seconds` |  NUMBER |                `15` |     5-60 | Stable window ending at the current sample required by R15.                        |
+| `stability_twa_range`      |   FLOAT |              `20.0` | 5.0-45.0 | Maximum TWA range including the current sample.                                    |
+| `stability_tws_range`      |   FLOAT |              `10.0` | 3.0-20.0 | Maximum TWS range including the current sample.                                    |
+| `stability_stw_range`      |   FLOAT |               `4.0` | 1.0-10.0 | Maximum STW range including the current sample.                                    |
 | `engine_tws_ceil`          |   FLOAT |               `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
 | `engine_stw_floor`         |   FLOAT |               `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
 | `min_samples_for_export`   |  NUMBER |                `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
@@ -67,9 +67,10 @@ sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_s
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer.
 
-`debug_logging` records a schema version; raw and normalized core values; source timestamps and ages; raw, normalized,
-timestamped enhanced values; decision/reasons/predicates; the exact pipeline-produced R15 metrics; and the relevant
-R10/R15/R20 thresholds. No per-iteration diagnostic is emitted while it is disabled. The head-to-wind default remains 10
+`debug_logging` records schema version 2; raw and normalized core values; source timestamps and ages; enhanced
+missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates; the exact
+pipeline-produced R15 metrics; and the relevant R10/R15/R20 thresholds. Diagnostic emission happens after normal
+decision accounting and no per-iteration diagnostic is emitted while it is disabled. The head-to-wind default remains 10
 degrees.
 
 ### Enhanced (optional-signal) rule settings
@@ -97,7 +98,7 @@ key in the Settings tab's Enhanced Rules section. The genuinely custom signals (
 | `enh_depth_key`                 |  STRING | `"gps.depthBelowKeel"` |           - | Store key for depth in meters (keel clearance).                                      |
 | `enh_depth_floor_m`             |   FLOAT |                  `1.0` |    0.5-50.0 | Clearance below this rejects the sample (shallow-water squat).                       |
 | `enh_slip_enabled`              | BOOLEAN |                 `true` |           - | Enable the STW-implausibly-low reject (R20).                                         |
-| `enh_sog_key`                   |  STRING |          `"gps.speed"` |           - | Store key for speed over ground.                                                     |
+| `enh_sog_key`                   |  STRING |          `"gps.speed"` |           - | Shared SOG source for R10 anchoring and R20 consistency.                             |
 | `enh_current_drift_key`         |  STRING |   `"gps.currentDrift"` |           - | Store key for current drift; corroborates R20.                                       |
 | `enh_slip_sog_floor_kt`         |   FLOAT |                  `1.0` |    0.3-10.0 | SOG must exceed this for R20 to apply.                                               |
 | `enh_slip_ratio`                |   FLOAT |                  `0.5` |     0.1-0.9 | Reject when STW < SOG * ratio and current cannot explain the gap.                    |

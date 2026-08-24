@@ -29,7 +29,7 @@ class StabilityEvaluation:
     twa_range: float | None
     tws_range: float | None
     stw_range: float | None
-    predicate_codes: list[str]
+    predicate_codes: tuple[str, ...]
 
 
 def twa_rate_of_change(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
@@ -131,7 +131,7 @@ def stability_decision(evaluation: StabilityEvaluation) -> RuleResult:
         return RuleResult(
             decision="reject",
             reason_codes=["reject_unstable"],
-            predicate_codes=evaluation.predicate_codes,
+            predicate_codes=list(evaluation.predicate_codes),
         )
     return _pass()
 
@@ -152,7 +152,7 @@ def evaluate_stability(
             twa_range=None,
             tws_range=None,
             stw_range=None,
-            predicate_codes=[],
+            predicate_codes=(),
         )
 
     twa_values = [entry.twa_deg_raw for entry in entries]
@@ -168,7 +168,7 @@ def evaluate_stability(
         twa_range=twa_range,
         tws_range=tws_range,
         stw_range=stw_range,
-        predicate_codes=predicates,
+        predicate_codes=tuple(predicates),
     )
 
 

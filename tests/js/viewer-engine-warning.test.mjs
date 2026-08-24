@@ -110,7 +110,7 @@ test("Never show again stores the versioned suppression preference", async () =>
   assert.equal(warning(fresh), null);
 });
 
-test("enhanced-status failure does not block viewer startup", async () => {
+test("enhanced-status failure warns without blocking viewer startup", async () => {
   const env = createEnvironment({
     responder(endpoint) {
       if (endpoint.startsWith("enhanced/status")) {
@@ -121,7 +121,7 @@ test("enhanced-status failure does not block viewer startup", async () => {
   });
   loadViewerModules(env);
   await start(env);
-  assert.equal(warning(env), null);
+  assert.ok(warning(env));
   assert.equal(env.window.Polarrecorder.ApiBase, "../api/");
 });
 
@@ -167,6 +167,19 @@ test("warning is an accessible focus-contained modal and restores focus", async 
   assert.equal(warning(env), null);
   assert.equal(env.elements["polarrecorder-app"].inert, false);
   assert.equal(env.document.activeElement, previous);
+});
+
+test("warning restores pre-existing background accessibility state", async () => {
+  const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }]);
+  const background = env.elements["polarrecorder-app"];
+  background.inert = true;
+  background.setAttribute("aria-hidden", "false");
+  await start(env);
+  const modal = warning(env);
+  assert.ok(modal);
+  modal.querySelectorAll(".secondary-action")[0].click();
+  assert.equal(background.inert, true);
+  assert.equal(background.getAttribute("aria-hidden"), "false");
 });
 
 test("warning CSS keeps the dialog content-sized and centered", () => {

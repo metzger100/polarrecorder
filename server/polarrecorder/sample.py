@@ -1,16 +1,19 @@
 """Module: Sample - Raw and normalized sample data types.
 
 Documentation: documentation/architecture/polar-model.md
-Depends: polarrecorder.units
+Depends: polarrecorder.enhanced_input, polarrecorder.units
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Callable, Literal
+from typing import TYPE_CHECKING, Callable, Literal
 
 from polarrecorder.units import meters_per_second_to_knots
+
+if TYPE_CHECKING:
+    from polarrecorder.enhanced_input import EnhancedInput
 
 ClockFn = Callable[[], float]
 WallClockFn = Callable[[], float]
@@ -62,6 +65,7 @@ class ReadResult:
     tws_timestamp: float | None
     stw_timestamp: float | None
     enhanced_raw: dict[str, tuple[float, float]] | None = None
+    enhanced_inputs: dict[str, EnhancedInput] | None = None
 
 
 @dataclass(frozen=True)

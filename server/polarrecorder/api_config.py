@@ -102,7 +102,8 @@ ADVANCED_GROUPS = (
             AdvancedField(
                 "anchored_stw_threshold",
                 "Anchored boat-speed floor",
-                "Rejects near-zero through-water speed when wind is present.",
+                "Rejects near-zero SOG when fresh SOG is available; otherwise uses STW. "
+                "Wind must be present.",
                 "0.1",
             ),
             AdvancedField(
@@ -151,26 +152,28 @@ ADVANCED_GROUPS = (
             AdvancedField(
                 "stability_window_seconds",
                 "Stable sailing window",
-                "Requires this many seconds of prior stable readings before learning a sample.",
+                "Requires a full stable window ending at the current sample before learning it.",
                 "1",
             ),
             AdvancedField(
                 "stability_twa_range",
                 "Stable wind-angle range",
-                "Rejects the sample when prior true wind angle varied by "
-                "this many degrees or more.",
+                "Rejects when true wind angle across the stability window, including the "
+                "current sample, spans this many degrees or more.",
                 "0.1",
             ),
             AdvancedField(
                 "stability_tws_range",
                 "Stable wind-speed range",
-                "Rejects the sample when prior true wind speed varied by this many knots or more.",
+                "Rejects when true wind speed across the stability window, including the "
+                "current sample, spans this many knots or more.",
                 "0.1",
             ),
             AdvancedField(
                 "stability_stw_range",
                 "Stable boat-speed range",
-                "Rejects the sample when prior boat speed varied by this many knots or more.",
+                "Rejects when boat speed across the stability window, including the current "
+                "sample, spans this many knots or more.",
                 "0.1",
             ),
         ),

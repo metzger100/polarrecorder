@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from dataclasses import replace
+from typing import cast
 
 from polarrecorder.config import default_config
 from polarrecorder.diagnostics import format_sample_diagnostic
+from polarrecorder.enhanced_input import EnhancedInput
 from polarrecorder.validation.pipeline import run
 from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_read_result, make_warmed_state
@@ -13,14 +16,20 @@ from validation_helpers import make_read_result, make_warmed_state
 def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     config = default_config()
     state = make_warmed_state()
-    read_result = make_read_result(enhanced_raw={"rpm": (800.0, 99.5), "sog_kt": (2.0, 99.5)})
+    read_result = replace(
+        make_read_result(enhanced_raw={"rpm": (800.0, 99.5), "sog_kt": (2.0, 99.5)}),
+        enhanced_inputs={
+            "rpm": EnhancedInput("usable", 800.0, 99.5, 800.0),
+            "sog_kt": EnhancedInput("usable", 2.0, 99.5, 2.0),
+        },
+    )
     result, sample = run(read_result, state, config)
 
     before = deepcopy(state)
     payload = format_sample_diagnostic(read_result, sample, result, config)
 
     assert state == before
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert payload["core_raw"] == {
         "twa": 90.0,
         "tws_ms": read_result.tws_raw,
@@ -34,12 +43,14 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     }
     assert payload["enhanced"] == {
         "rpm": {
+            "state": "usable",
             "raw": 800.0,
             "normalized": 800.0,
             "timestamp": 99.5,
             "age_seconds": 0.5,
         },
         "sog_kt": {
+            "state": "usable",
             "raw": 2.0,
             "normalized": 3.88768,
             "timestamp": 99.5,
@@ -124,6 +135,30 @@ def test_formatter_represents_missing_and_non_finite_values_as_null() -> None:
         "is_sailing_candidate": False,
     }
     assert "NaN" not in json.dumps(payload, allow_nan=False)
+
+
+def test_formatter_is_total_for_rejected_nonnumeric_core_and_enhanced_values() -> None:
+    config = default_config()
+    read_result = replace(
+        make_read_result(twa_raw=cast("float", "bad")),
+        enhanced_inputs={"rpm": EnhancedInput("invalid", "off", 99.5, None)},
+    )
+    result, sample = run(read_result, ValidationState(), config)
+
+    payload = format_sample_diagnostic(read_result, sample, result, config)
+    core_raw = cast("dict[str, object]", payload["core_raw"])
+
+    assert core_raw["twa"] is None
+    assert payload["enhanced"] == {
+        "rpm": {
+            "state": "invalid",
+            "raw": None,
+            "normalized": None,
+            "timestamp": 99.5,
+            "age_seconds": 0.5,
+        }
+    }
+    assert json.dumps(payload, allow_nan=False)
 
 
 def test_formatter_uses_the_pipeline_current_sample_r15_evaluation() -> None:

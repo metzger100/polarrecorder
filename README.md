@@ -104,9 +104,10 @@ The Status tab explains what is happening now:
 - common rejection reasons and triggered predicates
 - persistence and optional enhanced-rule availability
 
-Status also shows whether each optional enhanced rule is active, disabled, or unavailable and why. On startup, a warning
-appears when no definitive RPM or engine-state protection is active: pause while motoring or configure one in Settings.
-Close affects only the page; Never show again stores a browser-local preference.
+Status also shows whether each optional enhanced rule is active, disabled, or unavailable and why, including invalid
+source data. On startup, a warning appears when no definitive RPM or engine-state protection is active or its status
+cannot be verified: pause while motoring or configure one in Settings. Close affects only the page; Never show again
+stores a browser-local preference.
 
 ### Timeline
 
@@ -154,6 +155,7 @@ The six rules are:
 - **Engine RPM** — rejects when RPM is above an idle ceiling (you are motoring).
 - **Engine state** — rejects when a boolean, RPM, or alternator-voltage signal indicates the engine is on.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
+- **SOG source** — is shared with anchored detection even when the SOG/STW consistency rule is disabled.
 - **SOG / STW consistency** — rejects when either speed reading is implausible versus the other and the reported current
   drift is too small to explain the gap.
 - **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects when it disagrees with

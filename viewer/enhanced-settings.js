@@ -44,7 +44,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     enh_engine_state_on_threshold: "Engine-on threshold",
     enh_depth_key: "Depth source",
     enh_depth_floor_m: "Minimum depth (m)",
-    enh_sog_key: "Speed over ground source",
+    enh_sog_key: "Shared SOG source (anchoring and consistency)",
     enh_current_drift_key: "Current drift source",
     enh_slip_sog_floor_kt: "Only check faster speed above (kn)",
     enh_slip_ratio: "SOG/STW consistency ratio",
@@ -80,7 +80,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       Polarrecorder.Dom.Node(
         "p",
         "helper",
-        "Optional boat signals that reject unrepresentative samples. Each rule defaults on; clear its key or switch it off to opt out."
+        "Optional boat signals that reject unrepresentative samples. Each rule defaults on; clear its key or switch it off to opt out. The SOG source also remains active for anchored detection when the SOG/STW consistency rule is off."
       )
     );
     state.body = Polarrecorder.Dom.Node("div", "enhanced-rules");

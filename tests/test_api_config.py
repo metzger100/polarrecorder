@@ -48,6 +48,18 @@ def test_advanced_settings_endpoint_groups_and_saves_safe_values() -> None:
     assert "Sampling and Persistence" in group_labels
     assert "Core Filters" in group_labels
     assert "Stability and Maneuvers" in group_labels
+    fields = {
+        cast("str", field["field"]): field
+        for group in groups
+        for field in cast("list[dict[str, object]]", group["fields"])
+    }
+    assert "fresh SOG" in cast("str", fields["anchored_stw_threshold"]["description"])
+    for name in (
+        "stability_twa_range",
+        "stability_tws_range",
+        "stability_stw_range",
+    ):
+        assert "current sample" in cast("str", fields[name]["description"])
     assert unknown["status"] == "ERROR"
     assert invalid["status"] == "ERROR"
     assert out_of_range["status"] == "ERROR"

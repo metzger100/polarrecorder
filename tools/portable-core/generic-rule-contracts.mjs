@@ -72,7 +72,7 @@ function runCatchFallback(ruleId, file) {
     const body = source.slice(open + 1, close).trim();
     if (!body || /\bthrow\b/.test(body)) continue;
     const line = lineAt(file.content, match.index);
-    const explicitBoundaryResult = /\breturn\s+(?:undefined|null|\{\s*ok\s*:\s*false\b)/.test(body);
+    const explicitBoundaryResult = /\breturn\s+\{\s*ok\s*:\s*false\b/.test(body);
     const visibleFailureState = /\.(?:textContent|hidden|className)\s*=/.test(body);
     if (explicitBoundaryResult || visibleFailureState) continue;
     out.push(finding(ruleId, file, line, "Non-rethrow catch detected (catch (...) { ... })"));

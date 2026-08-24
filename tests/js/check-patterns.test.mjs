@@ -331,6 +331,33 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.status, 0, result.failures.join("\n"));
 });
 
+test("catches returning null or undefined without handling fail", () => {
+  for (const absent of ["null", "undefined"]) {
+    const result = runChecker({
+      "viewer/bad.js":
+        viewerHeader() +
+        `
+window.Polarrecorder = window.Polarrecorder || {};
+(function () {
+  "use strict";
+  function load() {
+    try {
+      return JSON.parse(window.name);
+    } catch (error) {
+      window.name = "failed";
+      return ${absent};
+    }
+  }
+  window.Polarrecorder.Bad = { Load: load };
+}());
+`
+    });
+
+    assert.equal(result.status, 1);
+    assert.equal(result.summary.byRule["catch-fallback-without-suppression"], 1);
+  }
+});
+
 test("a catch updating visible failure state passes", () => {
   const result = runChecker({
     "viewer/good.js":

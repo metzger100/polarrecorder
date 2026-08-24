@@ -2,7 +2,19 @@
 
 ## Status
 
-Implemented through all six phases; implementation-review remediation is complete.
+Implemented through all six phases and both implementation-review remediation passes.
+
+### Amendment — 2026-08-24: second implementation-review remediation
+
+A fresh review found that enhanced status accepted fresh but unusable values, diagnostic formatting could interrupt
+decision accounting for nonnumeric core input, checker guards were narrower than their documented contracts, and several
+user-facing descriptions still described earlier behavior. Completion now additionally requires one canonical
+missing/stale/invalid/usable enhanced-input contract shared by reading and status, observational diagnostic schema v2
+emitted after canonical accounting, deeply immutable R15 predicate evidence, category-level catch and host-boundary
+checks with negative tests, synchronized anchoring/stability/SOG descriptions, and a green full quality gate.
+
+**Second-review exit evidence:** `npm run check:all` exited successfully with 392 Python tests, 364 tooling tests, 61
+viewer tests, 1 plugin test, 96.09% aggregate Python coverage, and 92.74% viewer/plugin line coverage.
 
 ### Amendment — 2026-08-24: implementation-review remediation
 

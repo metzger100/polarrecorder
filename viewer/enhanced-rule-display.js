@@ -24,7 +24,8 @@ window.Polarrecorder = window.Polarrecorder || {};
     disabled: "Disabled",
     inactive_key_not_configured: "No source configured",
     inactive_key_missing: "Source not available",
-    inactive_value_missing: "Source data stale"
+    inactive_value_missing: "Source data stale",
+    inactive_value_invalid: "Source data invalid"
   };
   /** @type {Record<string, string>} */
   const AVAILABILITY_LABELS = {
