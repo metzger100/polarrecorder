@@ -80,6 +80,18 @@ def test_v0_backup_migrates_and_reports_source_version() -> None:
     assert result.bins_restored == 0
 
 
+def test_schema_v1_without_predicate_histograms_defaults_to_empty() -> None:
+    payload = _valid_payload()
+    del payload["counters"]["predicate_histogram"]
+    for model_bin in payload["bins"].values():
+        del model_bin["predicate_histogram"]
+
+    result = restore.validate_and_build(json.dumps(payload))
+
+    assert result.counters.predicate_histogram == {}
+    assert result.model.bins[(90, 12)].predicate_histogram == {}
+
+
 def test_non_json_is_rejected() -> None:
     with pytest.raises(BackupError, match="not valid JSON"):
         restore.validate_and_build("{not json")

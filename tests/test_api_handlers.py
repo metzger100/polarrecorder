@@ -30,6 +30,7 @@ def test_format_status_includes_counters_top_rejections_and_stale_flags() -> Non
             "total_quarantined": 0,
         },
         top_rejections=[{"reason": "reject_low_wind", "count": 2}],
+        top_predicates=[{"predicate": "reject_low_wind", "count": 2}],
         last_flush_wall=1000.0,
         file_size_bytes=123,
         bins_with_data=2,
@@ -45,6 +46,7 @@ def test_format_status_includes_counters_top_rejections_and_stale_flags() -> Non
     assert data["recording"] is True
     assert cast("dict[str, object]", data["counters"])["acceptance_rate"] == 0.75
     assert data["top_rejections"] == [{"reason": "reject_low_wind", "count": 2}]
+    assert data["top_predicates"] == [{"predicate": "reject_low_wind", "count": 2}]
     assert values["twa_age_s"] == 1.0
     assert values["tws_stale"] is True
     assert values["stw_stale"] is False
@@ -65,6 +67,7 @@ def test_format_status_nulls_before_first_values_and_decision() -> None:
             "total_quarantined": 0,
         },
         top_rejections=[],
+        top_predicates=[],
         last_flush_wall=0.0,
         file_size_bytes=0,
         bins_with_data=0,

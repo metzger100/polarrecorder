@@ -201,7 +201,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const counters = data.counters || {};
     const grid = el("div", "stat-grid");
     [
-      ["Seen", counters.total_seen],
+      ["Candidates", counters.total_seen],
       ["Accepted", counters.total_accepted],
       ["Rejected", counters.total_rejected],
       ["Quarantined", counters.total_quarantined]
@@ -212,11 +212,28 @@ window.Polarrecorder = window.Polarrecorder || {};
       grid.appendChild(tile);
     });
     card.appendChild(grid);
-    card.appendChild(el("p", "helper", "Acceptance rate " + Math.round((counters.acceptance_rate || 0) * 100) + "%"));
+    card.appendChild(
+      el("p", "helper", "Candidate acceptance rate " + Math.round((counters.acceptance_rate || 0) * 100) + "%")
+    );
+    card.appendChild(
+      el(
+        "p",
+        "helper",
+        "Decision reasons include non-candidate input and sailing exclusions, so counts can exceed Candidates."
+      )
+    );
+    card.appendChild(el("h2", "", "Diagnostic decision reasons"));
     (data.top_rejections || []).forEach(
       /** @param {{reason: string, count: number}} entry */
       function (entry) {
         card.appendChild(el("p", "helper", entry.reason + " ×" + String(entry.count)));
+      }
+    );
+    card.appendChild(el("h2", "", "Triggered predicates"));
+    (data.top_predicates || []).forEach(
+      /** @param {{predicate: string, count: number}} entry */
+      function (entry) {
+        card.appendChild(el("p", "helper", entry.predicate + " ×" + String(entry.count)));
       }
     );
     return card;

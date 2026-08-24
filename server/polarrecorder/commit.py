@@ -35,11 +35,15 @@ def commit_sample(
         return
 
     if pipeline_result.decision == "rejected" and pipeline_result.is_sailing_candidate:
-        model.record_rejection(sample, pipeline_result.reason_codes)
+        model.record_rejection(
+            sample, pipeline_result.reason_codes, pipeline_result.failed_predicates
+        )
         return
 
     if pipeline_result.decision == "quarantined":
-        model.record_quarantine(sample, _single_reason_code(pipeline_result))
+        model.record_quarantine(
+            sample, _single_reason_code(pipeline_result), pipeline_result.failed_predicates
+        )
 
 
 def _single_reason_code(pipeline_result: PipelineResult) -> str:

@@ -20,6 +20,7 @@ class CountersDict(TypedDict):
     total_rejected: int
     total_quarantined: int
     rejection_histogram: dict[str, int]
+    predicate_histogram: dict[str, int]
 
 
 @dataclass
@@ -31,32 +32,49 @@ class Counters:
     total_rejected: int = 0
     total_quarantined: int = 0
     rejection_histogram: dict[str, int] = field(default_factory=dict)
+    predicate_histogram: dict[str, int] = field(default_factory=dict)
 
-    def record_accepted(self) -> None:
+    def record_accepted(self, predicate_codes: list[str] | None = None) -> None:
         """Record one accepted sailing candidate."""
+        self.record_predicates([] if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_accepted += 1
 
-    def record_rejected(self, reason_codes: list[str]) -> None:
+    def record_rejected(
+        self, reason_codes: list[str], predicate_codes: list[str] | None = None
+    ) -> None:
         """Record one rejected sailing candidate and its reason codes."""
+        self.record_predicates([] if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_rejected += 1
         self.record_reasons(reason_codes)
 
-    def record_quarantined(self, reason_code: str) -> None:
+    def record_quarantined(
+        self, reason_code: str, predicate_codes: list[str] | None = None
+    ) -> None:
         """Record one quarantined sailing candidate and its reason code."""
+        self.record_predicates([] if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_quarantined += 1
         self.record_reasons([reason_code])
 
-    def record_non_candidate(self, reason_codes: list[str]) -> None:
+    def record_non_candidate(
+        self, reason_codes: list[str], predicate_codes: list[str] | None = None
+    ) -> None:
         """Record non-candidate diagnostics without changing sailing totals."""
+        self.record_predicates([] if predicate_codes is None else predicate_codes)
         self.record_reasons(reason_codes)
 
     def record_reasons(self, reason_codes: list[str]) -> None:
         """Add reason codes to the diagnostic histogram."""
         for reason_code in reason_codes:
             self.rejection_histogram[reason_code] = self.rejection_histogram.get(reason_code, 0) + 1
+
+    def record_predicates(self, predicate_codes: list[str]) -> None:
+        """Add triggered predicate codes to the diagnostic histogram."""
+        for predicate_code in predicate_codes:
+            histogram = self.predicate_histogram
+            histogram[predicate_code] = histogram.get(predicate_code, 0) + 1
 
     def reset(self) -> None:
         """Clear all counters and rejection diagnostics."""
@@ -65,6 +83,7 @@ class Counters:
         self.total_rejected = 0
         self.total_quarantined = 0
         self.rejection_histogram.clear()
+        self.predicate_histogram.clear()
 
     def to_dict(self) -> CountersDict:
         """Serialize counters to the persistence schema block."""
@@ -74,6 +93,7 @@ class Counters:
             "total_rejected": self.total_rejected,
             "total_quarantined": self.total_quarantined,
             "rejection_histogram": dict(self.rejection_histogram),
+            "predicate_histogram": dict(self.predicate_histogram),
         }
 
     @classmethod
@@ -82,8 +102,11 @@ class Counters:
         if not isinstance(data, dict):
             return cls()
         histogram = data.get("rejection_histogram", {})
+        predicate_histogram = data.get("predicate_histogram", {})
         if not isinstance(histogram, dict):
             histogram = {}
+        if not isinstance(predicate_histogram, dict):
+            predicate_histogram = {}
         return cls(
             total_seen=_int_field(data, "total_seen"),
             total_accepted=_int_field(data, "total_accepted"),
@@ -92,6 +115,10 @@ class Counters:
             rejection_histogram={
                 str(key): to_int(value)
                 for key, value in cast("dict[object, object]", histogram).items()
+            },
+            predicate_histogram={
+                str(key): to_int(value)
+                for key, value in cast("dict[object, object]", predicate_histogram).items()
             },
         )
 

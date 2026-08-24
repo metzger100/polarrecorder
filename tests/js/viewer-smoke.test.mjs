@@ -51,6 +51,9 @@ test("viewer modules work together", async () => {
   await flushViewer();
   assert.equal(env.elements["status-panel"].classList.contains("has-data"), true);
   assert.ok(textTree(env.elements["status-panel"]).includes("Recording"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("Candidates"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("Triggered predicates"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("unstable_twa"));
 
   env.clickTab("timeline");
   await flushViewer();

@@ -43,6 +43,7 @@ class StatusSnapshot:
     current_decision: dict[str, object] | None
     counters: dict[str, int]
     top_rejections: list[dict[str, object]]
+    top_predicates: list[dict[str, object]]
     last_flush_wall: float
     file_size_bytes: int
     bins_with_data: int
@@ -83,6 +84,7 @@ def format_status(snapshot: StatusSnapshot) -> Response:
             "current_decision": snapshot.current_decision,
             "counters": counters,
             "top_rejections": snapshot.top_rejections,
+            "top_predicates": snapshot.top_predicates,
             "persistence": {
                 "last_flush_wall": snapshot.last_flush_wall,
                 "file_size_bytes": snapshot.file_size_bytes,

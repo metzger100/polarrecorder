@@ -9,7 +9,7 @@ polarrecorder.validation.state
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
 from polarrecorder.sample import ReadResult, RuleResult, Sample, build_sample
@@ -30,6 +30,7 @@ class PipelineResult:
     decision: PipelineDecision
     reason_codes: list[str]
     is_sailing_candidate: bool
+    failed_predicates: list[str] = field(default_factory=list)
 
 
 def run(
@@ -51,7 +52,11 @@ def run(
     """
     phase_a_result = _run_phase_a(read_result)
     if phase_a_result.decision == "reject":
-        result = _rejected(phase_a_result.reason_codes, is_sailing_candidate=False)
+        result = _rejected(
+            phase_a_result.reason_codes,
+            is_sailing_candidate=False,
+            failed_predicates=_predicate_codes((phase_a_result,)),
+        )
         sample = None
     else:
         sample = build_sample(read_result)
@@ -67,16 +72,21 @@ def run(
 def _run_sample_rules(sample: Sample, state: ValidationState, config: Config) -> PipelineResult:
     pre_candidate_result = _run_pre_candidate_rules(sample, config)
     if pre_candidate_result.decision == "reject":
-        return _rejected(pre_candidate_result.reason_codes, is_sailing_candidate=False)
+        return _rejected(
+            pre_candidate_result.reason_codes,
+            is_sailing_candidate=False,
+            failed_predicates=pre_candidate_result.predicate_codes,
+        )
 
     candidate_result = _run_candidate_rules(sample, state, config)
     if candidate_result.decision == "reject":
-        return _candidate_rejection(candidate_result.reason_codes)
+        return _candidate_rejection(candidate_result.reason_codes, candidate_result.predicate_codes)
     if candidate_result.decision == "quarantine":
         return PipelineResult(
             decision="quarantined",
             reason_codes=candidate_result.reason_codes,
             is_sailing_candidate=True,
+            failed_predicates=candidate_result.predicate_codes,
         )
     return PipelineResult(decision="accepted", reason_codes=[], is_sailing_candidate=True)
 
@@ -86,12 +96,14 @@ def _run_phase_a(read_result: ReadResult) -> RuleResult:
     required_result = rules_core.required_keys(read_result)
     reason_codes = finite_result.reason_codes + required_result.reason_codes
     if reason_codes:
-        return RuleResult(decision="reject", reason_codes=reason_codes)
+        return RuleResult(
+            decision="reject", reason_codes=reason_codes, predicate_codes=reason_codes
+        )
     return RuleResult(decision="pass", reason_codes=[])
 
 
 def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
-    for result in (
+    results = (
         rules_core.stale_values(sample, config),
         rules_core.age_skew(sample, config),
         rules_core.twa_range(sample, config),
@@ -103,14 +115,12 @@ def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
         rules_enhanced.reject_engine_rpm(sample, config),
         rules_enhanced.reject_engine_on(sample, config),
         rules_enhanced.reject_shallow(sample, config),
-    ):
-        if result.decision == "reject":
-            return result
-    return RuleResult(decision="pass", reason_codes=[])
+    )
+    return _first_non_pass(results)
 
 
 def _run_candidate_rules(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
-    for result in (
+    results = (
         rules_stability.twa_rate_of_change(sample, state, config),
         rules_stability.tws_rate_of_change(sample, state, config),
         rules_stability.stw_acceleration(sample, state, config),
@@ -120,19 +130,46 @@ def _run_candidate_rules(sample: Sample, state: ValidationState, config: Config)
         rules_enhanced.reject_true_wind_crosscheck(sample, config),
         rules_enhanced.reject_heel_out_of_band(sample, config),
         rules_heuristic.engine_heuristic(sample, config),
-    ):
-        if result.decision != "pass":
-            return result
-    return RuleResult(decision="pass", reason_codes=[])
+    )
+    return _first_non_pass(results)
 
 
-def _candidate_rejection(reason_codes: list[str]) -> PipelineResult:
-    return _rejected(reason_codes, is_sailing_candidate=reason_codes != ["reject_warming_up"])
+def _first_non_pass(results: tuple[RuleResult, ...]) -> RuleResult:
+    failed = tuple(result for result in results if result.decision != "pass")
+    if not failed:
+        return RuleResult(decision="pass", reason_codes=[])
+    first = failed[0]
+    return RuleResult(
+        decision=first.decision,
+        reason_codes=first.reason_codes,
+        predicate_codes=_predicate_codes(failed),
+    )
 
 
-def _rejected(reason_codes: list[str], is_sailing_candidate: bool) -> PipelineResult:
+def _predicate_codes(results: tuple[RuleResult, ...]) -> list[str]:
+    codes: list[str] = []
+    for result in results:
+        source_codes = result.predicate_codes or result.reason_codes
+        for code in source_codes:
+            if code not in codes:
+                codes.append(code)
+    return codes
+
+
+def _candidate_rejection(reason_codes: list[str], failed_predicates: list[str]) -> PipelineResult:
+    return _rejected(
+        reason_codes,
+        is_sailing_candidate=reason_codes != ["reject_warming_up"],
+        failed_predicates=failed_predicates,
+    )
+
+
+def _rejected(
+    reason_codes: list[str], is_sailing_candidate: bool, failed_predicates: list[str]
+) -> PipelineResult:
     return PipelineResult(
         decision="rejected",
         reason_codes=reason_codes,
         is_sailing_candidate=is_sailing_candidate,
+        failed_predicates=failed_predicates,
     )

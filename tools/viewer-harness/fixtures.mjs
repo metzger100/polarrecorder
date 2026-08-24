@@ -44,6 +44,7 @@
  *     last_flush_wall: number
  *   },
  *   recording: boolean,
+ *   top_predicates: Array<{ count: number, predicate: string }>,
  *   top_rejections: Array<{ count: number, reason: string }>,
  *   uptime_seconds: number,
  *   warming_up: boolean
@@ -200,6 +201,7 @@ export function statusPayload(overrides = {}) {
       last_flush_wall: Math.round(Date.now() / 1000) - 120
     },
     recording: true,
+    top_predicates: [{ count: 3, predicate: "unstable_twa" }],
     top_rejections: [{ count: 3, reason: "r12" }],
     uptime_seconds: 3600,
     warming_up: false,

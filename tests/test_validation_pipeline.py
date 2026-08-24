@@ -22,6 +22,7 @@ def test_runner_returns_none_sample_for_r1_and_r2_rejections() -> None:
     missing, missing_sample = run(make_read_result(twa_raw=None), state, config)
 
     assert non_finite.reason_codes == ["reject_non_finite_twa"]
+    assert non_finite.failed_predicates == ["reject_non_finite_twa"]
     assert non_finite.decision == "rejected"
     assert not non_finite.is_sailing_candidate
     assert non_finite_sample is None
@@ -66,6 +67,19 @@ def test_runner_rejects_r3_to_r10_as_non_candidates_with_sample() -> None:
     assert result.decision == "rejected"
     assert result.reason_codes == ["reject_stale_twa"]
     assert not result.is_sailing_candidate
+    assert sample is not None
+
+
+def test_runner_retains_same_phase_predicates_in_rule_order() -> None:
+    result, sample = run(
+        make_read_result(ages=(4.0, 0.5, 0.5)),
+        make_warmed_state(),
+        default_config(),
+    )
+
+    assert result.reason_codes == ["reject_stale_twa"]
+    assert result.failed_predicates == ["reject_stale_twa", "reject_age_skew"]
+    assert result.decision == "rejected"
     assert sample is not None
 
 

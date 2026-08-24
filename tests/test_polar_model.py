@@ -50,8 +50,10 @@ def test_update_accepted_records_histogram_and_bumps_generation() -> None:
 def test_rejection_and_quarantine_do_not_bump_generation() -> None:
     model = PolarModel()
 
-    model.record_rejection(make_sample(), ["reject_unstable", "reject_stw_roc"])
-    model.record_quarantine(make_sample(), "quarantine_engine_suspected")
+    model.record_rejection(make_sample(), ["reject_unstable", "reject_stw_roc"], ["unstable_twa"])
+    model.record_quarantine(
+        make_sample(), "quarantine_engine_suspected", ["quarantine_engine_suspected"]
+    )
 
     model_bin = model.bins[(90, 12)]
     assert model.generation == 0
@@ -60,6 +62,10 @@ def test_rejection_and_quarantine_do_not_bump_generation() -> None:
     assert model_bin.rejection_histogram == {
         "reject_unstable": 1,
         "reject_stw_roc": 1,
+        "quarantine_engine_suspected": 1,
+    }
+    assert model_bin.predicate_histogram == {
+        "unstable_twa": 1,
         "quarantine_engine_suspected": 1,
     }
 
@@ -105,8 +111,10 @@ def test_snapshot_bins_is_fully_detached_from_live_model() -> None:
     assert snapshot[(90, 12)]["total_accepted"] == 1
     assert snapshot[(90, 12)]["total_rejected"] == 0
     assert snapshot[(90, 12)]["rejection_histogram"] == {}
+    assert snapshot[(90, 12)]["predicate_histogram"] == {}
     assert snapshot[(90, 12)]["histogram"] is not model.bins[(90, 12)].histogram
     assert snapshot[(90, 12)]["rejection_histogram"] is not model.bins[(90, 12)].rejection_histogram
+    assert snapshot[(90, 12)]["predicate_histogram"] is not model.bins[(90, 12)].predicate_histogram
 
 
 def _update_accepted_samples(model: PolarModel, count: int) -> None:

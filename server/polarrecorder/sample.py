@@ -7,7 +7,7 @@ Depends: polarrecorder.units
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Literal
 
 from polarrecorder.units import meters_per_second_to_knots
@@ -96,6 +96,12 @@ class RuleResult:
 
     decision: RuleDecision
     reason_codes: list[str]
+    predicate_codes: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """Use a rejecting rule's decision reasons as default predicates."""
+        if self.decision != "pass" and not self.predicate_codes:
+            object.__setattr__(self, "predicate_codes", list(self.reason_codes))
 
 
 def enhanced_value(sample: Sample, role: str) -> float | None:
