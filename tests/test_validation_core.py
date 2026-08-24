@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 from typing import cast
 
 from polarrecorder.config import default_config
@@ -91,3 +92,32 @@ def test_core_rules_pass_clean_sample() -> None:
     assert rules_core.head_to_wind(sample, config).decision == "pass"
     assert rules_core.low_wind(sample, config).decision == "pass"
     assert rules_core.anchored_heuristic(sample, config).decision == "pass"
+
+
+def test_r10_prefers_fresh_sog_and_falls_back_to_stw() -> None:
+    config = default_config()
+
+    assert config.anchored_stw_threshold == 0.5
+    assert config.head_to_wind_threshold == 10
+    assert (
+        rules_core.anchored_heuristic(
+            replace(make_sample(tws_kt=12.0, stw_kt=6.0), enhanced={"sog_kt": 0.4}), config
+        ).decision
+        == "reject"
+    )
+    assert (
+        rules_core.anchored_heuristic(
+            replace(make_sample(tws_kt=12.0, stw_kt=0.2), enhanced={"sog_kt": 2.0}), config
+        ).decision
+        == "pass"
+    )
+    assert (
+        rules_core.anchored_heuristic(make_sample(tws_kt=12.0, stw_kt=0.4), config).decision
+        == "reject"
+    )
+    assert (
+        rules_core.anchored_heuristic(
+            replace(make_sample(tws_kt=12.0), stw_kt=0.5), config
+        ).decision
+        == "pass"
+    )

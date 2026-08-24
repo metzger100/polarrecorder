@@ -97,7 +97,7 @@ test("enhanced settings render and save", async () => {
   assert.ok(tree.includes("Enhanced Rules"), tree);
   assert.ok(tree.includes("Speed-log sanity (SOG vs STW)"), tree);
   assert.ok(tree.includes("Speed over ground source"), tree);
-  assert.ok(tree.includes("Slip ratio (STW ÷ SOG)"), tree);
+  assert.ok(tree.includes("SOG/STW consistency ratio"), tree);
   assert.ok(tree.includes("active"), tree);
   assert.ok(tree.includes("no key set"), tree);
   assert.ok(!tree.includes("undefined"), tree);

@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Any
 
-from polarrecorder.sample import RuleResult
+from polarrecorder.sample import RuleResult, enhanced_value
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -118,8 +118,10 @@ def low_wind(sample: Sample, config: Config) -> RuleResult:
 
 
 def anchored_heuristic(sample: Sample, config: Config) -> RuleResult:
-    """Reject anchored-like samples with wind but near-zero STW."""
-    if sample.stw_kt < config.anchored_stw_threshold and sample.tws_kt > 0.0:
+    """Reject anchored-like samples using SOG when available, else STW."""
+    sog_kt = enhanced_value(sample, "sog_kt")
+    anchor_speed = sample.stw_kt if sog_kt is None else sog_kt
+    if anchor_speed < config.anchored_stw_threshold and sample.tws_kt > 0.0:
         return _reject("reject_anchored")
     return _pass()
 

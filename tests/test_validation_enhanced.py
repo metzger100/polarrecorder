@@ -55,13 +55,17 @@ def test_reject_shallow_below_floor() -> None:
     assert rules_enhanced.reject_shallow(_sample(None), config).decision == "pass"
 
 
-def test_reject_sog_stw_mismatch_paddlewheel_failure() -> None:
+def test_reject_sog_stw_mismatch_is_symmetric_and_current_aware() -> None:
     config = default_config()
     mismatch = rules_enhanced.reject_sog_stw_mismatch
 
     # STW implausibly low, current too small to explain the gap -> reject.
     reject = mismatch(_sample({"sog_kt": 5.0, "current_drift_kt": 0.5}, stw_kt=1.0), config)
     assert reject.decision == "reject"
+
+    # STW implausibly high, current too small to explain the gap -> reject.
+    high_stw = mismatch(_sample({"sog_kt": 1.0, "current_drift_kt": 0.5}, stw_kt=5.0), config)
+    assert high_stw.decision == "reject"
 
     # Healthy STW relative to SOG -> pass.
     healthy = mismatch(_sample({"sog_kt": 5.0, "current_drift_kt": 0.5}, stw_kt=4.0), config)
@@ -74,6 +78,11 @@ def test_reject_sog_stw_mismatch_paddlewheel_failure() -> None:
     # Current large enough to explain the gap -> honest following current, pass.
     explained = mismatch(_sample({"sog_kt": 2.0, "current_drift_kt": 1.3}, stw_kt=0.8), config)
     assert explained.decision == "pass"
+
+    reverse_explained = mismatch(
+        _sample({"sog_kt": 1.0, "current_drift_kt": 4.0}, stw_kt=5.0), config
+    )
+    assert reverse_explained.decision == "pass"
 
     # SOG below the moving floor -> pass.
     not_moving = mismatch(_sample({"sog_kt": 0.8, "current_drift_kt": 0.0}, stw_kt=0.1), config)

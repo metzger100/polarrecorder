@@ -76,9 +76,9 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
     {
         "name": "anchored_stw_threshold",
         "type": "FLOAT",
-        "default": "0.3",
+        "default": "0.5",
         "rangeOrList": [0.1, 1.0],
-        "description": "STW below this with wind is rejected",
+        "description": "Anchoring speed floor: SOG when available, otherwise STW",
     },
     {
         "name": "twa_roc_threshold",
@@ -224,7 +224,7 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
         "name": "enh_slip_enabled",
         "type": "BOOLEAN",
         "default": "true",
-        "description": "Enable STW-implausibly-low reject (R20)",
+        "description": "Enable SOG/STW consistency reject (R20)",
     },
     {
         "name": "enh_sog_key",
@@ -243,14 +243,14 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
         "type": "FLOAT",
         "default": "1.0",
         "rangeOrList": [0.3, 10.0],
-        "description": "SOG must exceed this for R20 to apply (boat clearly moving)",
+        "description": "Faster SOG/STW speed must exceed this for R20 to apply",
     },
     {
         "name": "enh_slip_ratio",
         "type": "FLOAT",
         "default": "0.5",
         "rangeOrList": [0.1, 0.9],
-        "description": "Reject when STW < SOG * ratio and current cannot explain the gap (R20)",
+        "description": "Reject when either SOG/STW speed is below faster speed times ratio (R20)",
     },
     {
         "name": "enh_tw_crosscheck_enabled",

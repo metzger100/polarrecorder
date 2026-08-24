@@ -197,6 +197,33 @@ def test_r15_passes_stable_filled_window() -> None:
     assert not state.is_warming_up(100.0)
 
 
+def test_r15_rejects_an_unstable_current_sample_without_observing_it() -> None:
+    state = make_warmed_state(now=100.0)
+    original_window = tuple(state.window)
+
+    result = rules_stability.stability_window(
+        make_sample(twa_raw=120.0, now=100.0), state, default_config()
+    )
+
+    assert result.reason_codes == ["reject_unstable"]
+    assert result.predicate_codes == ["unstable_twa"]
+    assert tuple(state.window) == original_window
+
+
+def test_r15_evaluation_uses_the_current_sample_measurements() -> None:
+    state = make_warmed_state(now=100.0)
+
+    evaluation = rules_stability.evaluate_stability(
+        make_sample(twa_raw=120.0, tws_kt=22.0, stw_kt=12.0, now=100.0),
+        state,
+        default_config(),
+    )
+
+    assert evaluation.filled
+    assert evaluation.predicate_codes == ["unstable_twa", "unstable_tws", "unstable_stw"]
+    assert evaluation.window_span_seconds == 15.0
+
+
 def test_r15_passes_with_jittered_one_second_samples() -> None:
     config = default_config()
     state = ValidationState(stability_window_seconds=config.stability_window_seconds)
