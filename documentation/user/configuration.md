@@ -47,7 +47,7 @@ Pause/Resume control), tracked by the transient `_paused` flag rather than a per
 | `max_stw`                  |  NUMBER |                `40` |    10-80 | Maximum plausible speed through water in knots for R7.                             |
 | `low_wind_threshold`       |   FLOAT |               `3.0` | 0.5-10.0 | TWS below this threshold is rejected by R9.                                        |
 | `head_to_wind_threshold`   |  NUMBER |                `10` |     5-30 | Absolute TWA below this threshold is rejected by R8.                               |
-| `anchored_stw_threshold`   |   FLOAT |               `0.3` |  0.1-1.0 | STW below this value with nonzero wind is rejected by R10.                         |
+| `anchored_stw_threshold`   |   FLOAT |               `0.5` |  0.1-1.0 | Fresh SOG below this value, or STW when SOG is absent, is rejected by R10.         |
 | `twa_roc_threshold`        |   FLOAT |              `15.0` | 5.0-45.0 | Maximum TWA change in degrees per second before R11 detects a maneuver.            |
 | `tws_roc_threshold`        |   FLOAT |              `10.0` | 3.0-30.0 | Maximum TWS change in knots per second before R12 rejects a spike.                 |
 | `stw_roc_threshold`        |   FLOAT |               `2.0` | 0.5-10.0 | Maximum STW acceleration in knots per second before R13 rejects.                   |
@@ -59,13 +59,17 @@ Pause/Resume control), tracked by the transient `_paused` flag rather than a per
 | `engine_tws_ceil`          |   FLOAT |               `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
 | `engine_stw_floor`         |   FLOAT |               `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
 | `min_samples_for_export`   |  NUMBER |                `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
-| `debug_logging`            | BOOLEAN |             `false` |        - | Enables one debug log line per pipeline iteration with decision and reason codes.  |
+| `debug_logging`            | BOOLEAN |             `false` |        - | Emits one finite `diagnostic_sample=<json>` record per iteration for replay.       |
 
 The Settings tab's top **Data Sources** card exposes `twa_key`, `tws_key`, and `stw_key` as store-key selectors. Its
 **Advanced Settings** card exposes the safe runtime-tuning subset from this table: sampling cadence, flush cadence,
 sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_stw`, the engine heuristic, and debug
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer.
+
+`debug_logging` records timestamps, normalized core and available enhanced values, decision/reasons/predicates, R15
+metrics, and the relevant R10/R15/R20 thresholds. No per-iteration diagnostic is emitted while it is disabled. The
+head-to-wind default remains 10 degrees.
 
 ### Enhanced (optional-signal) rule settings
 

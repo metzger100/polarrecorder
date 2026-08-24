@@ -24,11 +24,14 @@ and the enhanced quality-gate rejects R20 through R22; these set `is_sailing_can
 
 `ValidationState.observe(sample)` is maintenance, not rule execution. The runner never calls it. Plugin integration
 calls it once per built sample after the pipeline returns, or after direct `build_sample` use during pause/disabled
-loops. This ordering keeps R11 through R13 reading the previous sample, lets R15 evaluate only the prior buffer, and
-lets the UI warming flag call `state.is_warming_up(now)` against the same buffer R15 just judged.
+loops. This ordering keeps R11 through R13 reading the previous sample, lets R15 evaluate the prior buffer plus the
+current uncommitted sample, and lets the UI warming flag call `state.is_warming_up(now)` against the same buffer R15
+just judged.
 
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.
+The primary reason remains the first decisive rule; `failed_predicates` retains all same-phase evidence in rule order
+and is recorded in global and per-bin diagnostic histograms.
 
 Optional signal hooks read a bounded set of configured store keys alongside the three core keys. When a `Config` is
 supplied, `StoreReader` reads each enabled, configured optional key via `getSingleValue`, coerces it through
@@ -47,11 +50,10 @@ Implemented enhanced rules and candidacy:
   `reject_shallow` (`depth_m < enh_depth_floor_m`). Motoring and shallow-water squat are non-representative conditions,
   treated like `reject_head_to_wind`.
 - Quality-gate (`is_sailing_candidate=True`), inserted into `_run_candidate_rules` after `stability_window` and before
-  `engine_heuristic` (so they win over the R16 quarantine): R20 `reject_sog_stw_mismatch` (STW implausibly low versus
-  SOG, with a present current drift too small to explain the gap: `stw_kt < sog_kt * enh_slip_ratio` and
-  `current_drift_kt < sog_kt - stw_kt`), R21 `reject_true_wind_crosscheck` (true wind recomputed from
-  `awa_deg`/`aws_kt`/STW disagrees with reports beyond the configured TWA/TWS tolerances), R22 `reject_heel_out_of_band`
-  (`abs(heel_deg)` outside `[min, max]`).
+  `engine_heuristic` (so they win over the R16 quarantine): R20 `reject_sog_stw_mismatch` (the slower of SOG/STW is
+  below the configured ratio of the faster and present current drift is too small to explain their gap), R21
+  `reject_true_wind_crosscheck` (true wind recomputed from `awa_deg`/`aws_kt`/STW disagrees with reports beyond the
+  configured TWA/TWS tolerances), R22 `reject_heel_out_of_band` (`abs(heel_deg)` outside `[min, max]`).
 - R16 enhancement: `engine_heuristic` defers to a definitive engine signal — suppressed when the signal reads off,
   unchanged in the idle band and when no signal is present. Engine-on is already an R17/R18 pre-candidate reject.
 - R11/R14 enhancement (turn confirmation): `WindowEntry` carries optional `heading_deg`/`cog_deg` from

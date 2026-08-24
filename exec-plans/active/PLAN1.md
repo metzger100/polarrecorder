@@ -5,7 +5,7 @@
 Active execution plan. Implementation has not started.
 
 This plan is the implementation source of truth for the data-quality changes derived from findings **#2, #6, #9, #10,
-#11, #17, #18, #19, #22, #23, #25, and #28**. Observable behavior, compatibility requirements, and the validation
+and #11, #17, #18, #19, #22, #23, #25, and #28**. Observable behavior, compatibility requirements, and the validation
 semantics below are prescriptive. Internal helper names and small file-local refactors are flexible when needed to
 satisfy repository layering, complexity, duplication, and file-size gates.
 
@@ -232,7 +232,7 @@ The implementation should stay within this set unless a repository gate proves a
 - test inventory/coverage policy files only when the canonical inventory/coverage checker requires them; never lower a
   floor
 
-### Documentation
+### Documentation verification
 
 - `README.md`
 - `ROADMAP.md`

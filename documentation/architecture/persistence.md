@@ -22,6 +22,10 @@ Bin keys are serialized as `"{twa}_{tws}"`. JSON turns all object keys into stri
 back to `(int, int)` tuples and converts speed histogram keys back to `int` deciknot keys before rebuilding the
 `PolarModel`.
 
+Counters retain the established global reason histogram and add a parallel global predicate histogram; sparse bins do
+the same for quality-gate diagnostics. These additive fields default to empty when absent in an older backup. The schema
+version remains 1 because their absence has an explicit compatible default.
+
 Atomic write order is fixed:
 
 1. Serialize to a JSON string.
