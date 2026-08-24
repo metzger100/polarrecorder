@@ -2,7 +2,15 @@
 
 ## Status
 
-Active execution plan. Implementation has not started.
+Implemented through all six phases; follow-up viewer corrections are being validated under the same quality contract.
+
+### Amendment — 2026-08-24: quality baseline restored
+
+The committed README baseline was discovered at 381 non-empty lines, exceeding its enforced hotspot budget of 380.
+Rather than weaken the budget or its ratchet, the README was consolidated around user-facing installation, operation,
+configuration, and troubleshooting guidance; implementation detail and duplicated reference material were removed in
+favor of the maintained documentation links. The README now has 208 non-empty lines,
+`npx vitest run --project tools tests/js/hotspot-budgets.test.mjs` passes all 7 tests, and `npm run check:all` exits 0.
 
 This plan is the implementation source of truth for the data-quality changes derived from findings **#2, #6, #9, #10,
 and #11, #17, #18, #19, #22, #23, #25, and #28**. Observable behavior, compatibility requirements, and the validation

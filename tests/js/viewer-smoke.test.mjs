@@ -121,6 +121,12 @@ test("export grid fields accommodate three-digit TWA values", () => {
   assert.ok(source.includes(".grid-token input {\n  width: 5.7143rem;\n  text-align: center;\n}"));
 });
 
+test("export grid actions retain their full touch target", () => {
+  const source = fs.readFileSync(path.join(process.cwd(), "viewer", "viewer-settings-and-responsive.css"), "utf8");
+
+  assert.ok(source.includes(".small-icon {\n  display: grid;\n  place-items: center;\n  flex: 0 0 auto;"));
+});
+
 /** @param {Environment} env */
 async function testSettingsActions(env) {
   const panel = env.elements["settings-panel"];
