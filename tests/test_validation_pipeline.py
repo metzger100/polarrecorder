@@ -117,6 +117,7 @@ def test_runner_maps_warming_up_to_non_candidate() -> None:
     assert result.decision == "rejected"
     assert result.reason_codes == ["reject_warming_up"]
     assert not result.is_sailing_candidate
+    assert result.stability_eligible
     assert sample is not None
 
 
@@ -207,6 +208,7 @@ def test_enhanced_pre_candidate_rejects_are_non_candidates() -> None:
         assert result.decision == "rejected"
         assert result.reason_codes == [code]
         assert not result.is_sailing_candidate
+        assert not result.stability_eligible
         assert sample is not None
 
 

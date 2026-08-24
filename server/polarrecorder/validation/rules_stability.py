@@ -20,12 +20,16 @@ if TYPE_CHECKING:
     from polarrecorder.validation.state import ValidationState, WindowEntry
 
 
+STABILITY_MAX_GAP_INTERVALS = 3.0
+
+
 @dataclass(frozen=True)
 class StabilityEvaluation:
     """Current-sample-inclusive R15 stability measurements."""
 
     filled: bool
     window_span_seconds: float | None
+    largest_gap_seconds: float | None
     twa_range: float | None
     tws_range: float | None
     stw_range: float | None
@@ -145,10 +149,13 @@ def evaluate_stability(
     retained = _retained_entries(list(state.window), now, window_seconds)
     entries = [*retained, entry_from_sample(sample)]
     span = _window_span(entries)
-    if not retained or now - retained[0].timestamp_monotonic < window_seconds:
+    largest_gap = _largest_gap(entries)
+    continuous = largest_gap <= config.sample_interval * STABILITY_MAX_GAP_INTERVALS
+    if not retained or now - retained[0].timestamp_monotonic < window_seconds or not continuous:
         return StabilityEvaluation(
             filled=False,
             window_span_seconds=span,
+            largest_gap_seconds=largest_gap,
             twa_range=None,
             tws_range=None,
             stw_range=None,
@@ -165,6 +172,7 @@ def evaluate_stability(
     return StabilityEvaluation(
         filled=True,
         window_span_seconds=span,
+        largest_gap_seconds=largest_gap,
         twa_range=twa_range,
         tws_range=tws_range,
         stw_range=stw_range,
@@ -196,6 +204,16 @@ def _window_span(entries: list[WindowEntry]) -> float | None:
     if not entries:
         return None
     return entries[-1].timestamp_monotonic - entries[0].timestamp_monotonic
+
+
+def _largest_gap(entries: list[WindowEntry]) -> float:
+    return max(
+        (
+            current.timestamp_monotonic - previous.timestamp_monotonic
+            for previous, current in zip(entries, entries[1:])
+        ),
+        default=0.0,
+    )
 
 
 def _unstable_predicates(

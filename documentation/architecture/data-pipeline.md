@@ -9,9 +9,9 @@ updates model bins, counters, timeline state, persistence, and AvNav-visible sta
 
 ## Key Details
 
-The reader produces `ReadResult`, which may contain missing raw values. The pipeline owns R1 and R2 against that raw
-object so it can preserve granular non-finite and missing-value reason codes. If R1 or R2 rejects, the runner returns a
-rejected `PipelineResult` and `Sample` is `None`.
+The reader produces `ReadResult`, whose raw core values are untrusted objects and may be missing, nonnumeric, boolean,
+non-finite, or too large to convert safely. One total finite-numeric predicate, which rejects booleans, is shared by R1
+and `build_sample`. If R1 or R2 rejects, the runner returns a rejected `PipelineResult` and `Sample` is `None`.
 
 After R1 and R2 pass, the runner calls `build_sample(read_result)`. The resulting `Sample` has non-optional float
 fields, TWS/STW converted to knots, TWA normalized for model use, and freshness ages computed from the store timestamps.
@@ -22,11 +22,11 @@ through R19. These outcomes mean the pipeline cannot make a usable sailing-quali
 is false. Quality-gate outcomes are accepted samples, R11 through R14 rejections, R15 `reject_unstable`, R16 quarantine,
 and the enhanced quality-gate rejects R20 through R22; these set `is_sailing_candidate` true.
 
-`ValidationState.observe(sample)` is maintenance, not rule execution. The runner never calls it. Plugin integration
-calls it once per built sample after the pipeline returns, or after direct `build_sample` use during pause/disabled
-loops. This ordering keeps R11 through R13 reading the previous sample, lets R15 evaluate the prior buffer plus the
-current uncommitted sample, and lets the UI warming flag call `state.is_warming_up(now)` against the same buffer R15
-just judged.
+Validation-state observation is maintenance, not rule execution. The runner never calls it. Plugin integration retains
+each built numeric sample separately as the previous observation for R11-R13, but appends it to R15 history only after
+the pre-candidate gates pass. Missing, malformed, stale, out-of-range, head-to-wind, low-wind, anchored, motoring, and
+shallow observations break R15 continuity. Pausing or resuming also clears R15 history, so recovery always requires a
+fresh stability warm-up. Quality-gate failures remain eligible history and naturally age out of the window.
 
 R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
 the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
@@ -44,13 +44,13 @@ Optional signal hooks read a bounded set of configured store keys alongside the 
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
 is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
 through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
-contract parses booleans, finite numbers, and numeric strings and is shared by the live enhanced-status endpoint.
-`ReadResult.enhanced_inputs` retains every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains
-only usable values in store units with timestamps. `build_sample` converts each usable role to its canonical unit once
-(`units.py`) and stores it in `Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when
-nothing was read. Enhanced rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same
-no-AvNav, no-I/O, no-threading purity as the core rules. The role/unit table lives in
-[AvNav keys and units](../avnav/keys-and-units.md).
+contract parses finite numbers and numeric strings and is shared by the live enhanced-status endpoint. Boolean values
+are accepted only for the `engine_signal` role; physical measurements reject them. `ReadResult.enhanced_inputs` retains
+every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains only usable values in store units with
+timestamps. `build_sample` converts each usable role to its canonical unit once (`units.py`) and stores it in
+`Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when nothing was read. Enhanced
+rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same no-AvNav, no-I/O,
+no-threading purity as the core rules. The role/unit table lives in [AvNav keys and units](../avnav/keys-and-units.md).
 
 Implemented enhanced rules and candidacy:
 

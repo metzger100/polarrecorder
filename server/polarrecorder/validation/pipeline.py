@@ -30,6 +30,7 @@ class PipelineResult:
     decision: PipelineDecision
     reason_codes: list[str]
     is_sailing_candidate: bool
+    stability_eligible: bool = False
     failed_predicates: list[str] = field(default_factory=list)
     stability_evaluation: rules_stability.StabilityEvaluation | None = None
 
@@ -89,6 +90,7 @@ def _run_sample_rules(sample: Sample, state: ValidationState, config: Config) ->
             decision="quarantined",
             reason_codes=candidate_result.reason_codes,
             is_sailing_candidate=True,
+            stability_eligible=True,
             failed_predicates=candidate_result.predicate_codes,
             stability_evaluation=stability,
         )
@@ -96,6 +98,7 @@ def _run_sample_rules(sample: Sample, state: ValidationState, config: Config) ->
         decision="accepted",
         reason_codes=[],
         is_sailing_candidate=True,
+        stability_eligible=True,
         stability_evaluation=stability,
     )
 
@@ -176,6 +179,7 @@ def _candidate_rejection(
     return _rejected(
         reason_codes,
         is_sailing_candidate=reason_codes != ["reject_warming_up"],
+        stability_eligible=True,
         failed_predicates=failed_predicates,
         stability_evaluation=stability,
     )
@@ -185,12 +189,14 @@ def _rejected(
     reason_codes: list[str],
     is_sailing_candidate: bool,
     failed_predicates: list[str],
+    stability_eligible: bool = False,
     stability_evaluation: rules_stability.StabilityEvaluation | None = None,
 ) -> PipelineResult:
     return PipelineResult(
         decision="rejected",
         reason_codes=reason_codes,
         is_sailing_candidate=is_sailing_candidate,
+        stability_eligible=stability_eligible,
         failed_predicates=failed_predicates,
         stability_evaluation=stability_evaluation,
     )

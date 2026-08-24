@@ -30,12 +30,17 @@ class EnhancedSignalSpec:
     key_field: str
     enable_fields: tuple[str, ...]
     to_knots: bool
+    accepts_bool: bool = False
 
 
 ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
     EnhancedSignalSpec("rpm", "enh_rpm_key", ("enh_rpm_enabled",), to_knots=False),
     EnhancedSignalSpec(
-        "engine_signal", "enh_engine_state_key", ("enh_engine_state_enabled",), to_knots=False
+        "engine_signal",
+        "enh_engine_state_key",
+        ("enh_engine_state_enabled",),
+        to_knots=False,
+        accepts_bool=True,
     ),
     EnhancedSignalSpec("depth_m", "enh_depth_key", ("enh_depth_enabled",), to_knots=False),
     EnhancedSignalSpec("sog_kt", "enh_sog_key", (), to_knots=True),
@@ -50,6 +55,7 @@ ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
     ),
     EnhancedSignalSpec("cog_deg", "enh_cog_key", ("enh_turnconfirm_enabled",), to_knots=False),
 )
+ENHANCED_SIGNAL_BY_ROLE = {spec.role: spec for spec in ENHANCED_SIGNAL_SPECS}
 
 
 @dataclass(frozen=True)
@@ -58,9 +64,9 @@ class ReadResult:
 
     timestamp_monotonic: float
     timestamp_wall: float
-    twa_raw: float | None
-    tws_raw: float | None
-    stw_raw: float | None
+    twa_raw: object | None
+    tws_raw: object | None
+    stw_raw: object | None
     twa_timestamp: float | None
     tws_timestamp: float | None
     stw_timestamp: float | None
@@ -131,9 +137,9 @@ def build_sample(read_result: ReadResult) -> Sample | None:
     if not _required_values_are_finite(read_result):
         return None
 
-    assert read_result.twa_raw is not None
-    assert read_result.tws_raw is not None
-    assert read_result.stw_raw is not None
+    assert isinstance(read_result.twa_raw, (int, float))
+    assert isinstance(read_result.tws_raw, (int, float))
+    assert isinstance(read_result.stw_raw, (int, float))
     assert read_result.twa_timestamp is not None
     assert read_result.tws_timestamp is not None
     assert read_result.stw_timestamp is not None
@@ -168,9 +174,19 @@ def _build_enhanced(
     return enhanced
 
 
+def is_finite_core_value(value: object | None) -> bool:
+    """Return whether a raw core sensor value is finite and numeric but not boolean."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
 def _required_values_are_finite(read_result: ReadResult) -> bool:
     values = (read_result.twa_raw, read_result.tws_raw, read_result.stw_raw)
-    return all(value is not None and math.isfinite(value) for value in values)
+    return all(is_finite_core_value(value) for value in values)
 
 
 def _normalize_twa(twa_deg_raw: float) -> tuple[float, float]:

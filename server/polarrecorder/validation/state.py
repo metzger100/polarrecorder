@@ -44,27 +44,35 @@ class ValidationState:
     previous_sample: WindowEntry | None = None
 
     def observe(self, sample: Sample) -> None:
-        """Prune old entries, append the sample, and update the previous sample.
+        """Observe a sample for both transition and stability rules.
 
         Args:
             sample: Built sample to add after the pipeline has returned.
         """
+        self.observe_transition(sample)
+        self.observe_stability(sample)
+
+    def observe_iteration(self, sample: Sample | None, *, eligible: bool) -> None:
+        """Apply post-pipeline transition and R15-history observation policy."""
+        if sample is not None:
+            self.observe_transition(sample)
+        if sample is not None and eligible:
+            self.observe_stability(sample)
+        else:
+            self.reset_stability()
+
+    def observe_transition(self, sample: Sample) -> None:
+        """Retain a valid numeric observation for transition-rate rules."""
+        self.previous_sample = entry_from_sample(sample)
+
+    def observe_stability(self, sample: Sample) -> None:
+        """Append a sailing-eligible observation to the R15 window."""
         self.prune(sample.timestamp_monotonic)
-        entry = entry_from_sample(sample)
-        self.window.append(entry)
-        self.previous_sample = entry
+        self.window.append(entry_from_sample(sample))
 
-    def is_warming_up(self, now_monotonic: float) -> bool:
-        """Return whether the rolling buffer has not filled a full window.
-
-        Args:
-            now_monotonic: Current monotonic timestamp to evaluate against.
-
-        Returns:
-            ``True`` when R15 would use its ``reject_warming_up`` branch.
-        """
-        self.prune(now_monotonic)
-        return not self.is_filled(now_monotonic)
+    def reset_stability(self) -> None:
+        """Discard R15 history after a break in sailing eligibility."""
+        self.window.clear()
 
     def prune(self, now_monotonic: float) -> None:
         """Trim old entries while retaining one boundary anchor when available.
@@ -78,19 +86,6 @@ class ValidationState:
             return
         while len(self.window) > 1 and self.window[1].timestamp_monotonic <= oldest_allowed:
             self.window.popleft()
-
-    def is_filled(self, now_monotonic: float) -> bool:
-        """Return whether the retained buffer spans a full stability window.
-
-        Args:
-            now_monotonic: Current monotonic timestamp.
-
-        Returns:
-            ``True`` when the buffer is non-empty and spans the configured window.
-        """
-        if not self.window:
-            return False
-        return now_monotonic - self.window[0].timestamp_monotonic >= self.stability_window_seconds
 
 
 def entry_from_sample(sample: Sample) -> WindowEntry:

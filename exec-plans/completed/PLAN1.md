@@ -2,7 +2,19 @@
 
 ## Status
 
-Implemented through all six phases and both implementation-review remediation passes.
+Implemented through all six phases and three implementation-review remediation passes.
+
+### Amendment — 2026-08-24: third implementation-review remediation
+
+A fresh archive review found a paused malformed-input crash, non-candidate observations warming R15, sparse endpoints
+satisfying the R15 span, boolean physical inputs passing as numbers, an enhanced integer-overflow escape, misleading
+core readiness, and stale R20 configuration prose. Completion now additionally requires total core/enhanced boundaries,
+role-aware boolean handling, separate transition and sailing-eligible history, a three-interval R15 continuity bound,
+fresh usable core readiness, synchronized user documentation, focused regressions, and a green full quality gate.
+
+**Third-review exit evidence:** `npm run check:all` exited successfully with 401 Python tests, 364 tooling tests, 61
+viewer tests, 1 plugin test, 96.02% aggregate Python coverage, and 92.74% viewer/plugin line coverage. The focused input,
+pipeline, stability, diagnostics, status, and plugin-integration regression suite passed 117 tests before the full gate.
 
 ### Amendment — 2026-08-24: second implementation-review remediation
 

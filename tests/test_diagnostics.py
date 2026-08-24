@@ -6,7 +6,7 @@ from dataclasses import replace
 from typing import cast
 
 from polarrecorder.config import default_config
-from polarrecorder.diagnostics import format_sample_diagnostic
+from polarrecorder.diagnostics import data_status, format_sample_diagnostic
 from polarrecorder.enhanced_input import EnhancedInput
 from polarrecorder.validation.pipeline import run
 from polarrecorder.validation.state import ValidationState
@@ -176,3 +176,11 @@ def test_formatter_uses_the_pipeline_current_sample_r15_evaluation() -> None:
         "tws_range": 0.0,
         "stw_range": 0.0,
     }
+
+
+def test_data_status_requires_complete_finite_fresh_core_values() -> None:
+    assert data_status(make_read_result(), 3.0) == "receiving"
+    assert data_status(make_read_result(ages=(4.0, 0.5, 0.5)), 3.0) == "partial"
+    assert data_status(make_read_result(twa_raw="bad"), 3.0) == "partial"
+    assert data_status(make_read_result(twa_raw=True), 3.0) == "partial"
+    assert data_status(make_read_result(twa_raw=None), 3.0) == "partial"
