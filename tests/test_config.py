@@ -24,6 +24,8 @@ def test_default_config_matches_phase_3_defaults() -> None:
     assert config.flush_interval == 300
     assert config.max_tws == 60
     assert config.debug_logging is False
+    assert config.anchored_stw_threshold == 0.5
+    assert config.head_to_wind_threshold == 10
 
 
 def test_parse_config_values_uses_avnav_string_conventions() -> None:

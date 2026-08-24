@@ -7,15 +7,29 @@ polarrecorder.validation.state
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from polarrecorder.sample import RuleResult, enhanced_value
 from polarrecorder.validation.angle_math import circular_distance, circular_range
+from polarrecorder.validation.state import entry_from_sample
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
     from polarrecorder.sample import Sample
     from polarrecorder.validation.state import ValidationState, WindowEntry
+
+
+@dataclass(frozen=True)
+class StabilityEvaluation:
+    """Current-sample-inclusive R15 stability measurements."""
+
+    filled: bool
+    window_span_seconds: float | None
+    twa_range: float | None
+    tws_range: float | None
+    stw_range: float | None
+    predicate_codes: list[str]
 
 
 def twa_rate_of_change(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
@@ -106,23 +120,52 @@ def maneuver_cooldown(sample: Sample, state: ValidationState, config: Config) ->
 
 def stability_window(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
     """Reject warming-up or unstable rolling-window samples."""
-    now = sample.timestamp_monotonic
-    state.stability_window_seconds = float(config.stability_window_seconds)
-    state.prune(now)
-    if not state.is_filled(now):
+    evaluation = evaluate_stability(sample, state, config)
+    if not evaluation.filled:
         return _reject("reject_warming_up")
-
-    twa_values = [entry.twa_deg_raw for entry in state.window]
-    tws_values = [entry.tws_kt for entry in state.window]
-    stw_values = [entry.stw_kt for entry in state.window]
-    predicate_codes = _unstable_predicates(twa_values, tws_values, stw_values, config)
-    if predicate_codes:
+    if evaluation.predicate_codes:
         return RuleResult(
             decision="reject",
             reason_codes=["reject_unstable"],
-            predicate_codes=predicate_codes,
+            predicate_codes=evaluation.predicate_codes,
         )
     return _pass()
+
+
+def evaluate_stability(
+    sample: Sample, state: ValidationState, config: Config
+) -> StabilityEvaluation:
+    """Evaluate R15 using retained state plus the current uncommitted sample."""
+    now = sample.timestamp_monotonic
+    state.stability_window_seconds = float(config.stability_window_seconds)
+    state.prune(now)
+    entries = [*state.window, entry_from_sample(sample)]
+    span = _window_span(entries)
+    if not state.is_filled(now):
+        return StabilityEvaluation(
+            filled=False,
+            window_span_seconds=span,
+            twa_range=None,
+            tws_range=None,
+            stw_range=None,
+            predicate_codes=[],
+        )
+
+    twa_values = [entry.twa_deg_raw for entry in entries]
+    tws_values = [entry.tws_kt for entry in entries]
+    stw_values = [entry.stw_kt for entry in entries]
+    twa_range = circular_range(twa_values)
+    tws_range = _linear_range(tws_values)
+    stw_range = _linear_range(stw_values)
+    predicates = _unstable_predicates(twa_range, tws_range, stw_range, config)
+    return StabilityEvaluation(
+        filled=True,
+        window_span_seconds=span,
+        twa_range=twa_range,
+        tws_range=tws_range,
+        stw_range=stw_range,
+        predicate_codes=predicates,
+    )
 
 
 def _linear_range(values: list[float]) -> float:
@@ -131,15 +174,21 @@ def _linear_range(values: list[float]) -> float:
     return max(values) - min(values)
 
 
+def _window_span(entries: list[WindowEntry]) -> float | None:
+    if not entries:
+        return None
+    return entries[-1].timestamp_monotonic - entries[0].timestamp_monotonic
+
+
 def _unstable_predicates(
-    twa_values: list[float], tws_values: list[float], stw_values: list[float], config: Config
+    twa_range: float, tws_range: float, stw_range: float, config: Config
 ) -> list[str]:
     codes: list[str] = []
-    if circular_range(twa_values) >= config.stability_twa_range:
+    if twa_range >= config.stability_twa_range:
         codes.append("unstable_twa")
-    if _linear_range(tws_values) >= config.stability_tws_range:
+    if tws_range >= config.stability_tws_range:
         codes.append("unstable_tws")
-    if _linear_range(stw_values) >= config.stability_stw_range:
+    if stw_range >= config.stability_stw_range:
         codes.append("unstable_stw")
     return codes
 

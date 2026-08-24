@@ -217,11 +217,16 @@ def test_enhanced_quality_gate_rejects_are_candidates() -> None:
                 stw_kt=1.0, enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.5, 99.5)}
             ),
             "reject_sog_stw_mismatch",
+            make_warmed_state(stw_values=(1.0, 1.0, 1.0)),
         ),
-        (make_read_result(enhanced_raw={"heel_deg": (60.0, 99.5)}), "reject_heel_out_of_band"),
+        (
+            make_read_result(enhanced_raw={"heel_deg": (60.0, 99.5)}),
+            "reject_heel_out_of_band",
+            make_warmed_state(),
+        ),
     ]
-    for read_result, code in cases:
-        result, sample = run(read_result, make_warmed_state(), default_config())
+    for read_result, code, state in cases:
+        result, sample = run(read_result, state, default_config())
 
         assert result.decision == "rejected"
         assert result.reason_codes == [code]
@@ -252,7 +257,7 @@ def test_engine_off_signal_suppresses_r16_quarantine_end_to_end() -> None:
     assert sample is not None
 
 
-def test_wind_shift_with_steady_heading_is_accepted_end_to_end() -> None:
+def test_wind_shift_with_steady_heading_reaches_r15_end_to_end() -> None:
     state = make_warmed_state(now=100.0)
     previous = state.previous_sample
     assert previous is not None
@@ -261,8 +266,8 @@ def test_wind_shift_with_steady_heading_is_accepted_end_to_end() -> None:
     read_result = make_read_result(twa_raw=200.0, enhanced_raw={"heading_deg": (92.0, 99.5)})
     result, sample = run(read_result, state, default_config())
 
-    assert result.decision == "accepted"
-    assert result.reason_codes == []
+    assert result.decision == "rejected"
+    assert result.reason_codes == ["reject_unstable"]
     assert result.is_sailing_candidate
     assert sample is not None
 

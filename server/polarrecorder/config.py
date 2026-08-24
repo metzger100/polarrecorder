@@ -34,7 +34,7 @@ class Config:
     max_stw: int = 40
     low_wind_threshold: float = 3.0
     head_to_wind_threshold: int = 10
-    anchored_stw_threshold: float = 0.3
+    anchored_stw_threshold: float = 0.5
     twa_roc_threshold: float = 15.0
     tws_roc_threshold: float = 10.0
     stw_roc_threshold: float = 2.0
