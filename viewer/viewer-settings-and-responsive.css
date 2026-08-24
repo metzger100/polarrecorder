@@ -29,6 +29,7 @@
 .small-icon {
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
   width: 3.1429rem;
   height: 3.1429rem;
   border-radius: 50%;

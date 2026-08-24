@@ -89,7 +89,8 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
 - Status diagnostic headings use the card's shared inset, so Enhanced Rule Availability and the reason/predicate
   sections align with their card content rather than the rounded border.
 - Export grid controls reserve room for the browser's numeric spinner as well as a three-digit TWA value, so port-side
-  angles through `359` remain fully visible while the row continues to scroll horizontally when needed.
+  angles through `359` remain fully visible while the row continues to scroll horizontally when needed. Its add/remove
+  controls do not shrink, preserving their circular touch targets at every grid width.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It always fetches `status`, which carries
   the monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch. The active tab
   refreshes off that heartbeat: Status re-renders every beat; Polar refetches only when `generation` advances, so new
