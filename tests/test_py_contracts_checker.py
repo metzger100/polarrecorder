@@ -207,6 +207,22 @@ def test_host_store_api_spelling_blocked(tmp_path: Path) -> None:
     assert "host-api-leak" in output
 
 
+def test_representative_avnav_camel_case_methods_are_blocked(tmp_path: Path) -> None:
+    for method in ("getConfigValue", "setStatus", "registerRequestHandler"):
+        case_dir = tmp_path / method
+        write_package(
+            case_dir,
+            {
+                "sample.py": HEADER
+                + "def call(api: object) -> object:\n"
+                + f"    return api.{method}()\n"
+            },
+        )
+        result, output = run_checker(case_dir)
+        assert result == 1
+        assert "host-api-leak" in output
+
+
 def test_speculative_legacy_blocked(tmp_path: Path) -> None:
     write_package(
         tmp_path,

@@ -3,22 +3,24 @@ from __future__ import annotations
 from dataclasses import replace
 
 from polarrecorder.config import Config, default_config
-from polarrecorder.enhanced_status import KeyProbe, compute_enhanced_status
+from polarrecorder.enhanced_input import EnhancedInput
+from polarrecorder.enhanced_status import compute_enhanced_status
 
 
-def _status(config: Config, probes: dict[str, KeyProbe], rule: str) -> str:
+def _status(config: Config, probes: dict[str, EnhancedInput], rule: str) -> str:
     rows = compute_enhanced_status(config, probes)
     return next(str(row["status"]) for row in rows if row["rule"] == rule)
 
 
-def _availability(config: Config, probes: dict[str, KeyProbe], rule: str) -> str:
+def _availability(config: Config, probes: dict[str, EnhancedInput], rule: str) -> str:
     rows = compute_enhanced_status(config, probes)
     return next(str(row["availability"]) for row in rows if row["rule"] == rule)
 
 
-_FRESH = KeyProbe(present=True, fresh=True)
-_STALE = KeyProbe(present=True, fresh=False)
-_MISSING = KeyProbe(present=False, fresh=False)
+_FRESH = EnhancedInput("usable", 1.0, 99.5, 1.0)
+_STALE = EnhancedInput("stale", 1.0, 90.0, 1.0)
+_INVALID = EnhancedInput("invalid", "bad", 99.5, None)
+_MISSING = EnhancedInput("missing", None, None, None)
 
 _ENABLE_FIELDS = {
     "reject_engine_rpm": "enh_rpm_enabled",
@@ -80,6 +82,14 @@ def test_inactive_value_missing_when_read_is_stale() -> None:
     assert _status(config, probes, "reject_shallow") == "inactive_value_missing"
 
 
+def test_inactive_value_invalid_is_never_active() -> None:
+    config = default_config()
+    probes = {config.enh_depth_key: _INVALID}
+
+    assert _status(config, probes, "reject_shallow") == "inactive_value_invalid"
+    assert _availability(config, probes, "reject_shallow") == "unavailable"
+
+
 def test_all_combinator_requires_both_keys_fresh() -> None:
     config = default_config()
     one_fresh = {config.enh_sog_key: _FRESH, config.enh_current_drift_key: _MISSING}
@@ -106,6 +116,13 @@ def test_r21_inactive_key_when_one_of_awa_aws_unconfigured() -> None:
 def test_any_combinator_active_with_one_fresh_key() -> None:
     config = default_config()
     probes = {config.enh_heading_key: _FRESH, config.enh_cog_key: _MISSING}
+
+    assert _status(config, probes, "turn_confirm") == "active"
+
+
+def test_any_combinator_remains_active_with_one_usable_and_one_invalid_key() -> None:
+    config = default_config()
+    probes = {config.enh_heading_key: _FRESH, config.enh_cog_key: _INVALID}
 
     assert _status(config, probes, "turn_confirm") == "active"
 

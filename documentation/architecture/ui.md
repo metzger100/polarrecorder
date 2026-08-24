@@ -84,11 +84,11 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `GET advanced/save` request and then re-fetching the groups.
 - The Status tab and Enhanced Settings use `enhanced-rule-display.js` as the single source of user-facing rule,
   availability, and cause labels; internal API identifiers are not shown as headings. `engine-warning.js` performs one
-  startup check only: when neither definitive engine rule is active it offers Close or browser-local Never show again;
-  it never changes plugin configuration or persistence. Its modal has dialog semantics, a backdrop, initial and
-  contained focus, Escape handling, focus restoration, and an inert background. It is content-sized, centered,
-  viewport-constrained, and layered above the app navigation and overlays. Storage failures remain local to the modal
-  rather than using a global browser error listener.
+  startup check only: when neither definitive engine rule is active, or protection status cannot be verified, it offers
+  Close or browser-local Never show again; it never changes plugin configuration or persistence. Its modal has dialog
+  semantics, a backdrop, initial and contained focus, Escape handling, focus restoration, and an inert background. It is
+  content-sized, centered, viewport-constrained, and layered above the app navigation and overlays. Storage failures
+  remain local to the modal rather than using a global browser error listener.
 - Status diagnostic headings use the card's shared inset, so Enhanced Rule Availability and the reason/predicate
   sections align with their card content rather than the rounded border.
 - Export grid controls reserve room for the browser's numeric spinner as well as a three-digit TWA value, so port-side

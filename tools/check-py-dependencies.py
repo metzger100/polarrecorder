@@ -52,6 +52,7 @@ _LAYER_RANK = {
     # 0 - primitives: no intra-package dependencies.
     "units": 0,
     "coerce": 0,
+    "enhanced_input": 0,
     "logger": 0,
     "params": 0,
     "source_params": 0,

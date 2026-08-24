@@ -1,7 +1,7 @@
 """Module: Enhanced Status - Pure live-status state machine for enhanced rules.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.config
+Depends: polarrecorder.config, polarrecorder.enhanced_input
 """
 
 from __future__ import annotations
@@ -13,17 +13,10 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from polarrecorder.config import Config
+    from polarrecorder.enhanced_input import EnhancedInput
 
 COMBINATOR_ALL = "all"
 COMBINATOR_ANY = "any"
-
-
-@dataclass(frozen=True)
-class KeyProbe:
-    """Boundary-computed presence/freshness of one store key."""
-
-    present: bool
-    fresh: bool
 
 
 @dataclass(frozen=True)
@@ -92,13 +85,13 @@ ENHANCED_RULE_SPECS: tuple[EnhancedRuleSpec, ...] = (
 
 def compute_enhanced_status(
     config: Config,
-    probes: Mapping[str, KeyProbe],
+    probes: Mapping[str, EnhancedInput],
 ) -> list[dict[str, object]]:
     """Resolve the live status of every enhanced rule.
 
     Args:
         config: Current parsed runtime configuration.
-        probes: Per-store-key presence/freshness computed at the boundary.
+        probes: Per-store-key acquisition state computed by the canonical input contract.
 
     Returns:
         One status row per rule with its keys, thresholds, and resolved state.
@@ -109,7 +102,7 @@ def compute_enhanced_status(
 def _rule_row(
     config: Config,
     spec: EnhancedRuleSpec,
-    probes: Mapping[str, KeyProbe],
+    probes: Mapping[str, EnhancedInput],
 ) -> dict[str, object]:
     enabled = bool(getattr(config, spec.enable_field))
     status = _resolve_status(config, spec, probes, enabled=enabled)
@@ -134,7 +127,7 @@ def _availability(status: str) -> str:
 def _resolve_status(
     config: Config,
     spec: EnhancedRuleSpec,
-    probes: Mapping[str, KeyProbe],
+    probes: Mapping[str, EnhancedInput],
     *,
     enabled: bool,
 ) -> str:
@@ -153,7 +146,9 @@ def _status_from_states(spec: EnhancedRuleSpec, states: list[str]) -> str:
         return "active"
     if "missing" in states:
         return "inactive_key_missing"
-    return "inactive_value_missing"
+    if "stale" in states:
+        return "inactive_value_missing"
+    return "inactive_value_invalid"
 
 
 def _configuration_satisfies(spec: EnhancedRuleSpec, configured_count: int) -> bool:
@@ -163,13 +158,13 @@ def _configuration_satisfies(spec: EnhancedRuleSpec, configured_count: int) -> b
 
 
 def _is_active(combinator: str, total_fields: int, states: list[str]) -> bool:
-    fresh = sum(1 for state in states if state == "fresh")
+    usable = sum(1 for state in states if state == "usable")
     if combinator == COMBINATOR_ALL:
-        return len(states) == total_fields and fresh == total_fields
-    return fresh >= 1
+        return len(states) == total_fields and usable == total_fields
+    return usable >= 1
 
 
-def _key_state(probe: KeyProbe | None) -> str:
-    if probe is None or not probe.present:
+def _key_state(probe: EnhancedInput | None) -> str:
+    if probe is None:
         return "missing"
-    return "fresh" if probe.fresh else "stale"
+    return probe.state

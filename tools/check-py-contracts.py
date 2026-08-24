@@ -39,8 +39,7 @@ Section 8 that ruff/mypy cannot see:
                       moved, or deleted). A stale map silently stops guarding the
                       helper, so an agent could re-implement it freely. Verifying
                       the map closes that gap.
-- host-api-leak : AvNav camelCase methods appear in domain code;
-                      adapt them in ``plugin.py`` and pass domain values inward.
+- host-api-leak : AvNav camelCase methods appear in domain code; adapt them in ``plugin.py``.
 
 Scope is server/polarrecorder/ only, where producer contracts are guaranteed.
 plugin.py (AvNav boundary) and tests/ legitimately use defensive
@@ -53,6 +52,7 @@ from __future__ import annotations
 
 import ast
 import os
+import re
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -73,7 +73,7 @@ _FLOAT_SENTINEL_STRINGS = frozenset(
 
 # Name fragments that mark a declaration as a legacy/compat shim.
 _LEGACY_TOKENS = ("legacy", "compat", "deprecated")
-_HOST_API_METHODS = frozenset({"getSingleValue", "getDataByPrefix", "saveConfigValues"})
+_CAMEL_CASE_ATTRIBUTE = re.compile(r"^[a-z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*$")
 
 # Canonical domain helpers mapped to their single owning module (repo-relative,
 # posix). Re-implementing one of these under the same name in another module
@@ -394,7 +394,7 @@ def _check_math_sentinel(node: ast.Attribute, rel: str) -> list[str]:
 
 def _check_host_api(node: ast.Attribute, rel: str) -> list[str]:
     """Flag AvNav method spellings outside the integration shell."""
-    if node.attr not in _HOST_API_METHODS:
+    if _CAMEL_CASE_ATTRIBUTE.fullmatch(node.attr) is None:
         return []
     return [
         f"{rel}:{node.lineno}: host-api-leak: '{node.attr}' is an AvNav "

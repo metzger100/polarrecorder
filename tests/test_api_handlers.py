@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, cast
 
-from conftest import FakeAvNavAPI
-from polarrecorder import api_handlers, export
+from conftest import FakeAvNavAPI, FakeClock
+from polarrecorder import api_handlers, export, reader
 from polarrecorder.config import default_config
 from polarrecorder.sample import ReadResult, build_sample
 from polarrecorder.units import knots_to_meters_per_second
@@ -162,6 +162,30 @@ def test_enhanced_formatters_wrap_detached_payloads() -> None:
     assert keys == {"keys": ["gps.speed", "gps.windAngle"]}
     assert status == {"rules": [{"rule": "reject_shallow", "status": "active"}]}
     assert config == {"config": {"enh_rpm_enabled": True}}
+
+
+def test_invalid_engine_source_is_unavailable_and_omitted_by_reader(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.config["enh_rpm_key"] = "engine.rpm"
+    api.set_value("engine.rpm", cast("float", "bad"), 99.5)
+    plugin = plugin_module.Plugin(api)
+    plugin._data_dir = str(tmp_path)
+    plugin._clock = FakeClock(100.0)
+
+    status = _data(plugin._handle_request("enhanced/status", object(), {}))
+    rows = cast("list[dict[str, object]]", status["rules"])
+    rpm = next(row for row in rows if row["rule"] == "reject_engine_rpm")
+    read_result = reader.StoreReader(
+        plugin,
+        FakeClock(100.0),
+        FakeClock(1000.0),
+        plugin._logger,
+        plugin.config,
+    ).read()
+
+    assert rpm["status"] == "inactive_value_invalid"
+    assert rpm["availability"] == "unavailable"
+    assert read_result.enhanced_raw is None or "rpm" not in read_result.enhanced_raw
 
 
 def test_invalid_percentile_returns_error_envelope_through_dispatch(tmp_path: Path) -> None:

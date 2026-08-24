@@ -97,7 +97,9 @@ The enhanced endpoints back the Settings-tab "Enhanced Rules" section. `enhanced
 store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer offers them as dropdown options and also
 allows free-text entry for custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
 computes each key's presence/freshness at the boundary (snapshotting `self.config` under the lock, probing via
-`getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the lock.
+`getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the lock. Status
+uses the same missing/stale/invalid/usable acquisition contract as `StoreReader`, so `active` means every required
+source is currently consumable by validation; invalid values report `inactive_value_invalid` and `unavailable`.
 Unavailable causes use a deterministic priority: incomplete configuration, missing store source, then stale value; an
 any-source rule remains active when any configured source is fresh. `enhanced/save` self-applies first (sets
 `self.config` under the lock) and then calls `api.saveConfigValues` after releasing the lock; `saveConfigValues` only

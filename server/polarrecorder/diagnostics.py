@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from polarrecorder.validation.pipeline import PipelineResult
     from polarrecorder.validation.rules_stability import StabilityEvaluation
 
-DIAGNOSTIC_SCHEMA_VERSION = 1
+DIAGNOSTIC_SCHEMA_VERSION = 2
 
 
 class CurrentValues(NamedTuple):
@@ -109,16 +109,17 @@ def _core_sources(read_result: ReadResult) -> dict[str, dict[str, float | None]]
 
 def _enhanced_values(
     read_result: ReadResult, sample: Sample | None
-) -> dict[str, dict[str, float | None]]:
-    if read_result.enhanced_raw is None:
+) -> dict[str, dict[str, object]]:
+    if read_result.enhanced_inputs is None:
         return {}
     normalized = {} if sample is None or sample.enhanced is None else sample.enhanced
-    values: dict[str, dict[str, float | None]] = {}
-    for role, (raw, timestamp) in read_result.enhanced_raw.items():
+    values: dict[str, dict[str, object]] = {}
+    for role, acquisition in read_result.enhanced_inputs.items():
         values[role] = {
-            "raw": _finite_or_none(raw),
+            "state": acquisition.state,
+            "raw": _finite_or_none(acquisition.raw_value),
             "normalized": _finite_or_none(normalized.get(role)),
-            **_source_metadata(timestamp, read_result.timestamp_monotonic),
+            **_source_metadata(acquisition.timestamp, read_result.timestamp_monotonic),
         }
     return values
 
@@ -165,7 +166,7 @@ def _diagnostic_config(config: Config) -> dict[str, float]:
     }
 
 
-def _finite_or_none(value: float | None) -> float | None:
-    if value is None or not math.isfinite(value):
+def _finite_or_none(value: object) -> float | None:
+    if not isinstance(value, (int, float)) or not math.isfinite(value):
         return None
-    return value
+    return float(value)

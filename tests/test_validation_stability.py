@@ -220,7 +220,7 @@ def test_r15_evaluation_uses_the_current_sample_measurements() -> None:
     )
 
     assert evaluation.filled
-    assert evaluation.predicate_codes == ["unstable_twa", "unstable_tws", "unstable_stw"]
+    assert evaluation.predicate_codes == ("unstable_twa", "unstable_tws", "unstable_stw")
     assert evaluation.window_span_seconds == 15.0
 
 

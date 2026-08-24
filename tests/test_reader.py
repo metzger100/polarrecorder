@@ -259,13 +259,34 @@ def test_reader_omits_non_numeric_string_signal_and_debug_logs() -> None:
     config = parse_config_values({"enh_engine_state_key": "engine.state"})
     logger = FakeLogger()
 
-    sample = build_sample(
-        StoreReader(api, FakeClock(100.0), FakeClock(1000.0), logger, config).read()
-    )
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), logger, config).read()
+    sample = build_sample(read_result)
 
     assert sample is not None
     assert sample.enhanced is None
+    assert read_result.enhanced_inputs is not None
+    assert read_result.enhanced_inputs["engine_signal"].state == "invalid"
     assert any(level == "debug" for level, _ in logger.messages)
+
+
+def test_reader_retains_missing_stale_and_usable_acquisition_states() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry("gps.speed", cast("float", "2.5"), 99.5)
+    api.set_entry("gps.depthBelowKeel", 3.0, 90.0)
+
+    read_result = StoreReader(
+        api,
+        FakeClock(100.0),
+        FakeClock(1000.0),
+        config=default_config(),
+    ).read()
+
+    assert read_result.enhanced_inputs is not None
+    assert read_result.enhanced_inputs["sog_kt"].state == "usable"
+    assert read_result.enhanced_inputs["sog_kt"].numeric_value == 2.5
+    assert read_result.enhanced_inputs["depth_m"].state == "stale"
+    assert read_result.enhanced_inputs["awa_deg"].state == "missing"
 
 
 def test_coerce_float_handles_bool_number_string_and_non_numeric() -> None:

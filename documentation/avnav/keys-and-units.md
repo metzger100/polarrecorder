@@ -37,12 +37,13 @@ Unit conversion:
 
 Optional (enhanced) signal keys:
 
-The reader also reads a bounded set of optional store keys when their rule is enabled and a key is configured. Each raw
-value passes through one coerce-once helper (`reader._coerce_float`: bool -> `0.0`/`1.0`, numbers pass through, numeric
-strings parse, non-numeric or non-finite values are omitted and debug-logged), is dropped if its age exceeds
-`stale_threshold`, and is then carried as `ReadResult.enhanced_raw` (store units, with timestamp). `build_sample`
-converts each role to its canonical unit once and stores it in `Sample.enhanced`; an absent or stale signal is omitted
-from the dict (never a `NaN`/`-1`/`0` sentinel), and `Sample.enhanced` is `None` when nothing is read.
+The reader reads a bounded set of optional keys when an active consumer needs them and a key is configured. Configured
+SOG is also always read because R10 anchoring uses it independently of the R20 switch. Each raw value passes through the
+shared `enhanced_input.assess_enhanced_input` contract: booleans, finite numbers, and numeric strings become usable
+numbers; missing, stale, invalid, and usable states remain distinct. `ReadResult.enhanced_inputs` retains those states
+for status-quality diagnostics, while only usable values enter `ReadResult.enhanced_raw`. `build_sample` converts each
+usable role to its canonical unit once and stores it in `Sample.enhanced`; unavailable signals are omitted from the dict
+(never represented by a `NaN`/`-1`/`0` sentinel).
 
 | Role in `Sample.enhanced` | Config key (default)                         |          Store unit | Canonical unit |
 | ------------------------- | -------------------------------------------- | ------------------: | -------------: |

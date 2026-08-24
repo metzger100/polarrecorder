@@ -28,10 +28,12 @@ loops. This ordering keeps R11 through R13 reading the previous sample, lets R15
 current uncommitted sample, and lets the UI warming flag call `state.is_warming_up(now)` against the same buffer R15
 just judged.
 
-R15 evaluation is pure over a retained-state snapshot plus the current sample. The immutable evaluation used for the
-decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
+R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
+the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
 reconfigures, or otherwise mutates live validation state. Diagnostic records also retain individually available raw core
-values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages, and a record schema.
+values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages and acquisition states, and a
+record schema. Diagnostic emission follows canonical state, model, counter, timeline, and status accounting, so logging
+cannot change the recorded decision.
 
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.
@@ -40,10 +42,11 @@ and is recorded in global and per-bin diagnostic histograms.
 
 Optional signal hooks read a bounded set of configured store keys alongside the three core keys. Configured SOG is
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
-is supplied, `StoreReader` reads each applicable configured optional key through its store protocol, coerces it through
-`reader._coerce_float` (bool -> `0.0`/`1.0`, numbers pass through, numeric strings parse, non-numeric/non-finite values
-are omitted and debug-logged), drops any reading older than `stale_threshold`, and carries the survivors in
-`ReadResult.enhanced_raw` (store units + timestamp). `build_sample` converts each role to its canonical unit once
+is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
+through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
+contract parses booleans, finite numbers, and numeric strings and is shared by the live enhanced-status endpoint.
+`ReadResult.enhanced_inputs` retains every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains
+only usable values in store units with timestamps. `build_sample` converts each usable role to its canonical unit once
 (`units.py`) and stores it in `Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when
 nothing was read. Enhanced rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same
 no-AvNav, no-I/O, no-threading purity as the core rules. The role/unit table lives in

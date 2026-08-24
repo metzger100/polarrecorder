@@ -27,7 +27,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         if (!hasActiveEngineRule(data.rules || [])) renderWarning();
       },
       function () {
-        return undefined;
+        renderWarning();
       }
     );
   }
@@ -61,6 +61,8 @@ window.Polarrecorder = window.Polarrecorder || {};
   function renderWarning() {
     const previousFocus = document.activeElement;
     const background = document.getElementById("polarrecorder-app");
+    const previousInert = background ? background.inert : false;
+    const previousAriaHidden = background ? background.getAttribute("aria-hidden") : null;
     const backdrop = Polarrecorder.Dom.Node("div", "engine-warning-backdrop");
     const modal = Polarrecorder.Dom.Node("section", "engine-warning");
     const heading = Polarrecorder.Dom.Node("h2", "", "Engine protection unavailable");
@@ -104,8 +106,9 @@ window.Polarrecorder = window.Polarrecorder || {};
       modal.remove();
       backdrop.remove();
       if (background) {
-        background.inert = false;
-        background.removeAttribute("aria-hidden");
+        background.inert = previousInert;
+        if (previousAriaHidden === null) background.removeAttribute("aria-hidden");
+        else background.setAttribute("aria-hidden", previousAriaHidden);
       }
       if (previousFocus) /** @type {HTMLElement} */ (previousFocus).focus();
     }

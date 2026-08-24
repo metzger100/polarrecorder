@@ -1,8 +1,8 @@
 """Module: API Enhanced - Enhanced-rule API handlers (keys, status, save).
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.enhanced_status,
-polarrecorder.params, polarrecorder.source_params
+Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.enhanced_input,
+polarrecorder.enhanced_status, polarrecorder.params, polarrecorder.source_params
 """
 
 from __future__ import annotations
@@ -11,7 +11,8 @@ from typing import Any
 
 from polarrecorder import api_handlers, enhanced_status
 from polarrecorder.config import parse_config_values
-from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS, KeyProbe
+from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input
+from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS
 from polarrecorder.params import CONFIG_PARAMETERS
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
@@ -82,8 +83,8 @@ def _probe_keys(
     config: Any,
     now: float,
     stale_threshold: float,
-) -> dict[str, KeyProbe]:
-    probes: dict[str, KeyProbe] = {}
+) -> dict[str, EnhancedInput]:
+    probes: dict[str, EnhancedInput] = {}
     for spec in ENHANCED_RULE_SPECS:
         for field in spec.key_fields:
             key = str(getattr(config, field))
@@ -92,8 +93,6 @@ def _probe_keys(
     return probes
 
 
-def _probe(plugin: Any, key: str, now: float, stale_threshold: float) -> KeyProbe:
+def _probe(plugin: Any, key: str, now: float, stale_threshold: float) -> EnhancedInput:
     entry = plugin.get_single_value(key, include_info=True)
-    if entry is None:
-        return KeyProbe(present=False, fresh=False)
-    return KeyProbe(present=True, fresh=now - entry.timestamp <= stale_threshold)
+    return assess_enhanced_input(entry, now, stale_threshold)
