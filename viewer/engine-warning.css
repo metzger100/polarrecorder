@@ -6,12 +6,24 @@
 .engine-warning {
   position: fixed;
   z-index: 20;
-  inset: 1rem;
-  max-width: 34rem;
-  margin: auto;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
   padding: 1.25rem;
   border: 1px solid var(--polarrecorder-rejected-color);
   border-radius: 0.75rem;
   background: var(--polarrecorder-surface-color);
   box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 35%);
+  transform: translate(-50%, -50%);
+  overflow-y: auto;
+}
+
+.engine-warning h2 {
+  margin: 0 0 0.5rem;
+}
+
+.engine-warning p {
+  margin: 0 0 1rem;
 }

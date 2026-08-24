@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { test } from "vitest";
 
 import {
@@ -129,4 +131,15 @@ test("storage failures stay visible and do not crash startup", async () => {
   assert.ok(modal);
   modal.querySelectorAll(".primary-action")[0].click();
   assert.ok(textTree(modal).includes("preference could not be saved"));
+});
+
+test("warning CSS keeps the dialog content-sized and centered", () => {
+  const source = fs.readFileSync(path.join(process.cwd(), "viewer", "engine-warning.css"), "utf8");
+
+  assert.ok(source.includes("top: 50%;"));
+  assert.ok(source.includes("left: 50%;"));
+  assert.ok(source.includes("transform: translate(-50%, -50%);"));
+  assert.ok(source.includes("width: min(34rem, calc(100vw - 2rem));"));
+  assert.ok(source.includes("max-height: calc(100vh - 2rem);"));
+  assert.equal(source.includes("inset: 1rem;"), false);
 });
