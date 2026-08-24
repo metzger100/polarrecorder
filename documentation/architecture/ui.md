@@ -84,7 +84,8 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `GET advanced/save` request and then re-fetching the groups.
 - The Status tab also lists enhanced-rule availability with its detailed cause. `engine-warning.js` performs one startup
   check only: when neither definitive engine rule is active it offers Close or browser-local Never show again; it never
-  changes plugin configuration or persistence.
+  changes plugin configuration or persistence. Its dialog is content-sized and centered, constrained to the viewport on
+  small screens rather than stretching to fill it.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It always fetches `status`, which carries
   the monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch. The active tab
   refreshes off that heartbeat: Status re-renders every beat; Polar refetches only when `generation` advances, so new
