@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, NamedTuple
 
-from polarrecorder.enhanced_input import coerce_finite_timestamp
+from polarrecorder.enhanced_input import classify_timestamp, coerce_finite_timestamp
 from polarrecorder.sample import is_finite_core_value
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from polarrecorder.validation.pipeline import PipelineResult
     from polarrecorder.validation.rules_stability import StabilityEvaluation
 
-DIAGNOSTIC_SCHEMA_VERSION = 3
+DIAGNOSTIC_SCHEMA_VERSION = 4
 
 
 class CurrentValues(NamedTuple):
@@ -43,8 +43,8 @@ def data_status(read_result: ReadResult, stale_threshold: float) -> str:
     )
     usable = tuple(
         is_finite_core_value(value)
-        and (finite_timestamp := coerce_finite_timestamp(timestamp)) is not None
-        and read_result.timestamp_monotonic - finite_timestamp <= stale_threshold
+        and classify_timestamp(timestamp, read_result.timestamp_monotonic, stale_threshold)[0]
+        == "usable"
         for value, timestamp in zip(values, timestamps)
     )
     if all(usable):
@@ -92,11 +92,11 @@ def format_sample_diagnostic(
     return payload
 
 
-def _core_raw_values(read_result: ReadResult) -> dict[str, float | None]:
+def _core_raw_values(read_result: ReadResult) -> dict[str, object]:
     return {
-        "twa": _finite_or_none(read_result.twa_raw),
-        "tws_ms": _finite_or_none(read_result.tws_raw),
-        "stw_ms": _finite_or_none(read_result.stw_raw),
+        "twa": _json_scalar_or_none(read_result.twa_raw),
+        "tws_ms": _json_scalar_or_none(read_result.tws_raw),
+        "stw_ms": _json_scalar_or_none(read_result.stw_raw),
     }
 
 
@@ -128,7 +128,7 @@ def _enhanced_values(
     for role, acquisition in read_result.enhanced_inputs.items():
         values[role] = {
             "state": acquisition.state,
-            "raw": _finite_or_none(acquisition.raw_value),
+            "raw": _json_scalar_or_none(acquisition.raw_value),
             "normalized": _finite_or_none(normalized.get(role)),
             **_source_metadata(acquisition.timestamp, read_result.timestamp_monotonic),
         }
@@ -193,3 +193,9 @@ def _finite_or_none(value: object) -> float | None:
     except OverflowError:
         return None
     return float(value)
+
+
+def _json_scalar_or_none(value: object) -> object:
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    return _finite_or_none(value)

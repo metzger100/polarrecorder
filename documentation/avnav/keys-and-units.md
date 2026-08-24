@@ -26,6 +26,8 @@ Store read contract:
 - Missing, expired, or unavailable store entries are represented as `None`.
 - R1 and R2 run before `Sample` construction so missing and non-finite values can produce granular reason codes.
 - Timestamps are monotonic store timestamps and feed freshness, age-skew, and stale-value checks.
+- Because AvNav and the reader use the same monotonic clock domain, future offsets beyond the bounded 0.5-second
+  sequential-read allowance are unusable rather than indefinitely fresh.
 - `ReadResult.timestamp_wall` is display/diagnostic time; validation age math uses monotonic timestamps.
 
 Unit conversion:
@@ -40,10 +42,10 @@ Optional (enhanced) signal keys:
 The reader reads a bounded set of optional keys when an active consumer needs them and a key is configured. Configured
 SOG is also always read because R10 anchoring uses it independently of the R20 switch. Each raw value passes through the
 shared `enhanced_input.assess_enhanced_input` contract: booleans, finite numbers, and numeric strings become usable
-numbers; missing, stale, invalid, and usable states remain distinct. `ReadResult.enhanced_inputs` retains those states
-for status-quality diagnostics, while only usable values enter `ReadResult.enhanced_raw`. `build_sample` converts each
-usable role to its canonical unit once and stores it in `Sample.enhanced`; unavailable signals are omitted from the dict
-(never represented by a `NaN`/`-1`/`0` sentinel).
+numbers; missing, stale, invalid (including implausibly future timestamps), and usable states remain distinct.
+`ReadResult.enhanced_inputs` retains those states for status-quality diagnostics, while only usable values enter
+`ReadResult.enhanced_raw`. `build_sample` converts each usable role to its canonical unit once and stores it in
+`Sample.enhanced`; unavailable signals are omitted from the dict (never represented by a `NaN`/`-1`/`0` sentinel).
 
 | Role in `Sample.enhanced` | Config key (default)                         |          Store unit | Canonical unit |
 | ------------------------- | -------------------------------------------- | ------------------: | -------------: |

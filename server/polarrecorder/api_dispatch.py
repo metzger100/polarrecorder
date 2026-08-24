@@ -9,7 +9,7 @@ polarrecorder.preset_backup
 from __future__ import annotations
 
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from polarrecorder import (
@@ -29,9 +29,10 @@ Route = Callable[[Any, dict[str, str]], dict[str, object]]
 IMPORT_KINDS = frozenset({"learned-data", "presets"})
 
 
-def handle_request(plugin: Any, url: str, args: dict[str, str]) -> dict[str, object]:
+def handle_request(plugin: Any, url: str, raw_args: Mapping[str, object]) -> dict[str, object]:
     """Route a normalized plugin API request."""
     try:
+        args = api_handlers.normalize_args(raw_args)
         route = ROUTES.get(url)
         if route is None:
             return api_handlers.error(f"Unknown endpoint '{url}'")

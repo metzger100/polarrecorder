@@ -124,14 +124,17 @@ class Plugin:
         if not self._startup_error_active:
             self._set_status("STARTED", "Polar Recorder started")
         sequence = 0
-        last_sample_monotonic = self._run_start_monotonic - self.config.sample_interval
+        with self._lock:
+            config = self.config
+        last_sample_monotonic = self._run_start_monotonic - config.sample_interval
         last_flush_monotonic = self._run_start_monotonic
         if self.api.shouldStopMainThread() and not self._stop_requested:
             sequence, _data = self.api.fetchFromQueue(sequence, waitTime=QUEUE_WAIT_SECONDS)
         while not self.api.shouldStopMainThread() and not self._stop_requested:
             sequence, _data = self.api.fetchFromQueue(sequence, waitTime=QUEUE_WAIT_SECONDS)
             now = self._clock()
-            config = self.config
+            with self._lock:
+                config = self.config
             if now - last_sample_monotonic < config.sample_interval:
                 continue
             last_sample_monotonic = now
@@ -171,6 +174,8 @@ class Plugin:
         read_result = store_reader.read()
         data_status = diagnostics.data_status(read_result, config.stale_threshold)
         with self._lock:
+            if config is not self.config:
+                return
             if self._paused:
                 sample, pipeline_result = self._record_suppressed(
                     read_result, data_status, "reject_user_paused"
@@ -367,7 +372,7 @@ class Plugin:
     ) -> dict[str, object]:
         del handler
         try:
-            return handle_api_request(self, url, _normalize_args(args))
+            return handle_api_request(self, url, args)
         except Exception as exc:
             self.api.error("Polar Recorder request error: %s", exc)
             return {"status": "ERROR", "error": "Internal error"}
@@ -405,13 +410,3 @@ def _read_plugin_version() -> str:
         logging.warning("Could not read polarrecorder plugin.json version")
         version = fallback
     return version
-
-
-def _normalize_args(args: Mapping[str, object]) -> dict[str, str]:
-    normalized: dict[str, str] = {}
-    for key, value in args.items():
-        if isinstance(value, list):
-            normalized[key] = str(value[0]) if value else ""
-        else:
-            normalized[key] = str(value)
-    return normalized

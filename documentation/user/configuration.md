@@ -25,9 +25,9 @@ AvNav persists plugin configuration outside `polar.json`. Polar Recorder reads i
 `polarrecorder.params`. It does not load active runtime configuration from the learned-polar persistence file; the
 persistence `config` block is metadata about the saved dataset.
 
-AvNav stores and forwards editable values as strings. Polar Recorder follows AvNav's boolean convention: a boolean
-string is true when `value.strip().upper() == "TRUE"` and false otherwise. Numeric settings are parsed as `int` or
-`float`, clamped to their `rangeOrList`, and invalid values fall back to the previous value or default.
+AvNav stores and forwards editable values as strings. Polar Recorder strictly accepts boolean strings `true` and `false`
+(case-insensitive). Numeric settings must parse to finite `int` or `float` values before being clamped to their
+`rangeOrList`. Invalid, non-finite, or unrepresentably large values fall back to the previous value or default.
 
 AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole plugin. Polar Recorder
 does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
@@ -67,11 +67,11 @@ sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_s
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer.
 
-`debug_logging` records schema version 3; raw and normalized core values; source timestamps and ages; enhanced
-missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates; the exact
-pipeline-produced R15 span, gap, density, and range metrics; and the relevant R10/R15/R20 thresholds. Diagnostic
-emission happens after normal decision accounting and no per-iteration diagnostic is emitted while it is disabled. The
-head-to-wind default remains 10 degrees.
+`debug_logging` records schema version 4; JSON-safe raw scalar and normalized core values; source timestamps and ages;
+enhanced missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates;
+the exact pipeline-produced R15 span, gap, density, and range metrics; and the relevant R10/R15/R20 thresholds.
+Diagnostic emission happens after normal decision accounting and no per-iteration diagnostic is emitted while it is
+disabled. The head-to-wind default remains 10 degrees.
 
 ### Enhanced (optional-signal) rule settings
 
@@ -118,8 +118,8 @@ key in the Settings tab's Enhanced Rules section. The genuinely custom signals (
 
 Config changes are hot-swapped. Viewer Settings endpoints validate changed string values, acquire the single `plugin.py`
 lock, parse and clamp the new values, and replace the `Config` object before persisting the raw values through AvNav.
-The sampling loop snapshots the current config once per iteration, so a change takes effect on the next sample cycle
-rather than halfway through a read/validate/update sequence.
+The sampling loop snapshots the current config under that lock once per iteration. If a change lands during external
+store reads, that read is discarded, so no sample is committed with a superseded threshold set.
 
 Validation state is not reset on config changes. The rolling stability observations, cooldown timer, and previous sample
 continue from their current contents; the active config snapshot supplies the window duration during each iteration, so

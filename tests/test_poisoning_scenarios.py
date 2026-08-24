@@ -110,6 +110,16 @@ def test_only_low_wind_samples_populate_no_bins() -> None:
     assert model.bins == {}
 
 
+def test_far_future_core_timestamps_never_reach_the_model() -> None:
+    reads = [_read_result(float(index), age_s=-1_000_000.0) for index in range(WARMUP_SECONDS + 20)]
+
+    results, model = _drive(reads)
+
+    assert _reason_count(results, "reject_stale_twa") == len(reads)
+    assert _decision_count(results, "accepted") == 0
+    assert model.bins == {}
+
+
 def test_maneuver_rich_sequence_learns_only_stable_between_tack_segments() -> None:
     reads: list[ReadResult] = []
     timestamp = 0.0
@@ -172,8 +182,8 @@ def test_failing_paddlewheel_sog_stw_mismatch_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_sog_stw_mismatch") == 2
-    assert _reason_count(results, "reject_warming_up") == 33
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 1
+    assert _reason_count(results, "reject_warming_up") == 34
     assert _decision_count(results, "accepted") == 0
 
 
@@ -186,8 +196,8 @@ def test_high_speed_log_failure_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_sog_stw_mismatch") == 2
-    assert _reason_count(results, "reject_warming_up") == 33
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 1
+    assert _reason_count(results, "reject_warming_up") == 34
     assert _decision_count(results, "accepted") == 0
 
 
@@ -197,8 +207,8 @@ def test_miscalibrated_wind_crosscheck_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_true_wind_crosscheck") == 2
-    assert _reason_count(results, "reject_warming_up") == 33
+    assert _reason_count(results, "reject_true_wind_crosscheck") == 1
+    assert _reason_count(results, "reject_warming_up") == 34
     assert _decision_count(results, "accepted") == 0
 
 

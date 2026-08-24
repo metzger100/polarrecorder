@@ -107,6 +107,38 @@ def test_invalid_float_with_previous_keeps_previous_value_and_warns() -> None:
     ]
 
 
+def test_every_float_rejects_non_finite_and_huge_values() -> None:
+    previous = default_config()
+    float_names = [str(spec["name"]) for spec in CONFIG_PARAMETERS if spec["type"] == "FLOAT"]
+
+    for name in float_names:
+        expected = getattr(previous, name)
+        for raw in ("nan", "inf", "-inf", "1e10000"):
+            parsed = parse_config_values({name: raw}, previous=previous)
+            assert getattr(parsed, name) == expected
+
+
+def test_every_number_rejects_unrepresentable_huge_values() -> None:
+    previous = default_config()
+    number_names = [str(spec["name"]) for spec in CONFIG_PARAMETERS if spec["type"] == "NUMBER"]
+
+    for name in number_names:
+        expected = getattr(previous, name)
+        parsed = parse_config_values({name: "9" * 5000}, previous=previous)
+        assert getattr(parsed, name) == expected
+
+
+def test_every_boolean_rejects_invalid_text_and_preserves_previous() -> None:
+    previous = default_config()
+    boolean_names = [str(spec["name"]) for spec in CONFIG_PARAMETERS if spec["type"] == "BOOLEAN"]
+
+    for name in boolean_names:
+        expected = getattr(previous, name)
+        for raw in ("banana", "", "1"):
+            parsed = parse_config_values({name: raw}, previous=previous)
+            assert getattr(parsed, name) is expected
+
+
 def test_partial_values_with_previous_update_only_supplied_fields() -> None:
     previous = parse_config_values(
         {

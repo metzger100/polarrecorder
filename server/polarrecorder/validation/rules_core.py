@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from polarrecorder.enhanced_input import coerce_finite_timestamp
+from polarrecorder.enhanced_input import classify_timestamp_age, coerce_finite_timestamp
 from polarrecorder.sample import (
     RuleResult,
     enhanced_value,
@@ -80,11 +80,11 @@ def stale_values(sample: Sample, config: Config) -> RuleResult:
         Pass or reject with one code per stale value.
     """
     codes: list[str] = []
-    if sample.freshness.twa_age_s > config.stale_threshold:
+    if classify_timestamp_age(sample.freshness.twa_age_s, config.stale_threshold) != "usable":
         codes.append("reject_stale_twa")
-    if sample.freshness.tws_age_s > config.stale_threshold:
+    if classify_timestamp_age(sample.freshness.tws_age_s, config.stale_threshold) != "usable":
         codes.append("reject_stale_tws")
-    if sample.freshness.stw_age_s > config.stale_threshold:
+    if classify_timestamp_age(sample.freshness.stw_age_s, config.stale_threshold) != "usable":
         codes.append("reject_stale_stw")
     return _multi_result(codes)
 

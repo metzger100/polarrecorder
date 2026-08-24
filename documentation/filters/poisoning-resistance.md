@@ -15,10 +15,10 @@ percentile from that histogram on demand, using the nearest-rank algorithm in `s
 default P65 naturally ignores slow tails from undetected drag, bad trim, current, or moderate drift better than a mean
 would.
 
-The validation pipeline is the first defense. R1 through R10 reject samples that are missing, stale, out of range,
-head-to-wind, low-wind, or anchored-like before they can touch any model bin. R11 through R15 reject quality-gate
-transients such as rapid TWA changes, sensor spikes, cooldown periods, and unstable rolling windows. R16 quarantines
-suspected low-wind engine use.
+The validation pipeline is the first defense. R1 through R10 reject samples that are missing, stale, implausibly
+future-dated, out of range, head-to-wind, low-wind, or anchored-like before they can touch any model bin. R11 through
+R15 reject quality-gate transients such as rapid TWA changes, sensor spikes, cooldown periods, and unstable rolling
+windows. R16 quarantines suspected low-wind engine use.
 
 Optional enhanced signals (R17-R22) harden the model further when a boat publishes them. A definitive engine signal (RPM
 or engine-state) turns R16's guess into a fact: engine-on becomes a direct R17/R18 reject and engine-off suppresses the
@@ -57,10 +57,10 @@ state window. A definitive engine signal is still the only reliable automatic di
 good sailing; without one, users should pause recording while motoring.
 
 The executable proof lives in `tests/test_poisoning_scenarios.py`. It covers valid learning, slow-sample resistance,
-anchored bursts, sensor spikes, gradual drift, low-wind rejection, maneuver-rich sequences where only stable
-between-tack segments are learned, and the enhanced scenarios: motoring-with-RPM, shallow water, failing paddlewheel
-(SOG/STW), and miscalibrated wind reject as expected, while a strong following-current sample is accepted (no
-current-strength reject exists and R20's gap test does not fire when drift explains the gap).
+anchored bursts, far-future timestamp poisoning, sensor spikes, gradual drift, low-wind rejection, maneuver-rich
+sequences where only stable between-tack segments are learned, and the enhanced scenarios: motoring-with-RPM, shallow
+water, failing paddlewheel (SOG/STW), and miscalibrated wind reject as expected, while a strong following-current sample
+is accepted (no current-strength reject exists and R20's gap test does not fire when drift explains the gap).
 
 ## Related
 

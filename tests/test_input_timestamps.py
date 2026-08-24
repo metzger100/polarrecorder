@@ -63,6 +63,17 @@ def test_finite_core_timestamp_with_small_future_offset_remains_usable() -> None
     assert data_status(read_result, default_config().stale_threshold) == "receiving"
 
 
+def test_implausibly_future_core_timestamp_rejects_and_is_not_ready() -> None:
+    read_result = replace(make_read_result(), twa_timestamp=1_000_000.0)
+
+    result, sample = run(read_result, make_warmed_state(), default_config())
+
+    assert result.decision == "rejected"
+    assert result.reason_codes == ("reject_stale_twa",)
+    assert sample is not None
+    assert data_status(read_result, default_config().stale_threshold) == "partial"
+
+
 @pytest.mark.parametrize(
     "timestamp",
     _INVALID_TIMESTAMPS,
@@ -74,6 +85,7 @@ def test_invalid_enhanced_timestamps_are_unusable_without_crashing(timestamp: ob
     assert result.state == "invalid"
     assert result.timestamp is None
     assert result.numeric_value is None
+    assert result.invalid_cause == "timestamp"
 
 
 def test_finite_enhanced_timestamp_with_small_future_offset_is_usable() -> None:
@@ -82,3 +94,12 @@ def test_finite_enhanced_timestamp_with_small_future_offset_is_usable() -> None:
     assert result.state == "usable"
     assert result.timestamp == 100.1
     assert result.numeric_value == 12.0
+
+
+def test_implausibly_future_enhanced_timestamp_is_invalid() -> None:
+    result = assess_enhanced_input(_Entry(12.0, 1_000_000.0), 100.0, 3.0)
+
+    assert result.state == "invalid"
+    assert result.timestamp == 1_000_000.0
+    assert result.numeric_value is None
+    assert result.invalid_cause == "future_timestamp"

@@ -175,7 +175,8 @@ Advanced Settings exposes boat-specific tuning grouped as:
 - **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
 - **Engine Heuristic** — low-wind movement checks used when no engine signal is configured.
 
-Values are checked before saving and persist in AvNav plugin configuration. See
+Values are checked before saving and persist in AvNav plugin configuration. The runtime parser also rejects malformed
+boolean values and non-finite numbers from corrupted or manually edited persisted settings. See
 [Configuration](documentation/user/configuration.md) for defaults and ranges.
 
 ## What are presets?
@@ -280,7 +281,7 @@ Common causes:
 Pause/Resume, loss of fresh usable core data, non-sailing conditions, suspected engine use, and enhanced sensor-quality
 rejections restart the stability warm-up. R15 requires both a full time span and the expected observation density, so
 two sparse endpoints cannot prove stability. Status reports data as present only when all three core readings and their
-source timestamps are finite, numeric, and fresh.
+source timestamps are finite, numeric, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

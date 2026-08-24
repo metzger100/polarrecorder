@@ -45,6 +45,22 @@ def test_non_candidate_iteration_clears_stability_but_keeps_transition_observati
     assert plugin._warming_up
 
 
+def test_iteration_drops_read_when_config_snapshot_is_superseded(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.set_value(reader.TWA_KEY, 90.0, 100.0)
+    api.set_value(reader.TWS_KEY, 6.0, 100.0)
+    api.set_value(reader.STW_KEY, 3.0, 100.0)
+    plugin = make_plugin(tmp_path, api)
+    stale_config = plugin.config
+    with plugin._lock:
+        plugin.config = replace(stale_config, max_stw=10)
+
+    plugin._run_iteration(stale_config)
+
+    assert plugin._counters.total_seen == 0
+    assert plugin._last_data_status == "no_data"
+
+
 def test_pause_and_resume_each_clear_stability_history(tmp_path: Path) -> None:
     plugin = make_plugin(tmp_path, FakeAvNavAPI())
     plugin._state = make_warmed_state()
@@ -73,7 +89,8 @@ def test_engine_quarantine_breaks_history_before_conditions_clear() -> None:
         [make_read_result(now=101.0, tws_kt=5.1, stw_kt=4.0)], state, config, model
     )[0][0]
 
-    assert results[-1][0].decision == "quarantined"
+    assert results[-1][0].reason_codes == ("reject_warming_up",)
+    assert "quarantine_engine_suspected" in results[-1][0].failed_predicates
     assert not results[-1][0].retain_stability_history
     assert recovery.reason_codes == ("reject_warming_up",)
 
@@ -93,7 +110,8 @@ def test_sog_stw_mismatch_breaks_history_before_mismatch_clears() -> None:
         0
     ][0]
 
-    assert results[-1][0].reason_codes == ("reject_sog_stw_mismatch",)
+    assert results[-1][0].reason_codes == ("reject_warming_up",)
+    assert "reject_sog_stw_mismatch" in results[-1][0].failed_predicates
     assert not results[-1][0].retain_stability_history
     assert recovery.reason_codes == ("reject_warming_up",)
 

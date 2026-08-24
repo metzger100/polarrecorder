@@ -197,7 +197,7 @@ def _candidate_rejection(
     return _rejected(
         reason_codes,
         is_sailing_candidate=reason_codes != ("reject_warming_up",),
-        retain_stability_history=reason_codes[0] not in STABILITY_HISTORY_BREAK_REASONS,
+        retain_stability_history=STABILITY_HISTORY_BREAK_REASONS.isdisjoint(failed_predicates),
         failed_predicates=failed_predicates,
         stability_evaluation=stability,
     )

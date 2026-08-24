@@ -3,6 +3,7 @@
   "data": {
     "global": {
       "reject_anchored": 1220,
+      "reject_stale_twa": 7,
       "reject_low_wind": 940,
       "reject_unstable": 710,
       "reject_warming_up": 580,
