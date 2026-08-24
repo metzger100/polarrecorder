@@ -13,6 +13,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   /**
    * @typedef {{
    *   rule: string,
+   *   availability: string,
    *   status: string,
    *   enabled: boolean,
    *   enable_field: string,
@@ -144,8 +145,9 @@ window.Polarrecorder = window.Polarrecorder || {};
     const wrap = Polarrecorder.Dom.Node("div", "enhanced-rule");
     const header = Polarrecorder.Dom.Node("div", "enhanced-rule-head");
     header.appendChild(Polarrecorder.Dom.Node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule));
-    header.appendChild(badge(String(rule.status)));
+    header.appendChild(badge(String(rule.availability)));
     wrap.appendChild(header);
+    wrap.appendChild(Polarrecorder.Dom.Node("p", "helper", detailedStatus(String(rule.status))));
     wrap.appendChild(toggleField(rule));
     (rule.keys || []).forEach(function (entry) {
       wrap.appendChild(keyField(entry));
@@ -274,6 +276,14 @@ window.Polarrecorder = window.Polarrecorder || {};
       "enhanced-badge enhanced-badge-" + cssStatus,
       STATUS_LABELS[status] || status
     );
+  }
+
+  /**
+   * @param {string} status
+   * @returns {string}
+   */
+  function detailedStatus(status) {
+    return STATUS_LABELS[status] || status;
   }
 
   /**

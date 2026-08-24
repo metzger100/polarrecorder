@@ -1,0 +1,17 @@
+/**
+ * @file Engine Protection Warning styles
+ * Documentation: documentation/architecture/ui.md
+ * Depends: engine-warning.js
+ */
+.engine-warning {
+  position: fixed;
+  z-index: 20;
+  inset: 1rem;
+  max-width: 34rem;
+  margin: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--polarrecorder-rejected-color);
+  border-radius: 0.75rem;
+  background: var(--polarrecorder-surface-color);
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 35%);
+}

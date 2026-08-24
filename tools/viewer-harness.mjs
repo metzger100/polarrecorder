@@ -58,9 +58,11 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  *   Blob: typeof Blob,
  *   Polarrecorder: Record<string, unknown>,
  *   URL: FakeUrl,
+ *   addEventListener: (name: string, callback: (event: { preventDefault: () => void }) => void) => void,
  *   confirm: () => boolean,
  *   innerHeight: number,
  *   innerWidth: number,
+ *   localStorage: { getItem: (key: string) => string | null, setItem: (key: string, value: string) => void },
  *   setInterval: () => number,
  *   setTimeout: (callback: unknown) => number,
  *   fetch?: FetchFn
@@ -79,7 +81,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  */
 
 /**
- * @typedef {{ responder?: ApiResponder }} CreateEnvironmentOptions
+ * @typedef {{ responder?: ApiResponder, storage?: Map<string, string>, storageFails?: boolean }} CreateEnvironmentOptions
  */
 
 /**
@@ -90,6 +92,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  *   fireDOMContentLoaded: () => void,
  *   clickTab: (name: string) => void,
  *   requests: string[],
+ *   storage: Map<string, string>,
  *   window: FakeWindow
  * }} Environment
  */
@@ -112,7 +115,7 @@ export function loadViewerFile(env, name, root = process.cwd()) {
  */
 export function createEnvironment(options = {}) {
   const responder = options.responder || defaultResponseBody;
-  /** @type {Map<string, () => void>} */
+  /** @type {Map<string, Array<() => void>>} */
   const listeners = new Map();
   /** @type {Record<string, FakeElement>} */
   const elements = {
@@ -144,8 +147,10 @@ export function createEnvironment(options = {}) {
   body.dataset.apiBase = "../api/";
   /** @type {FakeDocument} */
   const document = {
-    addEventListener(name, callback) {
-      listeners.set(name, callback);
+    addEventListener(/** @type {string} */ name, /** @type {() => void} */ callback) {
+      const callbacks = listeners.get(name) || [];
+      callbacks.push(callback);
+      listeners.set(name, callbacks);
     },
     body,
     createElement(tagName) {
@@ -177,6 +182,9 @@ export function createEnvironment(options = {}) {
       return [];
     }
   };
+  const storage = options.storage || new Map();
+  /** @type {Map<string, Array<(event: { preventDefault: () => void }) => void>>} */
+  const windowListeners = new Map();
   /** @type {FakeWindow} */
   const window = {
     Blob,
@@ -187,6 +195,26 @@ export function createEnvironment(options = {}) {
     },
     innerHeight: 600,
     innerWidth: 800,
+    addEventListener(name, callback) {
+      const callbacks = windowListeners.get(name) || [];
+      callbacks.push(callback);
+      windowListeners.set(name, callbacks);
+    },
+    localStorage: {
+      getItem(key) {
+        return storage.get(key) || null;
+      },
+      setItem(key, value) {
+        if (options.storageFails) {
+          const event = { preventDefault() {} };
+          (windowListeners.get("error") || []).forEach(function (callback) {
+            callback(event);
+          });
+          return;
+        }
+        storage.set(key, value);
+      }
+    },
     setInterval() {
       return 1;
     },
@@ -219,11 +247,13 @@ export function createEnvironment(options = {}) {
     document,
     elements,
     fireDOMContentLoaded() {
-      const callback = listeners.get("DOMContentLoaded");
-      if (!callback) {
+      const callbacks = listeners.get("DOMContentLoaded");
+      if (!callbacks) {
         throw new Error("viewer-harness: DOMContentLoaded listener not registered");
       }
-      callback();
+      callbacks.forEach(function (callback) {
+        callback();
+      });
     },
     clickTab(name) {
       const button = tabButtons.find(function (item) {
@@ -235,6 +265,7 @@ export function createEnvironment(options = {}) {
       button.click();
     },
     requests,
+    storage,
     window
   };
 }
@@ -243,7 +274,7 @@ export function createEnvironment(options = {}) {
  * @returns {Promise<void>}
  */
 export async function flushViewer() {
-  for (let index = 0; index < 8; index += 1) {
+  for (let index = 0; index < 16; index += 1) {
     await Promise.resolve();
   }
 }

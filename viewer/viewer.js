@@ -236,16 +236,31 @@ window.Polarrecorder = window.Polarrecorder || {};
       .then(function (data) {
         state.statusData = data;
         Polarrecorder.StatusUI.AppendRecentDecision(data);
-        if (state.activeTab === "status") {
-          Polarrecorder.StatusUI.Render(byId("status-panel"), data, {
-            runAction: runAction,
-            fetchStatus: fetchStatus
-          });
-        }
+        if (state.activeTab === "status") fetchStatusPanel(data);
         if (state.activeTab === "polar" && data.generation !== state.polarGen) fetchPolar();
         if (state.activeTab === "export" && data.generation !== state.csvGen) refreshPreview(data.generation);
       })
       .catch(showBanner);
+  }
+
+  /** @param {any} data */
+  function fetchStatusPanel(data) {
+    fetchJson("enhanced/status")
+      .then(function (enhanced) {
+        data.enhanced_rules = enhanced.rules;
+        renderStatusPanel(data);
+      })
+      .catch(function () {
+        renderStatusPanel(data);
+      });
+  }
+
+  /** @param {any} data */
+  function renderStatusPanel(data) {
+    Polarrecorder.StatusUI.Render(byId("status-panel"), data, {
+      runAction: runAction,
+      fetchStatus: fetchStatus
+    });
   }
 
   /** @param {number} generation */

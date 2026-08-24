@@ -91,7 +91,8 @@ function checkViewerScriptContract(ctx) {
     "import-upload.js",
     "enhanced-settings.js",
     "advanced-settings.js",
-    "settings-ui.js"
+    "settings-ui.js",
+    "engine-warning.js"
   ];
   const html = read(ctx, "viewer/viewer.html");
   const scripts = Array.from(html.matchAll(/<script\s+src="([^"]+\.js)"/g)).map(function (match) {

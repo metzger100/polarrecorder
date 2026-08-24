@@ -112,6 +112,7 @@ def _rule_row(
     probes: Mapping[str, KeyProbe],
 ) -> dict[str, object]:
     enabled = bool(getattr(config, spec.enable_field))
+    status = _resolve_status(config, spec, probes, enabled=enabled)
     return {
         "rule": spec.rule,
         "enable_field": spec.enable_field,
@@ -119,8 +120,15 @@ def _rule_row(
         "combinator": spec.combinator,
         "keys": [{"field": field, "key": str(getattr(config, field))} for field in spec.key_fields],
         "thresholds": {field: getattr(config, field) for field in spec.threshold_fields},
-        "status": _resolve_status(config, spec, probes, enabled=enabled),
+        "status": status,
+        "availability": _availability(status),
     }
+
+
+def _availability(status: str) -> str:
+    if status in {"active", "disabled"}:
+        return status
+    return "unavailable"
 
 
 def _resolve_status(

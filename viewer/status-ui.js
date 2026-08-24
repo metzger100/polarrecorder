@@ -60,6 +60,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     host.appendChild(renderStateCard(data, callbacks));
     host.appendChild(renderValuesCard(data));
     host.appendChild(renderCountersCard(data));
+    host.appendChild(renderEnhancedAvailability(data.enhanced_rules || []));
     host.appendChild(renderPersistenceCard(data));
   }
 
@@ -254,6 +255,19 @@ window.Polarrecorder = window.Polarrecorder || {};
       el("p", "helper", "Bins " + String(persistence.bins_with_data || 0) + " / " + String(persistence.bins_total || 0))
     );
     card.appendChild(box);
+    return card;
+  }
+
+  /**
+   * @param {Array<{availability: string, rule: string, status: string}>} rules
+   * @returns {HTMLElement}
+   */
+  function renderEnhancedAvailability(rules) {
+    const card = el("section", "card");
+    card.appendChild(el("h2", "", "Enhanced Rule Availability"));
+    rules.forEach(function (rule) {
+      card.appendChild(el("p", "helper", rule.rule + ": " + rule.availability + " (" + rule.status + ")"));
+    });
     return card;
   }
 
