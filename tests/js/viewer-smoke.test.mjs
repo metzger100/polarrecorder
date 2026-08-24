@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { test } from "vitest";
 
 import { createEnvironment, flushViewer, loadViewerFile, textTree } from "../../tools/viewer-harness.mjs";
@@ -105,6 +107,12 @@ test("viewer API base override", async () => {
 
   assert.equal(polarrecorderOf(env).ApiBase, "/plugins/user-polarrecorder/api/");
   assert.equal(env.requests[0], "/plugins/user-polarrecorder/api/presets");
+});
+
+test("direct status-card headings use the shared card inset", () => {
+  const source = fs.readFileSync(path.join(process.cwd(), "viewer", "viewer-status-and-chart.css"), "utf8");
+
+  assert.ok(source.includes(".card > h2 {\n  margin: 1rem 1rem 0.5rem;\n}"));
 });
 
 /** @param {Environment} env */

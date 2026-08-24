@@ -86,6 +86,8 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   check only: when neither definitive engine rule is active it offers Close or browser-local Never show again; it never
   changes plugin configuration or persistence. Its dialog is content-sized and centered, constrained to the viewport on
   small screens rather than stretching to fill it, and is layered above the app navigation and overlays.
+- Status diagnostic headings use the card's shared inset, so Enhanced Rule Availability and the reason/predicate
+  sections align with their card content rather than the rounded border.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It always fetches `status`, which carries
   the monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch. The active tab
   refreshes off that heartbeat: Status re-renders every beat; Polar refetches only when `generation` advances, so new
