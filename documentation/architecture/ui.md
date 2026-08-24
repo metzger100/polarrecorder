@@ -69,18 +69,22 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   and `GET enhanced/status`. Each rule shows an Enabled switch (the shared `.switch-field` control also used by the
   Export tab), one `<select>` per configured key field listing the currently-present store keys (SignalK keys appear as
   `gps.signalk.*`; an already-configured key stays selected even when it is not publishing), the rule's threshold
-  inputs, and a live status badge (`active`, `disabled`, `no key set`, `key not in store`, or `value stale`). A single
-  "Save Enhanced Settings" button validates that every threshold is a finite number (`Number.isFinite`) before
-  collecting every control into one `GET enhanced/save` call and then re-fetching status to refresh the badges; a
-  non-numeric threshold blocks the save with a visible error. The badge classes are `.enhanced-badge-<status>`, each
-  with its own `--polarrecorder-*` treatment: `active` reads accepted-green, `value stale` quarantined-amber,
-  `key not in store` rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted second-color.
+  inputs, and a live status badge whose primary vocabulary is `active`, `disabled`, or `unavailable`, with the detailed
+  cause (`no key set`, `key not in store`, or `value stale`) retained as supporting text. A single "Save Enhanced
+  Settings" button validates that every threshold is a finite number (`Number.isFinite`) before collecting every control
+  into one `GET enhanced/save` call and then re-fetching status to refresh the badges; a non-numeric threshold blocks
+  the save with a visible error. The badge classes are `.enhanced-badge-<status>`, each with its own `--polarrecorder-*`
+  treatment: `active` reads accepted-green, `value stale` quarantined-amber, `key not in store` rejected-red,
+  `no key set` a dashed neutral outline, and `disabled` the muted second-color.
 - A fifth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below Enhanced Rules and is rendered from
   `GET advanced/settings`. It exposes the safe runtime-tuning settings from the server allowlist, grouped as Sampling
   and Persistence, Sensor Freshness, Core Filters, Stability and Maneuvers, and Engine Heuristic. Numeric fields use
   readable labels, short descriptions, and the server's min/max bounds; `debug_logging` renders as a switch. Internal
   config keys are only used as hidden save wiring. The save button validates finite in-range numbers before sending one
   `GET advanced/save` request and then re-fetching the groups.
+- The Status tab also lists enhanced-rule availability with its detailed cause. `engine-warning.js` performs one startup
+  check only: when neither definitive engine rule is active it offers Close or browser-local Never show again; it never
+  changes plugin configuration or persistence.
 - A single two-second heartbeat is the only timer and the shared sync anchor. It always fetches `status`, which carries
   the monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch. The active tab
   refreshes off that heartbeat: Status re-renders every beat; Polar refetches only when `generation` advances, so new

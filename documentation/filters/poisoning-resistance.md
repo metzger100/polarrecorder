@@ -32,11 +32,11 @@ _together_, leaving the `(STW, TWS_water)` point valid. A current-_magnitude_ re
 wind-against-tide sea-state proxy it is too blunt (it cannot tell flat wind-with-tide from rough wind-against-tide).
 Current drift is read only by R20.
 
-R20 (SOG/STW paddlewheel check) fires only when STW reads implausibly low versus SOG _and_ the present current is too
-small to account for the gap (`current_drift_kt < sog_kt - stw_kt`). Limitations: boats without a current-drift source
-get no SOG/STW-mismatch detection, and if the VDR set/drift device derives drift from the same paddlewheel that feeds
-`gps.waterSpeed`, a broken log inflates the computed drift too and R20 is silently defeated. Both are deliberate prices
-of never discarding honest following-current data, which shares the STW-below-SOG signature.
+R20 (SOG/STW consistency check) compares the faster and slower of SOG/STW, so it catches implausibly low **or high**
+speed-log readings only when current drift is too small to account for their gap. Limitations: boats without a
+current-drift source get no SOG/STW-mismatch detection, and if the VDR set/drift device derives drift from the same
+paddlewheel that feeds `gps.waterSpeed`, a broken log inflates the computed drift too and R20 is silently defeated. Both
+are deliberate prices of never discarding honest following-current data, which shares the STW-below-SOG signature.
 
 R21 (true-wind cross-check) has real teeth in the AvNav-core NMEA model: true wind is parsed from instrument MWV
 (ref=T)/MWD sentences independently of `gps.windAngle`/`windSpeed` + STW, so the recompute catches a miscalibrated wind
@@ -47,6 +47,10 @@ derived from the same AWA/AWS/STW it is checked against.
 contract. Accepted samples update histograms, quality-gate rejections and quarantines update per-bin diagnostics, and
 candidacy-gate or warming-up rejections touch no bin. The scenario tests drive reads through `pipeline.run`,
 `ValidationState.observe`, and `commit_sample`, matching the production normal path.
+
+R15 includes the current sample in its stability range, so the first bad spike is rejected without first entering the
+state window. A definitive engine signal is still the only reliable automatic distinction between motoring and ordinary
+good sailing; without one, users should pause recording while motoring.
 
 The executable proof lives in `tests/test_poisoning_scenarios.py`. It covers valid learning, slow-sample resistance,
 anchored bursts, sensor spikes, gradual drift, low-wind rejection, maneuver-rich sequences where only stable
