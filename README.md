@@ -197,6 +197,8 @@ You can:
 - save your own export presets
 - export only high-confidence cells
 
+TWA grid fields show the complete allowed angle, including three-digit port-side values through `359°`.
+
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
 A `360°` preset (or any custom grid with angles above `180°`) exports true port/starboard asymmetry, emitting TWA rows
