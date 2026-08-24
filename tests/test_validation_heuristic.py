@@ -20,14 +20,14 @@ def test_r16_quarantines_suspected_engine_use() -> None:
     result = engine_heuristic(make_sample(tws_kt=4.0, stw_kt=4.0), default_config())
 
     assert result.decision == "quarantine"
-    assert result.reason_codes == ["quarantine_engine_suspected"]
+    assert result.reason_codes == ("quarantine_engine_suspected",)
 
 
 def test_r16_passes_non_engine_like_sample() -> None:
     result = engine_heuristic(make_sample(tws_kt=12.0, stw_kt=6.0), default_config())
 
     assert result.decision == "pass"
-    assert result.reason_codes == []
+    assert result.reason_codes == ()
 
 
 def test_r16_suppressed_when_engine_state_reads_off() -> None:
@@ -52,7 +52,7 @@ def test_r16_heuristic_still_runs_for_idle_band_rpm() -> None:
     result = engine_heuristic(sample, default_config())
 
     assert result.decision == "quarantine"
-    assert result.reason_codes == ["quarantine_engine_suspected"]
+    assert result.reason_codes == ("quarantine_engine_suspected",)
 
 
 def test_r16_unchanged_when_no_engine_signal_present() -> None:

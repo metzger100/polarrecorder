@@ -24,16 +24,17 @@ AvNav boundary rules:
 - `plugin.py` is the only module that touches the runtime AvNav API.
 - `avnav_api` is imported only under `TYPE_CHECKING`.
 - `server/polarrecorder/` receives AvNav-like behavior through protocols or plain data, never through AvNav imports.
-- `StoreReader` receives `StoreBoundaryAdapter`, which translates its snake-case `get_single_value()` protocol into
-  AvNav's `getSingleValue(..., includeInfo=True)` call.
+- `Plugin.get_single_value()` translates the domain reader's snake-case protocol into AvNav's
+  `getSingleValue(..., includeInfo=True)` call.
 - Request dispatch receives the plugin shell object because lock ownership and live state reside in `plugin.py`; API
   handlers format snapshots and avoid AvNav access.
 
 Single-lock discipline:
 
 - `plugin.py` creates exactly one `threading.Lock`.
-- The sampling loop holds the lock only while committing samples, counters, timeline entries, status scalars, config
-  swaps, or persistence snapshots.
+- The sampling loop reads the external store before taking the lock, then performs the pipeline decision and all live
+  state/model/counter/timeline mutations under one acquisition. AvNav status calls and diagnostic logging happen after
+  releasing it.
 - API dispatch holds the same lock while snapshotting model/config/status data.
 - Formatting, CSV generation, and JSON response shaping should use detached snapshots whenever possible.
 - Domain modules must not acquire locks or assume thread identity.

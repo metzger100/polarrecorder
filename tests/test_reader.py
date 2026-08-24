@@ -120,11 +120,11 @@ def test_reader_timestamps_drive_freshness_and_stale_rejection() -> None:
     assert sample.freshness.max_age_s == 5.0
     assert pipeline_sample is not None
     assert pipeline_result.decision == "rejected"
-    assert pipeline_result.reason_codes == [
+    assert pipeline_result.reason_codes == (
         "reject_stale_twa",
         "reject_stale_tws",
         "reject_stale_stw",
-    ]
+    )
 
 
 def _set_core(api: FakeStoreAPI, timestamp: float = 99.5) -> None:

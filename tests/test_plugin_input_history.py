@@ -3,9 +3,12 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from conftest import FakeAvNavAPI
+from conftest import FakeAvNavAPI, drive_read_results
 from plugin_integration_support import make_plugin
 from polarrecorder import reader
+from polarrecorder.config import default_config
+from polarrecorder.polar_model import PolarModel
+from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_read_result, make_warmed_state
 
 if TYPE_CHECKING:
@@ -16,7 +19,8 @@ def test_paused_iteration_accounts_for_malformed_core_without_crashing(tmp_path:
     plugin = make_plugin(tmp_path, FakeAvNavAPI())
     malformed = replace(make_read_result(), twa_raw="bad")
 
-    plugin._record_suppressed(malformed, "partial", "reject_user_paused", plugin.config)
+    with plugin._lock:
+        plugin._record_suppressed(malformed, "partial", "reject_user_paused")
 
     assert plugin._counters.rejection_histogram == {"reject_user_paused": 1}
     assert plugin._last_data_status == "partial"
@@ -53,6 +57,45 @@ def test_pause_and_resume_each_clear_stability_history(tmp_path: Path) -> None:
     plugin._handle_request("resume", object(), {})
     assert not plugin._state.window
     assert plugin._warming_up
+
+
+def test_engine_quarantine_breaks_history_before_conditions_clear() -> None:
+    config = default_config()
+    state = ValidationState()
+    model = PolarModel()
+    quarantine_reads = [
+        make_read_result(now=float(timestamp), tws_kt=4.0, stw_kt=4.0)
+        for timestamp in range(85, 101)
+    ]
+
+    results = drive_read_results(quarantine_reads, state, config, model)
+    recovery = drive_read_results(
+        [make_read_result(now=101.0, tws_kt=5.1, stw_kt=4.0)], state, config, model
+    )[0][0]
+
+    assert results[-1][0].decision == "quarantined"
+    assert not results[-1][0].retain_stability_history
+    assert recovery.reason_codes == ("reject_warming_up",)
+
+
+def test_sog_stw_mismatch_breaks_history_before_mismatch_clears() -> None:
+    config = default_config()
+    state = ValidationState()
+    model = PolarModel()
+    mismatch = {"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)}
+    mismatch_reads = [
+        make_read_result(now=float(timestamp), stw_kt=1.0, enhanced_raw=mismatch)
+        for timestamp in range(85, 101)
+    ]
+
+    results = drive_read_results(mismatch_reads, state, config, model)
+    recovery = drive_read_results([make_read_result(now=101.0, stw_kt=1.0)], state, config, model)[
+        0
+    ][0]
+
+    assert results[-1][0].reason_codes == ("reject_sog_stw_mismatch",)
+    assert not results[-1][0].retain_stability_history
+    assert recovery.reason_codes == ("reject_warming_up",)
 
 
 def test_enhanced_status_applies_boolean_policy_by_signal_role(tmp_path: Path) -> None:

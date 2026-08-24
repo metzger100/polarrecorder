@@ -109,7 +109,7 @@ def test_build_sample_enhanced_is_none_without_enhanced_raw() -> None:
 
 
 def test_rule_result_is_shared_pipeline_rule_type() -> None:
-    result = RuleResult(decision="reject", reason_codes=["reject_low_wind"])
+    result = RuleResult(decision="reject", reason_codes=("reject_low_wind",))
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_low_wind"]
+    assert result.reason_codes == ("reject_low_wind",)

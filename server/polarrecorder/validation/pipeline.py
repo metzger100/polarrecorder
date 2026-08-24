@@ -9,7 +9,7 @@ polarrecorder.validation.state
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from polarrecorder.sample import ReadResult, RuleResult, Sample, build_sample
@@ -21,6 +21,14 @@ if TYPE_CHECKING:
     from polarrecorder.validation.state import ValidationState
 
 PipelineDecision = Literal["accepted", "rejected", "quarantined"]
+STABILITY_HISTORY_BREAK_REASONS = frozenset(
+    {
+        "quarantine_engine_suspected",
+        "reject_sog_stw_mismatch",
+        "reject_true_wind_crosscheck",
+        "reject_heel_out_of_band",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -28,11 +36,21 @@ class PipelineResult:
     """Final validation decision returned by the pipeline runner."""
 
     decision: PipelineDecision
-    reason_codes: list[str]
+    reason_codes: tuple[str, ...]
     is_sailing_candidate: bool
-    stability_eligible: bool = False
-    failed_predicates: list[str] = field(default_factory=list)
+    retain_stability_history: bool = False
+    failed_predicates: tuple[str, ...] = ()
     stability_evaluation: rules_stability.StabilityEvaluation | None = None
+
+
+def suppressed(reason: str) -> PipelineResult:
+    """Return a non-candidate result for a plugin-suppressed iteration."""
+    return PipelineResult(
+        decision="rejected",
+        reason_codes=(reason,),
+        is_sailing_candidate=False,
+        failed_predicates=(reason,),
+    )
 
 
 def run(
@@ -90,15 +108,15 @@ def _run_sample_rules(sample: Sample, state: ValidationState, config: Config) ->
             decision="quarantined",
             reason_codes=candidate_result.reason_codes,
             is_sailing_candidate=True,
-            stability_eligible=True,
+            retain_stability_history=False,
             failed_predicates=candidate_result.predicate_codes,
             stability_evaluation=stability,
         )
     return PipelineResult(
         decision="accepted",
-        reason_codes=[],
+        reason_codes=(),
         is_sailing_candidate=True,
-        stability_eligible=True,
+        retain_stability_history=True,
         stability_evaluation=stability,
     )
 
@@ -111,7 +129,7 @@ def _run_phase_a(read_result: ReadResult) -> RuleResult:
         return RuleResult(
             decision="reject", reason_codes=reason_codes, predicate_codes=reason_codes
         )
-    return RuleResult(decision="pass", reason_codes=[])
+    return RuleResult(decision="pass", reason_codes=())
 
 
 def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
@@ -152,7 +170,7 @@ def _run_candidate_rules(
 def _first_non_pass(results: tuple[RuleResult, ...]) -> RuleResult:
     failed = tuple(result for result in results if result.decision != "pass")
     if not failed:
-        return RuleResult(decision="pass", reason_codes=[])
+        return RuleResult(decision="pass", reason_codes=())
     first = failed[0]
     return RuleResult(
         decision=first.decision,
@@ -161,42 +179,42 @@ def _first_non_pass(results: tuple[RuleResult, ...]) -> RuleResult:
     )
 
 
-def _predicate_codes(results: tuple[RuleResult, ...]) -> list[str]:
+def _predicate_codes(results: tuple[RuleResult, ...]) -> tuple[str, ...]:
     codes: list[str] = []
     for result in results:
         source_codes = result.predicate_codes or result.reason_codes
         for code in source_codes:
             if code not in codes:
                 codes.append(code)
-    return codes
+    return tuple(codes)
 
 
 def _candidate_rejection(
-    reason_codes: list[str],
-    failed_predicates: list[str],
+    reason_codes: tuple[str, ...],
+    failed_predicates: tuple[str, ...],
     stability: rules_stability.StabilityEvaluation,
 ) -> PipelineResult:
     return _rejected(
         reason_codes,
-        is_sailing_candidate=reason_codes != ["reject_warming_up"],
-        stability_eligible=True,
+        is_sailing_candidate=reason_codes != ("reject_warming_up",),
+        retain_stability_history=reason_codes[0] not in STABILITY_HISTORY_BREAK_REASONS,
         failed_predicates=failed_predicates,
         stability_evaluation=stability,
     )
 
 
 def _rejected(
-    reason_codes: list[str],
+    reason_codes: tuple[str, ...],
     is_sailing_candidate: bool,
-    failed_predicates: list[str],
-    stability_eligible: bool = False,
+    failed_predicates: tuple[str, ...],
+    retain_stability_history: bool = False,
     stability_evaluation: rules_stability.StabilityEvaluation | None = None,
 ) -> PipelineResult:
     return PipelineResult(
         decision="rejected",
         reason_codes=reason_codes,
         is_sailing_candidate=is_sailing_candidate,
-        stability_eligible=stability_eligible,
+        retain_stability_history=retain_stability_history,
         failed_predicates=failed_predicates,
         stability_evaluation=stability_evaluation,
     )

@@ -1,17 +1,16 @@
 """Module: API Enhanced - Enhanced-rule API handlers (keys, status, save).
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_handlers, polarrecorder.config, polarrecorder.enhanced_input,
-polarrecorder.enhanced_status, polarrecorder.params, polarrecorder.sample,
-polarrecorder.source_params
+Depends: polarrecorder.api_config, polarrecorder.api_handlers, polarrecorder.enhanced_input,
+polarrecorder.enhanced_status, polarrecorder.params,
+polarrecorder.sample, polarrecorder.source_params
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from polarrecorder import api_handlers, enhanced_status
-from polarrecorder.config import parse_config_values
+from polarrecorder import api_config, api_handlers, enhanced_status
 from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS
 from polarrecorder.params import CONFIG_PARAMETERS
@@ -52,10 +51,7 @@ def enhanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     updates = {name: value for name, value in args.items() if name in ENHANCED_PARAM_NAMES}
     if not updates:
         return api_handlers.error("No enhanced parameters supplied")
-    with plugin._lock:
-        new_config = parse_config_values(updates, plugin._logger, plugin.config)
-        plugin.config = new_config
-    plugin._save_config_values(dict(updates))
+    new_config = api_config.apply_config_updates(plugin, updates)
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.format_enhanced_config(saved)
 

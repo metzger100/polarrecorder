@@ -1,8 +1,8 @@
 """Module: Diagnostics - Pure structured replay diagnostics.
 
 Documentation: documentation/architecture/data-pipeline.md
-Depends: polarrecorder.config, polarrecorder.sample, polarrecorder.validation.pipeline,
-polarrecorder.validation.rules_stability
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample,
+polarrecorder.validation.pipeline, polarrecorder.validation.rules_stability
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, NamedTuple
 
+from polarrecorder.enhanced_input import coerce_finite_timestamp
 from polarrecorder.sample import is_finite_core_value
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from polarrecorder.validation.pipeline import PipelineResult
     from polarrecorder.validation.rules_stability import StabilityEvaluation
 
-DIAGNOSTIC_SCHEMA_VERSION = 2
+DIAGNOSTIC_SCHEMA_VERSION = 3
 
 
 class CurrentValues(NamedTuple):
@@ -42,8 +43,8 @@ def data_status(read_result: ReadResult, stale_threshold: float) -> str:
     )
     usable = tuple(
         is_finite_core_value(value)
-        and timestamp is not None
-        and read_result.timestamp_monotonic - timestamp <= stale_threshold
+        and (finite_timestamp := coerce_finite_timestamp(timestamp)) is not None
+        and read_result.timestamp_monotonic - finite_timestamp <= stale_threshold
         for value, timestamp in zip(values, timestamps)
     )
     if all(usable):
@@ -80,9 +81,10 @@ def format_sample_diagnostic(
         "enhanced": _enhanced_values(read_result, sample),
         "pipeline": {
             "decision": result.decision,
-            "reason_codes": result.reason_codes,
-            "failed_predicates": result.failed_predicates,
+            "reason_codes": list(result.reason_codes),
+            "failed_predicates": list(result.failed_predicates),
             "is_sailing_candidate": result.is_sailing_candidate,
+            "retain_stability_history": result.retain_stability_history,
         },
         "r15": _stability_values(result.stability_evaluation),
         "config": _diagnostic_config(config),
@@ -133,13 +135,15 @@ def _enhanced_values(
     return values
 
 
-def _stability_values(
-    evaluation: StabilityEvaluation | None,
-) -> dict[str, bool | float | None]:
+def _stability_values(evaluation: StabilityEvaluation | None) -> dict[str, object]:
     if evaluation is None:
         return {
             "filled": False,
             "window_span_seconds": None,
+            "largest_gap_seconds": None,
+            "max_allowed_gap_seconds": None,
+            "sample_count": 0,
+            "minimum_sample_count": None,
             "twa_range": None,
             "tws_range": None,
             "stw_range": None,
@@ -147,14 +151,18 @@ def _stability_values(
     return {
         "filled": evaluation.filled,
         "window_span_seconds": _finite_or_none(evaluation.window_span_seconds),
+        "largest_gap_seconds": _finite_or_none(evaluation.largest_gap_seconds),
+        "max_allowed_gap_seconds": evaluation.max_allowed_gap_seconds,
+        "sample_count": evaluation.sample_count,
+        "minimum_sample_count": evaluation.minimum_sample_count,
         "twa_range": _finite_or_none(evaluation.twa_range),
         "tws_range": _finite_or_none(evaluation.tws_range),
         "stw_range": _finite_or_none(evaluation.stw_range),
     }
 
 
-def _source_metadata(timestamp: float | None, now: float) -> dict[str, float | None]:
-    finite_timestamp = _finite_or_none(timestamp)
+def _source_metadata(timestamp: object | None, now: float) -> dict[str, float | None]:
+    finite_timestamp = coerce_finite_timestamp(timestamp)
     if finite_timestamp is None:
         return {"timestamp": None, "age_seconds": None}
     return {
@@ -166,6 +174,7 @@ def _source_metadata(timestamp: float | None, now: float) -> dict[str, float | N
 def _diagnostic_config(config: Config) -> dict[str, float]:
     return {
         "stability_window_seconds": float(config.stability_window_seconds),
+        "sample_interval": config.sample_interval,
         "stability_twa_range": config.stability_twa_range,
         "stability_tws_range": config.stability_tws_range,
         "stability_stw_range": config.stability_stw_range,

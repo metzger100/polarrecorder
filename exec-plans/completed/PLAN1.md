@@ -2,7 +2,24 @@
 
 ## Status
 
-Implemented through all six phases and three implementation-review remediation passes.
+Implemented through all six phases and four implementation-review remediation passes.
+
+### Amendment — 2026-08-24: fourth implementation-review remediation
+
+A fresh archive review found a recursive-lock regression with nested paused-path acquisition, unsafe arithmetic on
+untrusted core and enhanced timestamps, R16/R20-R22 outcomes incorrectly retaining R15 history, an R15 continuity rule
+that two sparse endpoints could satisfy at slower configured sampling, incomplete replay evidence, stale lifecycle
+prose, duplicated mutable window duration, and shallowly immutable decision evidence. Completion now additionally
+requires exactly one mechanically enforced ordinary plugin lock with external callbacks after release; total finite
+timestamp boundaries; outcome-specific stability-history retention; time-span, gap, and observation-density continuity;
+diagnostic schema 3; one config-owned stability duration; tuple-backed decision evidence; synchronized docs and README;
+focused counterexamples; and a green full quality gate.
+
+**Fourth-review exit evidence:** `npm run check:all` exited successfully with 422 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.14% aggregate Python coverage, and 92.74% viewer/plugin line coverage. Focused
+timestamp, history, stability, diagnostic, integration, and checker regressions passed before the full gate; the pattern
+checker reported zero findings, duplication reported zero clones, and `plugin.py` remained below its hotspot budget at
+377 non-empty lines.
 
 ### Amendment — 2026-08-24: third implementation-review remediation
 
@@ -13,8 +30,9 @@ role-aware boolean handling, separate transition and sailing-eligible history, a
 fresh usable core readiness, synchronized user documentation, focused regressions, and a green full quality gate.
 
 **Third-review exit evidence:** `npm run check:all` exited successfully with 401 Python tests, 364 tooling tests, 61
-viewer tests, 1 plugin test, 96.02% aggregate Python coverage, and 92.74% viewer/plugin line coverage. The focused input,
-pipeline, stability, diagnostics, status, and plugin-integration regression suite passed 117 tests before the full gate.
+viewer tests, 1 plugin test, 96.02% aggregate Python coverage, and 92.74% viewer/plugin line coverage. The focused
+input, pipeline, stability, diagnostics, status, and plugin-integration regression suite passed 117 tests before the
+full gate.
 
 ### Amendment — 2026-08-24: second implementation-review remediation
 

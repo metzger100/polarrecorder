@@ -82,7 +82,7 @@ class Plugin:
         self.plugin_version = str(self.pluginInfo().get("version", FALLBACK_VERSION))
         self._clock = time.monotonic
         self._wall_clock = time.time
-        self._lock = threading.RLock()
+        self._lock = threading.Lock()
         self._logger = AvNavLogger(api)
         self._status_value = ""
         self._status_info = ""
@@ -95,7 +95,7 @@ class Plugin:
         self._data_dir: str | PathLike[str] = _plugin_path / "data"
         api.registerEditableParameters(EDITABLE_PARAMETERS, self._on_config_change)
         self.config = self._load_initial_config()
-        self._state = ValidationState(float(self.config.stability_window_seconds))
+        self._state = ValidationState()
         self._timeline = Timeline(self._wall_clock)
         self._last_current_values: diagnostics.CurrentValues | None = None
         self._last_decision: dict[str, object] | None = None
@@ -172,42 +172,44 @@ class Plugin:
         data_status = diagnostics.data_status(read_result, config.stale_threshold)
         with self._lock:
             if self._paused:
-                self._record_suppressed(read_result, data_status, "reject_user_paused", config)
-                return
-            pipeline_result, sample = pipeline.run(read_result, self._state, config)
-            self._state.observe_iteration(sample, eligible=pipeline_result.stability_eligible)
-            warming_up = (
-                pipeline_result.stability_evaluation is None
-                or not pipeline_result.stability_evaluation.filled
-            )
-            commit_sample(pipeline_result, sample, self._model)
-            self._record_counters(pipeline_result)
-            self._timeline.record(pipeline_result.decision, pipeline_result.reason_codes)
-            self._write_status_scalars(read_result, sample, data_status, warming_up)
-            self._last_decision = {
-                "state": pipeline_result.decision,
-                "reason_codes": list(pipeline_result.reason_codes),
-            }
-        self._update_avnav_status(data_status, pipeline_result)
+                sample, pipeline_result = self._record_suppressed(
+                    read_result, data_status, "reject_user_paused"
+                )
+                status_result = None
+            else:
+                pipeline_result, sample = pipeline.run(read_result, self._state, config)
+                self._state.observe_iteration(
+                    sample,
+                    pipeline_result.retain_stability_history,
+                    config.stability_window_seconds,
+                )
+                warming_up = (
+                    pipeline_result.stability_evaluation is None
+                    or not pipeline_result.stability_evaluation.filled
+                )
+                commit_sample(pipeline_result, sample, self._model)
+                self._record_counters(pipeline_result)
+                self._timeline.record(pipeline_result.decision, pipeline_result.reason_codes)
+                self._write_status_scalars(read_result, sample, data_status, warming_up)
+                self._last_decision = {
+                    "state": pipeline_result.decision,
+                    "reason_codes": list(pipeline_result.reason_codes),
+                }
+                status_result = pipeline_result
+        self._update_avnav_status(data_status, status_result)
         self._log_diagnostic(read_result, sample, pipeline_result, config)
 
     def _record_suppressed(
-        self, read_result: ReadResult, data_status: str, reason: str, config: Config
-    ) -> None:
+        self, read_result: ReadResult, data_status: str, reason: str
+    ) -> tuple[Sample | None, PipelineResult]:
+        """Record one suppressed iteration while the caller holds the plugin lock."""
         sample = build_sample(read_result)
-        result = pipeline.PipelineResult(
-            decision="rejected",
-            reason_codes=[reason],
-            is_sailing_candidate=False,
-            failed_predicates=[reason],
-        )
-        with self._lock:
-            self._state.observe_iteration(sample, eligible=False)
-            self._record_counters(result)
-            self._timeline.record("rejected", [reason])
-            self._write_status_scalars(read_result, sample, data_status, warming_up=True)
-        self._update_avnav_status(data_status, None)
-        self._log_diagnostic(read_result, sample, result, config)
+        result = pipeline.suppressed(reason)
+        self._state.observe_break(sample)
+        self._record_counters(result)
+        self._timeline.record("rejected", (reason,))
+        self._write_status_scalars(read_result, sample, data_status, warming_up=True)
+        return sample, result
 
     def _log_diagnostic(
         self,
@@ -247,16 +249,13 @@ class Plugin:
         warming_up: bool,
     ) -> None:
         if sample is not None:
-            assert read_result.twa_timestamp is not None
-            assert read_result.tws_timestamp is not None
-            assert read_result.stw_timestamp is not None
             self._last_current_values = diagnostics.CurrentValues(
                 twa_deg=sample.twa_deg_raw,
                 tws_kt=sample.tws_kt,
                 stw_kt=sample.stw_kt,
-                twa_timestamp=read_result.twa_timestamp,
-                tws_timestamp=read_result.tws_timestamp,
-                stw_timestamp=read_result.stw_timestamp,
+                twa_timestamp=cast("float", read_result.twa_timestamp),
+                tws_timestamp=cast("float", read_result.tws_timestamp),
+                stw_timestamp=cast("float", read_result.stw_timestamp),
             )
         self._last_data_status = data_status
         self._warming_up = warming_up
@@ -359,7 +358,6 @@ class Plugin:
     def _on_config_change(self, changed: Mapping[str, str]) -> None:
         with self._lock:
             self.config = parse_config_values(changed, self._logger, self.config)
-            self._state.stability_window_seconds = float(self.config.stability_window_seconds)
 
     def _handle_request(
         self,

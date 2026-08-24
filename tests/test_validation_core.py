@@ -25,22 +25,39 @@ def test_r1_reports_all_non_finite_raw_values() -> None:
     )
 
     assert result.decision == "reject"
-    assert result.reason_codes == [
+    assert result.reason_codes == (
         "reject_non_finite_twa",
         "reject_non_finite_tws",
         "reject_non_finite_stw",
-    ]
+    )
 
 
 def test_r2_reports_all_missing_required_keys() -> None:
     result = rules_core.required_keys(make_read_result(twa_raw=None, tws_kt=None, stw_kt=None))
 
     assert result.decision == "reject"
-    assert result.reason_codes == [
+    assert result.reason_codes == (
         "reject_missing_twa",
         "reject_missing_tws",
         "reject_missing_stw",
-    ]
+    )
+
+
+def test_r2_treats_missing_source_timestamps_as_missing_inputs() -> None:
+    read_result = replace(
+        make_read_result(),
+        twa_timestamp=None,
+        tws_timestamp=None,
+        stw_timestamp=None,
+    )
+
+    result = rules_core.required_keys(read_result)
+
+    assert result.reason_codes == (
+        "reject_missing_twa",
+        "reject_missing_tws",
+        "reject_missing_stw",
+    )
 
 
 def test_r3_reports_all_stale_values() -> None:
@@ -48,11 +65,11 @@ def test_r3_reports_all_stale_values() -> None:
     result = rules_core.stale_values(sample, default_config())
 
     assert result.decision == "reject"
-    assert result.reason_codes == [
+    assert result.reason_codes == (
         "reject_stale_twa",
         "reject_stale_tws",
         "reject_stale_stw",
-    ]
+    )
 
 
 def test_r4_through_r10_return_expected_reason_codes() -> None:
@@ -75,7 +92,7 @@ def test_r4_through_r10_return_expected_reason_codes() -> None:
 
     for result, code in cases:
         assert result.decision == "reject"
-        assert result.reason_codes == [code]
+        assert result.reason_codes == (code,)
 
 
 def test_core_rules_pass_clean_sample() -> None:
@@ -129,4 +146,4 @@ def test_r10_sog_authority_documents_adverse_current_counterexample() -> None:
     result = rules_core.anchored_heuristic(sample, default_config())
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_anchored"]
+    assert result.reason_codes == ("reject_anchored",)

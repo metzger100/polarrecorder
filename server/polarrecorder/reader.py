@@ -32,7 +32,7 @@ class DataEntryLike(Protocol):
         ...
 
     @property
-    def timestamp(self) -> float:
+    def timestamp(self) -> object:
         """Return the monotonic store timestamp."""
         ...
 
@@ -183,7 +183,7 @@ def _entry_value(entry: DataEntryLike | None) -> object | None:
     return entry.value
 
 
-def _entry_timestamp(entry: DataEntryLike | None) -> float | None:
+def _entry_timestamp(entry: DataEntryLike | None) -> object | None:
     if entry is None:
         return None
     return entry.timestamp

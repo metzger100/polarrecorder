@@ -215,7 +215,8 @@ def test_paused_iteration_records_reason_and_predicate_histograms(tmp_path: Path
     api = FakeAvNavAPI()
     plugin = make_plugin(tmp_path, api)
 
-    plugin._record_suppressed(make_read_result(), "receiving", "reject_user_paused", plugin.config)
+    with plugin._lock:
+        plugin._record_suppressed(make_read_result(), "receiving", "reject_user_paused")
 
     assert plugin._counters.total_seen == 0
     assert plugin._counters.rejection_histogram == {"reject_user_paused": 1}

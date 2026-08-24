@@ -26,13 +26,13 @@ def engine_heuristic(sample: Sample, config: Config) -> RuleResult:
     so the low-wind/moving heuristic still applies in the idle band.
     """
     if _engine_reads_off(sample, config):
-        return RuleResult(decision="pass", reason_codes=[])
+        return RuleResult(decision="pass", reason_codes=())
     if sample.tws_kt < config.engine_tws_ceil and sample.stw_kt > config.engine_stw_floor:
         return RuleResult(
             decision="quarantine",
-            reason_codes=["quarantine_engine_suspected"],
+            reason_codes=("quarantine_engine_suspected",),
         )
-    return RuleResult(decision="pass", reason_codes=[])
+    return RuleResult(decision="pass", reason_codes=())
 
 
 def _engine_reads_off(sample: Sample, config: Config) -> bool:

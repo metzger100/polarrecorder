@@ -29,6 +29,18 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.summary.ok, true);
 });
 
+test("plugin.py owns exactly one ordinary lock", () => {
+  const clean = runChecker({ "plugin.py": "import threading\nlock = threading.Lock()\n" });
+  const recursive = runChecker({ "plugin.py": "import threading\nlock = threading.RLock()\n" });
+  const multiple = runChecker({
+    "plugin.py": "import threading\nfirst = threading.Lock()\nsecond = threading.Lock()\n"
+  });
+
+  assert.equal(clean.status, 0, clean.failures.join("\n"));
+  assert.equal(recursive.summary.byRule["plugin-lock-ownership"], 2);
+  assert.equal(multiple.summary.byRule["plugin-lock-ownership"], 1);
+});
+
 test("variable-renamed cross-file functions fail the generic duplication rule", () => {
   const result = runChecker({
     "viewer/one.js":

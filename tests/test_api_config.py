@@ -69,7 +69,7 @@ def test_advanced_settings_endpoint_groups_and_saves_safe_values() -> None:
     assert plugin.config.max_tws == 48
     assert plugin.config.sample_interval == 2.5
     assert plugin.config.stability_window_seconds == 30
-    assert plugin._state.stability_window_seconds == 30.0
+    assert not hasattr(plugin._state, "stability_window_seconds")
     assert api.saved_configs == [
         {
             "debug_logging": "true",

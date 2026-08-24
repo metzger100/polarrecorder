@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from polarrecorder.sample import WallClockFn
 
 Decision = Literal["accepted", "rejected", "quarantined"]
@@ -58,7 +60,7 @@ class Timeline:
         self._wall_clock = wall_clock
         self._buckets: dict[float, _Bucket] = {}
 
-    def record(self, decision: Decision, reason_codes: list[str]) -> None:
+    def record(self, decision: Decision, reason_codes: Sequence[str]) -> None:
         """Record one loop iteration in the current minute bucket.
 
         Args:

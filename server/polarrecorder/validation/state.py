@@ -38,49 +38,58 @@ def _new_window() -> deque[WindowEntry]:
 class ValidationState:
     """Mutable rolling state used by stateful validation rules."""
 
-    stability_window_seconds: float = 15.0
     window: deque[WindowEntry] = field(default_factory=_new_window)
     cooldown_expires: float = 0.0
     previous_sample: WindowEntry | None = None
 
-    def observe(self, sample: Sample) -> None:
+    def observe(self, sample: Sample, *, window_seconds: float) -> None:
         """Observe a sample for both transition and stability rules.
 
         Args:
             sample: Built sample to add after the pipeline has returned.
+            window_seconds: Active R15 history duration from the iteration config.
         """
         self.observe_transition(sample)
-        self.observe_stability(sample)
+        self.observe_stability(sample, window_seconds=window_seconds)
 
-    def observe_iteration(self, sample: Sample | None, *, eligible: bool) -> None:
+    def observe_iteration(
+        self, sample: Sample | None, retain_stability_history: bool, window_seconds: float
+    ) -> None:
         """Apply post-pipeline transition and R15-history observation policy."""
         if sample is not None:
             self.observe_transition(sample)
-        if sample is not None and eligible:
-            self.observe_stability(sample)
+        if sample is not None and retain_stability_history:
+            self.observe_stability(sample, window_seconds=window_seconds)
         else:
             self.reset_stability()
+
+    def observe_break(self, sample: Sample | None) -> None:
+        """Retain transition evidence and clear R15 history for a broken iteration."""
+        if sample is not None:
+            self.observe_transition(sample)
+        self.reset_stability()
 
     def observe_transition(self, sample: Sample) -> None:
         """Retain a valid numeric observation for transition-rate rules."""
         self.previous_sample = entry_from_sample(sample)
 
-    def observe_stability(self, sample: Sample) -> None:
+    def observe_stability(self, sample: Sample, *, window_seconds: float) -> None:
         """Append a sailing-eligible observation to the R15 window."""
-        self.prune(sample.timestamp_monotonic)
+        self.prune(sample.timestamp_monotonic, window_seconds=window_seconds)
         self.window.append(entry_from_sample(sample))
 
     def reset_stability(self) -> None:
         """Discard R15 history after a break in sailing eligibility."""
         self.window.clear()
 
-    def prune(self, now_monotonic: float) -> None:
+    def prune(self, now_monotonic: float, *, window_seconds: float) -> None:
         """Trim old entries while retaining one boundary anchor when available.
 
         Args:
             now_monotonic: Current monotonic timestamp.
+            window_seconds: Active R15 history duration from the iteration config.
         """
-        oldest_allowed = now_monotonic - self.stability_window_seconds
+        oldest_allowed = now_monotonic - window_seconds
         if self.window and self.window[-1].timestamp_monotonic < oldest_allowed:
             self.window.clear()
             return

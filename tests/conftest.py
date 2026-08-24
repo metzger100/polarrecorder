@@ -25,7 +25,9 @@ def drive_read_results(
     results: list[tuple[PipelineResult, Sample | None]] = []
     for read_result in read_results:
         pipeline_result, sample = pipeline.run(read_result, state, config)
-        state.observe_iteration(sample, eligible=pipeline_result.stability_eligible)
+        state.observe_iteration(
+            sample, pipeline_result.retain_stability_history, config.stability_window_seconds
+        )
         commit_sample(pipeline_result, sample, model)
         results.append((pipeline_result, sample))
     return results
