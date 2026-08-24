@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder import api_handlers
-from polarrecorder.config import parse_config_values
+from polarrecorder.config import Config, parse_config_values
 from polarrecorder.params import CONFIG_PARAMETERS
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
@@ -221,13 +221,18 @@ def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     validation_error = _first_validation_error(updates)
     if validation_error:
         return api_handlers.error(validation_error)
+    new_config = apply_config_updates(plugin, updates)
+    saved = {name: getattr(new_config, name) for name in sorted(updates)}
+    return api_handlers.ok({"config": saved})
+
+
+def apply_config_updates(plugin: Any, updates: dict[str, str]) -> Config:
+    """Apply validated string config updates under the plugin lock and persist them."""
     with plugin._lock:
         new_config = parse_config_values(updates, plugin._logger, plugin.config)
         plugin.config = new_config
-        plugin._state.stability_window_seconds = float(new_config.stability_window_seconds)
     plugin._save_config_values(dict(updates))
-    saved = {name: getattr(new_config, name) for name in sorted(updates)}
-    return api_handlers.ok({"config": saved})
+    return new_config
 
 
 def _format_group(group: AdvancedGroup, config: Any) -> dict[str, object]:

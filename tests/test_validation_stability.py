@@ -38,7 +38,7 @@ def test_r11_sets_cooldown_on_twa_rate_of_change() -> None:
     result = rules_stability.twa_rate_of_change(make_sample(twa_raw=200.0), state, config)
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_twa_roc"]
+    assert result.reason_codes == ("reject_twa_roc",)
     assert state.cooldown_expires == 130.0
 
 
@@ -59,7 +59,7 @@ def test_turn_confirm_turning_heading_still_rejects_and_cools_down() -> None:
     )
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_twa_roc"]
+    assert result.reason_codes == ("reject_twa_roc",)
     assert state.cooldown_expires == 130.0
 
 
@@ -137,8 +137,8 @@ def test_r12_and_r13_reject_current_sample_without_cooldown() -> None:
     tws_result = rules_stability.tws_rate_of_change(make_sample(tws_kt=80.0), tws_state, config)
     stw_result = rules_stability.stw_acceleration(make_sample(stw_kt=20.0), stw_state, config)
 
-    assert tws_result.reason_codes == ["reject_tws_roc"]
-    assert stw_result.reason_codes == ["reject_stw_roc"]
+    assert tws_result.reason_codes == ("reject_tws_roc",)
+    assert stw_result.reason_codes == ("reject_stw_roc",)
     assert tws_state.cooldown_expires == 0.0
     assert stw_state.cooldown_expires == 0.0
 
@@ -149,20 +149,20 @@ def test_r14_reads_maneuver_cooldown() -> None:
     result = rules_stability.maneuver_cooldown(make_sample(now=100.0), state, default_config())
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_maneuver_cooldown"]
-    assert result.predicate_codes == ["reject_maneuver_cooldown"]
+    assert result.reason_codes == ("reject_maneuver_cooldown",)
+    assert result.predicate_codes == ("reject_maneuver_cooldown",)
 
 
 def test_r15_rejects_warming_up_and_matches_state_status() -> None:
     config = default_config()
-    state = ValidationState(stability_window_seconds=config.stability_window_seconds)
-    state.observe(make_sample(now=90.0))
+    state = ValidationState()
+    state.observe(make_sample(now=90.0), window_seconds=config.stability_window_seconds)
     sample = make_sample(now=100.0)
 
     result = rules_stability.stability_window(sample, state, config)
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_warming_up"]
+    assert result.reason_codes == ("reject_warming_up",)
 
 
 def test_r15_rejects_unstable_filled_window() -> None:
@@ -170,8 +170,8 @@ def test_r15_rejects_unstable_filled_window() -> None:
     result = rules_stability.stability_window(make_sample(now=100.0), state, default_config())
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_unstable"]
-    assert result.predicate_codes == ["unstable_twa"]
+    assert result.reason_codes == ("reject_unstable",)
+    assert result.predicate_codes == ("unstable_twa",)
 
 
 def test_r15_records_all_independent_instability_predicates() -> None:
@@ -184,8 +184,8 @@ def test_r15_records_all_independent_instability_predicates() -> None:
 
     result = rules_stability.stability_window(make_sample(now=100.0), state, default_config())
 
-    assert result.reason_codes == ["reject_unstable"]
-    assert result.predicate_codes == ["unstable_twa", "unstable_tws", "unstable_stw"]
+    assert result.reason_codes == ("reject_unstable",)
+    assert result.predicate_codes == ("unstable_twa", "unstable_tws", "unstable_stw")
 
 
 def test_r15_passes_stable_filled_window() -> None:
@@ -203,8 +203,8 @@ def test_r15_rejects_an_unstable_current_sample_without_observing_it() -> None:
         make_sample(twa_raw=120.0, now=100.0), state, default_config()
     )
 
-    assert result.reason_codes == ["reject_unstable"]
-    assert result.predicate_codes == ["unstable_twa"]
+    assert result.reason_codes == ("reject_unstable",)
+    assert result.predicate_codes == ("unstable_twa",)
     assert tuple(state.window) == original_window
 
 
@@ -224,9 +224,9 @@ def test_r15_evaluation_uses_the_current_sample_measurements() -> None:
 
 def test_r15_passes_with_jittered_one_second_samples() -> None:
     config = default_config()
-    state = ValidationState(stability_window_seconds=config.stability_window_seconds)
+    state = ValidationState()
     for index in range(15):
-        state.observe(make_sample(now=index * 1.01))
+        state.observe(make_sample(now=index * 1.01), window_seconds=config.stability_window_seconds)
 
     result = rules_stability.stability_window(make_sample(now=15.15), state, config)
 
@@ -240,7 +240,7 @@ def test_r15_restarts_warmup_after_sample_gap() -> None:
     result = rules_stability.stability_window(make_sample(now=130.0), state, config)
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_warming_up"]
+    assert result.reason_codes == ("reject_warming_up",)
 
 
 def test_r15_uses_runtime_config_window_without_mutating_state_configuration() -> None:
@@ -249,26 +249,41 @@ def test_r15_uses_runtime_config_window_without_mutating_state_configuration() -
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "reject"
-    assert result.reason_codes == ["reject_warming_up"]
-    assert state.stability_window_seconds == 15.0
+    assert result.reason_codes == ("reject_warming_up",)
+    assert not hasattr(state, "stability_window_seconds")
 
 
 def test_r15_runtime_config_can_shorten_evaluation_without_mutating_state() -> None:
     config = replace(default_config(), stability_window_seconds=5, sample_interval=2.0)
     state = ValidationState()
-    state.observe(make_sample(now=95.0))
+    for timestamp in (94.0, 96.0, 98.0):
+        state.observe(make_sample(now=timestamp), window_seconds=config.stability_window_seconds)
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "pass"
-    assert state.stability_window_seconds == 15.0
+    assert not hasattr(state, "stability_window_seconds")
 
 
 def test_r15_restarts_warmup_when_window_has_a_sparse_sampling_gap() -> None:
     state = ValidationState()
-    state.observe(make_sample(now=85.0))
-    state.observe(make_sample(now=86.0))
+    state.observe(make_sample(now=85.0), window_seconds=15.0)
+    state.observe(make_sample(now=86.0), window_seconds=15.0)
 
     evaluation = rules_stability.evaluate_stability(make_sample(now=100.0), state, default_config())
 
     assert not evaluation.filled
     assert evaluation.largest_gap_seconds == 14.0
+
+
+def test_r15_two_endpoints_never_fill_a_slow_sampling_window() -> None:
+    config = replace(default_config(), sample_interval=5.0)
+    state = ValidationState()
+    state.observe(make_sample(now=85.0), window_seconds=config.stability_window_seconds)
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=100.0), state, config)
+
+    assert evaluation.largest_gap_seconds == 15.0
+    assert evaluation.max_allowed_gap_seconds == 15.0
+    assert evaluation.sample_count == 2
+    assert evaluation.minimum_sample_count == 4
+    assert not evaluation.filled

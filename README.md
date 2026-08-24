@@ -277,8 +277,10 @@ Common causes:
 - the boat has mostly been motoring, maneuvering, drifting, or sailing in very low wind
 - the plugin is still warming up its stability checks
 
-Pause/Resume, loss of fresh usable core data, and non-sailing conditions restart the stability warm-up. Status reports
-data as present only when all three core readings are finite, timestamped, and fresh.
+Pause/Resume, loss of fresh usable core data, non-sailing conditions, suspected engine use, and enhanced sensor-quality
+rejections restart the stability warm-up. R15 requires both a full time span and the expected observation density, so
+two sparse endpoints cannot prove stability. Status reports data as present only when all three core readings and their
+source timestamps are finite, numeric, and fresh.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

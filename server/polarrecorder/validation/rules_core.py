@@ -1,14 +1,21 @@
 """Module: Core Validation Rules - Candidacy-gate checks R1 through R10.
 
 Documentation: documentation/filters/rejection-rules.md
-Depends: polarrecorder.config, polarrecorder.sample
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from polarrecorder.sample import RuleResult, enhanced_value, is_finite_core_value
+from polarrecorder.enhanced_input import coerce_finite_timestamp
+from polarrecorder.sample import (
+    RuleResult,
+    enhanced_value,
+    is_finite_core_value,
+    pass_rule,
+    reject_rule,
+)
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -31,6 +38,9 @@ def finite_values(read_result: ReadResult) -> RuleResult:
     _add_non_finite_code(codes, read_result.twa_raw, "reject_non_finite_twa")
     _add_non_finite_code(codes, read_result.tws_raw, "reject_non_finite_tws")
     _add_non_finite_code(codes, read_result.stw_raw, "reject_non_finite_stw")
+    _add_invalid_timestamp_code(codes, read_result.twa_timestamp, "reject_non_finite_twa")
+    _add_invalid_timestamp_code(codes, read_result.tws_timestamp, "reject_non_finite_tws")
+    _add_invalid_timestamp_code(codes, read_result.stw_timestamp, "reject_non_finite_stw")
     return _multi_result(codes)
 
 
@@ -45,11 +55,17 @@ def required_keys(read_result: ReadResult) -> RuleResult:
     """
     codes: list[str] = []
     if read_result.twa_raw is None:
-        codes.append("reject_missing_twa")
+        _append_unique(codes, "reject_missing_twa")
     if read_result.tws_raw is None:
-        codes.append("reject_missing_tws")
+        _append_unique(codes, "reject_missing_tws")
     if read_result.stw_raw is None:
-        codes.append("reject_missing_stw")
+        _append_unique(codes, "reject_missing_stw")
+    if read_result.twa_raw is not None and read_result.twa_timestamp is None:
+        _append_unique(codes, "reject_missing_twa")
+    if read_result.tws_raw is not None and read_result.tws_timestamp is None:
+        _append_unique(codes, "reject_missing_tws")
+    if read_result.stw_raw is not None and read_result.stw_timestamp is None:
+        _append_unique(codes, "reject_missing_stw")
     return _multi_result(codes)
 
 
@@ -132,15 +148,21 @@ def _add_non_finite_code(codes: list[str], value: object | None, code: str) -> N
         codes.append(code)
 
 
+def _add_invalid_timestamp_code(codes: list[str], value: object | None, code: str) -> None:
+    if value is not None and coerce_finite_timestamp(value) is None:
+        _append_unique(codes, code)
+
+
+def _append_unique(codes: list[str], code: str) -> None:
+    if code not in codes:
+        codes.append(code)
+
+
 def _multi_result(codes: list[str]) -> RuleResult:
     if codes:
-        return RuleResult(decision="reject", reason_codes=codes)
+        return RuleResult(decision="reject", reason_codes=tuple(codes))
     return _pass()
 
 
-def _pass() -> RuleResult:
-    return RuleResult(decision="pass", reason_codes=[])
-
-
-def _reject(code: str) -> RuleResult:
-    return RuleResult(decision="reject", reason_codes=[code])
+_pass = pass_rule
+_reject = reject_rule

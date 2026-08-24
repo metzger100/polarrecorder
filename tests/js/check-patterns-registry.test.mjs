@@ -52,6 +52,7 @@ test("the Tier 2 profile fixes every rule's final classification", () => {
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "pluginhandler-import"));
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "reverse-plugin-import"));
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-lock-acquisition"));
+  assert.ok(PROJECT_RULES.some((rule) => rule.name === "plugin-lock-ownership"));
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-time-sleep"));
   assert.ok(!PROJECT_RULES.some((rule) => rule.name === "invalid-lint-suppression"));
 });

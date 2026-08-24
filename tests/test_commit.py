@@ -9,7 +9,7 @@ from validation_helpers import make_sample
 def test_accepted_sample_updates_histogram_and_generation() -> None:
     model = PolarModel()
     sample = make_sample(stw_kt=6.2)
-    result = PipelineResult(decision="accepted", reason_codes=[], is_sailing_candidate=True)
+    result = PipelineResult(decision="accepted", reason_codes=(), is_sailing_candidate=True)
 
     commit_sample(result, sample, model)
 
@@ -24,7 +24,7 @@ def test_quality_gate_rejection_records_per_bin_rejection() -> None:
     sample = make_sample()
     result = PipelineResult(
         decision="rejected",
-        reason_codes=["reject_unstable", "reject_stw_roc"],
+        reason_codes=("reject_unstable", "reject_stw_roc"),
         is_sailing_candidate=True,
     )
 
@@ -42,7 +42,7 @@ def test_quarantine_records_single_per_bin_reason() -> None:
     sample = make_sample()
     result = PipelineResult(
         decision="quarantined",
-        reason_codes=["quarantine_engine_suspected"],
+        reason_codes=("quarantine_engine_suspected",),
         is_sailing_candidate=True,
     )
 
@@ -60,7 +60,7 @@ def test_quarantine_requires_one_reason_code() -> None:
     sample = make_sample()
     result = PipelineResult(
         decision="quarantined",
-        reason_codes=[],
+        reason_codes=(),
         is_sailing_candidate=True,
     )
 
@@ -78,7 +78,7 @@ def test_none_sample_touches_no_bin() -> None:
     model = PolarModel()
     result = PipelineResult(
         decision="rejected",
-        reason_codes=["reject_missing_twa"],
+        reason_codes=("reject_missing_twa",),
         is_sailing_candidate=False,
     )
 
@@ -93,7 +93,7 @@ def test_r1_to_r10_non_candidate_rejection_touches_no_bin() -> None:
     sample = make_sample(ages=(4.0, 0.5, 0.5))
     result = PipelineResult(
         decision="rejected",
-        reason_codes=["reject_stale_twa"],
+        reason_codes=("reject_stale_twa",),
         is_sailing_candidate=False,
     )
 
@@ -108,7 +108,7 @@ def test_warming_up_rejection_touches_no_bin() -> None:
     sample = make_sample()
     result = PipelineResult(
         decision="rejected",
-        reason_codes=["reject_warming_up"],
+        reason_codes=("reject_warming_up",),
         is_sailing_candidate=False,
     )
 

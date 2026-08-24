@@ -22,7 +22,7 @@ class StoreEntryLike(Protocol):
         ...
 
     @property
-    def timestamp(self) -> float:
+    def timestamp(self) -> object:
         """Return the monotonic store timestamp."""
         ...
 
@@ -57,12 +57,24 @@ def assess_enhanced_input(
     """
     if entry is None:
         return EnhancedInput("missing", None, None, None)
+    timestamp = coerce_finite_timestamp(entry.timestamp)
     numeric = coerce_finite_float(entry.value, accepts_bool=accepts_bool)
-    if numeric is None:
-        return EnhancedInput("invalid", entry.value, entry.timestamp, None)
-    if now_monotonic - entry.timestamp > stale_threshold:
-        return EnhancedInput("stale", entry.value, entry.timestamp, numeric)
-    return EnhancedInput("usable", entry.value, entry.timestamp, numeric)
+    if timestamp is None or numeric is None:
+        return EnhancedInput("invalid", entry.value, timestamp, None)
+    if now_monotonic - timestamp > stale_threshold:
+        return EnhancedInput("stale", entry.value, timestamp, numeric)
+    return EnhancedInput("usable", entry.value, timestamp, numeric)
+
+
+def coerce_finite_timestamp(value: object) -> float | None:
+    """Return a finite numeric timestamp, rejecting booleans and strings."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        timestamp = float(value)
+    except OverflowError:
+        return None
+    return timestamp if math.isfinite(timestamp) else None
 
 
 def coerce_finite_float(value: object, *, accepts_bool: bool = False) -> float | None:

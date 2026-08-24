@@ -67,11 +67,11 @@ sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_s
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer.
 
-`debug_logging` records schema version 2; raw and normalized core values; source timestamps and ages; enhanced
+`debug_logging` records schema version 3; raw and normalized core values; source timestamps and ages; enhanced
 missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates; the exact
-pipeline-produced R15 metrics; and the relevant R10/R15/R20 thresholds. Diagnostic emission happens after normal
-decision accounting and no per-iteration diagnostic is emitted while it is disabled. The head-to-wind default remains 10
-degrees.
+pipeline-produced R15 span, gap, density, and range metrics; and the relevant R10/R15/R20 thresholds. Diagnostic
+emission happens after normal decision accounting and no per-iteration diagnostic is emitted while it is disabled. The
+head-to-wind default remains 10 degrees.
 
 ### Enhanced (optional-signal) rule settings
 
@@ -121,9 +121,10 @@ lock, parse and clamp the new values, and replace the `Config` object before per
 The sampling loop snapshots the current config once per iteration, so a change takes effect on the next sample cycle
 rather than halfway through a read/validate/update sequence.
 
-Validation state is not reset on config changes. The rolling stability window, cooldown timer, and previous sample
-continue from their current contents. If `stability_window_seconds` is increased, R15 naturally warms up until the
-retained buffer spans the new window; if it is decreased, older entries simply fall outside the new window.
+Validation state is not reset on config changes. The rolling stability observations, cooldown timer, and previous sample
+continue from their current contents; the active config snapshot supplies the window duration during each iteration, so
+there is no second mutable copy. If `stability_window_seconds` is increased, R15 naturally warms up until the retained
+buffer spans the new window; if it is decreased, older entries simply fall outside the new window.
 
 Known limitation: keep `cooldown_seconds >= stability_window_seconds` if you want the post-maneuver stability guarantee.
 The plugin does not cross-validate these two settings. If cooldown is shorter than the stability window, the first

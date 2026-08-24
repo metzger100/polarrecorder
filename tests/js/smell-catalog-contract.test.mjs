@@ -28,6 +28,7 @@ export const REQUIRED_SMELL_RULES = [
   "AvNav import leak",
   "Reverse dependency",
   "Lock acquisition in domain code",
+  "Plugin lock ownership",
   "Real sleep in domain code",
   "Defensive fallback masking a contract gap",
   "Absent-value sentinel",

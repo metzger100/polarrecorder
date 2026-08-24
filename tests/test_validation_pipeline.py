@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import cast
 
+from conftest import FakeLogger
 from polarrecorder.config import default_config
 from polarrecorder.sample import ReadResult
 from polarrecorder.validation.pipeline import run
@@ -21,14 +22,24 @@ def test_runner_returns_none_sample_for_r1_and_r2_rejections() -> None:
     )
     missing, missing_sample = run(make_read_result(twa_raw=None), state, config)
 
-    assert non_finite.reason_codes == ["reject_non_finite_twa"]
-    assert non_finite.failed_predicates == ["reject_non_finite_twa"]
+    assert non_finite.reason_codes == ("reject_non_finite_twa",)
+    assert non_finite.failed_predicates == ("reject_non_finite_twa",)
     assert non_finite.decision == "rejected"
     assert not non_finite.is_sailing_candidate
     assert non_finite_sample is None
-    assert missing.reason_codes == ["reject_missing_twa"]
+    assert missing.reason_codes == ("reject_missing_twa",)
     assert not missing.is_sailing_candidate
     assert missing_sample is None
+
+
+def test_runner_emits_optional_debug_hook_after_decision() -> None:
+    logger = FakeLogger()
+
+    result, sample = run(make_read_result(), make_warmed_state(), default_config(), logger=logger)
+
+    assert result.decision == "accepted"
+    assert sample is not None
+    assert logger.messages == [("debug", "validation pipeline decision=accepted")]
 
 
 def test_runner_aggregates_mixed_r1_and_r2_codes_in_plan_order() -> None:
@@ -50,11 +61,11 @@ def test_runner_aggregates_mixed_r1_and_r2_codes_in_plan_order() -> None:
     assert result.decision == "rejected"
     assert sample is None
     assert not result.is_sailing_candidate
-    assert result.reason_codes == [
+    assert result.reason_codes == (
         "reject_non_finite_tws",
         "reject_non_finite_stw",
         "reject_missing_twa",
-    ]
+    )
 
 
 def test_runner_rejects_r3_to_r10_as_non_candidates_with_sample() -> None:
@@ -65,7 +76,7 @@ def test_runner_rejects_r3_to_r10_as_non_candidates_with_sample() -> None:
     )
 
     assert result.decision == "rejected"
-    assert result.reason_codes == ["reject_stale_twa"]
+    assert result.reason_codes == ("reject_stale_twa",)
     assert not result.is_sailing_candidate
     assert sample is not None
 
@@ -77,8 +88,8 @@ def test_runner_retains_same_phase_predicates_in_rule_order() -> None:
         default_config(),
     )
 
-    assert result.reason_codes == ["reject_stale_twa"]
-    assert result.failed_predicates == ["reject_stale_twa", "reject_age_skew"]
+    assert result.reason_codes == ("reject_stale_twa",)
+    assert result.failed_predicates == ("reject_stale_twa", "reject_age_skew")
     assert result.decision == "rejected"
     assert sample is not None
 
@@ -93,7 +104,7 @@ def test_runner_rejects_r11_to_r13_as_candidates() -> None:
         result, sample = run(read_result, state, default_config())
 
         assert result.decision == "rejected"
-        assert result.reason_codes == [code]
+        assert result.reason_codes == (code,)
         assert result.is_sailing_candidate
         assert sample is not None
 
@@ -104,7 +115,7 @@ def test_runner_rejects_cooldown_as_candidate() -> None:
 
     result, sample = run(make_read_result(), state, default_config())
 
-    assert result.reason_codes == ["reject_maneuver_cooldown"]
+    assert result.reason_codes == ("reject_maneuver_cooldown",)
     assert result.is_sailing_candidate
     assert sample is not None
 
@@ -115,9 +126,9 @@ def test_runner_maps_warming_up_to_non_candidate() -> None:
     result, sample = run(make_read_result(), state, default_config())
 
     assert result.decision == "rejected"
-    assert result.reason_codes == ["reject_warming_up"]
+    assert result.reason_codes == ("reject_warming_up",)
     assert not result.is_sailing_candidate
-    assert result.stability_eligible
+    assert result.retain_stability_history
     assert sample is not None
 
 
@@ -130,11 +141,12 @@ def test_runner_maps_unstable_and_quarantine_to_candidates() -> None:
         default_config(),
     )
 
-    assert unstable.reason_codes == ["reject_unstable"]
+    assert unstable.reason_codes == ("reject_unstable",)
     assert unstable.is_sailing_candidate
     assert unstable_sample is not None
     assert quarantine.decision == "quarantined"
-    assert quarantine.reason_codes == ["quarantine_engine_suspected"]
+    assert quarantine.reason_codes == ("quarantine_engine_suspected",)
+    assert not quarantine.retain_stability_history
     assert quarantine.is_sailing_candidate
     assert quarantine_sample is not None
 
@@ -147,7 +159,7 @@ def test_runner_accepts_stable_candidate_and_does_not_observe() -> None:
     result, sample = run(make_read_result(), state, default_config())
 
     assert result.decision == "accepted"
-    assert result.reason_codes == []
+    assert result.reason_codes == ()
     assert result.is_sailing_candidate
     assert sample is not None
     assert len(state.window) == prior_length
@@ -191,7 +203,7 @@ def test_threats_not_detectable_in_mvp_pass_by_design() -> None:
 
         assert threat_id
         assert result.decision == "accepted"
-        assert result.reason_codes == []
+        assert result.reason_codes == ()
         assert result.is_sailing_candidate
         assert sample is not None
 
@@ -206,9 +218,9 @@ def test_enhanced_pre_candidate_rejects_are_non_candidates() -> None:
         result, sample = run(read_result, make_warmed_state(), default_config())
 
         assert result.decision == "rejected"
-        assert result.reason_codes == [code]
+        assert result.reason_codes == (code,)
         assert not result.is_sailing_candidate
-        assert not result.stability_eligible
+        assert not result.retain_stability_history
         assert sample is not None
 
 
@@ -231,7 +243,8 @@ def test_enhanced_quality_gate_rejects_are_candidates() -> None:
         result, sample = run(read_result, state, default_config())
 
         assert result.decision == "rejected"
-        assert result.reason_codes == [code]
+        assert result.reason_codes == (code,)
+        assert not result.retain_stability_history
         assert result.is_sailing_candidate
         assert sample is not None
 
@@ -242,7 +255,7 @@ def test_enhanced_quality_gate_reject_precedes_r16_quarantine() -> None:
     result, sample = run(read_result, make_warmed_state(), default_config())
 
     assert result.decision == "rejected"
-    assert result.reason_codes == ["reject_heel_out_of_band"]
+    assert result.reason_codes == ("reject_heel_out_of_band",)
     assert sample is not None
 
 
@@ -254,7 +267,7 @@ def test_engine_off_signal_suppresses_r16_quarantine_end_to_end() -> None:
     result, sample = run(read_result, make_warmed_state(), default_config())
 
     assert result.decision == "accepted"
-    assert result.reason_codes == []
+    assert result.reason_codes == ()
     assert result.is_sailing_candidate
     assert sample is not None
 
@@ -269,7 +282,7 @@ def test_wind_shift_with_steady_heading_reaches_r15_end_to_end() -> None:
     result, sample = run(read_result, state, default_config())
 
     assert result.decision == "rejected"
-    assert result.reason_codes == ["reject_unstable"]
+    assert result.reason_codes == ("reject_unstable",)
     assert result.is_sailing_candidate
     assert sample is not None
 
@@ -285,6 +298,6 @@ def test_unstable_threats_emit_expected_code() -> None:
         result, sample = run(read_result, state, default_config())
 
         assert result.decision == "rejected"
-        assert result.reason_codes == ["reject_unstable"]
+        assert result.reason_codes == ("reject_unstable",)
         assert result.is_sailing_candidate
         assert sample is not None

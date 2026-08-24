@@ -103,6 +103,7 @@
     },
     "viewer-only": { "include": ["viewer/*.js"] },
     "python-domain": { "include": ["server/polarrecorder/**/*.py"] },
+    "plugin-shell": { "include": ["plugin.py"] },
     "duplication-source": { "include": ["viewer/*.js", "plugin.js", "plugin.mjs", "server/polarrecorder/**/*.py"] },
     "generic-source": { "include": ["viewer/*.js", "plugin.js", "plugin.mjs", "server/polarrecorder/**/*.py"] },
     "markdown-todo": {

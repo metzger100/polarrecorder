@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-from polarrecorder.sample import RuleResult, enhanced_value
+from polarrecorder.sample import RuleResult, enhanced_value, pass_rule, reject_rule
 from polarrecorder.validation.angle_math import circular_distance
 
 if TYPE_CHECKING:
@@ -94,9 +94,5 @@ def reject_heel_out_of_band(sample: Sample, config: Config) -> RuleResult:
     return _pass()
 
 
-def _pass() -> RuleResult:
-    return RuleResult(decision="pass", reason_codes=[])
-
-
-def _reject(code: str) -> RuleResult:
-    return RuleResult(decision="reject", reason_codes=[code])
+_pass = pass_rule
+_reject = reject_rule

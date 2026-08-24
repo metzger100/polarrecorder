@@ -54,7 +54,7 @@ def make_warmed_state(
     tws_values: tuple[float, ...] = (12.0, 12.0, 12.0),
     stw_values: tuple[float, ...] = (6.0, 6.0, 6.0),
 ) -> ValidationState:
-    state = ValidationState(stability_window_seconds=15.0)
+    state = ValidationState()
     timestamps = tuple(now - offset for offset in range(15, 0, -1))
     for index, timestamp in enumerate(timestamps):
         value_index = min(index // 5, 2)
@@ -64,7 +64,8 @@ def make_warmed_state(
                 tws_kt=tws_values[value_index],
                 stw_kt=stw_values[value_index],
                 now=timestamp,
-            )
+            ),
+            window_seconds=15.0,
         )
     state.previous_sample = state.window[-5]
     return state

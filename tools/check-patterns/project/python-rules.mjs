@@ -24,6 +24,29 @@ function runLinePattern(files, pattern, message) {
   return out;
 }
 
+/** @param {string[]} files @returns {Finding[]} */
+function runPluginLockOwnership(files) {
+  if (files.length === 0) return [];
+  const file = files[0];
+  const { text } = getFileData(file);
+  const ordinaryLocks = text.match(/\bthreading\.Lock\s*\(/g) || [];
+  const forbiddenLocks = text.match(/\bthreading\.(RLock|Condition)\s*\(/g) || [];
+  /** @type {Finding[]} */
+  const findings = forbiddenLocks.map(() => ({
+    file,
+    line: 1,
+    message: "plugin.py must not use RLock or Condition"
+  }));
+  if (ordinaryLocks.length !== 1) {
+    findings.push({
+      file,
+      line: 1,
+      message: `plugin.py must create exactly one threading.Lock (found ${ordinaryLocks.length})`
+    });
+  }
+  return findings;
+}
+
 /** @type {Rule[]} */
 export const PYTHON_PROJECT_RULES = [
   {
@@ -59,6 +82,13 @@ export const PYTHON_PROJECT_RULES = [
         /\bthreading\.(Lock|RLock|Condition)\s*\(/,
         "threading lock acquisition forbidden in server/polarrecorder/"
       )
+  },
+  {
+    id: "plugin-lock-ownership",
+    name: "plugin-lock-ownership",
+    severity: "block",
+    scope: scopeFor("plugin-shell"),
+    run: (_rule, files) => runPluginLockOwnership(files)
   },
   {
     id: "domain-time-sleep",

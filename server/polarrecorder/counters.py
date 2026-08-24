@@ -7,9 +7,12 @@ Depends: polarrecorder.coerce
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict, cast
 
 from polarrecorder.coerce import to_int
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class CountersDict(TypedDict):
@@ -34,43 +37,43 @@ class Counters:
     rejection_histogram: dict[str, int] = field(default_factory=dict)
     predicate_histogram: dict[str, int] = field(default_factory=dict)
 
-    def record_accepted(self, predicate_codes: list[str] | None = None) -> None:
+    def record_accepted(self, predicate_codes: Sequence[str] | None = None) -> None:
         """Record one accepted sailing candidate."""
-        self.record_predicates([] if predicate_codes is None else predicate_codes)
+        self.record_predicates(() if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_accepted += 1
 
     def record_rejected(
-        self, reason_codes: list[str], predicate_codes: list[str] | None = None
+        self, reason_codes: Sequence[str], predicate_codes: Sequence[str] | None = None
     ) -> None:
         """Record one rejected sailing candidate and its reason codes."""
-        self.record_predicates([] if predicate_codes is None else predicate_codes)
+        self.record_predicates(() if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_rejected += 1
         self.record_reasons(reason_codes)
 
     def record_quarantined(
-        self, reason_code: str, predicate_codes: list[str] | None = None
+        self, reason_code: str, predicate_codes: Sequence[str] | None = None
     ) -> None:
         """Record one quarantined sailing candidate and its reason code."""
-        self.record_predicates([] if predicate_codes is None else predicate_codes)
+        self.record_predicates(() if predicate_codes is None else predicate_codes)
         self.total_seen += 1
         self.total_quarantined += 1
         self.record_reasons([reason_code])
 
     def record_non_candidate(
-        self, reason_codes: list[str], predicate_codes: list[str] | None = None
+        self, reason_codes: Sequence[str], predicate_codes: Sequence[str] | None = None
     ) -> None:
         """Record non-candidate diagnostics without changing sailing totals."""
-        self.record_predicates([] if predicate_codes is None else predicate_codes)
+        self.record_predicates(() if predicate_codes is None else predicate_codes)
         self.record_reasons(reason_codes)
 
-    def record_reasons(self, reason_codes: list[str]) -> None:
+    def record_reasons(self, reason_codes: Sequence[str]) -> None:
         """Add reason codes to the diagnostic histogram."""
         for reason_code in reason_codes:
             self.rejection_histogram[reason_code] = self.rejection_histogram.get(reason_code, 0) + 1
 
-    def record_predicates(self, predicate_codes: list[str]) -> None:
+    def record_predicates(self, predicate_codes: Sequence[str]) -> None:
         """Add triggered predicate codes to the diagnostic histogram."""
         for predicate_code in predicate_codes:
             histogram = self.predicate_histogram

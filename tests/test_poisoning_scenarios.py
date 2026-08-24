@@ -172,7 +172,8 @@ def test_failing_paddlewheel_sog_stw_mismatch_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_sog_stw_mismatch") == 20
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 2
+    assert _reason_count(results, "reject_warming_up") == 33
     assert _decision_count(results, "accepted") == 0
 
 
@@ -185,7 +186,8 @@ def test_high_speed_log_failure_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_sog_stw_mismatch") == 20
+    assert _reason_count(results, "reject_sog_stw_mismatch") == 2
+    assert _reason_count(results, "reject_warming_up") == 33
     assert _decision_count(results, "accepted") == 0
 
 
@@ -195,7 +197,8 @@ def test_miscalibrated_wind_crosscheck_is_rejected() -> None:
 
     results, _ = _drive(reads)
 
-    assert _reason_count(results, "reject_true_wind_crosscheck") == 20
+    assert _reason_count(results, "reject_true_wind_crosscheck") == 2
+    assert _reason_count(results, "reject_warming_up") == 33
     assert _decision_count(results, "accepted") == 0
 
 

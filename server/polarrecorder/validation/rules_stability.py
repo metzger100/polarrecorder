@@ -7,10 +7,11 @@ polarrecorder.validation.state
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from polarrecorder.sample import RuleResult, enhanced_value
+from polarrecorder.sample import RuleResult, enhanced_value, pass_rule, reject_rule
 from polarrecorder.validation.angle_math import circular_distance, circular_range
 from polarrecorder.validation.state import entry_from_sample
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 
 
 STABILITY_MAX_GAP_INTERVALS = 3.0
+STABILITY_MIN_SAMPLE_COUNT = 3
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,9 @@ class StabilityEvaluation:
     filled: bool
     window_span_seconds: float | None
     largest_gap_seconds: float | None
+    max_allowed_gap_seconds: float
+    sample_count: int
+    minimum_sample_count: int
     twa_range: float | None
     tws_range: float | None
     stw_range: float | None
@@ -134,8 +139,8 @@ def stability_decision(evaluation: StabilityEvaluation) -> RuleResult:
     if evaluation.predicate_codes:
         return RuleResult(
             decision="reject",
-            reason_codes=["reject_unstable"],
-            predicate_codes=list(evaluation.predicate_codes),
+            reason_codes=("reject_unstable",),
+            predicate_codes=evaluation.predicate_codes,
         )
     return _pass()
 
@@ -150,12 +155,26 @@ def evaluate_stability(
     entries = [*retained, entry_from_sample(sample)]
     span = _window_span(entries)
     largest_gap = _largest_gap(entries)
-    continuous = largest_gap <= config.sample_interval * STABILITY_MAX_GAP_INTERVALS
-    if not retained or now - retained[0].timestamp_monotonic < window_seconds or not continuous:
+    max_allowed_gap = config.sample_interval * STABILITY_MAX_GAP_INTERVALS
+    minimum_samples = max(
+        STABILITY_MIN_SAMPLE_COUNT,
+        math.ceil(window_seconds / config.sample_interval) + 1,
+    )
+    continuous = largest_gap <= max_allowed_gap
+    dense = len(entries) >= minimum_samples
+    if (
+        not retained
+        or now - retained[0].timestamp_monotonic < window_seconds
+        or not continuous
+        or not dense
+    ):
         return StabilityEvaluation(
             filled=False,
             window_span_seconds=span,
             largest_gap_seconds=largest_gap,
+            max_allowed_gap_seconds=max_allowed_gap,
+            sample_count=len(entries),
+            minimum_sample_count=minimum_samples,
             twa_range=None,
             tws_range=None,
             stw_range=None,
@@ -173,6 +192,9 @@ def evaluate_stability(
         filled=True,
         window_span_seconds=span,
         largest_gap_seconds=largest_gap,
+        max_allowed_gap_seconds=max_allowed_gap,
+        sample_count=len(entries),
+        minimum_sample_count=minimum_samples,
         twa_range=twa_range,
         tws_range=tws_range,
         stw_range=stw_range,
@@ -229,9 +251,5 @@ def _unstable_predicates(
     return codes
 
 
-def _pass() -> RuleResult:
-    return RuleResult(decision="pass", reason_codes=[])
-
-
-def _reject(code: str) -> RuleResult:
-    return RuleResult(decision="reject", reason_codes=[code], predicate_codes=[code])
+_pass = pass_rule
+_reject = reject_rule

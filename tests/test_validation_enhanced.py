@@ -126,15 +126,15 @@ def test_reject_heel_out_of_band_upper_and_lower() -> None:
 def test_each_enhanced_reject_emits_only_its_reason_code() -> None:
     config: Config = default_config()
 
-    assert rules_enhanced.reject_engine_rpm(_sample({"rpm": 2000.0}), config).reason_codes == [
-        "reject_engine_rpm"
-    ]
+    assert rules_enhanced.reject_engine_rpm(_sample({"rpm": 2000.0}), config).reason_codes == (
+        "reject_engine_rpm",
+    )
     assert rules_enhanced.reject_engine_on(
         _sample({"engine_signal": 1.0}), config
-    ).reason_codes == ["reject_engine_on"]
-    assert rules_enhanced.reject_shallow(_sample({"depth_m": 0.2}), config).reason_codes == [
-        "reject_shallow"
-    ]
+    ).reason_codes == ("reject_engine_on",)
+    assert rules_enhanced.reject_shallow(_sample({"depth_m": 0.2}), config).reason_codes == (
+        "reject_shallow",
+    )
     assert rules_enhanced.reject_heel_out_of_band(
         _sample({"heel_deg": 80.0}), config
-    ).reason_codes == ["reject_heel_out_of_band"]
+    ).reason_codes == ("reject_heel_out_of_band",)

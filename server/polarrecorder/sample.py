@@ -7,9 +7,10 @@ Depends: polarrecorder.enhanced_input, polarrecorder.units
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Literal
 
+from polarrecorder.enhanced_input import coerce_finite_timestamp
 from polarrecorder.units import meters_per_second_to_knots
 
 if TYPE_CHECKING:
@@ -67,9 +68,9 @@ class ReadResult:
     twa_raw: object | None
     tws_raw: object | None
     stw_raw: object | None
-    twa_timestamp: float | None
-    tws_timestamp: float | None
-    stw_timestamp: float | None
+    twa_timestamp: object | None
+    tws_timestamp: object | None
+    stw_timestamp: object | None
     enhanced_raw: dict[str, tuple[float, float]] | None = None
     enhanced_inputs: dict[str, EnhancedInput] | None = None
 
@@ -107,13 +108,23 @@ class RuleResult:
     """Result returned by one validation rule."""
 
     decision: RuleDecision
-    reason_codes: list[str]
-    predicate_codes: list[str] = field(default_factory=list)
+    reason_codes: tuple[str, ...]
+    predicate_codes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         """Use a rejecting rule's decision reasons as default predicates."""
         if self.decision != "pass" and not self.predicate_codes:
-            object.__setattr__(self, "predicate_codes", list(self.reason_codes))
+            object.__setattr__(self, "predicate_codes", self.reason_codes)
+
+
+def pass_rule() -> RuleResult:
+    """Return the canonical passing rule result."""
+    return RuleResult(decision="pass", reason_codes=())
+
+
+def reject_rule(code: str) -> RuleResult:
+    """Return the canonical single-code rejecting rule result."""
+    return RuleResult(decision="reject", reason_codes=(code,))
 
 
 def enhanced_value(sample: Sample, role: str) -> float | None:
@@ -134,18 +145,15 @@ def build_sample(read_result: ReadResult) -> Sample | None:
         A normalized sample, or ``None`` when any core value is missing or
         non-finite.
     """
-    if not _required_values_are_finite(read_result):
+    timestamps = _finite_timestamps(read_result)
+    if not _required_values_are_finite(read_result) or timestamps is None:
         return None
 
     assert isinstance(read_result.twa_raw, (int, float))
     assert isinstance(read_result.tws_raw, (int, float))
     assert isinstance(read_result.stw_raw, (int, float))
-    assert read_result.twa_timestamp is not None
-    assert read_result.tws_timestamp is not None
-    assert read_result.stw_timestamp is not None
-
     twa_abs, twa_signed = _normalize_twa(read_result.twa_raw)
-    freshness = _build_freshness(read_result)
+    freshness = _build_freshness(read_result.timestamp_monotonic, timestamps)
     return Sample(
         timestamp_monotonic=read_result.timestamp_monotonic,
         timestamp_wall=read_result.timestamp_wall,
@@ -189,6 +197,24 @@ def _required_values_are_finite(read_result: ReadResult) -> bool:
     return all(is_finite_core_value(value) for value in values)
 
 
+def _finite_timestamps(read_result: ReadResult) -> tuple[float, float, float] | None:
+    timestamps = tuple(
+        coerce_finite_timestamp(value)
+        for value in (
+            read_result.twa_timestamp,
+            read_result.tws_timestamp,
+            read_result.stw_timestamp,
+        )
+    )
+    if any(value is None for value in timestamps):
+        return None
+    twa_timestamp, tws_timestamp, stw_timestamp = timestamps
+    assert twa_timestamp is not None
+    assert tws_timestamp is not None
+    assert stw_timestamp is not None
+    return twa_timestamp, tws_timestamp, stw_timestamp
+
+
 def _normalize_twa(twa_deg_raw: float) -> tuple[float, float]:
     normalized = twa_deg_raw % TWA_FULL_CIRCLE_DEG
     if normalized <= TWA_HALF_CIRCLE_DEG:
@@ -196,14 +222,10 @@ def _normalize_twa(twa_deg_raw: float) -> tuple[float, float]:
     return TWA_FULL_CIRCLE_DEG - normalized, normalized - TWA_FULL_CIRCLE_DEG
 
 
-def _build_freshness(read_result: ReadResult) -> Freshness:
-    assert read_result.twa_timestamp is not None
-    assert read_result.tws_timestamp is not None
-    assert read_result.stw_timestamp is not None
-
-    twa_age = read_result.timestamp_monotonic - read_result.twa_timestamp
-    tws_age = read_result.timestamp_monotonic - read_result.tws_timestamp
-    stw_age = read_result.timestamp_monotonic - read_result.stw_timestamp
+def _build_freshness(now: float, timestamps: tuple[float, float, float]) -> Freshness:
+    twa_age = now - timestamps[0]
+    tws_age = now - timestamps[1]
+    stw_age = now - timestamps[2]
     ages = (twa_age, tws_age, stw_age)
     return Freshness(
         twa_age_s=twa_age,

@@ -29,7 +29,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     payload = format_sample_diagnostic(read_result, sample, result, config)
 
     assert state == before
-    assert payload["schema_version"] == 2
+    assert payload["schema_version"] == 3
     assert payload["core_raw"] == {
         "twa": 90.0,
         "tws_ms": read_result.tws_raw,
@@ -62,16 +62,22 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
         "reason_codes": [],
         "failed_predicates": [],
         "is_sailing_candidate": True,
+        "retain_stability_history": True,
     }
     assert payload["r15"] == {
         "filled": True,
         "window_span_seconds": 15.0,
+        "largest_gap_seconds": 1.0,
+        "max_allowed_gap_seconds": 3.0,
+        "sample_count": 16,
+        "minimum_sample_count": 16,
         "twa_range": 0.0,
         "tws_range": 0.0,
         "stw_range": 0.0,
     }
     assert payload["config"] == {
         "stability_window_seconds": 15.0,
+        "sample_interval": 1.0,
         "stability_twa_range": 20.0,
         "stability_tws_range": 10.0,
         "stability_stw_range": 4.0,
@@ -99,12 +105,14 @@ def test_formatter_preserves_rejected_quarantined_and_predicate_decisions() -> N
         "reason_codes": ["reject_unstable"],
         "failed_predicates": ["unstable_twa"],
         "is_sailing_candidate": True,
+        "retain_stability_history": True,
     }
     assert quarantined_payload["pipeline"] == {
         "decision": "quarantined",
         "reason_codes": ["quarantine_engine_suspected"],
         "failed_predicates": ["quarantine_engine_suspected"],
         "is_sailing_candidate": True,
+        "retain_stability_history": False,
     }
 
 
@@ -124,6 +132,10 @@ def test_formatter_represents_missing_and_non_finite_values_as_null() -> None:
     assert payload["r15"] == {
         "filled": False,
         "window_span_seconds": None,
+        "largest_gap_seconds": None,
+        "max_allowed_gap_seconds": None,
+        "sample_count": 0,
+        "minimum_sample_count": None,
         "twa_range": None,
         "tws_range": None,
         "stw_range": None,
@@ -133,6 +145,7 @@ def test_formatter_represents_missing_and_non_finite_values_as_null() -> None:
         "reason_codes": ["reject_non_finite_twa"],
         "failed_predicates": ["reject_non_finite_twa"],
         "is_sailing_candidate": False,
+        "retain_stability_history": False,
     }
     assert "NaN" not in json.dumps(payload, allow_nan=False)
 
@@ -172,6 +185,10 @@ def test_formatter_uses_the_pipeline_current_sample_r15_evaluation() -> None:
     assert payload["r15"] == {
         "filled": True,
         "window_span_seconds": 15.0,
+        "largest_gap_seconds": 1.0,
+        "max_allowed_gap_seconds": 3.0,
+        "sample_count": 16,
+        "minimum_sample_count": 16,
         "twa_range": 30.0,
         "tws_range": 0.0,
         "stw_range": 0.0,
