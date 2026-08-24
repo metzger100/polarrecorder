@@ -308,7 +308,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   assert.equal(result.summary.byRule["catch-fallback-without-suppression"], 1);
 });
 
-test("a catch with a boundary-fallback marker passes", () => {
+test("a catch returning an explicit boundary failure passes", () => {
   const result = runChecker({
     "viewer/good.js":
       viewerHeader() +
@@ -319,9 +319,32 @@ window.Polarrecorder = window.Polarrecorder || {};
   function load() {
     try {
       return JSON.parse(window.name);
-    // plugin-boundary-next-line(category: host-window-name, owner: polarrecorder-maintainers, date: 2026-08-01) -- host window may be unavailable across browsing contexts
     } catch (error) {
-      return {};
+      return { ok: false, error: error };
+    }
+  }
+  window.Polarrecorder.Good = { Load: load };
+}());
+`
+  });
+
+  assert.equal(result.status, 0, result.failures.join("\n"));
+});
+
+test("a catch updating visible failure state passes", () => {
+  const result = runChecker({
+    "viewer/good.js":
+      viewerHeader() +
+      `
+window.Polarrecorder = window.Polarrecorder || {};
+(function () {
+  "use strict";
+  function load(message) {
+    try {
+      return JSON.parse(window.name);
+    } catch (error) {
+      message.textContent = error.message;
+      return undefined;
     }
   }
   window.Polarrecorder.Good = { Load: load };

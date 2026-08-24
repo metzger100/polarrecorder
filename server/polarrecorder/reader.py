@@ -99,7 +99,9 @@ class StoreReader:
             return None
         enhanced_raw: dict[str, tuple[float, float]] = {}
         for spec in ENHANCED_SIGNAL_SPECS:
-            if not getattr(config, spec.enable_field):
+            if spec.enable_fields and not any(
+                getattr(config, field) for field in spec.enable_fields
+            ):
                 continue
             key = getattr(config, spec.key_field)
             if not key:

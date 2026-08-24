@@ -86,8 +86,8 @@ def test_all_combinator_requires_both_keys_fresh() -> None:
     one_stale = {config.enh_sog_key: _STALE, config.enh_current_drift_key: _MISSING}
     both_fresh = {config.enh_sog_key: _FRESH, config.enh_current_drift_key: _FRESH}
 
-    assert _status(config, one_fresh, "reject_sog_stw_mismatch") == "inactive_value_missing"
-    assert _status(config, one_stale, "reject_sog_stw_mismatch") == "inactive_value_missing"
+    assert _status(config, one_fresh, "reject_sog_stw_mismatch") == "inactive_key_missing"
+    assert _status(config, one_stale, "reject_sog_stw_mismatch") == "inactive_key_missing"
     assert _status(config, both_fresh, "reject_sog_stw_mismatch") == "active"
 
 
@@ -108,3 +108,17 @@ def test_any_combinator_active_with_one_fresh_key() -> None:
     probes = {config.enh_heading_key: _FRESH, config.enh_cog_key: _MISSING}
 
     assert _status(config, probes, "turn_confirm") == "active"
+
+
+def test_any_combinator_reports_missing_before_stale_when_none_are_fresh() -> None:
+    config = default_config()
+    probes = {config.enh_heading_key: _STALE, config.enh_cog_key: _MISSING}
+
+    assert _status(config, probes, "turn_confirm") == "inactive_key_missing"
+
+
+def test_all_combinator_reports_stale_only_when_no_source_is_missing() -> None:
+    config = default_config()
+    probes = {config.enh_sog_key: _STALE, config.enh_current_drift_key: _STALE}
+
+    assert _status(config, probes, "reject_sog_stw_mismatch") == "inactive_value_missing"

@@ -193,6 +193,20 @@ def test_framework_method_guard_callable_blocked(tmp_path: Path) -> None:
     assert "framework-method-guard" in output
 
 
+def test_host_store_api_spelling_blocked(tmp_path: Path) -> None:
+    write_package(
+        tmp_path,
+        {
+            "sample.py": HEADER
+            + "def read(api: object) -> object:\n"
+            + "    return api.getSingleValue('gps.speed', includeInfo=True)\n"
+        },
+    )
+    result, output = run_checker(tmp_path)
+    assert result == 1
+    assert "host-api-leak" in output
+
+
 def test_speculative_legacy_blocked(tmp_path: Path) -> None:
     write_package(
         tmp_path,

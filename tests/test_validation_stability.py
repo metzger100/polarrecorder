@@ -247,21 +247,21 @@ def test_r15_restarts_warmup_after_sample_gap() -> None:
     assert state.is_warming_up(130.0)
 
 
-def test_r15_uses_runtime_config_window_for_warming_up_status() -> None:
+def test_r15_uses_runtime_config_window_without_mutating_state_configuration() -> None:
     config = replace(default_config(), stability_window_seconds=60)
     state = make_warmed_state(now=100.0)
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "reject"
     assert result.reason_codes == ["reject_warming_up"]
-    assert state.is_warming_up(100.0)
+    assert state.stability_window_seconds == 15.0
 
 
-def test_r15_runtime_config_can_shorten_existing_state_window() -> None:
+def test_r15_runtime_config_can_shorten_evaluation_without_mutating_state() -> None:
     config = replace(default_config(), stability_window_seconds=5)
     state = ValidationState()
     state.observe(make_sample(now=95.0))
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "pass"
-    assert not state.is_warming_up(100.0)
+    assert state.stability_window_seconds == 15.0

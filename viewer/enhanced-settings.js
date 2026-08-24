@@ -1,7 +1,7 @@
 /**
  * @file Enhanced Settings
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, dom.js
+ * Depends: viewer.js, dom.js, enhanced-rule-display.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -37,16 +37,6 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
 
   /** @type {Record<string, string>} */
-  const RULE_LABELS = {
-    reject_engine_rpm: "Engine RPM",
-    reject_engine_on: "Engine on/off",
-    reject_shallow: "Shallow water",
-    reject_sog_stw_mismatch: "Speed-log sanity (SOG vs STW)",
-    reject_true_wind_crosscheck: "Wind sensor cross-check",
-    reject_heel_out_of_band: "Heel angle",
-    turn_confirm: "Turn vs. wind-shift detection"
-  };
-  /** @type {Record<string, string>} */
   const FIELD_LABELS = {
     enh_rpm_key: "Engine RPM source",
     enh_rpm_idle_max: "Reject above RPM",
@@ -68,14 +58,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     enh_heading_key: "Heading source",
     enh_cog_key: "Course over ground source",
     enh_turn_min_roc: "Turn rate threshold (°/s)"
-  };
-  /** @type {Record<string, string>} */
-  const STATUS_LABELS = {
-    active: "active",
-    disabled: "disabled",
-    inactive_key_not_configured: "no key set",
-    inactive_key_missing: "key not in store",
-    inactive_value_missing: "value stale"
   };
 
   /** @type {EnhancedState} */
@@ -144,7 +126,9 @@ window.Polarrecorder = window.Polarrecorder || {};
   function ruleBlock(rule) {
     const wrap = Polarrecorder.Dom.Node("div", "enhanced-rule");
     const header = Polarrecorder.Dom.Node("div", "enhanced-rule-head");
-    header.appendChild(Polarrecorder.Dom.Node("h3", "settings-group-title", RULE_LABELS[rule.rule] || rule.rule));
+    header.appendChild(
+      Polarrecorder.Dom.Node("h3", "settings-group-title", Polarrecorder.EnhancedRuleDisplay.RuleLabel(rule.rule))
+    );
     header.appendChild(badge(String(rule.availability)));
     wrap.appendChild(header);
     wrap.appendChild(Polarrecorder.Dom.Node("p", "helper", detailedStatus(String(rule.status))));
@@ -274,7 +258,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     return Polarrecorder.Dom.Node(
       "span",
       "enhanced-badge enhanced-badge-" + cssStatus,
-      STATUS_LABELS[status] || status
+      Polarrecorder.EnhancedRuleDisplay.AvailabilityLabel(status)
     );
   }
 
@@ -283,7 +267,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {string}
    */
   function detailedStatus(status) {
-    return STATUS_LABELS[status] || status;
+    return Polarrecorder.EnhancedRuleDisplay.StatusLabel(status);
   }
 
   /**

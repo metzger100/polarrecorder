@@ -9,16 +9,13 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   const Polarrecorder = window.Polarrecorder;
   const SUPPRESSION_KEY = "polarrecorder.engine-warning.v1";
-  /** @type {HTMLElement} */
-  let storageMessage;
-  let storageOperation = "";
   let warningChecked = false;
 
   document.addEventListener("DOMContentLoaded", start);
-  window.addEventListener("error", reportStorageFailure);
 
   function start() {
-    if (isSuppressed()) return;
+    const stored = readSuppression();
+    if (stored.ok && stored.value === "hidden") return;
     requestWarning();
   }
 
@@ -42,17 +39,36 @@ window.Polarrecorder = window.Polarrecorder || {};
     });
   }
 
-  function isSuppressed() {
-    storageOperation = "read";
-    const value = window.localStorage.getItem(SUPPRESSION_KEY);
-    if (storageOperation !== "read") return true;
-    storageOperation = "";
-    return value === "hidden";
+  /** @returns {{ok: true, value: string|null}|{ok: false, error: unknown}} */
+  function readSuppression() {
+    try {
+      return { ok: true, value: window.localStorage.getItem(SUPPRESSION_KEY) };
+    } catch (error) {
+      return { ok: false, error: error };
+    }
+  }
+
+  /** @returns {{ok: true}|{ok: false, error: unknown}} */
+  function writeSuppression() {
+    try {
+      window.localStorage.setItem(SUPPRESSION_KEY, "hidden");
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error };
+    }
   }
 
   function renderWarning() {
-    const modal = Polarrecorder.Dom.Node("section", "engine-warning", undefined);
-    modal.appendChild(Polarrecorder.Dom.Node("h2", "", "Engine protection unavailable"));
+    const previousFocus = document.activeElement;
+    const background = document.getElementById("polarrecorder-app");
+    const backdrop = Polarrecorder.Dom.Node("div", "engine-warning-backdrop");
+    const modal = Polarrecorder.Dom.Node("section", "engine-warning");
+    const heading = Polarrecorder.Dom.Node("h2", "", "Engine protection unavailable");
+    heading.id = "engine-warning-title";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", heading.id);
+    modal.appendChild(heading);
     modal.appendChild(
       Polarrecorder.Dom.Node(
         "p",
@@ -61,49 +77,55 @@ window.Polarrecorder = window.Polarrecorder || {};
       )
     );
     const message = Polarrecorder.Dom.Node("p", "error-text", "");
-    const close = Polarrecorder.Dom.Button(
-      "Close",
-      function () {
-        modal.remove();
-      },
-      "secondary-action"
-    );
+    message.setAttribute("aria-live", "polite");
+    const close = Polarrecorder.Dom.Button("Close", dismiss, "secondary-action");
     const never = Polarrecorder.Dom.Button(
       "Never show again",
       function () {
-        saveSuppression(modal, message);
+        const saved = writeSuppression();
+        if (saved.ok) dismiss();
+        else message.textContent = "The preference could not be saved. Close this warning to dismiss it for now.";
       },
       "primary-action"
     );
     modal.appendChild(Polarrecorder.Dom.ActionRow([close, never]));
     modal.appendChild(message);
-    document.body.appendChild(modal);
-  }
-
-  /**
-   * @param {HTMLElement} modal
-   * @param {HTMLElement} message
-   */
-  function saveSuppression(modal, message) {
-    storageMessage = message;
-    storageOperation = "write";
-    window.localStorage.setItem(SUPPRESSION_KEY, "hidden");
-    if (storageOperation !== "write") return;
-    storageOperation = "";
-    modal.remove();
-  }
-
-  /** @param {ErrorEvent} event */
-  function reportStorageFailure(event) {
-    if (!storageOperation) return;
-    const operation = storageOperation;
-    storageOperation = "";
-    event.preventDefault();
-    if (operation === "read") {
-      requestWarning();
-      return;
+    if (background) {
+      background.inert = true;
+      background.setAttribute("aria-hidden", "true");
     }
-    storageMessage.textContent = "The preference could not be saved. Close this warning to dismiss it for now.";
+    document.body.appendChild(backdrop);
+    document.body.appendChild(modal);
+    document.addEventListener("keydown", containFocus);
+    close.focus();
+
+    function dismiss() {
+      document.removeEventListener("keydown", containFocus);
+      modal.remove();
+      backdrop.remove();
+      if (background) {
+        background.inert = false;
+        background.removeAttribute("aria-hidden");
+      }
+      if (previousFocus) /** @type {HTMLElement} */ (previousFocus).focus();
+    }
+
+    /** @param {KeyboardEvent} event */
+    function containFocus(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        dismiss();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      if (event.shiftKey && document.activeElement === close) {
+        event.preventDefault();
+        never.focus();
+      } else if (!event.shiftKey && document.activeElement === never) {
+        event.preventDefault();
+        close.focus();
+      }
+    }
   }
 
   Polarrecorder.EngineWarning = { Start: start };

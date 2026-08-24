@@ -145,10 +145,15 @@ def _resolve_status(
     if not _configuration_satisfies(spec, len(configured_keys)):
         return "inactive_key_not_configured"
     states = [_key_state(probes.get(key)) for key in configured_keys]
+    return _status_from_states(spec, states)
+
+
+def _status_from_states(spec: EnhancedRuleSpec, states: list[str]) -> str:
     if _is_active(spec.combinator, len(spec.key_fields), states):
         return "active"
-    read = any(state in {"fresh", "stale"} for state in states)
-    return "inactive_value_missing" if read else "inactive_key_missing"
+    if "missing" in states:
+        return "inactive_key_missing"
+    return "inactive_value_missing"
 
 
 def _configuration_satisfies(spec: EnhancedRuleSpec, configured_count: int) -> bool:

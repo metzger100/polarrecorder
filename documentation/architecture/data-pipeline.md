@@ -28,13 +28,19 @@ loops. This ordering keeps R11 through R13 reading the previous sample, lets R15
 current uncommitted sample, and lets the UI warming flag call `state.is_warming_up(now)` against the same buffer R15
 just judged.
 
+R15 evaluation is pure over a retained-state snapshot plus the current sample. The immutable evaluation used for the
+decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
+reconfigures, or otherwise mutates live validation state. Diagnostic records also retain individually available raw core
+values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages, and a record schema.
+
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.
 The primary reason remains the first decisive rule; `failed_predicates` retains all same-phase evidence in rule order
 and is recorded in global and per-bin diagnostic histograms.
 
-Optional signal hooks read a bounded set of configured store keys alongside the three core keys. When a `Config` is
-supplied, `StoreReader` reads each enabled, configured optional key via `getSingleValue`, coerces it through
+Optional signal hooks read a bounded set of configured store keys alongside the three core keys. Configured SOG is
+always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
+is supplied, `StoreReader` reads each applicable configured optional key through its store protocol, coerces it through
 `reader._coerce_float` (bool -> `0.0`/`1.0`, numbers pass through, numeric strings parse, non-numeric/non-finite values
 are omitted and debug-logged), drops any reading older than `stale_threshold`, and carries the survivors in
 `ReadResult.enhanced_raw` (store units + timestamp). `build_sample` converts each role to its canonical unit once

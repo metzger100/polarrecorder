@@ -4,12 +4,7 @@ import path from "node:path";
 import { maskCode, maskStringsOnly } from "./ast-utils.mjs";
 import { resetSuppressionState, setKnownRuleNames } from "./shared-suppressions.mjs";
 
-export {
-  BOUNDARY_MARKER_RULE_NAME,
-  getInvalidLintSuppressions,
-  isLintSuppressed,
-  setKnownRuleNames
-} from "./shared-suppressions.mjs";
+export { getInvalidLintSuppressions, isLintSuppressed, setKnownRuleNames } from "./shared-suppressions.mjs";
 
 /** @typedef {{text: string, lineStarts: number[], masked: string, maskedStringsOnly: string}} FileData */
 /** @typedef {{file: string, line: number, message: string, [key: string]: any}} Finding */

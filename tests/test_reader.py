@@ -193,7 +193,7 @@ def test_reader_omits_disabled_unconfigured_missing_and_stale_signals() -> None:
     assert sample is not None
     enhanced = sample.enhanced
     assert enhanced is not None
-    assert "sog_kt" not in enhanced
+    assert "sog_kt" in enhanced
     assert "current_drift_kt" not in enhanced
     assert "depth_m" not in enhanced
     assert "aws_kt" not in enhanced
@@ -220,7 +220,22 @@ def test_reader_current_drift_follows_slip_enable() -> None:
     assert on_sample.enhanced is not None
     assert "current_drift_kt" in on_sample.enhanced
     assert off_sample is not None
-    assert off_sample.enhanced is None
+    assert off_sample.enhanced == {"sog_kt": 5.0 * 1.94384}
+
+
+def test_r10_receives_fresh_sog_when_r20_is_disabled() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry(STW_KEY, 0.1, 99.5)
+    api.set_entry("gps.speed", 2.0, 99.5)
+    config = parse_config_values({"enh_slip_enabled": "false"})
+
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
+    result, sample = pipeline.run(read_result, ValidationState(), config)
+
+    assert sample is not None
+    assert sample.enhanced == {"sog_kt": 2.0 * 1.94384}
+    assert "reject_anchored" not in result.reason_codes
 
 
 def test_reader_engine_state_coerces_bool_rpm_and_voltage() -> None:

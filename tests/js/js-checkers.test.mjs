@@ -188,6 +188,7 @@ function smellContractsWorkspace() {
     "placeholders.js",
     "viewer.js",
     "dom.js",
+    "enhanced-rule-display.js",
     "status-ui.js",
     "presets.js",
     "polar-chart-geometry.js",

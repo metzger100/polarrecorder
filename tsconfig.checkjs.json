@@ -17,6 +17,7 @@
     "viewer/status-ui.js",
     "viewer/placeholders.js",
     "viewer/dom.js",
+    "viewer/enhanced-rule-display.js",
     "viewer/theme.js",
     "viewer/presets.js",
     "viewer/grid-editor.js",

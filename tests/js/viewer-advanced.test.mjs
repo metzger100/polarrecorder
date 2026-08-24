@@ -169,6 +169,7 @@ test("advanced settings validates range", async () => {
 function loadSettingsViewer(env) {
   loadViewerFile(env, "placeholders.js");
   loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "enhanced-rule-display.js");
   loadViewerFile(env, "status-ui.js");
   loadViewerFile(env, "presets.js");
   loadViewerFile(env, "grid-editor.js");

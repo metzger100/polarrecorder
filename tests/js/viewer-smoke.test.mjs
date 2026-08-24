@@ -19,6 +19,7 @@ test("viewer modules work together", async () => {
   const env = createEnvironment();
   loadViewerFile(env, "placeholders.js");
   loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "enhanced-rule-display.js");
   loadViewerFile(env, "status-ui.js");
   loadViewerFile(env, "presets.js");
   loadViewerFile(env, "grid-editor.js");
@@ -57,7 +58,7 @@ test("viewer modules work together", async () => {
   assert.ok(textTree(env.elements["status-panel"]).includes("Triggered predicates"));
   assert.ok(textTree(env.elements["status-panel"]).includes("unstable_twa"));
   assert.ok(textTree(env.elements["status-panel"]).includes("Enhanced Rule Availability"));
-  assert.ok(textTree(env.elements["status-panel"]).includes("unavailable"));
+  assert.ok(textTree(env.elements["status-panel"]).includes("Unavailable"));
 
   env.clickTab("timeline");
   await flushViewer();
@@ -98,6 +99,7 @@ test("viewer API base override", async () => {
   const env = createEnvironment();
   env.document.body.dataset.apiBase = "/plugins/user-polarrecorder/api";
   loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "enhanced-rule-display.js");
   loadViewerFile(env, "status-ui.js");
   loadViewerFile(env, "presets.js");
   loadViewerFile(env, "viewer.js");
