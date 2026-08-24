@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar
 
 _plugin_path = Path(__file__).resolve().parent
 _plugin_dir = str(_plugin_path)
@@ -24,6 +24,14 @@ from polarrecorder.api_dispatch import handle_request as handle_api_request
 from polarrecorder.commit import commit_sample
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
+from polarrecorder.diagnostics import (
+    CurrentValues,
+    StoreBoundaryAdapter,
+    format_sample_diagnostic,
+)
+from polarrecorder.diagnostics import (
+    data_status as classify_data_status,
+)
 from polarrecorder.export import replace_user_presets
 from polarrecorder.logger import AvNavLogger
 from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
@@ -62,27 +70,6 @@ USER_APP_ICON = "viewer/icon.svg"
 USER_APP_TITLE = "Polar Recorder"
 
 
-class _CurrentValues(NamedTuple):
-    twa_deg: float
-    tws_kt: float
-    stw_kt: float
-    twa_timestamp: float
-    tws_timestamp: float
-    stw_timestamp: float
-
-
-class StoreBoundaryAdapter:
-    """Adapt the host store spelling to the domain reader contract."""
-
-    def __init__(self, api: AVNApi) -> None:
-        """Store the host API boundary."""
-        self._api = api
-
-    def get_single_value(self, key: str, include_info: bool = False) -> Any:
-        """Read one host store value using the domain naming contract."""
-        return self._api.getSingleValue(key, includeInfo=include_info)
-
-
 class Plugin:
     """AvNav plugin entry point."""
 
@@ -115,7 +102,7 @@ class Plugin:
         self.config = self._load_initial_config()
         self._state = ValidationState(float(self.config.stability_window_seconds))
         self._timeline = Timeline(self._wall_clock)
-        self._last_current_values: _CurrentValues | None = None
+        self._last_current_values: CurrentValues | None = None
         self._last_decision: dict[str, object] | None = None
         self._warming_up = True
         self._last_data_status = "no_data"
@@ -179,21 +166,16 @@ class Plugin:
             StoreBoundaryAdapter(self.api), self._clock, self._wall_clock, self._logger, config
         )
         read_result = store_reader.read()
-        data_status = _data_status(read_result)
+        data_status = classify_data_status(read_result)
         if self._paused:
-            self._record_suppressed(read_result, data_status, "reject_user_paused")
+            self._record_suppressed(read_result, data_status, "reject_user_paused", config)
             return
         pipeline_result, sample = pipeline.run(read_result, self._state, config)
         warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
         warming_up = self._state.is_warming_up(warming_now)
+        self._log_diagnostic(read_result, sample, pipeline_result, config)
         if sample is not None:
             self._state.observe(sample)
-        if config.debug_logging:
-            message = (
-                f"sample decision={pipeline_result.decision} "
-                f"reasons={','.join(pipeline_result.reason_codes)}"
-            )
-            self._logger.debug(message)
         with self._lock:
             commit_sample(pipeline_result, sample, self._model)
             self._record_counters(pipeline_result)
@@ -205,10 +187,19 @@ class Plugin:
             }
         self._update_avnav_status(data_status, pipeline_result)
 
-    def _record_suppressed(self, read_result: ReadResult, data_status: str, reason: str) -> None:
+    def _record_suppressed(
+        self, read_result: ReadResult, data_status: str, reason: str, config: Config
+    ) -> None:
         sample = build_sample(read_result)
         warming_now = sample.timestamp_monotonic if sample is not None else self._clock()
         warming_up = self._state.is_warming_up(warming_now)
+        result = pipeline.PipelineResult(
+            decision="rejected",
+            reason_codes=[reason],
+            is_sailing_candidate=False,
+            failed_predicates=[reason],
+        )
+        self._log_diagnostic(read_result, sample, result, config)
         if sample is not None:
             self._state.observe(sample)
         with self._lock:
@@ -216,6 +207,20 @@ class Plugin:
             self._timeline.record("rejected", [reason])
             self._write_status_scalars(read_result, sample, data_status, warming_up)
         self._update_avnav_status(data_status, None)
+
+    def _log_diagnostic(
+        self,
+        read_result: ReadResult,
+        sample: Sample | None,
+        result: PipelineResult,
+        config: Config,
+    ) -> None:
+        if config.debug_logging:
+            payload = format_sample_diagnostic(read_result, sample, result, self._state, config)
+            message = "diagnostic_sample={}".format(
+                json.dumps(payload, allow_nan=False, separators=(",", ":"), sort_keys=True)
+            )
+            self._logger.debug(message)
 
     def _record_counters(self, pipeline_result: PipelineResult) -> None:
         if pipeline_result.decision == "accepted":
@@ -244,7 +249,7 @@ class Plugin:
             assert read_result.twa_timestamp is not None
             assert read_result.tws_timestamp is not None
             assert read_result.stw_timestamp is not None
-            self._last_current_values = _CurrentValues(
+            self._last_current_values = CurrentValues(
                 twa_deg=sample.twa_deg_raw,
                 tws_kt=sample.tws_kt,
                 stw_kt=sample.stw_kt,
@@ -407,16 +412,3 @@ def _normalize_args(args: Mapping[str, object]) -> dict[str, str]:
         else:
             normalized[key] = str(value)
     return normalized
-
-
-def _data_status(read_result: ReadResult) -> str:
-    present = [
-        read_result.twa_raw is not None,
-        read_result.tws_raw is not None,
-        read_result.stw_raw is not None,
-    ]
-    if all(present):
-        return "receiving"
-    if any(present):
-        return "partial"
-    return "no_data"

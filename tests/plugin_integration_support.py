@@ -1,14 +1,89 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
+from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
+from polarrecorder import reader
 from polarrecorder.sample import ReadResult, Sample, build_sample
+from polarrecorder.timeline import Timeline
 from polarrecorder.units import knots_to_meters_per_second
 
-if TYPE_CHECKING:
-    from conftest import FakeClock
+import plugin as plugin_module
 
-    import plugin as plugin_module
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+class LoopAvNavAPI(FakeAvNavAPI):
+    """Fake AvNav loop source with deterministic clock and data behavior."""
+
+    def __init__(
+        self,
+        max_fetches: int,
+        monotonic: FakeClock,
+        wall: FakeClock,
+        data_mode: Literal["receiving", "partial", "no_data"] = "receiving",
+        restart_on_fetch: int | None = None,
+        fail_read_at_fetch: int | None = None,
+    ) -> None:
+        """Initialize deterministic loop controls."""
+        super().__init__()
+        self.max_fetches = max_fetches
+        self.fetches = 0
+        self.monotonic = monotonic
+        self.wall = wall
+        self.data_mode = data_mode
+        self.restart_on_fetch = restart_on_fetch
+        self.fail_read_at_fetch = fail_read_at_fetch
+        self.failed_reads = 0
+
+    def fetchFromQueue(
+        self,
+        sequence: int,
+        number: int = 10,
+        includeSource: bool = False,
+        waitTime: float = 0.5,
+        filter_values: str | list[str] | None = None,
+    ) -> tuple[int, list[str]]:
+        """Advance clocks and publish the configured core values."""
+        self.fetches += 1
+        self.monotonic.advance(1.0)
+        self.wall.advance(1.0)
+        self.values.clear()
+        if self.data_mode in {"receiving", "partial"}:
+            self.set_value(reader.TWA_KEY, 90.0, self.monotonic())
+        if self.data_mode == "receiving":
+            self.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), self.monotonic())
+            self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
+        if self.fetches == self.restart_on_fetch and self.restart_callback is not None:
+            self.restart_callback()
+        return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter_values)
+
+    def shouldStopMainThread(self) -> bool:
+        """Stop after the configured fetch count."""
+        return self.fetches >= self.max_fetches
+
+    def getSingleValue(self, key: str, includeInfo: bool = False) -> float | FakeDataEntry | None:
+        """Inject one optional store read failure."""
+        if self.fetches == self.fail_read_at_fetch and self.failed_reads == 0:
+            self.failed_reads += 1
+            msg = "store read failed"
+            raise RuntimeError(msg)
+        return super().getSingleValue(key, includeInfo)
+
+
+def make_plugin(tmp_path: Path, api: FakeAvNavAPI) -> plugin_module.Plugin:
+    """Build a plugin wired to deterministic clocks and temporary persistence."""
+    monotonic = getattr(api, "monotonic", FakeClock(100.0))
+    wall = getattr(api, "wall", FakeClock(1000.0))
+    plugin = plugin_module.Plugin(api)
+    plugin._data_dir = str(tmp_path)
+    plugin._clock = monotonic
+    plugin._wall_clock = wall
+    plugin._timeline = Timeline(wall)
+    plugin._run_start_monotonic = monotonic()
+    plugin._load_persistence()
+    return plugin
 
 
 def assert_all_mvp_routes(

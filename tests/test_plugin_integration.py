@@ -5,13 +5,17 @@ import sys
 import threading
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from conftest import FakeAvNavAPI, FakeClock, FakeDataEntry
-from plugin_integration_support import assert_all_mvp_routes, response_data, sample_at
+from conftest import FakeAvNavAPI, FakeClock
+from plugin_integration_support import (
+    LoopAvNavAPI,
+    assert_all_mvp_routes,
+    make_plugin,
+    response_data,
+    sample_at,
+)
 from polarrecorder import export, persistence, reader
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
-from polarrecorder.timeline import Timeline
-from polarrecorder.units import knots_to_meters_per_second
 
 import plugin as plugin_module
 
@@ -19,71 +23,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from polarrecorder.polar_model import SnapshotBin
-
-
-class LoopAvNavAPI(FakeAvNavAPI):
-    def __init__(
-        self,
-        max_fetches: int,
-        monotonic: FakeClock,
-        wall: FakeClock,
-        data_mode: Literal["receiving", "partial", "no_data"] = "receiving",
-        restart_on_fetch: int | None = None,
-        fail_read_at_fetch: int | None = None,
-    ) -> None:
-        super().__init__()
-        self.max_fetches = max_fetches
-        self.fetches = 0
-        self.monotonic = monotonic
-        self.wall = wall
-        self.data_mode = data_mode
-        self.restart_on_fetch = restart_on_fetch
-        self.fail_read_at_fetch = fail_read_at_fetch
-        self.failed_reads = 0
-
-    def fetchFromQueue(
-        self,
-        sequence: int,
-        number: int = 10,
-        includeSource: bool = False,
-        waitTime: float = 0.5,
-        filter_values: str | list[str] | None = None,
-    ) -> tuple[int, list[str]]:
-        self.fetches += 1
-        self.monotonic.advance(1.0)
-        self.wall.advance(1.0)
-        self.values.clear()
-        if self.data_mode in {"receiving", "partial"}:
-            self.set_value(reader.TWA_KEY, 90.0, self.monotonic())
-        if self.data_mode == "receiving":
-            self.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), self.monotonic())
-            self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
-        if self.fetches == self.restart_on_fetch and self.restart_callback is not None:
-            self.restart_callback()
-        return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter_values)
-
-    def shouldStopMainThread(self) -> bool:
-        return self.fetches >= self.max_fetches
-
-    def getSingleValue(self, key: str, includeInfo: bool = False) -> float | FakeDataEntry | None:
-        if self.fetches == self.fail_read_at_fetch and self.failed_reads == 0:
-            self.failed_reads += 1
-            msg = "store read failed"
-            raise RuntimeError(msg)
-        return super().getSingleValue(key, includeInfo)
-
-
-def make_plugin(tmp_path: Path, api: FakeAvNavAPI) -> plugin_module.Plugin:
-    monotonic = getattr(api, "monotonic", FakeClock(100.0))
-    wall = getattr(api, "wall", FakeClock(1000.0))
-    plugin = plugin_module.Plugin(api)
-    plugin._data_dir = str(tmp_path)
-    plugin._clock = monotonic
-    plugin._wall_clock = wall
-    plugin._timeline = Timeline(wall)
-    plugin._run_start_monotonic = monotonic()
-    plugin._load_persistence()
-    return plugin
 
 
 def test_plugin_registers_no_avnav_editable_parameters(tmp_path: Path) -> None:
@@ -419,6 +358,34 @@ def test_loop_survives_iteration_error_and_final_flushes(tmp_path: Path) -> None
     )
     assert plugin._counters.total_accepted > 0
     assert (tmp_path / persistence.PRIMARY_NAME).exists()
+
+
+def test_debug_logging_emits_one_structured_diagnostic_per_iteration(tmp_path: Path) -> None:
+    monotonic = FakeClock(100.0)
+    wall = FakeClock(1000.0)
+    api = LoopAvNavAPI(max_fetches=3, monotonic=monotonic, wall=wall)
+    api.config["debug_logging"] = "true"
+    plugin = make_plugin(tmp_path, api)
+
+    plugin.run()
+
+    messages = [message for level, message in api.logs if level == "debug"]
+    assert len(messages) == 3
+    assert all(message.startswith("diagnostic_sample=") for message in messages)
+    payload = json.loads(messages[0].removeprefix("diagnostic_sample="))
+    assert payload["pipeline"]["decision"] in {"accepted", "rejected"}
+    assert payload["r15"]["filled"] is False
+
+
+def test_debug_logging_emits_no_diagnostics_when_disabled(tmp_path: Path) -> None:
+    monotonic = FakeClock(100.0)
+    wall = FakeClock(1000.0)
+    api = LoopAvNavAPI(max_fetches=3, monotonic=monotonic, wall=wall)
+    plugin = make_plugin(tmp_path, api)
+
+    plugin.run()
+
+    assert [message for level, message in api.logs if level == "debug"] == []
 
 
 def test_incomplete_data_demotes_status_even_when_paused(tmp_path: Path) -> None:
