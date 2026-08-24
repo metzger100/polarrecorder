@@ -5,7 +5,7 @@
  */
 .engine-warning {
   position: fixed;
-  z-index: 20;
+  z-index: 100;
   top: 50%;
   left: 50%;
   box-sizing: border-box;

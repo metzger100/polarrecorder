@@ -138,6 +138,7 @@ test("warning CSS keeps the dialog content-sized and centered", () => {
 
   assert.ok(source.includes("top: 50%;"));
   assert.ok(source.includes("left: 50%;"));
+  assert.ok(source.includes("z-index: 100;"));
   assert.ok(source.includes("transform: translate(-50%, -50%);"));
   assert.ok(source.includes("width: min(34rem, calc(100vw - 2rem));"));
   assert.ok(source.includes("max-height: calc(100vh - 2rem);"));
