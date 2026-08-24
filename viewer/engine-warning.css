@@ -3,9 +3,16 @@
  * Documentation: documentation/architecture/ui.md
  * Depends: engine-warning.js
  */
+.engine-warning-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 45%);
+}
+
 .engine-warning {
   position: fixed;
-  z-index: 100;
+  z-index: 101;
   top: 50%;
   left: 50%;
   box-sizing: border-box;

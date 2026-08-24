@@ -136,8 +136,6 @@ Implementation notes:
 - Define the palette once as named tokens so the future dashboard widget (item 4) and the viewer share a single source
   of color truth.
 
-## Related
-
 ### Investigation — isolated slow accepted samples
 
 Isolated slow accepted samples can exist inside otherwise strong bins. P65 is intentionally the current protection; no
@@ -148,6 +146,8 @@ artifacts, transient sailing states, or legitimate low-performance modes before 
 
 Investigate learning from explicitly detected stable segments or blocks rather than independent samples. This is a
 possible future approach only, not an implemented or scheduled feature.
+
+## Related
 
 - [Export and import](documentation/user/export-import.md)
 - [Data pipeline (enhanced signal hooks)](documentation/architecture/data-pipeline.md)

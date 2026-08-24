@@ -143,8 +143,12 @@ def _build_model(bins: dict[str, object]) -> PolarModel:
             total_rejected=_count(bin_data, "total_rejected"),
             total_quarantined=_count(bin_data, "total_quarantined"),
             last_update_wall=_finite(bin_data.get("last_update_wall", 0.0), "last_update_wall"),
-            rejection_histogram=_reason_histogram(bin_data.get("rejection_histogram", {})),
-            predicate_histogram=_reason_histogram(bin_data.get("predicate_histogram", {})),
+            rejection_histogram=_string_count_histogram(
+                bin_data.get("rejection_histogram", {}), "rejection_histogram"
+            ),
+            predicate_histogram=_string_count_histogram(
+                bin_data.get("predicate_histogram", {}), "predicate_histogram"
+            ),
         )
     return model
 
@@ -155,8 +159,12 @@ def _build_counters(data: dict[str, object]) -> Counters:
         total_accepted=_count(data, "total_accepted"),
         total_rejected=_count(data, "total_rejected"),
         total_quarantined=_count(data, "total_quarantined"),
-        rejection_histogram=_reason_histogram(data.get("rejection_histogram", {})),
-        predicate_histogram=_reason_histogram(data.get("predicate_histogram", {})),
+        rejection_histogram=_string_count_histogram(
+            data.get("rejection_histogram", {}), "rejection_histogram"
+        ),
+        predicate_histogram=_string_count_histogram(
+            data.get("predicate_histogram", {}), "predicate_histogram"
+        ),
     )
 
 
@@ -194,9 +202,9 @@ def _histogram(value: object) -> dict[int, int]:
     return out
 
 
-def _reason_histogram(value: object) -> dict[str, int]:
-    raw = require_dict(value, "rejection_histogram")
-    return {str(key): _non_negative_int(count, "rejection count") for key, count in raw.items()}
+def _string_count_histogram(value: object, field: str) -> dict[str, int]:
+    raw = require_dict(value, field)
+    return {str(key): _non_negative_int(count, f"{field} count") for key, count in raw.items()}
 
 
 def _parse_int_key(key: str) -> int:

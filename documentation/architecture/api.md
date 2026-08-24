@@ -98,10 +98,12 @@ store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer o
 allows free-text entry for custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
 computes each key's presence/freshness at the boundary (snapshotting `self.config` under the lock, probing via
 `getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the lock.
-`enhanced/save` self-applies first (sets `self.config` under the lock) and then calls `api.saveConfigValues` after
-releasing the lock; `saveConfigValues` only persists to disk and does not invoke the change callback, so there is no
-lock re-entrancy and the disk write never runs while the lock is held. The advanced settings endpoints use the same
-self-apply-then-save pattern, but only for safe runtime-tuning settings shown in the Settings tab.
+Unavailable causes use a deterministic priority: incomplete configuration, missing store source, then stale value; an
+any-source rule remains active when any configured source is fresh. `enhanced/save` self-applies first (sets
+`self.config` under the lock) and then calls `api.saveConfigValues` after releasing the lock; `saveConfigValues` only
+persists to disk and does not invoke the change callback, so there is no lock re-entrancy and the disk write never runs
+while the lock is held. The advanced settings endpoints use the same self-apply-then-save pattern, but only for safe
+runtime-tuning settings shown in the Settings tab.
 
 State mutations use GET for AvNav/viewer simplicity. Destructive reset requires `confirm=yes`; preset deletion also
 requires confirmation. Polar persistence writes still happen on the plugin thread. Preset writes are the exception:

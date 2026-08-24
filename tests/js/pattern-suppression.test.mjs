@@ -1,5 +1,5 @@
 /**
- * Self-tests for the structured lint and boundary marker grammar, including malformed and expired markers.
+ * Self-tests for the fail-closed suppression grammar.
  */
 
 import assert from "node:assert/strict";
@@ -12,8 +12,7 @@ import {
   resetContext,
   isLintSuppressed,
   getInvalidLintSuppressions,
-  setKnownRuleNames,
-  BOUNDARY_MARKER_RULE_NAME
+  setKnownRuleNames
 } from "../../tools/check-patterns/shared.mjs";
 
 /**
@@ -66,7 +65,7 @@ test("a malformed lint marker is invalid", () => {
   assert.ok(invalids[0].detail.includes("Malformed"));
 });
 
-test("a valid plugin-boundary-next-line marker suppresses the boundary rule on the next line", () => {
+test("a well-formed boundary marker is forbidden and suppresses nothing", () => {
   const root = makeFixtureRoot(
     [
       "// plugin-boundary-next-line(category: host-window, owner: alice, date: 2026-01-01) -- window.name may be absent",
@@ -75,8 +74,10 @@ test("a valid plugin-boundary-next-line marker suppresses the boundary rule on t
   );
   resetContext({ root });
   setKnownRuleNames([]);
-  assert.equal(isLintSuppressed("sample.js", 2, BOUNDARY_MARKER_RULE_NAME), true);
-  assert.deepEqual(getInvalidLintSuppressions("sample.js"), []);
+  assert.equal(isLintSuppressed("sample.js", 2, "catch-fallback-without-suppression"), false);
+  const invalids = getInvalidLintSuppressions("sample.js");
+  assert.equal(invalids.length, 1);
+  assert.ok(invalids[0].detail.includes("forbidden"));
 });
 
 test("a plugin-boundary marker missing a required field is invalid", () => {
@@ -89,7 +90,7 @@ test("a plugin-boundary marker missing a required field is invalid", () => {
   setKnownRuleNames([]);
   const invalids = getInvalidLintSuppressions("sample.js");
   assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("owner"));
+  assert.ok(invalids[0].detail.includes("forbidden"));
 });
 
 test("an expired plugin-boundary marker is invalid", () => {
@@ -103,7 +104,7 @@ test("an expired plugin-boundary marker is invalid", () => {
   setKnownRuleNames([]);
   const invalids = getInvalidLintSuppressions("sample.js");
   assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("expired"));
+  assert.ok(invalids[0].detail.includes("forbidden"));
 });
 
 test("the retired pattern-ignore convention is no longer recognised at all", () => {

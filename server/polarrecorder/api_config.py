@@ -222,7 +222,7 @@ def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
         new_config = parse_config_values(updates, plugin._logger, plugin.config)
         plugin.config = new_config
         plugin._state.stability_window_seconds = float(new_config.stability_window_seconds)
-    plugin.api.saveConfigValues(dict(updates))
+    plugin._save_config_values(dict(updates))
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.ok({"config": saved})
 

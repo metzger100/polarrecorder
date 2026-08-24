@@ -28,9 +28,9 @@ Polar Recorder uses three AvNav values:
 Change these defaults in **Settings > Data Sources**; TWA uses degrees, while TWS and STW use m/s before Polar Recorder
 converts and displays the speeds in knots.
 
-For core learning the plugin uses only true wind angle/speed and speed through water. Speed over ground, apparent wind,
-engine RPM, and depth are read only by the optional Enhanced Rules (see
-[Enhanced Rules (optional signals)](#enhanced-rules-optional-signals)); waves and sail configuration are not used.
+Core learning uses true wind angle/speed and speed through water. A configured fresh SOG is also used to distinguish
+anchored from moving samples. Other optional signals are described under
+[Enhanced Rules](#enhanced-rules-optional-signals); waves and sail configuration are not used.
 
 ## Quick Start
 
@@ -228,6 +228,8 @@ Without configured Enhanced Rules, Polar Recorder cannot reliably detect:
 
 Treat the result as "how my boat performed in the data I allowed it to record," not a manufacturer target. Port and
 starboard samples remain separate, so full-circle confidence takes longer to build but preserves real differences.
+Because the anchored check prefers fresh SOG, strong adverse current can make genuine sailing look stationary and
+exclude those samples.
 
 ## Where is the data stored?
 

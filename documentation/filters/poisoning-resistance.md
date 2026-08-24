@@ -38,6 +38,10 @@ current-drift source get no SOG/STW-mismatch detection, and if the VDR set/drift
 paddlewheel that feeds `gps.waterSpeed`, a broken log inflates the computed drift too and R20 is silently defeated. Both
 are deliberate prices of never discarding honest following-current data, which shares the STW-below-SOG signature.
 
+R10 independently prefers fresh SOG over STW for anchor detection, even when R20 is disabled. This protects against a
+stopped paddlewheel on a moving boat, but sailing against strong adverse current can produce near-zero SOG and a false
+anchored rejection. That limitation excludes data rather than poisoning the learned model.
+
 R21 (true-wind cross-check) has real teeth in the AvNav-core NMEA model: true wind is parsed from instrument MWV
 (ref=T)/MWD sentences independently of `gps.windAngle`/`windSpeed` + STW, so the recompute catches a miscalibrated wind
 sensor or a divergent boat-speed feed. It degrades to a near-tautology only in a SignalK/plugin setup where true wind is

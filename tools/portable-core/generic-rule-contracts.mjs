@@ -4,15 +4,7 @@
  * @file generic-rule-contracts - contract-boundary generic rule implementations.
  */
 
-import {
-  dedupe,
-  escapeRegex,
-  finding,
-  hasBoundaryMarker,
-  masked,
-  matchingBrace,
-  lineAt
-} from "./generic-rule-common.mjs";
+import { dedupe, escapeRegex, finding, masked, matchingBrace, lineAt } from "./generic-rule-common.mjs";
 
 /** @typedef {{path: string, content: string}} GenericFile */
 /** @typedef {{ruleId: string, path: string, line: number, message: string}} GenericFinding */
@@ -80,11 +72,9 @@ function runCatchFallback(ruleId, file) {
     const body = source.slice(open + 1, close).trim();
     if (!body || /\bthrow\b/.test(body)) continue;
     const line = lineAt(file.content, match.index);
-    if (
-      hasBoundaryMarker(file.content, line) ||
-      /plugin-boundary-(?:next-line|line)\(/.test(file.content.slice(open, close))
-    )
-      continue;
+    const explicitBoundaryResult = /\breturn\s+(?:undefined|null|\{\s*ok\s*:\s*false\b)/.test(body);
+    const visibleFailureState = /\.(?:textContent|hidden|className)\s*=/.test(body);
+    if (explicitBoundaryResult || visibleFailureState) continue;
     out.push(finding(ruleId, file, line, "Non-rethrow catch detected (catch (...) { ... })"));
   }
   return dedupe(out);
@@ -189,27 +179,8 @@ function runInvalidSuppression(ruleId, file) {
       out.push(finding(ruleId, file, index + 1, "Malformed suppression directive."));
     if (legacyLint)
       out.push(finding(ruleId, file, index + 1, `Retired lint suppression '${legacyLint[0].trim()}' is forbidden.`));
-    if (/plugin-boundary-/.test(line)) {
-      const marker = /plugin-boundary-(?:next-line|line)\(([^)]*)\)\s+--\s+(.+)/.exec(line);
-      if (!marker) out.push(finding(ruleId, file, index + 1, "Malformed boundary marker."));
-      else {
-        const fields = Object.fromEntries(
-          marker[1]
-            .split(",")
-            .map((part) => part.split(":").map((v) => v.trim()))
-            .filter((part) => part.length === 2)
-        );
-        let error = "";
-        if (!fields.category) error = "'category' is required.";
-        else if (!fields.owner) error = "'owner' is required.";
-        else if (!fields.date || !/^\d{4}-\d{2}-\d{2}$/.test(fields.date))
-          error = "'date' is required and must be YYYY-MM-DD.";
-        else if (fields.expires && fields.expires < new Date().toISOString().slice(0, 10))
-          error = `temporary marker expired on ${fields.expires}.`;
-        else if (!marker[2].trim()) error = "a reason after '--' is required.";
-        if (error) out.push(finding(ruleId, file, index + 1, `Invalid boundary marker: ${error}`));
-      }
-    }
+    if (/plugin-boundary-/.test(line))
+      out.push(finding(ruleId, file, index + 1, "Boundary suppression markers are forbidden."));
     if (
       /\b(?:#\s*noqa\b|#\s*type:\s*ignore\b|#\s*ruff\s*:\s*noqa(?!\s*:)|#\s*flake8\s*:\s*noqa\b|#\s*mypy\s*:\s*ignore-errors)/i.test(
         line

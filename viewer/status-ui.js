@@ -1,7 +1,7 @@
 /**
  * @file Status UI
  * Documentation: documentation/architecture/ui.md
- * Depends: dom.js, placeholders.js
+ * Depends: dom.js, placeholders.js, enhanced-rule-display.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -266,7 +266,10 @@ window.Polarrecorder = window.Polarrecorder || {};
     const card = el("section", "card");
     card.appendChild(el("h2", "", "Enhanced Rule Availability"));
     rules.forEach(function (rule) {
-      card.appendChild(el("p", "helper", rule.rule + ": " + rule.availability + " (" + rule.status + ")"));
+      const name = Polarrecorder.EnhancedRuleDisplay.RuleLabel(rule.rule);
+      const availability = Polarrecorder.EnhancedRuleDisplay.AvailabilityLabel(rule.availability);
+      const cause = Polarrecorder.EnhancedRuleDisplay.StatusLabel(rule.status);
+      card.appendChild(el("p", "helper", name + ": " + availability + " — " + cause));
     });
     return card;
   }

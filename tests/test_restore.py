@@ -174,6 +174,14 @@ def test_negative_count_is_rejected() -> None:
         restore.validate_and_build(json.dumps(payload))
 
 
+def test_negative_predicate_count_names_the_predicate_histogram() -> None:
+    payload = _valid_payload()
+    payload["counters"]["predicate_histogram"] = {"unstable_twa": -1}
+
+    with pytest.raises(restore.RestoreError, match="predicate_histogram count"):
+        restore.validate_and_build(json.dumps(payload))
+
+
 def test_non_integer_count_is_rejected() -> None:
     payload = _valid_payload()
     payload["counters"]["total_seen"] = True

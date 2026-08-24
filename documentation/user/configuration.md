@@ -67,9 +67,10 @@ sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_s
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer.
 
-`debug_logging` records timestamps, normalized core and available enhanced values, decision/reasons/predicates, R15
-metrics, and the relevant R10/R15/R20 thresholds. No per-iteration diagnostic is emitted while it is disabled. The
-head-to-wind default remains 10 degrees.
+`debug_logging` records a schema version; raw and normalized core values; source timestamps and ages; raw, normalized,
+timestamped enhanced values; decision/reasons/predicates; the exact pipeline-produced R15 metrics; and the relevant
+R10/R15/R20 thresholds. No per-iteration diagnostic is emitted while it is disabled. The head-to-wind default remains 10
+degrees.
 
 ### Enhanced (optional-signal) rule settings
 

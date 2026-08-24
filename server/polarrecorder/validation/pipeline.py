@@ -31,6 +31,7 @@ class PipelineResult:
     reason_codes: list[str]
     is_sailing_candidate: bool
     failed_predicates: list[str] = field(default_factory=list)
+    stability_evaluation: rules_stability.StabilityEvaluation | None = None
 
 
 def run(
@@ -78,17 +79,25 @@ def _run_sample_rules(sample: Sample, state: ValidationState, config: Config) ->
             failed_predicates=pre_candidate_result.predicate_codes,
         )
 
-    candidate_result = _run_candidate_rules(sample, state, config)
+    candidate_result, stability = _run_candidate_rules(sample, state, config)
     if candidate_result.decision == "reject":
-        return _candidate_rejection(candidate_result.reason_codes, candidate_result.predicate_codes)
+        return _candidate_rejection(
+            candidate_result.reason_codes, candidate_result.predicate_codes, stability
+        )
     if candidate_result.decision == "quarantine":
         return PipelineResult(
             decision="quarantined",
             reason_codes=candidate_result.reason_codes,
             is_sailing_candidate=True,
             failed_predicates=candidate_result.predicate_codes,
+            stability_evaluation=stability,
         )
-    return PipelineResult(decision="accepted", reason_codes=[], is_sailing_candidate=True)
+    return PipelineResult(
+        decision="accepted",
+        reason_codes=[],
+        is_sailing_candidate=True,
+        stability_evaluation=stability,
+    )
 
 
 def _run_phase_a(read_result: ReadResult) -> RuleResult:
@@ -119,19 +128,22 @@ def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
     return _first_non_pass(results)
 
 
-def _run_candidate_rules(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
+def _run_candidate_rules(
+    sample: Sample, state: ValidationState, config: Config
+) -> tuple[RuleResult, rules_stability.StabilityEvaluation]:
+    stability = rules_stability.evaluate_stability(sample, state, config)
     results = (
         rules_stability.twa_rate_of_change(sample, state, config),
         rules_stability.tws_rate_of_change(sample, state, config),
         rules_stability.stw_acceleration(sample, state, config),
         rules_stability.maneuver_cooldown(sample, state, config),
-        rules_stability.stability_window(sample, state, config),
+        rules_stability.stability_decision(stability),
         rules_enhanced.reject_sog_stw_mismatch(sample, config),
         rules_enhanced.reject_true_wind_crosscheck(sample, config),
         rules_enhanced.reject_heel_out_of_band(sample, config),
         rules_heuristic.engine_heuristic(sample, config),
     )
-    return _first_non_pass(results)
+    return _first_non_pass(results), stability
 
 
 def _first_non_pass(results: tuple[RuleResult, ...]) -> RuleResult:
@@ -156,20 +168,29 @@ def _predicate_codes(results: tuple[RuleResult, ...]) -> list[str]:
     return codes
 
 
-def _candidate_rejection(reason_codes: list[str], failed_predicates: list[str]) -> PipelineResult:
+def _candidate_rejection(
+    reason_codes: list[str],
+    failed_predicates: list[str],
+    stability: rules_stability.StabilityEvaluation,
+) -> PipelineResult:
     return _rejected(
         reason_codes,
         is_sailing_candidate=reason_codes != ["reject_warming_up"],
         failed_predicates=failed_predicates,
+        stability_evaluation=stability,
     )
 
 
 def _rejected(
-    reason_codes: list[str], is_sailing_candidate: bool, failed_predicates: list[str]
+    reason_codes: list[str],
+    is_sailing_candidate: bool,
+    failed_predicates: list[str],
+    stability_evaluation: rules_stability.StabilityEvaluation | None = None,
 ) -> PipelineResult:
     return PipelineResult(
         decision="rejected",
         reason_codes=reason_codes,
         is_sailing_candidate=is_sailing_candidate,
         failed_predicates=failed_predicates,
+        stability_evaluation=stability_evaluation,
     )

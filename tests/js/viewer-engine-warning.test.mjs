@@ -16,17 +16,17 @@ import {
 
 /**
  * @param {Array<{availability: string, rule: string}>} rules
- * @param {boolean} [storageFails=false]
+ * @param {{storageGetFails?: boolean, storageSetFails?: boolean}} [storageOptions]
  * @param {Map<string, string>} [storage]
  */
-function warningEnvironment(rules, storageFails = false, storage) {
+function warningEnvironment(rules, storageOptions = {}, storage) {
   const env = createEnvironment({
     responder(endpoint) {
       if (endpoint.startsWith("enhanced/status")) return ok({ rules });
       return defaultResponseBody(endpoint);
     },
     storage,
-    storageFails
+    ...storageOptions
   });
   loadViewerModules(env);
   return env;
@@ -37,6 +37,7 @@ function loadViewerModules(env) {
   [
     "placeholders.js",
     "dom.js",
+    "enhanced-rule-display.js",
     "status-ui.js",
     "presets.js",
     "grid-editor.js",
@@ -90,7 +91,7 @@ test("Close only dismisses the current warning", async () => {
   modal.querySelectorAll(".secondary-action")[0].click();
   assert.equal(warning(env), null);
   assert.equal(env.storage.size, 0);
-  const fresh = warningEnvironment(rules, false, env.storage);
+  const fresh = warningEnvironment(rules, {}, env.storage);
   await start(fresh);
   assert.ok(warning(fresh));
 });
@@ -104,7 +105,7 @@ test("Never show again stores the versioned suppression preference", async () =>
   modal.querySelectorAll(".primary-action")[0].click();
   assert.equal(warning(env), null);
   assert.equal(env.storage.get("polarrecorder.engine-warning.v1"), "hidden");
-  const fresh = warningEnvironment(rules, false, env.storage);
+  const fresh = warningEnvironment(rules, {}, env.storage);
   await start(fresh);
   assert.equal(warning(fresh), null);
 });
@@ -124,8 +125,18 @@ test("enhanced-status failure does not block viewer startup", async () => {
   assert.equal(env.window.Polarrecorder.ApiBase, "../api/");
 });
 
-test("storage failures stay visible and do not crash startup", async () => {
-  const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }], true);
+test("storage read failures fail open without crashing startup", async () => {
+  const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }], {
+    storageGetFails: true
+  });
+  await start(env);
+  assert.ok(warning(env));
+});
+
+test("storage write failures stay visible", async () => {
+  const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }], {
+    storageSetFails: true
+  });
   await start(env);
   const modal = warning(env);
   assert.ok(modal);
@@ -133,12 +144,38 @@ test("storage failures stay visible and do not crash startup", async () => {
   assert.ok(textTree(modal).includes("preference could not be saved"));
 });
 
+test("warning is an accessible focus-contained modal and restores focus", async () => {
+  const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }]);
+  const previous = env.document.createElement("button");
+  env.document.body.appendChild(previous);
+  previous.focus();
+  await start(env);
+  const modal = warning(env);
+  assert.ok(modal);
+  const buttons = modal.querySelectorAll(".secondary-action, .primary-action");
+  assert.equal(modal.getAttribute("role"), "dialog");
+  assert.equal(modal.getAttribute("aria-modal"), "true");
+  assert.equal(modal.getAttribute("aria-labelledby"), "engine-warning-title");
+  assert.equal(env.document.body.querySelectorAll(".engine-warning-backdrop").length, 1);
+  assert.equal(env.elements["polarrecorder-app"].inert, true);
+  assert.equal(env.document.activeElement, buttons[0]);
+  env.fireKeydown("Tab", true);
+  assert.equal(env.document.activeElement, buttons[1]);
+  env.fireKeydown("Tab");
+  assert.equal(env.document.activeElement, buttons[0]);
+  env.fireKeydown("Escape");
+  assert.equal(warning(env), null);
+  assert.equal(env.elements["polarrecorder-app"].inert, false);
+  assert.equal(env.document.activeElement, previous);
+});
+
 test("warning CSS keeps the dialog content-sized and centered", () => {
   const source = fs.readFileSync(path.join(process.cwd(), "viewer", "engine-warning.css"), "utf8");
 
   assert.ok(source.includes("top: 50%;"));
   assert.ok(source.includes("left: 50%;"));
-  assert.ok(source.includes("z-index: 100;"));
+  assert.ok(source.includes(".engine-warning-backdrop"));
+  assert.ok(source.includes("z-index: 101;"));
   assert.ok(source.includes("transform: translate(-50%, -50%);"));
   assert.ok(source.includes("width: min(34rem, calc(100vw - 2rem));"));
   assert.ok(source.includes("max-height: calc(100vh - 2rem);"));

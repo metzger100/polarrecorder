@@ -2,7 +2,66 @@
 
 ## Status
 
-Implemented through all six phases; follow-up viewer corrections are being validated under the same quality contract.
+Implemented through all six phases; implementation-review remediation is complete.
+
+### Amendment — 2026-08-24: implementation-review remediation
+
+Post-implementation review proved that several acceptance conditions did not hold despite the earlier green gate. The
+following are confirmed defects and are required before this plan can return to Implemented status:
+
+1. Suppressed iterations construct a predicate-bearing result but bypass the canonical counter recorder, so their
+   predicate histogram is not updated.
+2. The catch-fallback checker accepts a boundary marker that the suppression checker forbids. The marker escape is
+   removed; a catch may instead return an explicit structured failure result or update visible failure state.
+3. Browser-local warning suppression relies on a global error listener and a fake that does not model thrown storage
+   errors. Storage reads/writes must use an explicit boundary result, with read and write failures tested.
+4. Host store adapters and direct `getSingleValue`/`getDataByPrefix` calls leaked into domain modules. All host API
+   spelling stays in `plugin.py`, and the architecture checker must enforce that boundary.
+5. Diagnostic R15 formatting re-runs an evaluator that prunes and reconfigures live validation state. The pipeline
+   result must carry the immutable evaluation used for the decision, and formatting must leave all live state unchanged.
+6. SOG acquisition is incorrectly disabled with R20 even though R10 consumes SOG independently. A configured fresh SOG
+   is always acquired for anchoring; current drift remains conditional on R20.
+7. Enhanced availability collapses mixed missing/stale causes. Cause resolution must be deterministic: unconfigured,
+   missing, stale, then active, while any-key rules remain active when any configured source is fresh.
+8. Replay diagnostics lose individually available raw core reads and omit source timestamps/ages, enhanced raw metadata,
+   and a record schema version.
+9. The warning needs dialog semantics, a backdrop, initial focus, focus containment, Escape/Close restoration, and
+   non-interactive background content.
+10. Status exposes internal rule/status identifiers while Settings owns a separate label map. One shared viewer module
+    must render user-facing rule and cause labels in both screens.
+11. Restore histogram validation mislabels predicate failures as rejection failures, and ROADMAP content appears after
+    its terminal Related section.
+12. R10's SOG-authoritative behavior can reject real sailing against strong adverse current. This remains the specified
+    behavior, but a counterexample test and user documentation must state the limitation rather than implying certainty.
+
+This is one review-remediation phase and one commit. It changes no validation threshold or primary-decision ordering,
+adds no new reject rule, and does not expand persistence or runtime configuration. Its exit conditions are:
+
+- focused Python tests prove suppressed reason/predicate accounting, diagnostic state purity and complete replay fields,
+  SOG/R10 independence from R20, deterministic enhanced causes, the adverse-current counterexample, corrected restore
+  labels, and host-boundary enforcement;
+- focused viewer/tool tests prove explicit storage failure handling, accessible modal behavior, shared labels, and the
+  removal of the contradictory marker escape;
+- maintained README/docs describe only user-relevant behavior and the known R10 limitation; ROADMAP ordering is valid;
+- generated inventories are refreshed with `npm run inventory:write` if the test/file set changes;
+- `npm run check:all` exits successfully before the single remediation commit.
+
+**Review-remediation exit evidence:**
+
+1. Accounting, diagnostics, SOG/R10, availability, restore, boundary, and poisoning tests:
+   `venv/bin/python -m pytest tests/test_diagnostics.py tests/test_reader.py tests/test_enhanced_status.py tests/test_restore.py tests/test_py_contracts_checker.py tests/test_plugin_integration.py tests/test_validation_core.py tests/test_validation_stability.py tests/test_validation_pipeline.py tests/test_poisoning_scenarios.py -q`
+   — **152 passed**.
+2. Warning/modal, shared-label, viewer integration, and checker contracts:
+   - focused viewer command — **5 files, 17 tests passed** before the unknown-identifier coverage case was added;
+   - focused tool command — **2 files, 37 tests passed**;
+   - final full viewer suite — **12 files, 60 tests passed**.
+3. Inventory regeneration: `npm run inventory:write` — **exit 0**; the executable test file set was already current.
+4. Core quality proof: `npm run check:core` — **exit 0**, including **385 Python tests**, **363 tooling tests**, **60
+   viewer tests**, **1 plugin test**, **26 scaling tests**, strict typing, packaging, docs, suppression, complexity,
+   smell, focus, and unchanged file/hotspot limits.
+5. Completion proof: `npm run check:all` — **exit 0**. Python coverage was **95.95%** aggregate; viewer/plugin coverage
+   was **92.72% lines**, **91.47% statements**, **86.58% functions**, and **74.81% branches**. The new shared label
+   module measured **100% lines/functions** and **87.5% branches**. Coverage inventory passed.
 
 ### Amendment — 2026-08-24: quality baseline restored
 

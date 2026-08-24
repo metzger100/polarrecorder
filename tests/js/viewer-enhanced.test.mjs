@@ -69,6 +69,7 @@ function loadEnhancedEnvironment() {
   const env = createEnvironment({ responder });
   loadViewerFile(env, "placeholders.js");
   loadViewerFile(env, "dom.js");
+  loadViewerFile(env, "enhanced-rule-display.js");
   loadViewerFile(env, "status-ui.js");
   loadViewerFile(env, "presets.js");
   loadViewerFile(env, "grid-editor.js");
@@ -86,6 +87,18 @@ function loadEnhancedEnvironment() {
   return env;
 }
 
+test("enhanced display preserves unknown server identifiers", () => {
+  const env = loadEnhancedEnvironment();
+  const display =
+    /** @type {{RuleLabel: (value: string) => string, StatusLabel: (value: string) => string, AvailabilityLabel: (value: string) => string}} */ (
+      env.window.Polarrecorder.EnhancedRuleDisplay
+    );
+
+  assert.equal(display.RuleLabel("future_rule"), "future_rule");
+  assert.equal(display.StatusLabel("future_status"), "future_status");
+  assert.equal(display.AvailabilityLabel("future_availability"), "future_availability");
+});
+
 test("enhanced settings render and save", async () => {
   const env = loadEnhancedEnvironment();
 
@@ -100,11 +113,18 @@ test("enhanced settings render and save", async () => {
   assert.ok(tree.includes("Speed-log sanity (SOG vs STW)"), tree);
   assert.ok(tree.includes("Speed over ground source"), tree);
   assert.ok(tree.includes("SOG/STW consistency ratio"), tree);
-  assert.ok(tree.includes("active"), tree);
-  assert.ok(tree.includes("no key set"), tree);
+  assert.ok(tree.includes("Active"), tree);
+  assert.ok(tree.includes("No source configured"), tree);
   assert.ok(!tree.includes("undefined"), tree);
   assert.ok(!tree.includes("NaN"), tree);
   assert.ok(!tree.includes("null"), tree);
+
+  env.clickTab("status");
+  await flushViewer();
+  const statusTree = textTree(env.elements["status-panel"]);
+  assert.ok(statusTree.includes("Engine RPM: Unavailable — No source configured"), statusTree);
+  assert.ok(!statusTree.includes("reject_engine_rpm"), statusTree);
+  assert.ok(!statusTree.includes("inactive_key_not_configured"), statusTree);
 
   // Focusing a key dropdown pulls a fresh key list without a viewer reload.
   assert.equal(keysRequests, 2, "source and enhanced cards fetch keys");

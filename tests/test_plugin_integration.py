@@ -16,6 +16,7 @@ from plugin_integration_support import (
 from polarrecorder import export, persistence, reader
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
+from validation_helpers import make_read_result
 
 import plugin as plugin_module
 
@@ -207,6 +208,17 @@ def test_reset_pause_resume_and_export_json_endpoints(tmp_path: Path) -> None:
     assert plugin._flush_requested is False
     assert (tmp_path / "polar.json").exists()
     assert persistence.load(tmp_path).model.snapshot_bins() == {}
+
+
+def test_paused_iteration_records_reason_and_predicate_histograms(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    plugin = make_plugin(tmp_path, api)
+
+    plugin._record_suppressed(make_read_result(), "receiving", "reject_user_paused", plugin.config)
+
+    assert plugin._counters.total_seen == 0
+    assert plugin._counters.rejection_histogram == {"reject_user_paused": 1}
+    assert plugin._counters.predicate_histogram == {"reject_user_paused": 1}
 
 
 def test_concurrent_preset_saves_are_serialized(tmp_path: Path) -> None:

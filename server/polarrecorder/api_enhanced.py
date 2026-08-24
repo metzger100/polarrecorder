@@ -26,7 +26,7 @@ def enhanced_keys(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
         config = plugin.config
     keys: set[str] = set()
     for prefix in _key_prefixes(config):
-        _flatten_keys(prefix, plugin.api.getDataByPrefix(prefix), keys)
+        _flatten_keys(prefix, plugin._store_data_by_prefix(prefix), keys)
     return api_handlers.format_enhanced_keys(sorted(keys))
 
 
@@ -52,7 +52,7 @@ def enhanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
         new_config = parse_config_values(updates, plugin._logger, plugin.config)
         plugin.config = new_config
-    plugin.api.saveConfigValues(dict(updates))
+    plugin._save_config_values(dict(updates))
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.format_enhanced_config(saved)
 
@@ -93,7 +93,7 @@ def _probe_keys(
 
 
 def _probe(plugin: Any, key: str, now: float, stale_threshold: float) -> KeyProbe:
-    entry = plugin.api.getSingleValue(key, includeInfo=True)
+    entry = plugin.get_single_value(key, include_info=True)
     if entry is None:
         return KeyProbe(present=False, fresh=False)
     return KeyProbe(present=True, fresh=now - entry.timestamp <= stale_threshold)

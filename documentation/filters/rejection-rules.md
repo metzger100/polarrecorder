@@ -71,6 +71,10 @@ candidate.
 The pipeline preserves the first rule's reason code(s) as the primary explanation and records every triggered predicate
 in deterministic rule order for diagnostics. A predicate is evidence, not a replacement public decision.
 
+R10 acquires configured SOG even when R20 is disabled. Fresh SOG is authoritative for anchor detection; this avoids
+treating a stopped paddlewheel as anchored while the boat moves over ground. The tradeoff is that genuine sailing
+against sufficiently strong adverse current can have near-zero SOG and be rejected as anchored.
+
 The rolling buffer keeps one boundary anchor sample just outside the active window when a newer sample is present. This
 lets normal sampling jitter, such as a one-second loop running slightly late, prove that the prior data spans the
 configured window while still resetting warm-up after a gap longer than the window.

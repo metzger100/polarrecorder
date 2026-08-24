@@ -34,14 +34,16 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
 
 /**
  * @typedef {{
- *   addEventListener: (name: string, callback: () => void) => void,
+ *   activeElement: FakeElement | null,
+ *   addEventListener: (name: string, callback: (event?: unknown) => void) => void,
  *   body: FakeElement,
  *   createElement: (tagName: string) => FakeElement,
  *   createElementNS: (namespace: unknown, tagName: string) => FakeElement,
  *   createTextNode: (text: string) => FakeElement,
  *   getElementById: (id: string) => FakeElement | null,
  *   querySelector: (selector: string) => FakeElement | null,
- *   querySelectorAll: (selector: string) => FakeElement[]
+ *   querySelectorAll: (selector: string) => FakeElement[],
+ *   removeEventListener: (name: string, callback: (event?: unknown) => void) => void
  * }} FakeDocument
  */
 
@@ -81,7 +83,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  */
 
 /**
- * @typedef {{ responder?: ApiResponder, storage?: Map<string, string>, storageFails?: boolean }} CreateEnvironmentOptions
+ * @typedef {{ responder?: ApiResponder, storage?: Map<string, string>, storageGetFails?: boolean, storageSetFails?: boolean }} CreateEnvironmentOptions
  */
 
 /**
@@ -90,6 +92,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  *   document: FakeDocument,
  *   elements: Record<string, FakeElement>,
  *   fireDOMContentLoaded: () => void,
+ *   fireKeydown: (key: string, shiftKey?: boolean) => void,
  *   clickTab: (name: string) => void,
  *   requests: string[],
  *   storage: Map<string, string>,
@@ -115,7 +118,7 @@ export function loadViewerFile(env, name, root = process.cwd()) {
  */
 export function createEnvironment(options = {}) {
   const responder = options.responder || defaultResponseBody;
-  /** @type {Map<string, Array<() => void>>} */
+  /** @type {Map<string, Array<(event?: unknown) => void>>} */
   const listeners = new Map();
   /** @type {Record<string, FakeElement>} */
   const elements = {
@@ -127,7 +130,8 @@ export function createEnvironment(options = {}) {
     "settings-panel": element("div"),
     "status-panel": element("div"),
     "timeline-chart": element("div"),
-    "timeline-ranges": element("div")
+    "timeline-ranges": element("div"),
+    "polarrecorder-app": element("div")
   };
   for (const [id, node] of Object.entries(elements)) {
     node.id = id;
@@ -145,16 +149,22 @@ export function createEnvironment(options = {}) {
   });
   const body = element("body");
   body.dataset.apiBase = "../api/";
+  body.appendChild(elements["polarrecorder-app"]);
   /** @type {FakeDocument} */
   const document = {
-    addEventListener(/** @type {string} */ name, /** @type {() => void} */ callback) {
+    activeElement: null,
+    addEventListener(/** @type {string} */ name, /** @type {(event?: unknown) => void} */ callback) {
       const callbacks = listeners.get(name) || [];
       callbacks.push(callback);
       listeners.set(name, callbacks);
     },
     body,
     createElement(tagName) {
-      return element(tagName);
+      const created = element(tagName);
+      created.focus = function () {
+        document.activeElement = created;
+      };
+      return created;
     },
     createElementNS(_namespace, tagName) {
       return element(tagName);
@@ -180,6 +190,15 @@ export function createEnvironment(options = {}) {
       if (selector === "[data-tab]") return tabButtons;
       if (selector === "[data-tab-panel]") return tabPanels;
       return [];
+    },
+    removeEventListener(name, callback) {
+      const callbacks = listeners.get(name) || [];
+      listeners.set(
+        name,
+        callbacks.filter(function (item) {
+          return item !== callback;
+        })
+      );
     }
   };
   const storage = options.storage || new Map();
@@ -202,16 +221,11 @@ export function createEnvironment(options = {}) {
     },
     localStorage: {
       getItem(key) {
+        if (options.storageGetFails) throw new Error("storage read failed");
         return storage.get(key) || null;
       },
       setItem(key, value) {
-        if (options.storageFails) {
-          const event = { preventDefault() {} };
-          (windowListeners.get("error") || []).forEach(function (callback) {
-            callback(event);
-          });
-          return;
-        }
+        if (options.storageSetFails) throw new Error("storage write failed");
         storage.set(key, value);
       }
     },
@@ -253,6 +267,13 @@ export function createEnvironment(options = {}) {
       }
       callbacks.forEach(function (callback) {
         callback();
+      });
+    },
+    fireKeydown(key, shiftKey = false) {
+      const callbacks = listeners.get("keydown") || [];
+      const event = { key, shiftKey, preventDefault() {} };
+      callbacks.forEach(function (callback) {
+        callback(event);
       });
     },
     clickTab(name) {

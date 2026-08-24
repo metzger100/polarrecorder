@@ -101,15 +101,6 @@ function compareFindings(a, b) {
     a.message.localeCompare(b.message)
   );
 }
-/** @param {string} text @param {number} line @returns {boolean} */
-function hasBoundaryMarker(text, line) {
-  const lines = text.split(/\r?\n/);
-  return (
-    /plugin-boundary-(?:next-line|line)\(/.test(lines[line - 2] || "") ||
-    /plugin-boundary-line\(/.test(lines[line - 1] || "")
-  );
-}
-
 /** @param {string} line @returns {boolean} */
 function markerOutsideCodeSpan(line) {
   return line
@@ -129,7 +120,6 @@ export {
   dedupe,
   escapeRegex,
   finding,
-  hasBoundaryMarker,
   isFinding,
   lineAt,
   markerOutsideCodeSpan,

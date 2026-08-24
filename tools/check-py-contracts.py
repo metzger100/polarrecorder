@@ -39,13 +39,14 @@ Section 8 that ruff/mypy cannot see:
                       moved, or deleted). A stale map silently stops guarding the
                       helper, so an agent could re-implement it freely. Verifying
                       the map closes that gap.
+- host-api-leak : AvNav camelCase methods appear in domain code;
+                      adapt them in ``plugin.py`` and pass domain values inward.
 
-Scope is server/polarrecorder/ only: that is where producer contracts are
-guaranteed. plugin.py (AvNav boundary) and tests/ legitimately use defensive
+Scope is server/polarrecorder/ only, where producer contracts are guaranteed.
+plugin.py (AvNav boundary) and tests/ legitimately use defensive
 fallbacks and are not scanned (plugin.py is read for reference-tracking only).
 
-Run from the repo root (or set POLARRECORDER_CHECK_ROOT). Exit 0 when clean,
-1 when any violation is found.
+Run from the repo root (or set POLARRECORDER_CHECK_ROOT); exit 0 when clean.
 """
 
 from __future__ import annotations
@@ -72,6 +73,7 @@ _FLOAT_SENTINEL_STRINGS = frozenset(
 
 # Name fragments that mark a declaration as a legacy/compat shim.
 _LEGACY_TOKENS = ("legacy", "compat", "deprecated")
+_HOST_API_METHODS = frozenset({"getSingleValue", "getDataByPrefix", "saveConfigValues"})
 
 # Canonical domain helpers mapped to their single owning module (repo-relative,
 # posix). Re-implementing one of these under the same name in another module
@@ -390,6 +392,21 @@ def _check_math_sentinel(node: ast.Attribute, rel: str) -> list[str]:
     return []
 
 
+def _check_host_api(node: ast.Attribute, rel: str) -> list[str]:
+    """Flag AvNav method spellings outside the integration shell."""
+    if node.attr not in _HOST_API_METHODS:
+        return []
+    return [
+        f"{rel}:{node.lineno}: host-api-leak: '{node.attr}' is an AvNav "
+        "boundary method; adapt it in plugin.py instead of calling it from domain code"
+    ]
+
+
+def _check_attribute_node(node: ast.Attribute, rel: str) -> list[str]:
+    """Run every Attribute-shaped contract rule against one node."""
+    return _check_math_sentinel(node, rel) + _check_host_api(node, rel)
+
+
 def _check_call_node(node: ast.Call, rel: str) -> list[str]:
     """Run every Call-shaped contract rule against one node."""
     return (
@@ -404,7 +421,7 @@ _NODE_TYPE_CHECKS: dict[type[ast.AST], Callable[[Any, str], list[str]]] = {
     ast.BoolOp: _check_or_fallback,
     ast.Call: _check_call_node,
     ast.IfExp: _check_redundant_type_guard,
-    ast.Attribute: _check_math_sentinel,
+    ast.Attribute: _check_attribute_node,
 }
 
 

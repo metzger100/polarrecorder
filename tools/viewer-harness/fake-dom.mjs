@@ -42,6 +42,7 @@
  *   disabled: boolean,
  *   firstChild: FakeElement | null,
  *   hidden: boolean,
+ *   inert: boolean,
  *   id?: string,
  *   onblur?: () => void,
  *   onclick?: (event: FakeClickEvent) => void,
@@ -57,9 +58,11 @@
  *   click: () => void,
  *   closest: (selector: string) => FakeElement | null,
  *   getAttribute: (name: string) => string | undefined,
+ *   focus: () => void,
  *   querySelector: (selector: string) => FakeElement | null,
  *   querySelectorAll: (selector: string) => FakeElement[],
  *   remove: () => void,
+ *   removeAttribute: (name: string) => void,
  *   removeChild: (child: FakeElement) => FakeElement,
  *   setAttribute: (name: string, value: unknown) => void
  * }} FakeElement
@@ -83,6 +86,7 @@ export function element(tagName) {
     disabled: false,
     firstChild: null,
     hidden: false,
+    inert: false,
     parentNode: null,
     style: styleBag(),
     tagName,
@@ -114,6 +118,7 @@ export function element(tagName) {
     getAttribute(name) {
       return node.attributes.get(name);
     },
+    focus() {},
     querySelector(selector) {
       const selectors = selector.split(",").map(function (item) {
         return item.trim();
@@ -140,6 +145,9 @@ export function element(tagName) {
         return child !== node;
       });
       node.parentNode = null;
+    },
+    removeAttribute(name) {
+      node.attributes.delete(name);
     },
     removeChild(child) {
       node.children = node.children.filter(function (item) {

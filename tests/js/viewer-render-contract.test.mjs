@@ -32,6 +32,7 @@ import {
 const VIEWER_MODULES = [
   "placeholders.js",
   "dom.js",
+  "enhanced-rule-display.js",
   "status-ui.js",
   "presets.js",
   "grid-editor.js",

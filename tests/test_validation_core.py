@@ -121,3 +121,12 @@ def test_r10_prefers_fresh_sog_and_falls_back_to_stw() -> None:
         ).decision
         == "pass"
     )
+
+
+def test_r10_sog_authority_documents_adverse_current_counterexample() -> None:
+    sample = replace(make_sample(tws_kt=12.0, stw_kt=2.0), enhanced={"sog_kt": 0.2})
+
+    result = rules_core.anchored_heuristic(sample, default_config())
+
+    assert result.decision == "reject"
+    assert result.reason_codes == ["reject_anchored"]

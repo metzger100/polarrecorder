@@ -120,7 +120,11 @@ def maneuver_cooldown(sample: Sample, state: ValidationState, config: Config) ->
 
 def stability_window(sample: Sample, state: ValidationState, config: Config) -> RuleResult:
     """Reject warming-up or unstable rolling-window samples."""
-    evaluation = evaluate_stability(sample, state, config)
+    return stability_decision(evaluate_stability(sample, state, config))
+
+
+def stability_decision(evaluation: StabilityEvaluation) -> RuleResult:
+    """Map one immutable R15 evaluation to its rule decision."""
     if not evaluation.filled:
         return _reject("reject_warming_up")
     if evaluation.predicate_codes:
@@ -135,13 +139,13 @@ def stability_window(sample: Sample, state: ValidationState, config: Config) -> 
 def evaluate_stability(
     sample: Sample, state: ValidationState, config: Config
 ) -> StabilityEvaluation:
-    """Evaluate R15 using retained state plus the current uncommitted sample."""
+    """Evaluate R15 without mutating retained validation state."""
     now = sample.timestamp_monotonic
-    state.stability_window_seconds = float(config.stability_window_seconds)
-    state.prune(now)
-    entries = [*state.window, entry_from_sample(sample)]
+    window_seconds = float(config.stability_window_seconds)
+    retained = _retained_entries(list(state.window), now, window_seconds)
+    entries = [*retained, entry_from_sample(sample)]
     span = _window_span(entries)
-    if not state.is_filled(now):
+    if not retained or now - retained[0].timestamp_monotonic < window_seconds:
         return StabilityEvaluation(
             filled=False,
             window_span_seconds=span,
@@ -166,6 +170,20 @@ def evaluate_stability(
         stw_range=stw_range,
         predicate_codes=predicates,
     )
+
+
+def _retained_entries(
+    entries: list[WindowEntry], now: float, window_seconds: float
+) -> list[WindowEntry]:
+    oldest_allowed = now - window_seconds
+    if entries and entries[-1].timestamp_monotonic < oldest_allowed:
+        return []
+    first_retained = 0
+    while len(entries) - first_retained > 1:
+        if entries[first_retained + 1].timestamp_monotonic > oldest_allowed:
+            break
+        first_retained += 1
+    return entries[first_retained:]
 
 
 def _linear_range(values: list[float]) -> float:

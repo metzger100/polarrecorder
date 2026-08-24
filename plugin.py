@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
 
 _plugin_path = Path(__file__).resolve().parent
 _plugin_dir = str(_plugin_path)
@@ -20,18 +20,11 @@ _server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
+from polarrecorder import diagnostics
 from polarrecorder.api_dispatch import handle_request as handle_api_request
 from polarrecorder.commit import commit_sample
 from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
-from polarrecorder.diagnostics import (
-    CurrentValues,
-    StoreBoundaryAdapter,
-    format_sample_diagnostic,
-)
-from polarrecorder.diagnostics import (
-    data_status as classify_data_status,
-)
 from polarrecorder.export import replace_user_presets
 from polarrecorder.logger import AvNavLogger
 from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
@@ -56,6 +49,7 @@ if TYPE_CHECKING:
     from os import PathLike
 
     from avnav_api import AVNApi
+    from polarrecorder.reader import DataEntryLike
     from polarrecorder.validation.pipeline import PipelineResult
 
 DESCRIPTION = (
@@ -84,7 +78,7 @@ class Plugin:
 
     def __init__(self, api: AVNApi) -> None:
         """Register AvNav callbacks and initialize in-memory state."""
-        self.api: Any = api
+        self.api: AVNApi = api
         self._clock = time.monotonic
         self._wall_clock = time.time
         self._lock = threading.Lock()
@@ -102,7 +96,7 @@ class Plugin:
         self.config = self._load_initial_config()
         self._state = ValidationState(float(self.config.stability_window_seconds))
         self._timeline = Timeline(self._wall_clock)
-        self._last_current_values: CurrentValues | None = None
+        self._last_current_values: diagnostics.CurrentValues | None = None
         self._last_decision: dict[str, object] | None = None
         self._warming_up = True
         self._last_data_status = "no_data"
@@ -161,12 +155,20 @@ class Plugin:
         register(f"{base_url}/{USER_APP_URL}", USER_APP_ICON, USER_APP_TITLE)
         self._user_app_registered = True
 
+    def _store_data_by_prefix(self, prefix: str) -> object:
+        return self.api.getDataByPrefix(prefix)
+
+    def get_single_value(self, key: str, include_info: bool = False) -> DataEntryLike | None:
+        """Read one AvNav store value through the domain protocol spelling."""
+        return cast("DataEntryLike | None", self.api.getSingleValue(key, includeInfo=include_info))
+
+    def _save_config_values(self, updates: dict[str, str]) -> None:
+        self.api.saveConfigValues(updates)
+
     def _run_iteration(self, config: Config) -> None:
-        store_reader = StoreReader(
-            StoreBoundaryAdapter(self.api), self._clock, self._wall_clock, self._logger, config
-        )
+        store_reader = StoreReader(self, self._clock, self._wall_clock, self._logger, config)
         read_result = store_reader.read()
-        data_status = classify_data_status(read_result)
+        data_status = diagnostics.data_status(read_result)
         if self._paused:
             self._record_suppressed(read_result, data_status, "reject_user_paused", config)
             return
@@ -203,7 +205,7 @@ class Plugin:
         if sample is not None:
             self._state.observe(sample)
         with self._lock:
-            self._counters.record_non_candidate([reason])
+            self._record_counters(result)
             self._timeline.record("rejected", [reason])
             self._write_status_scalars(read_result, sample, data_status, warming_up)
         self._update_avnav_status(data_status, None)
@@ -216,7 +218,7 @@ class Plugin:
         config: Config,
     ) -> None:
         if config.debug_logging:
-            payload = format_sample_diagnostic(read_result, sample, result, self._state, config)
+            payload = diagnostics.format_sample_diagnostic(read_result, sample, result, config)
             message = "diagnostic_sample={}".format(
                 json.dumps(payload, allow_nan=False, separators=(",", ":"), sort_keys=True)
             )
@@ -249,7 +251,7 @@ class Plugin:
             assert read_result.twa_timestamp is not None
             assert read_result.tws_timestamp is not None
             assert read_result.stw_timestamp is not None
-            self._last_current_values = CurrentValues(
+            self._last_current_values = diagnostics.CurrentValues(
                 twa_deg=sample.twa_deg_raw,
                 tws_kt=sample.tws_kt,
                 stw_kt=sample.stw_kt,
