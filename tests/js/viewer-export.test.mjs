@@ -1,7 +1,8 @@
 /**
  * Behavioral tests for viewer/export-ui.js: preset save (empty name, new name, existing-name
  * overwrite confirm accepted/declined), preset delete (builtin blocked, confirm
- * accepted/declined), preview/action error handling, and the cancel-save-box path.
+ * accepted/declined), preview/action error handling, the cancel-save-box path, and the strict
+ * POL/CSV card separation (own percentile, confidence, and message line per format).
  */
 
 import assert from "node:assert/strict";
@@ -25,6 +26,8 @@ const saveRequests = [];
 const deleteRequests = [];
 /** @type {string[]} */
 const polRequests = [];
+/** @type {string[]} */
+const csvRequests = [];
 
 /** @returns {{name: string, builtin: boolean, twa: number[], tws: number[]}[]} */
 function customPresets() {
@@ -54,6 +57,7 @@ function responder(endpoint) {
     return ok({ pol: "TWA\\TWS\t4\r\n30\t4.0\r\n" });
   }
   if (endpoint.startsWith("export?")) {
+    csvRequests.push(endpoint);
     return ok({ csv: "twa/tws,4\n0,0.0\n" });
   }
   return defaultResponseBody(endpoint);
@@ -144,6 +148,61 @@ function allByTag(node, tagName) {
   const out = [];
   collectByTag(node, tagName, out);
   return out;
+}
+
+/**
+ * @param {FakeElement} panel
+ * @param {"pol" | "csv"} format
+ * @returns {FakeElement}
+ */
+function exportCard(panel, format) {
+  const card = panel.children[format === "pol" ? 0 : 1];
+  assert.ok(card, `expected the ${format} export card`);
+  return card;
+}
+
+/**
+ * @param {FakeElement} card
+ * @param {string} labelText
+ * @returns {FakeElement}
+ */
+function fieldControl(card, labelText) {
+  const found = allByTag(card, "label").find((node) => node.children[0].textContent === labelText);
+  assert.ok(found, `expected a '${labelText}' field in this card`);
+  return found.children[1];
+}
+
+/**
+ * @param {FakeElement} card
+ * @returns {FakeElement}
+ */
+function confidenceControl(card) {
+  const found = allByTag(card, "input").find((node) => inputType(node) === "checkbox");
+  assert.ok(found, "expected a confidence checkbox in this card");
+  return found;
+}
+
+/**
+ * @param {FakeElement} node
+ * @param {"oninput" | "onchange"} handlerName
+ */
+function fireHandler(node, handlerName) {
+  const handler = /** @type {Record<string, unknown>} */ (node)[handlerName];
+  if (typeof handler === "function") handler();
+}
+
+/**
+ * @param {FakeElement} card
+ * @param {string} percentile
+ * @param {boolean} highConfidence
+ */
+function setQuality(card, percentile, highConfidence) {
+  const percentileNode = fieldControl(card, "Percentile override");
+  percentileNode.value = percentile;
+  fireHandler(percentileNode, "oninput");
+  const confidenceNode = confidenceControl(card);
+  confidenceNode.checked = highConfidence;
+  fireHandler(confidenceNode, "onchange");
 }
 
 /**
@@ -315,18 +374,10 @@ test("routing POL is the first export action and downloads the dedicated respons
 
   const buttons = panel.querySelectorAll(".primary-action");
   assert.equal(buttons[0].textContent, "Download Routing POL");
-  assert.ok(textTree(panel).includes("folds port and starboard"), textTree(panel));
-  const inputs = allByTag(panel, "input");
-  const percentile = inputs.find((node) => inputType(node) === "number");
-  const confidence = inputs.find((node) => inputType(node) === "checkbox");
-  assert.ok(percentile, "expected the shared percentile control");
-  assert.ok(confidence, "expected the shared confidence control");
-  percentile.value = "70";
-  confidence.checked = true;
-  const onPercentile = /** @type {Record<string, unknown>} */ (percentile).oninput;
-  const onConfidence = /** @type {Record<string, unknown>} */ (confidence).onchange;
-  if (typeof onPercentile === "function") onPercentile();
-  if (typeof onConfidence === "function") onConfidence();
+  const pol = exportCard(panel, "pol");
+  assert.ok(textTree(pol).includes("merged onto each absolute angle"), textTree(pol));
+  assert.ok(textTree(pol).includes("apply to the POL download only"), textTree(pol));
+  setQuality(pol, "70", true);
   const before = polRequests.length;
   clickButton(panel, "Download Routing POL");
   await flushViewer();
@@ -358,5 +409,69 @@ test("routing POL errors are visible and CSV download remains available", async 
   clickButton(panel, "Download Routing POL");
   await flushViewer();
 
-  assert.ok(textTree(panel).includes("POL matrix incomplete"), textTree(panel));
+  assert.ok(textTree(exportCard(panel, "pol")).includes("POL matrix incomplete"), textTree(panel));
+  assert.equal(
+    textTree(exportCard(panel, "csv")).includes("POL matrix incomplete"),
+    false,
+    "a POL failure must not be reported inside the CSV card"
+  );
+});
+
+test("each format card carries its own percentile and confidence controls", async () => {
+  const env = createEnvironment({ responder });
+  const panel = await openExportPanel(env);
+
+  const pol = exportCard(panel, "pol");
+  const csv = exportCard(panel, "csv");
+  assert.ok(textTree(csv).includes("apply to the CSV preview and download only"), textTree(csv));
+  assert.ok(fieldControl(pol, "Percentile override"), "expected a POL percentile control");
+  assert.ok(fieldControl(csv, "Percentile override"), "expected a CSV percentile control");
+  assert.notEqual(
+    fieldControl(pol, "Percentile override"),
+    fieldControl(csv, "Percentile override"),
+    "the two cards must not share one percentile control"
+  );
+  assert.notEqual(confidenceControl(pol), confidenceControl(csv), "the two cards must not share one switch");
+  assert.equal(allByTag(pol, "select").length, 0, "the preset selector belongs to the CSV card only");
+  assert.equal(pol.querySelectorAll(".grid-editor").length, 0, "the TWA/TWS grid belongs to the CSV card only");
+});
+
+test("POL and CSV quality settings do not leak into each other's request", async () => {
+  const env = createEnvironment({ responder });
+  const panel = await openExportPanel(env);
+
+  setQuality(exportCard(panel, "pol"), "70", true);
+  setQuality(exportCard(panel, "csv"), "40", false);
+
+  clickButton(panel, "Download Routing POL");
+  await flushViewer();
+  clickButton(panel, "Download CSV");
+  await flushViewer();
+
+  assert.equal(polRequests[polRequests.length - 1], "export/pol?percentile=70&high_confidence=yes");
+  const csvRequest = csvRequests[csvRequests.length - 1];
+  assert.ok(csvRequest.includes("percentile=40"), csvRequest);
+  assert.equal(csvRequest.includes("high_confidence"), false, csvRequest);
+});
+
+test("a CSV failure is reported inside the CSV card only", async () => {
+  const env = createEnvironment({
+    responder(endpoint) {
+      if (endpoint.startsWith("export?")) {
+        return { status: "ERROR", data: null, error: "CSV grid rejected" };
+      }
+      return responder(endpoint);
+    }
+  });
+  const panel = await openExportPanel(env);
+
+  clickButton(panel, "Download CSV");
+  await flushViewer();
+
+  assert.ok(textTree(exportCard(panel, "csv")).includes("CSV grid rejected"), textTree(panel));
+  assert.equal(
+    textTree(exportCard(panel, "pol")).includes("CSV grid rejected"),
+    false,
+    "a CSV failure must not be reported inside the POL card"
+  );
 });

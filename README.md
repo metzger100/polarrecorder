@@ -119,16 +119,19 @@ recording worked and why samples were excluded.
 
 ### Export
 
-The Export tab offers routing POL and CSV polar tables.
+The Export tab has one card per format. Each card is self-contained: it has its own percentile override, its own
+high-confidence switch, its own download button, and its own message line, so nothing you set for one format affects the
+other.
 
-**Download Routing POL** creates a fixed 30-180° absolute-TWA table for NavimetriX and compatible routing apps. It folds
+**Routing POL (.pol)** creates a fixed 30-180° absolute-TWA table for NavimetriX and compatible routing apps. It folds
 port and starboard observations together by merging their sample histograms before percentile calculation. POL never
 changes or folds the stored learned model. Because NavimetriX does not publicly document blank-cell support, the
 download fails with a missing-cell count until all 108 routing cells meet the selected confidence floor; no performance
 is interpolated or extrapolated.
 
-CSV remains available for spreadsheets, custom TWA/TWS grids, starboard-only or port-only inspection, and full 360° tack
-asymmetry. You can preview or download CSV, edit its grid, save presets, and require high-confidence cells.
+**Tack-aware CSV (.csv)** is for spreadsheets, Windy, custom TWA/TWS grids, starboard-only or port-only inspection, and
+full 360° tack asymmetry. You can preview or download CSV, edit its grid, and save presets. Presets and the grid editor
+belong to this card only; they never change the POL table.
 
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
