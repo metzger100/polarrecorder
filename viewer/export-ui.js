@@ -87,8 +87,9 @@ window.Polarrecorder = window.Polarrecorder || {};
         "p",
         "helper",
         "Tab-separated table for NavimetriX and other routing apps that read .pol. The grid is fixed at TWA " +
-          "30-180° and TWS 4-25 kn, and port and starboard observations are merged onto each absolute angle " +
-          "before the percentile is taken. The settings below apply to the POL download only."
+          "30-180° and TWS 4-25 kn, trimmed to your maximum-true-wind setting, and port and starboard " +
+          "observations are merged onto each absolute angle before the percentile is taken. The settings " +
+          "below apply to the POL download only."
       )
     );
     appendQualityControls(card, state.pol);

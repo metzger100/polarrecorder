@@ -40,5 +40,6 @@ def export_routing_pol(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
         percentile = export.parse_percentile(args, plugin.config.percentile)
         min_samples = export.resolve_min_samples(args, plugin.config.min_samples_for_export)
+        max_tws = plugin.config.max_tws
         model_bins = plugin._model.snapshot_bins()
-    return api_handlers.format_routing_pol(model_bins, percentile, min_samples)
+    return api_handlers.format_routing_pol(model_bins, percentile, min_samples, max_tws)

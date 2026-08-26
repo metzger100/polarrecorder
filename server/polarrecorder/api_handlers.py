@@ -189,9 +189,11 @@ def format_routing_pol(
     model_bins: export.SnapshotBins,
     percentile: int,
     min_samples: int,
+    max_tws: int,
 ) -> Response:
     """Format the tack-folded routing POL export endpoint."""
-    return ok({"pol": routing_pol.routing_pol_export(model_bins, percentile, min_samples)})
+    pol = routing_pol.routing_pol_export(model_bins, percentile, min_samples, max_tws)
+    return ok({"pol": pol})
 
 
 def format_config(config: Config) -> Response:

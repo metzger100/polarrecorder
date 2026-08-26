@@ -5,9 +5,9 @@ The static ``nan-sentinel`` rule in check-py-contracts.py only catches *literal*
 ``float("nan")`` / ``math.nan``. A non-finite value produced at runtime (a
 division, unit-conversion overflow, percentile over an empty band, or projection
 edge case) is invisible to AST scanning. This checker exercises hostile core
-normalization and formats status, polar, and CSV/Windy boundary responses. It
-fails if any number is NaN/Infinity or export text carries a ``nan``/``inf``
-sentinel.
+normalization and formats status, polar, CSV/Windy, and routing POL boundary
+responses. It fails if any number is NaN/Infinity or export text carries a
+``nan``/``inf`` sentinel.
 
 Run from the repo root. Exit 0 when clean, 1 when a non-finite value leaks.
 """
@@ -19,7 +19,7 @@ import re
 import sys
 from typing import Any
 
-from polarrecorder import api_handlers, export
+from polarrecorder import api_handlers, export, routing_pol
 from polarrecorder.config import default_config
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, ReadResult, Sample
@@ -55,6 +55,7 @@ def main() -> int:
         for path, value in nonfinite_paths(status)
     )
     failures.extend(hostile_core_normalization_failures())
+    routing_snapshot = routing_model_snapshot()
     for percentile in (50, 65, 90):
         polar = api_handlers.format_polar(snapshot, twa_grid, tws_grid, percentile, 1, name)
         failures.extend(
@@ -72,6 +73,7 @@ def main() -> int:
             f"format_export(percentile={percentile}).data.csv: {detail}"
             for detail in sentinel_text_failures(_csv_text(export_response))
         )
+        failures.extend(routing_pol_failures(routing_snapshot, percentile))
 
     if failures:
         for failure in failures:
@@ -79,11 +81,79 @@ def main() -> int:
         sys.stderr.write(f"[runtime-contracts] {len(failures)} violation(s) found.\n")
         return 1
     sys.stdout.write(
-        f"[runtime-contracts] status, polar, and export boundaries finite across "
-        f"{SAMPLE_COUNT} samples.\n"
+        f"[runtime-contracts] status, polar, CSV export, and routing POL boundaries "
+        f"finite across {SAMPLE_COUNT} samples.\n"
     )
     sys.stdout.write("Runtime contract check passed.\n")
     return 0
+
+
+def routing_model_snapshot() -> export.SnapshotBins:
+    """Return a real model snapshot that populates every routing POL cell.
+
+    The POL grid is fixed and fail-closed, so the shared sweep snapshot cannot
+    satisfy it; this walks the routing grid itself.
+
+    Returns:
+        Snapshot bins covering the whole routing grid.
+    """
+    model = PolarModel()
+    for index in range(SAMPLE_COUNT):
+        model.update_accepted(routing_sample_for(index))
+    return model.snapshot_bins()
+
+
+def routing_pol_failures(snapshot: export.SnapshotBins, percentile: int) -> list[str]:
+    """Return findings for a successful routing POL export at one percentile.
+
+    Proves the tack-folded projection, merged-histogram percentile, and tab
+    serialization never emit a non-finite speed or a ``nan``/``inf`` token.
+
+    Args:
+        snapshot: Model bins covering the whole routing grid.
+        percentile: The export percentile to exercise.
+
+    Returns:
+        One entry per non-finite value or sentinel token found.
+    """
+    label = f"format_routing_pol(percentile={percentile})"
+    try:
+        response = api_handlers.format_routing_pol(
+            snapshot, percentile, export.MIN_SAMPLES_DISPLAY, default_config().max_tws
+        )
+    except routing_pol.RoutingPolError as error:
+        # The dispatcher turns this into an ERROR envelope, so it never reaches a
+        # user as a traceback; here it means the sweep failed to fill the grid.
+        return [f"{label}: expected a complete export, got {error}"]
+    failures = [
+        f"{label}{path}: non-finite value {value!r}" for path, value in nonfinite_paths(response)
+    ]
+    failures.extend(
+        f"{label}.data.pol: {detail}" for detail in sentinel_text_failures(_pol_text(response))
+    )
+    return failures
+
+
+def _pol_text(response: dict[str, object]) -> str:
+    """Extract the POL payload from a ``format_routing_pol`` response."""
+    data = response["data"]
+    if not isinstance(data, dict):
+        msg = f"format_routing_pol data is not a mapping: {type(data).__name__}"
+        raise TypeError(msg)
+    pol = data["pol"]
+    if not isinstance(pol, str):
+        msg = f"format_routing_pol pol is not a string: {type(pol).__name__}"
+        raise TypeError(msg)
+    return pol
+
+
+def routing_sample_for(index: int) -> Any:
+    """Return one accepted sample spread across every routing POL cell."""
+    twa_grid = routing_pol.ROUTING_TWA
+    tws_grid = routing_pol.routing_tws_grid(default_config().max_tws)
+    twa = float(twa_grid[index % len(twa_grid)])
+    tws_kt = float(tws_grid[(index // len(twa_grid)) % len(tws_grid)])
+    return _accepted_sample(index, twa, tws_kt, 4.0 + float(index % 40) / 10.0)
 
 
 def nonfinite_paths(value: object, path: str = "") -> list[tuple[str, float]]:
@@ -209,7 +279,11 @@ def sample_for(index: int) -> Any:
     """Return one deterministic accepted sample spread across common bins."""
     twa = float(index % 181)
     tws_kt = float(export.WINDY_TWS[index % len(export.WINDY_TWS)])
-    stw_kt = 4.0 + float(index % 40) / 10.0
+    return _accepted_sample(index, twa, tws_kt, 4.0 + float(index % 40) / 10.0)
+
+
+def _accepted_sample(index: int, twa: float, tws_kt: float, stw_kt: float) -> Any:
+    """Build one finite accepted sample at the given TWA/TWS/STW."""
     return Sample(
         timestamp_monotonic=float(index),
         timestamp_wall=float(index),

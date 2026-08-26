@@ -342,7 +342,7 @@ def _routing_pol_endpoint(query: dict[str, list[str]]) -> dict[str, object]:
     if reset_model:
         msg = "NavimetriX export is incomplete: 108 of 108 polar cells lack sufficient data."
         raise MockError(msg)
-    rows = ["TWA\\TWS\t" + "\t".join(str(tws) for tws in ROUTING_TWS)]
+    rows = ["TWA/TWS\t" + "\t".join(str(tws) for tws in ROUTING_TWS)]
     for twa in ROUTING_TWA:
         values = [str(twa)]
         values.extend(str(speed(twa, tws, percentile)) for tws in ROUTING_TWS)
