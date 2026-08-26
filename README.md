@@ -26,7 +26,8 @@ Polar Recorder uses three AvNav values:
 | STW        | Speed through water. Usually from the log or paddlewheel.                  | `gps.waterSpeed`    |
 
 Change these defaults in **Settings > Data Sources**; surrounding whitespace is removed from saved keys. TWA uses
-degrees, while TWS and STW use m/s before Polar Recorder converts and displays the speeds in knots.
+degrees, while TWS and STW use m/s before Polar Recorder converts and displays the speeds in knots. Blank persisted core
+keys are restored to these defaults at startup.
 
 Core learning uses true wind angle/speed and speed through water. A configured fresh SOG is also used to distinguish
 anchored from moving samples. Other optional signals are described under
@@ -166,8 +167,10 @@ The enhanced rejection rules are:
 The SOG source is also shared with anchored detection even when the SOG/STW consistency rule is disabled. Optional
 signals are normalized and checked against broad physical ceilings before any rule can consume them.
 
-Standard AvNav keys are prefilled where available. Engine and heel rules remain inactive until you map their
-boat-specific keys. The live badge explains whether each rule is active, disabled, or unavailable.
+Standard AvNav keys are offered as suggestions where available. The key fields remain editable, so engine, RPM, heel,
+and other custom store keys can be typed even when AvNav discovery cannot enumerate their prefix. Engine and heel rules
+remain inactive until you map their boat-specific keys. The live badge explains whether each rule is active, disabled,
+or unavailable.
 
 ### Advanced Settings
 
@@ -285,9 +288,10 @@ Common causes:
 - the plugin is still warming up its stability checks
 
 Pause/Resume, loss of fresh usable core data, non-sailing conditions, suspected engine use, and enhanced sensor-quality
-rejections restart the stability warm-up. R15 requires both a full time span and the expected observation density, so
-two sparse endpoints cannot prove stability. Status reports data as present only when all three core readings and their
-source timestamps are finite, numeric, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
+rejections restart the stability warm-up. R15 requires both a full time span and a bounded observation density that
+tolerates up to 10% sustained scheduler slippage or one missed tick, while still preventing sparse histories from
+proving stability. Status reports data as present only when all three core readings and their source timestamps are
+finite, numeric, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

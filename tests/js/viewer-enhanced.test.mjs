@@ -127,17 +127,21 @@ test("enhanced settings render and save", async () => {
   assert.ok(!statusTree.includes("reject_engine_rpm"), statusTree);
   assert.ok(!statusTree.includes("inactive_key_not_configured"), statusTree);
 
-  // Focusing a key dropdown pulls a fresh key list without a viewer reload.
+  // Focusing an editable key input pulls fresh suggestions without a viewer reload.
   assert.equal(keysRequests, 2, "source and enhanced cards fetch keys");
   const keyWrap = panel.querySelectorAll(".enhanced-key")[0];
-  const select = keyWrap.children.find((child) => child.tagName === "select");
-  assert.ok(select, "expected a key <select>");
-  assert.ok(select.onfocus, "expected a focus handler");
-  select.onfocus();
+  const input = keyWrap.children.find((child) => child.tagName === "input");
+  const suggestions = keyWrap.children.find((child) => child.tagName === "datalist");
+  assert.ok(input, "expected an editable key input");
+  assert.ok(suggestions, "expected key suggestions");
+  assert.equal(input.getAttribute("list"), suggestions.id);
+  assert.ok(input.onfocus, "expected a focus handler");
+  input.onfocus();
   await flushViewer();
   assert.equal(keysRequests, 3, "focus re-fetched keys");
-  const optionLabels = select.children.map((option) => option.textContent);
+  const optionLabels = suggestions.children.map((option) => option.textContent);
   assert.ok(optionLabels.includes("gps.signalk.propulsion.0.revolutions"), optionLabels.join(","));
+  input.value = "n2k.engine.0.rpm";
 
   const saveButton = enhancedSaveButton(panel);
   assert.ok(saveButton, "expected the Save Enhanced Settings button");
@@ -146,6 +150,7 @@ test("enhanced settings render and save", async () => {
 
   assert.equal(saveRequests.length, 1, saveRequests.join(" | "));
   assert.ok(saveRequests[0].includes("enh_rpm_enabled=true"), saveRequests[0]);
+  assert.ok(saveRequests[0].includes("enh_rpm_key=n2k.engine.0.rpm"), saveRequests[0]);
   assert.ok(saveRequests[0].includes("enh_sog_key=gps.speed"), saveRequests[0]);
   assert.ok(saveRequests[0].includes("enh_slip_ratio=0.5"), saveRequests[0]);
   assert.ok(textTree(panel).includes("Enhanced settings saved."), textTree(panel));

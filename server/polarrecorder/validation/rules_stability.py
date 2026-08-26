@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 STABILITY_MAX_GAP_INTERVALS = 3.0
 STABILITY_MIN_SAMPLE_COUNT = 3
+STABILITY_CADENCE_TOLERANCE_RATIO = 0.1
 
 
 @dataclass(frozen=True)
@@ -156,9 +157,10 @@ def evaluate_stability(
     span = _window_span(entries)
     largest_gap = _largest_gap(entries)
     max_allowed_gap = config.sample_interval * STABILITY_MAX_GAP_INTERVALS
+    tolerated_interval = config.sample_interval * (1.0 + STABILITY_CADENCE_TOLERANCE_RATIO)
     minimum_samples = max(
         STABILITY_MIN_SAMPLE_COUNT,
-        math.ceil(window_seconds / config.sample_interval) + 1,
+        math.ceil(window_seconds / tolerated_interval) + 1,
     )
     continuous = largest_gap <= max_allowed_gap
     dense = len(entries) >= minimum_samples

@@ -233,6 +233,56 @@ def test_r15_passes_with_jittered_one_second_samples() -> None:
     assert result.decision == "pass"
 
 
+def test_r15_passes_with_persistent_scheduler_slip() -> None:
+    config = default_config()
+    for cadence in (1.05, 1.1):
+        state = ValidationState()
+        for index in range(15):
+            state.observe(
+                make_sample(now=index * cadence),
+                window_seconds=config.stability_window_seconds,
+            )
+
+        evaluation = rules_stability.evaluate_stability(
+            make_sample(now=15 * cadence), state, config
+        )
+
+        assert evaluation.filled
+        assert evaluation.minimum_sample_count == 15
+
+
+def test_r15_passes_with_one_missed_tick_inside_a_continuous_window() -> None:
+    config = default_config()
+    state = ValidationState()
+    for timestamp in (*range(7), *range(8, 15)):
+        state.observe(
+            make_sample(now=float(timestamp)),
+            window_seconds=config.stability_window_seconds,
+        )
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=15.0), state, config)
+
+    assert evaluation.filled
+    assert evaluation.sample_count == 15
+    assert evaluation.largest_gap_seconds == 2.0
+
+
+def test_r15_density_still_rejects_evenly_sparse_history() -> None:
+    config = default_config()
+    state = ValidationState()
+    for timestamp in range(0, 16, 2):
+        state.observe(
+            make_sample(now=float(timestamp)),
+            window_seconds=config.stability_window_seconds,
+        )
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=16.0), state, config)
+
+    assert not evaluation.filled
+    assert evaluation.largest_gap_seconds == 2.0
+    assert evaluation.sample_count < evaluation.minimum_sample_count
+
+
 def test_r15_restarts_warmup_after_sample_gap() -> None:
     config = default_config()
     state = make_warmed_state(now=100.0)

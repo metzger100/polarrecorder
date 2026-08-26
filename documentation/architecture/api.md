@@ -95,13 +95,13 @@ as validation, so an implausibly future timestamp is shown as unusable rather th
 speeds originate from accepted finite samples, and timeline/counter values are integers.
 
 The enhanced endpoints back the Settings-tab "Enhanced Rules" section. `enhanced/keys` enumerates only currently-present
-store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer offers them as dropdown options and also
-allows free-text entry for custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
-computes each role's missing/stale/invalid/usable state at the boundary (snapshotting `self.config` under the lock,
-probing via `getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the
-lock. Every row includes a `sources` object mapping its roles to `unconfigured`, `missing`, `stale`, `invalid`, or
-`usable`, so mixed causes remain visible. Status normally reports `active` only when the rule's required source contract
-is consumable. R20 is the deliberate exception: usable SOG plus invalid current drift reports
+store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer offers them as suggestions in editable
+text inputs while allowing free-text custom keys (RPM, engine state, heel) that are not standard AvNav keys.
+`enhanced/status` computes each role's missing/stale/invalid/usable state at the boundary (snapshotting `self.config`
+under the lock, probing via `getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module
+outside the lock. Every row includes a `sources` object mapping its roles to `unconfigured`, `missing`, `stale`,
+`invalid`, or `usable`, so mixed causes remain visible. Status normally reports `active` only when the rule's required
+source contract is consumable. R20 is the deliberate exception: usable SOG plus invalid current drift reports
 `active_invalid_corroboration` with normalized availability `active`, because invalid drift cannot corroborate the speed
 gap and R20 can still reject; missing or stale drift remains unavailable and fail-open. Other invalid required values,
 including negative unsigned physical roles, report `inactive_value_invalid` and `unavailable`. Unavailable headline

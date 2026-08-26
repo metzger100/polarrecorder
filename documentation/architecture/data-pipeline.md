@@ -37,15 +37,17 @@ reason.
 
 R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
 the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
-reconfigures, or otherwise mutates live validation state. Diagnostic records also retain JSON-safe raw core scalar
-values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages, acquisition states, invalid
-causes, and a record schema. Schema 5 preserves strings and booleans as actually received while replacing unsupported or
-non-finite objects with `null`; it also includes R15's largest observed gap, allowed gap, observed/required sample
-counts, and the active sample interval, making the recorded decision inspectable. Diagnostic emission follows canonical
-state, model, counter, timeline, and status accounting, so logging cannot change the recorded decision. One record is
-emitted for each completed store read, including a read discarded after a configuration change. A reader exception that
-produces no `ReadResult` is reported through the normal AvNav loop error path instead. These are structured decision
-diagnostics, not a promise of literal full-pipeline replay across arbitrary configuration changes.
+reconfigures, or otherwise mutates live validation state. Its observation-density floor uses the configured sample
+interval with a bounded 10% scheduler-slippage allowance, while the separate three-interval maximum-gap rule still
+rejects sparse history. Diagnostic records also retain JSON-safe raw core scalar values, core source timestamps/ages,
+enhanced raw/normalized values with timestamps/ages, acquisition states, invalid causes, and a record schema. Schema 5
+preserves strings and booleans as actually received while replacing unsupported or non-finite objects with `null`; it
+also includes R15's largest observed gap, allowed gap, observed/required sample counts, and the active sample interval,
+making the recorded decision inspectable. Diagnostic emission follows canonical state, model, counter, timeline, and
+status accounting, so logging cannot change the recorded decision. One record is emitted for each completed store read,
+including a read discarded after a configuration change. A reader exception that produces no `ReadResult` is reported
+through the normal AvNav loop error path instead. These are structured decision diagnostics, not a promise of literal
+full-pipeline replay across arbitrary configuration changes.
 
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.
