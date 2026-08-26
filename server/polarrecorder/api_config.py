@@ -12,7 +12,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder import api_handlers
-from polarrecorder.config import Config, first_config_relation_error, parse_config_values
+from polarrecorder.config import (
+    SOURCE_KEY_FIELDS,
+    Config,
+    first_config_relation_error,
+    parse_config_values,
+)
 from polarrecorder.params import CONFIG_PARAMETERS
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
@@ -59,7 +64,7 @@ ADVANCED_GROUPS = (
             AdvancedField(
                 "debug_logging",
                 "Debug logging",
-                "Writes one diagnostic log line per sampling iteration.",
+                "Writes one decision diagnostic per completed store read.",
                 "",
             ),
         ),
@@ -251,19 +256,25 @@ def apply_config_updates(plugin: Any, updates: dict[str, str]) -> Config:
         relation_error = first_config_relation_error(new_config)
         if relation_error:
             raise ConfigUpdateError(relation_error)
+        persisted_updates = {
+            name: str(getattr(new_config, name)) if name in SOURCE_KEY_FIELDS else raw_value
+            for name, raw_value in updates.items()
+        }
         plugin._config_save_active = True
     persisted = False
     try:
-        plugin._save_config_values(dict(updates))
+        plugin._save_config_values(persisted_updates)
         persisted = True
     finally:
         with plugin._lock:
-            if persisted:
-                plugin.config = new_config
-                reset_validation_state_for_source_changes(
-                    plugin._state, previous_config, new_config
-                )
-            plugin._config_save_active = False
+            try:
+                if persisted:
+                    plugin.config = new_config
+                    reset_validation_state_for_source_changes(
+                        plugin._state, previous_config, new_config
+                    )
+            finally:
+                plugin._config_save_active = False
     return new_config
 
 

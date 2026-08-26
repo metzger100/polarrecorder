@@ -150,7 +150,7 @@ def _steady_reads(
     enhanced: dict[str, tuple[float, float]],
 ) -> list[ReadResult]:
     return [
-        _read_result(float(WARMUP_SECONDS + index), stw_kt=stw_kt, enhanced_raw=enhanced)
+        _read_result(float(WARMUP_SECONDS + index), stw_kt=stw_kt, enhanced_values=enhanced)
         for index in range(count)
     ]
 
@@ -269,7 +269,7 @@ def _read_result(
     tws_kt: float = 12.0,
     stw_kt: float = 6.0,
     age_s: float = 0.1,
-    enhanced_raw: dict[str, tuple[float, float]] | None = None,
+    enhanced_values: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     return ReadResult(
         timestamp_monotonic=timestamp,
@@ -280,7 +280,7 @@ def _read_result(
         twa_timestamp=timestamp - age_s,
         tws_timestamp=timestamp - age_s,
         stw_timestamp=timestamp - age_s,
-        enhanced_raw=enhanced_raw,
+        enhanced_values=enhanced_values,
     )
 
 

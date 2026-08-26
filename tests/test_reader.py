@@ -140,7 +140,7 @@ def test_reader_without_config_omits_enhanced_signals() -> None:
 
     read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0)).read()
 
-    assert read_result.enhanced_raw is None
+    assert read_result.enhanced_values is None
     sample = build_sample(read_result)
     assert sample is not None
     assert sample.enhanced is None
@@ -379,7 +379,10 @@ def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
         assert acquisition.invalid_cause == "range"
     assert read_result.enhanced_inputs["awa_deg"].state == "usable"
     assert read_result.enhanced_inputs["heel_deg"].state == "usable"
-    assert read_result.enhanced_raw == {"awa_deg": (-30.0, 99.5), "heel_deg": (-12.0, 99.5)}
+    assert read_result.enhanced_values == {
+        "awa_deg": (-30.0, 99.5),
+        "heel_deg": (-12.0, 99.5),
+    }
 
 
 def test_reader_rejects_values_that_overflow_during_unit_normalization() -> None:
@@ -395,8 +398,10 @@ def test_reader_rejects_values_that_overflow_during_unit_normalization() -> None
     assert read_result.enhanced_inputs is not None
     assert read_result.enhanced_inputs["sog_kt"].state == "invalid"
     assert read_result.enhanced_inputs["current_drift_kt"].state == "invalid"
-    assert read_result.enhanced_raw is None or "sog_kt" not in read_result.enhanced_raw
-    assert read_result.enhanced_raw is None or "current_drift_kt" not in read_result.enhanced_raw
+    assert read_result.enhanced_values is None or "sog_kt" not in read_result.enhanced_values
+    assert (
+        read_result.enhanced_values is None or "current_drift_kt" not in read_result.enhanced_values
+    )
 
 
 def test_reader_rejects_finite_value_above_canonical_role_ceiling() -> None:

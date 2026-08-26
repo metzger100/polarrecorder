@@ -40,6 +40,9 @@ derives drift from the same paddlewheel that feeds `gps.waterSpeed`, a broken lo
 R20 is silently defeated. Both are deliberate prices of never discarding honest following-current data, which shares the
 STW-below-SOG signature.
 
+Live status mirrors this contract: invalid drift with usable SOG leaves R20 active, while missing or stale drift makes
+it unavailable and fail-open. Per-source states expose the exact distinction.
+
 R10 independently prefers fresh SOG over STW for anchor detection, even when R20 is disabled. This protects against a
 stopped paddlewheel on a moving boat, but sailing against strong adverse current can produce near-zero SOG and a false
 anchored rejection. That limitation excludes data rather than poisoning the learned model.

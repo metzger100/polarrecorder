@@ -48,7 +48,7 @@ def test_non_finite_config_text_cannot_disable_r3_r10_r15_or_r20() -> None:
     mismatch, _ = run(
         make_read_result(
             stw_kt=1.0,
-            enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
+            enhanced_values={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
         ),
         make_warmed_state(stw_values=(1.0, 1.0, 1.0)),
         config,
@@ -238,9 +238,9 @@ def test_threats_not_detectable_in_mvp_pass_by_design() -> None:
 
 def test_enhanced_pre_candidate_rejects_are_non_candidates() -> None:
     cases = [
-        (make_read_result(enhanced_raw={"rpm": (1500.0, 99.5)}), "reject_engine_rpm"),
-        (make_read_result(enhanced_raw={"engine_signal": (1.0, 99.5)}), "reject_engine_on"),
-        (make_read_result(enhanced_raw={"depth_m": (0.4, 99.5)}), "reject_shallow"),
+        (make_read_result(enhanced_values={"rpm": (1500.0, 99.5)}), "reject_engine_rpm"),
+        (make_read_result(enhanced_values={"engine_signal": (1.0, 99.5)}), "reject_engine_on"),
+        (make_read_result(enhanced_values={"depth_m": (0.4, 99.5)}), "reject_shallow"),
     ]
     for read_result, code in cases:
         result, sample = run(read_result, make_warmed_state(), default_config())
@@ -256,13 +256,14 @@ def test_enhanced_quality_gate_rejects_are_candidates() -> None:
     cases = [
         (
             make_read_result(
-                stw_kt=1.0, enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.5, 99.5)}
+                stw_kt=1.0,
+                enhanced_values={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.5, 99.5)},
             ),
             "reject_sog_stw_mismatch",
             make_warmed_state(stw_values=(1.0, 1.0, 1.0)),
         ),
         (
-            make_read_result(enhanced_raw={"heel_deg": (60.0, 99.5)}),
+            make_read_result(enhanced_values={"heel_deg": (60.0, 99.5)}),
             "reject_heel_out_of_band",
             make_warmed_state(),
         ),
@@ -278,7 +279,9 @@ def test_enhanced_quality_gate_rejects_are_candidates() -> None:
 
 
 def test_enhanced_quality_gate_reject_precedes_r16_quarantine() -> None:
-    read_result = make_read_result(tws_kt=4.0, stw_kt=4.0, enhanced_raw={"heel_deg": (60.0, 99.5)})
+    read_result = make_read_result(
+        tws_kt=4.0, stw_kt=4.0, enhanced_values={"heel_deg": (60.0, 99.5)}
+    )
 
     result, sample = run(read_result, make_warmed_state(), default_config())
 
@@ -292,7 +295,7 @@ def test_secondary_quality_predicates_break_stability_history() -> None:
         (
             make_read_result(
                 stw_kt=0.5,
-                enhanced_raw={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
+                enhanced_values={"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)},
             ),
             make_warmed_state(stw_values=(5.0, 5.0, 5.0)),
             "reject_sog_stw_mismatch",
@@ -300,13 +303,13 @@ def test_secondary_quality_predicates_break_stability_history() -> None:
         (
             make_read_result(
                 twa_raw=120.0,
-                enhanced_raw={"awa_deg": (0.0, 99.5), "aws_kt": (12.0, 99.5)},
+                enhanced_values={"awa_deg": (0.0, 99.5), "aws_kt": (12.0, 99.5)},
             ),
             make_warmed_state(),
             "reject_true_wind_crosscheck",
         ),
         (
-            make_read_result(twa_raw=120.0, enhanced_raw={"heel_deg": (60.0, 99.5)}),
+            make_read_result(twa_raw=120.0, enhanced_values={"heel_deg": (60.0, 99.5)}),
             make_warmed_state(),
             "reject_heel_out_of_band",
         ),
@@ -332,9 +335,9 @@ def test_secondary_quality_predicates_break_stability_history() -> None:
 def test_rate_rejections_with_secondary_r20_break_stability_history() -> None:
     mismatch = {"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)}
     cases = (
-        (make_read_result(twa_raw=120.0, stw_kt=1.0, enhanced_raw=mismatch), "reject_twa_roc"),
-        (make_read_result(tws_kt=30.0, stw_kt=1.0, enhanced_raw=mismatch), "reject_tws_roc"),
-        (make_read_result(stw_kt=1.0, enhanced_raw=mismatch), "reject_stw_roc"),
+        (make_read_result(twa_raw=120.0, stw_kt=1.0, enhanced_values=mismatch), "reject_twa_roc"),
+        (make_read_result(tws_kt=30.0, stw_kt=1.0, enhanced_values=mismatch), "reject_tws_roc"),
+        (make_read_result(stw_kt=1.0, enhanced_values=mismatch), "reject_stw_roc"),
     )
     for read_result, primary_code in cases:
         state = make_warmed_state()
@@ -352,7 +355,7 @@ def test_rate_rejections_with_secondary_r20_break_stability_history() -> None:
 
 def test_engine_off_signal_suppresses_r16_quarantine_end_to_end() -> None:
     read_result = make_read_result(
-        tws_kt=4.0, stw_kt=4.0, enhanced_raw={"engine_signal": (0.0, 99.5)}
+        tws_kt=4.0, stw_kt=4.0, enhanced_values={"engine_signal": (0.0, 99.5)}
     )
 
     result, sample = run(read_result, make_warmed_state(), default_config())
@@ -369,7 +372,7 @@ def test_wind_shift_with_steady_heading_reaches_r15_end_to_end() -> None:
     assert previous is not None
     state.previous_sample = replace(previous, heading_deg=90.0)
 
-    read_result = make_read_result(twa_raw=200.0, enhanced_raw={"heading_deg": (92.0, 99.5)})
+    read_result = make_read_result(twa_raw=200.0, enhanced_values={"heading_deg": (92.0, 99.5)})
     result, sample = run(read_result, state, default_config())
 
     assert result.decision == "rejected"

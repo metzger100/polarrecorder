@@ -13,11 +13,11 @@ from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_read_result, make_warmed_state
 
 
-def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
+def test_formatter_includes_decision_values_enhanced_roles_and_config() -> None:
     config = default_config()
     state = make_warmed_state()
     read_result = replace(
-        make_read_result(enhanced_raw={"rpm": (800.0, 99.5), "sog_kt": (2.0, 99.5)}),
+        make_read_result(enhanced_values={"rpm": (800.0, 99.5), "sog_kt": (2.0, 99.5)}),
         enhanced_inputs={
             "rpm": EnhancedInput("usable", 800.0, 99.5, 800.0),
             "sog_kt": EnhancedInput("usable", 2.0, 99.5, 2.0),
@@ -29,7 +29,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     payload = format_sample_diagnostic(read_result, sample, result, config)
 
     assert state == before
-    assert payload["schema_version"] == 4
+    assert payload["schema_version"] == 5
     assert payload["core_raw"] == {
         "twa": 90.0,
         "tws_ms": read_result.tws_raw,
@@ -44,6 +44,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
     assert payload["enhanced"] == {
         "rpm": {
             "state": "usable",
+            "invalid_cause": None,
             "raw": 800.0,
             "normalized": 800.0,
             "timestamp": 99.5,
@@ -51,6 +52,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
         },
         "sog_kt": {
             "state": "usable",
+            "invalid_cause": None,
             "raw": 2.0,
             "normalized": 2.0,
             "timestamp": 99.5,
@@ -154,7 +156,7 @@ def test_formatter_is_total_for_rejected_nonnumeric_core_and_enhanced_values() -
     config = default_config()
     read_result = replace(
         make_read_result(twa_raw=cast("float", "bad")),
-        enhanced_inputs={"rpm": EnhancedInput("invalid", "off", 99.5, None)},
+        enhanced_inputs={"rpm": EnhancedInput("invalid", "off", 99.5, None, "value")},
     )
     result, sample = run(read_result, ValidationState(), config)
 
@@ -165,6 +167,7 @@ def test_formatter_is_total_for_rejected_nonnumeric_core_and_enhanced_values() -
     assert payload["enhanced"] == {
         "rpm": {
             "state": "invalid",
+            "invalid_cause": "value",
             "raw": "off",
             "normalized": None,
             "timestamp": 99.5,

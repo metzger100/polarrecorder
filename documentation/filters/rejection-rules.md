@@ -50,6 +50,10 @@ non-representative conditions, like `reject_head_to_wind`. R20-R22 are quality-g
 sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after `stability_window` and before R16, so
 a definitive enhanced reject wins over the R16 quarantine.
 
+The corresponding R20 status is `active_invalid_corroboration` with normalized availability `active` when SOG is usable
+and current drift is invalid. Each enhanced-status row also exposes per-role source states, so this exceptional
+fail-closed behavior and mixed unavailable causes are visible rather than hidden by one headline.
+
 R16 enhancement: a configured engine-state signal is definitive only when its producer semantics really encode running
 state; the generic RPM rule remains threshold-based and partial. Engine-on is already a pre-candidate R17/R18 reject and
 never reaches R16. When the signal reads **off** (`engine_signal < enh_engine_state_on_threshold`, or

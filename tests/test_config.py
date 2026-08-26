@@ -61,6 +61,20 @@ def test_core_source_keys_pass_through_unchanged() -> None:
     assert config.stw_key == "gps.signalk.navigation.speedThroughWater"
 
 
+def test_parse_config_values_trims_core_and_optional_source_keys() -> None:
+    config = parse_config_values(
+        {
+            "twa_key": "  custom.twa ",
+            "enh_rpm_key": " engine.rpm  ",
+            "enh_heel_key": "   ",
+        }
+    )
+
+    assert config.twa_key == "custom.twa"
+    assert config.enh_rpm_key == "engine.rpm"
+    assert config.enh_heel_key == ""
+
+
 def test_parse_config_values_clamps_numeric_ranges_from_params() -> None:
     logger = FakeLogger()
     below: dict[str, str] = {}

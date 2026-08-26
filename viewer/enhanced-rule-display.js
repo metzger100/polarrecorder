@@ -21,6 +21,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @type {Record<string, string>} */
   const STATUS_LABELS = {
     active: "Active",
+    active_invalid_corroboration: "Active (invalid drift is fail-closed)",
     disabled: "Disabled",
     inactive_key_not_configured: "No source configured",
     inactive_key_missing: "Source not available",

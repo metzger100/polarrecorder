@@ -60,20 +60,23 @@ Pause/Resume control), tracked by the transient `_paused` flag rather than a per
 | `engine_tws_ceil`          |   FLOAT |               `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
 | `engine_stw_floor`         |   FLOAT |               `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
 | `min_samples_for_export`   |  NUMBER |                `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
-| `debug_logging`            | BOOLEAN |             `false` |        - | Emits one finite `diagnostic_sample=<json>` record per iteration for replay.       |
+| `debug_logging`            | BOOLEAN |             `false` |        - | Emits one finite decision diagnostic per completed store read.                     |
 
 The Settings tab's top **Data Sources** card exposes `twa_key`, `tws_key`, and `stw_key` as store-key selectors. Its
 **Advanced Settings** card exposes the safe runtime-tuning subset from this table: sampling cadence, flush cadence,
 sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_stw`, the engine heuristic, and debug
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
-AvNav's built-in switch and pause/resume stays in the viewer.
+AvNav's built-in switch and pause/resume stays in the viewer. All store-key values are trimmed before persistence;
+optional keys may be cleared, while the three core keys must remain nonempty.
 
-`debug_logging` records schema version 4; JSON-safe raw scalar and normalized core values; source timestamps and ages;
-enhanced missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates;
-the exact pipeline-produced R15 span, gap, density, and range metrics; and the relevant R10/R15/R20 thresholds.
-Diagnostic emission happens after normal decision accounting. A read discarded because its configuration snapshot was
-superseded is recorded explicitly with decision `discarded` and reason `config_superseded`; no per-iteration diagnostic
-is emitted while logging is disabled. The head-to-wind default remains 10 degrees.
+`debug_logging` records schema version 5; JSON-safe raw scalar and normalized core values; source timestamps and ages;
+enhanced missing/stale/invalid/usable states with invalid causes plus raw, normalized, and timestamp metadata;
+decision/reasons/predicates; the exact pipeline-produced R15 span, gap, density, and range metrics; and the relevant
+R10/R15/R20 thresholds. Diagnostic emission happens after normal decision accounting. A read discarded because its
+configuration snapshot was superseded is recorded explicitly with decision `discarded` and reason `config_superseded`.
+Reader failures that never produce a completed read use the normal AvNav error log. The records support decision
+investigation rather than literal full-pipeline replay across every configuration change; no per-read diagnostic is
+emitted while logging is disabled. The head-to-wind default remains 10 degrees.
 
 ### Enhanced (optional-signal) rule settings
 

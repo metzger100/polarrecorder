@@ -1,4 +1,4 @@
-"""Module: Diagnostics - Pure structured replay diagnostics.
+"""Module: Diagnostics - Pure structured decision diagnostics.
 
 Documentation: documentation/architecture/data-pipeline.md
 Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample,
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from polarrecorder.validation.pipeline import PipelineResult
     from polarrecorder.validation.rules_stability import StabilityEvaluation
 
-DIAGNOSTIC_SCHEMA_VERSION = 4
+DIAGNOSTIC_SCHEMA_VERSION = 5
 DIAGNOSTIC_PREFIX = "diagnostic_sample="
 
 
@@ -62,7 +62,7 @@ def format_sample_diagnostic(
     result: PipelineResult,
     config: Config,
 ) -> dict[str, object]:
-    """Format one finite, JSON-compatible per-iteration diagnostic payload.
+    """Format one finite, JSON-compatible per-read diagnostic payload.
 
     Args:
         read_result: Reader output for the current iteration.
@@ -71,7 +71,7 @@ def format_sample_diagnostic(
         config: Runtime thresholds that govern the decision.
 
     Returns:
-        Replay-oriented diagnostic fields with unavailable numbers represented by ``None``.
+        Decision-oriented diagnostic fields with unavailable numbers represented by ``None``.
     """
     payload = _diagnostic_base(read_result, sample, config)
     payload["pipeline"] = {
@@ -156,6 +156,7 @@ def _enhanced_values(
     for role, acquisition in read_result.enhanced_inputs.items():
         values[role] = {
             "state": acquisition.state,
+            "invalid_cause": acquisition.invalid_cause,
             "raw": _json_scalar_or_none(acquisition.raw_value),
             "normalized": _finite_or_none(normalized.get(role)),
             **_source_metadata(acquisition.timestamp, read_result.timestamp_monotonic),

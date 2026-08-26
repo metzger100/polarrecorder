@@ -219,7 +219,7 @@ def test_negative_rpm_is_unavailable_and_omitted_by_reader(tmp_path: Path) -> No
 
     assert rpm["status"] == "inactive_value_invalid"
     assert rpm["availability"] == "unavailable"
-    assert read_result.enhanced_raw is None or "rpm" not in read_result.enhanced_raw
+    assert read_result.enhanced_values is None or "rpm" not in read_result.enhanced_values
 
 
 def test_overflowing_sog_is_unavailable_in_status_and_reader(tmp_path: Path) -> None:

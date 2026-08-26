@@ -9,7 +9,7 @@ def make_read_result(
     twa_raw: object | None = 270.0,
     tws_raw: object | None = 2.0,
     stw_raw: object | None = 3.0,
-    enhanced_raw: dict[str, tuple[float, float]] | None = None,
+    enhanced_values: dict[str, tuple[float, float]] | None = None,
 ) -> ReadResult:
     return ReadResult(
         timestamp_monotonic=100.0,
@@ -20,7 +20,7 @@ def make_read_result(
         twa_timestamp=99.5,
         tws_timestamp=98.0,
         stw_timestamp=99.0,
-        enhanced_raw=enhanced_raw,
+        enhanced_values=enhanced_values,
     )
 
 
@@ -80,7 +80,7 @@ def test_build_sample_returns_none_for_nonnumeric_boolean_and_huge_integer_value
 def test_build_sample_trusts_canonical_enhanced_values() -> None:
     sample = build_sample(
         make_read_result(
-            enhanced_raw={
+            enhanced_values={
                 "sog_kt": (5.0, 99.5),
                 "aws_kt": (4.0, 99.5),
                 "current_drift_kt": (0.5, 99.5),
@@ -101,8 +101,8 @@ def test_build_sample_trusts_canonical_enhanced_values() -> None:
     assert sample.enhanced["awa_deg"] == 30.0
 
 
-def test_build_sample_enhanced_is_none_without_enhanced_raw() -> None:
-    sample = build_sample(make_read_result(enhanced_raw=None))
+def test_build_sample_enhanced_is_none_without_enhanced_values() -> None:
+    sample = build_sample(make_read_result(enhanced_values=None))
 
     assert sample is not None
     assert sample.enhanced is None

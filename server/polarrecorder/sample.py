@@ -142,7 +142,7 @@ class ReadResult:
     twa_timestamp: object | None
     tws_timestamp: object | None
     stw_timestamp: object | None
-    enhanced_raw: dict[str, tuple[float, float]] | None = None
+    enhanced_values: dict[str, tuple[float, float]] | None = None
     enhanced_inputs: dict[str, EnhancedInput] | None = None
 
 
@@ -237,17 +237,17 @@ def build_sample(read_result: ReadResult) -> Sample | None:
         stw_ms=read_result.stw_raw,
         stw_kt=meters_per_second_to_knots(read_result.stw_raw),
         freshness=freshness,
-        enhanced=_build_enhanced(read_result.enhanced_raw),
+        enhanced=_build_enhanced(read_result.enhanced_values),
         invalid_enhanced_roles=_invalid_enhanced_roles(read_result),
     )
 
 
 def _build_enhanced(
-    enhanced_raw: dict[str, tuple[float, float]] | None,
+    enhanced_values: dict[str, tuple[float, float]] | None,
 ) -> dict[str, float] | None:
-    if not enhanced_raw:
+    if not enhanced_values:
         return None
-    return {role: value[0] for role, value in enhanced_raw.items()}
+    return {role: value[0] for role, value in enhanced_values.items()}
 
 
 def _invalid_enhanced_roles(read_result: ReadResult) -> frozenset[str]:

@@ -5,6 +5,7 @@ from typing import cast
 
 from conftest import FakeAvNavAPI
 from plugin_integration_support import response_data
+from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_warmed_state
 
 import plugin as plugin_module
@@ -32,6 +33,15 @@ class BlockingSaveAPI(FakeAvNavAPI):
         self.save_started.set()
         assert self.allow_save.wait(timeout=2.0)
         self.saved_configs.append(configDict)
+
+
+class FailingResetState(ValidationState):
+    """State double whose source-history reset fails unexpectedly."""
+
+    def reset_source_history(self) -> None:
+        """Raise while installing a persisted source change."""
+        message = "state reset failed"
+        raise RuntimeError(message)
 
 
 def test_advanced_settings_endpoint_groups_and_saves_safe_values() -> None:
@@ -119,9 +129,9 @@ def test_advanced_save_persists_nonempty_core_source_keys() -> None:
             "advanced/save",
             object(),
             {
-                "twa_key": ["custom.twa"],
-                "tws_key": ["custom.tws"],
-                "stw_key": ["custom.stw"],
+                "twa_key": ["  custom.twa "],
+                "tws_key": [" custom.tws  "],
+                "stw_key": ["\tcustom.stw\t"],
             },
         )
     )
@@ -140,6 +150,24 @@ def test_advanced_save_persists_nonempty_core_source_keys() -> None:
     }
 
 
+def test_enhanced_save_trims_optional_source_keys_before_persistence() -> None:
+    api = FakeAvNavAPI()
+    plugin = plugin_module.Plugin(api)
+
+    saved = response_data(
+        plugin._handle_request(
+            "enhanced/save",
+            object(),
+            {"enh_rpm_key": ["  engine.rpm "], "enh_heel_key": ["   "]},
+        )
+    )
+
+    assert plugin.config.enh_rpm_key == "engine.rpm"
+    assert plugin.config.enh_heel_key == ""
+    assert api.saved_configs == [{"enh_rpm_key": "engine.rpm", "enh_heel_key": ""}]
+    assert saved["config"] == {"enh_heel_key": "", "enh_rpm_key": "engine.rpm"}
+
+
 def test_failed_config_persistence_leaves_runtime_config_unchanged() -> None:
     api = FailingSaveAPI()
     plugin = plugin_module.Plugin(api)
@@ -156,6 +184,23 @@ def test_failed_config_persistence_leaves_runtime_config_unchanged() -> None:
     assert plugin.config.low_wind_threshold == 3.0
     assert api.saved_configs == []
     assert plugin._config_save_active is False
+
+
+def test_failed_source_reset_always_releases_config_transaction_guard() -> None:
+    api = FakeAvNavAPI()
+    plugin = plugin_module.Plugin(api)
+    plugin._state = FailingResetState()
+
+    failed = plugin._handle_request("advanced/save", object(), {"twa_key": ["custom.twa"]})
+    recovered = plugin._handle_request("advanced/save", object(), {"low_wind_threshold": ["4.2"]})
+
+    assert failed["status"] == "ERROR"
+    assert plugin._config_save_active is False
+    assert recovered["status"] == "OK"
+    assert api.saved_configs == [
+        {"twa_key": "custom.twa"},
+        {"low_wind_threshold": "4.2"},
+    ]
 
 
 def test_overlapping_config_save_is_rejected_without_runtime_persistence_drift() -> None:
