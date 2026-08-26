@@ -8,6 +8,15 @@ from plugin_integration_support import response_data
 import plugin as plugin_module
 
 
+class FailingSaveAPI(FakeAvNavAPI):
+    """Fake host whose persistent configuration write fails."""
+
+    def saveConfigValues(self, configDict: dict[str, str]) -> None:
+        """Raise instead of persisting the requested values."""
+        message = "config storage unavailable"
+        raise OSError(message)
+
+
 def test_advanced_settings_endpoint_groups_and_saves_safe_values() -> None:
     api = FakeAvNavAPI()
     plugin = plugin_module.Plugin(api)
@@ -112,3 +121,36 @@ def test_advanced_save_persists_nonempty_core_source_keys() -> None:
         "twa_key": "custom.twa",
         "tws_key": "custom.tws",
     }
+
+
+def test_failed_config_persistence_leaves_runtime_config_unchanged() -> None:
+    api = FailingSaveAPI()
+    plugin = plugin_module.Plugin(api)
+    previous = plugin.config
+
+    response = plugin._handle_request(
+        "advanced/save",
+        object(),
+        {"low_wind_threshold": ["4.2"]},
+    )
+
+    assert response["status"] == "ERROR"
+    assert plugin.config is previous
+    assert plugin.config.low_wind_threshold == 3.0
+    assert api.saved_configs == []
+
+
+def test_enhanced_save_rejects_invalid_values_without_side_effects() -> None:
+    api = FakeAvNavAPI()
+    plugin = plugin_module.Plugin(api)
+
+    invalid_numeric = plugin._handle_request("enhanced/save", object(), {"enh_slip_ratio": ["nan"]})
+    invalid_boolean = plugin._handle_request(
+        "enhanced/save", object(), {"enh_rpm_enabled": ["maybe"]}
+    )
+
+    assert invalid_numeric["status"] == "ERROR"
+    assert invalid_boolean["status"] == "ERROR"
+    assert plugin.config.enh_slip_ratio == 0.5
+    assert plugin.config.enh_rpm_enabled is True
+    assert api.saved_configs == []

@@ -1,7 +1,7 @@
 """Module: API Handlers - Pure API request and response formatting.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.config, polarrecorder.export
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.export
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
 from polarrecorder import export
+from polarrecorder.enhanced_input import classify_timestamp_age
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -239,9 +240,9 @@ def _format_current_values(snapshot: StatusSnapshot) -> dict[str, object] | None
         "twa_age_s": twa_age,
         "tws_age_s": tws_age,
         "stw_age_s": stw_age,
-        "twa_stale": twa_age > snapshot.stale_threshold,
-        "tws_stale": tws_age > snapshot.stale_threshold,
-        "stw_stale": stw_age > snapshot.stale_threshold,
+        "twa_stale": classify_timestamp_age(twa_age, snapshot.stale_threshold) != "usable",
+        "tws_stale": classify_timestamp_age(tws_age, snapshot.stale_threshold) != "usable",
+        "stw_stale": classify_timestamp_age(stw_age, snapshot.stale_threshold) != "usable",
     }
 
 

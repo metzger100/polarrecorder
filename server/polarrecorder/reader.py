@@ -123,6 +123,7 @@ class StoreReader:
                 now_monotonic,
                 config.stale_threshold,
                 accepts_bool=spec.accepts_bool,
+                minimum_value=spec.minimum_value,
             )
             enhanced_inputs[spec.role] = acquisition
             if acquisition.state == "invalid":

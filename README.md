@@ -105,9 +105,10 @@ The Status tab explains what is happening now:
 - persistence and optional enhanced-rule availability
 
 Status also shows whether each optional enhanced rule is active, disabled, or unavailable and why, including invalid
-source data. On startup, a warning appears when no definitive RPM or engine-state protection is active or its status
-cannot be verified: pause while motoring or configure one in Settings. Close affects only the page; Never show again
-stores a browser-local preference.
+source data. On startup, a warning appears when no definitive engine-state protection is active or its status cannot be
+verified. RPM-only protection is partial because values below its idle ceiling do not prove the propeller is disengaged;
+pause while motoring or map a definitive engine-state source. Close affects only the page; Never show again stores a
+browser-local preference.
 
 ### Timeline
 
@@ -152,7 +153,7 @@ its configured inputs are fresh, finite, and valid for their signal role. Only e
 
 The six rules are:
 
-- **Engine RPM** — rejects when RPM is above an idle ceiling (you are motoring).
+- **Engine RPM** — rejects when RPM is above an idle ceiling; lower RPM remains ambiguous.
 - **Engine state** — rejects when a boolean, RPM, or alternator-voltage signal indicates the engine is on.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
 - **SOG source** — is shared with anchored detection even when the SOG/STW consistency rule is disabled.
@@ -175,9 +176,9 @@ Advanced Settings exposes boat-specific tuning grouped as:
 - **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
 - **Engine Heuristic** — low-wind movement checks used when no engine signal is configured.
 
-Values are checked before saving and persist in AvNav plugin configuration. The runtime parser also rejects malformed
-boolean values and non-finite numbers from corrupted or manually edited persisted settings. See
-[Configuration](documentation/user/configuration.md) for defaults and ranges.
+Values are checked before saving and persist in AvNav plugin configuration; a failed host write leaves the live runtime
+unchanged. The runtime parser also rejects malformed boolean values and non-finite numbers from corrupted or manually
+edited persisted settings. See [Configuration](documentation/user/configuration.md) for defaults and ranges.
 
 ## What are presets?
 

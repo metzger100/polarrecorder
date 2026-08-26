@@ -84,6 +84,40 @@ def test_format_status_nulls_before_first_values_and_decision() -> None:
     assert cast("dict[str, object]", data["counters"])["acceptance_rate"] == 0.0
 
 
+def test_format_status_marks_implausibly_future_values_stale() -> None:
+    snapshot = api_handlers.StatusSnapshot(
+        recording=True,
+        data_status="receiving",
+        warming_up=False,
+        uptime_seconds=1.0,
+        current_values=api_handlers.CurrentValuesSnapshot(90.0, 12.0, 6.0, 11.0, 10.1, 10.0),
+        current_decision=None,
+        counters={
+            "total_seen": 0,
+            "total_accepted": 0,
+            "total_rejected": 0,
+            "total_quarantined": 0,
+        },
+        top_rejections=[],
+        top_predicates=[],
+        last_flush_wall=0.0,
+        file_size_bytes=0,
+        bins_with_data=0,
+        bins_total=21960,
+        generation=0,
+        now_monotonic=10.0,
+        stale_threshold=3.0,
+    )
+
+    values = cast(
+        "dict[str, object]", _data(api_handlers.format_status(snapshot))["current_values"]
+    )
+
+    assert values["twa_age_s"] == -1.0
+    assert values["twa_stale"] is True
+    assert values["tws_stale"] is False
+
+
 def test_format_polar_and_export_reuse_projection() -> None:
     bins = {(100, 12): {"histogram": {60: 3}}}
 
@@ -164,10 +198,10 @@ def test_enhanced_formatters_wrap_detached_payloads() -> None:
     assert config == {"config": {"enh_rpm_enabled": True}}
 
 
-def test_invalid_engine_source_is_unavailable_and_omitted_by_reader(tmp_path: Path) -> None:
+def test_negative_rpm_is_unavailable_and_omitted_by_reader(tmp_path: Path) -> None:
     api = FakeAvNavAPI()
     api.config["enh_rpm_key"] = "engine.rpm"
-    api.set_value("engine.rpm", cast("float", "bad"), 99.5)
+    api.set_value("engine.rpm", -1.0, 99.5)
     plugin = plugin_module.Plugin(api)
     plugin._data_dir = str(tmp_path)
     plugin._clock = FakeClock(100.0)

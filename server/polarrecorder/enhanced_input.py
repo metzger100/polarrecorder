@@ -12,7 +12,7 @@ from typing import Literal, Protocol
 
 EnhancedInputState = Literal["missing", "stale", "invalid", "usable"]
 TimestampState = Literal["invalid", "stale", "future", "usable"]
-InvalidInputCause = Literal["value", "timestamp", "future_timestamp"]
+InvalidInputCause = Literal["value", "range", "timestamp", "future_timestamp"]
 MAX_FUTURE_TIMESTAMP_SKEW_SECONDS = 0.5
 
 
@@ -47,6 +47,7 @@ def assess_enhanced_input(
     stale_threshold: float,
     *,
     accepts_bool: bool = False,
+    minimum_value: float | None = None,
 ) -> EnhancedInput:
     """Classify one store entry exactly as the sampling path consumes it.
 
@@ -55,6 +56,7 @@ def assess_enhanced_input(
         now_monotonic: Current monotonic timestamp.
         stale_threshold: Maximum usable source age in seconds.
         accepts_bool: Whether this signal role permits boolean input.
+        minimum_value: Inclusive lower physical bound, when the role has one.
 
     Returns:
         A complete missing, stale, invalid, or usable acquisition result.
@@ -71,6 +73,8 @@ def assess_enhanced_input(
         invalid_cause = "future_timestamp"
     elif numeric is None:
         invalid_cause = "value"
+    elif minimum_value is not None and numeric < minimum_value:
+        invalid_cause = "range"
     if invalid_cause is not None:
         return EnhancedInput("invalid", entry.value, timestamp, None, invalid_cause)
     if timestamp_state == "stale":

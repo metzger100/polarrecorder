@@ -53,14 +53,16 @@ Optional signal hooks read a bounded set of configured store keys alongside the 
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
 is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
 through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
-contract parses finite values and finite numeric timestamps, applies the bounded future-skew policy, and is shared by
-the live enhanced-status endpoint. Boolean values are accepted only for the `engine_signal` role; physical measurements
-reject them. Numeric strings are accepted as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains
-every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains only usable values in store units with
-timestamps. `build_sample` converts each usable role to its canonical unit once (`units.py`) and stores it in
-`Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when nothing was read. Enhanced
-rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same no-AvNav, no-I/O,
-no-threading purity as the core rules. The role/unit table lives in [AvNav keys and units](../avnav/keys-and-units.md).
+contract parses finite values and finite numeric timestamps, applies the bounded future-skew policy and role-specific
+physical bounds, and is shared by the live enhanced-status endpoint. RPM, engine-state numeric values, depth, SOG,
+current-drift magnitude, and AWS reject negative values; AWA and heel remain signed. Boolean values are accepted only
+for the `engine_signal` role. Numeric strings are accepted as signal values but never as timestamps.
+`ReadResult.enhanced_inputs` retains every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains
+only usable values in store units with timestamps. `build_sample` converts each usable role to its canonical unit once
+(`units.py`) and stores it in `Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when
+nothing was read. Enhanced rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same
+no-AvNav, no-I/O, no-threading purity as the core rules. The role/unit table lives in
+[AvNav keys and units](../avnav/keys-and-units.md).
 
 Implemented enhanced rules and candidacy:
 
@@ -73,8 +75,9 @@ Implemented enhanced rules and candidacy:
   below the configured ratio of the faster and present current drift is too small to explain their gap), R21
   `reject_true_wind_crosscheck` (true wind recomputed from `awa_deg`/`aws_kt`/STW disagrees with reports beyond the
   configured TWA/TWS tolerances), R22 `reject_heel_out_of_band` (`abs(heel_deg)` outside `[min, max]`).
-- R16 enhancement: `engine_heuristic` defers to a definitive engine signal — suppressed when the signal reads off,
-  unchanged in the idle band and when no signal is present. Engine-on is already an R17/R18 pre-candidate reject.
+- R16 enhancement: `engine_heuristic` is suppressed when a configured engine-state signal reads off or RPM is at the
+  stopped-engine ceiling. RPM in the idle band remains ambiguous, so the heuristic still runs there. Engine-on above the
+  configured RPM/state threshold is already an R17/R18 pre-candidate reject.
 - R11/R14 enhancement (turn confirmation): `WindowEntry` carries optional `heading_deg`/`cog_deg` from
   `Sample.enhanced`. When turn confirmation is enabled and a prior+current heading and/or COG is available,
   `twa_rate_of_change` treats a high TWA rate with steady heading/COG (the maximum available rate below

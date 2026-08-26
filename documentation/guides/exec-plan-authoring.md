@@ -16,6 +16,8 @@ they follow the normal development workflow in `AGENTS.md`.
 - For complex tasks, the current plan is the implementation source of truth for _what to build_ until completion. It
   never overrides core principles or mechanically enforced repo rules (the 400-line limit, the quality gate, coverage
   thresholds, blocking smells); when they conflict, the repo rule wins and the plan must be amended.
+- Files under `exec-plans/` are exempt from the 400-line Markdown limit so one plan can retain its complete evidence and
+  history. That exemption applies only to the plan file, never to a deliverable the plan creates or changes.
 - Surface plan defects explicitly and amend the plan instead of silently improvising around contradictions.
 - Keep every phase small enough to leave `npm run check:all` green after completion.
 - Never name a shipped deliverable (a file, function, JSON field value, or test) after the plan or phase that created

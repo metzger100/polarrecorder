@@ -69,7 +69,7 @@ function warning(env) {
   return env.document.body.querySelector(".engine-warning");
 }
 
-test("startup warning appears only without an active engine rule", async () => {
+test("startup warning requires a definitive engine-state rule", async () => {
   const missing = warningEnvironment([
     { rule: "reject_engine_rpm", availability: "unavailable" },
     { rule: "reject_engine_on", availability: "disabled" }
@@ -77,7 +77,13 @@ test("startup warning appears only without an active engine rule", async () => {
   await start(missing);
   assert.ok(warning(missing));
 
-  const protectedEnv = warningEnvironment([{ rule: "reject_engine_rpm", availability: "active" }]);
+  const rpmOnly = warningEnvironment([{ rule: "reject_engine_rpm", availability: "active" }]);
+  await start(rpmOnly);
+  const rpmWarning = warning(rpmOnly);
+  assert.ok(rpmWarning);
+  assert.ok(textTree(rpmWarning).includes("RPM protection rejects only above"));
+
+  const protectedEnv = warningEnvironment([{ rule: "reject_engine_on", availability: "active" }]);
   await start(protectedEnv);
   assert.equal(warning(protectedEnv), null);
 });

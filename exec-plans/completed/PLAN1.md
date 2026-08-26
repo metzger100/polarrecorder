@@ -2,7 +2,24 @@
 
 ## Status
 
-Implemented through all six phases and four implementation-review remediation passes.
+Implemented through all six phases and five implementation-review remediation passes.
+
+### Amendment — 2026-08-24: fifth implementation-review remediation
+
+A fresh archive review found that enhanced settings bypassed strict server validation, a failed configuration write
+could leave runtime state ahead of persisted state, negative unsigned enhanced signals remained usable, RPM-only
+protection was described as definitive despite its intentional idle band, and future core timestamps displayed as
+fresh in Status. Completion now additionally requires one validator shared by both settings endpoints; persist-before-
+install transaction semantics; role-specific nonnegative acquisition bounds; an explicit partial-RPM product contract
+whose startup warning requires a real engine-state source; canonical future-time Status classification; synchronized
+README/docs; and focused regression coverage. The review also exposed a written file-size-policy mismatch, resolved by
+making the existing `exec-plans/` exemption explicit in the highest-precedence principles and authoring guide.
+
+**Fifth-review exit evidence:** `npm run check:all` exited successfully with 438 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.29% aggregate Python coverage, and 92.75% viewer/plugin line coverage. The focused
+configuration, acquisition, status, warning, and heuristic suite passed 62 Python and 10 viewer tests before the full
+gate; strict typing, packaging, dependency, runtime-contract, documentation, smell, duplication, complexity, scaling,
+file-size, and coverage-inventory checks all passed.
 
 ### Amendment — 2026-08-24: fourth implementation-review remediation
 
@@ -12,7 +29,7 @@ that two sparse endpoints could satisfy at slower configured sampling, incomplet
 prose, duplicated mutable window duration, and shallowly immutable decision evidence. Completion now additionally
 requires exactly one mechanically enforced ordinary plugin lock with external callbacks after release; total finite
 timestamp boundaries; outcome-specific stability-history retention; time-span, gap, and observation-density continuity;
-diagnostic schema 3; one config-owned stability duration; tuple-backed decision evidence; synchronized docs and README;
+diagnostic schema 4; one config-owned stability duration; tuple-backed decision evidence; synchronized docs and README;
 focused counterexamples; and a green full quality gate.
 
 **Fourth-review exit evidence:** `npm run check:all` exited successfully with 422 Python tests, 365 tooling tests, 61
@@ -137,8 +154,8 @@ After completion, Polar Recorder will:
    STW, while retaining the existing current-drift escape and reason code.
 6. Expose each enhanced rule with a normalized `active` / `disabled` / `unavailable` availability state while retaining
    the existing detailed status cause.
-7. Show a startup engine-protection popup when neither definitive engine rule is active, with exactly **Close** and
-   **Never show again** actions.
+7. Show a startup engine-protection popup when no definitive engine-state rule is active, with exactly **Close** and
+   **Never show again** actions; RPM-only protection remains explicitly partial.
 8. Expand the existing `debug_logging` mode into one structured diagnostic log record per sampling iteration containing
    raw/normalized sample values, available enhanced inputs, the primary decision, all triggered predicates, and R15
    rolling-window metrics suitable for later threshold analysis.
@@ -258,7 +275,7 @@ After completion, Polar Recorder will:
 13. Keep the existing enhanced detailed status strings for compatibility and add a normalized availability field:
     `active`, `disabled`, or `unavailable`. All `inactive_*` detailed states map to `unavailable`.
 14. The engine warning is a viewer-startup check, not a heartbeat popup. It may be evaluated once per page load and is
-    shown only when neither `reject_engine_rpm` nor `reject_engine_on` has normalized availability `active`.
+    suppressed only when `reject_engine_on` has normalized availability `active`; an active RPM rule alone is partial.
 15. The engine warning has exactly two user actions:
     - **Close**: dismiss for the current page load only; do not persist suppression.
     - **Never show again**: persist a versioned browser-local suppression key and dismiss.
@@ -509,12 +526,11 @@ than inventing another polling system.
    `enhanced/status`; when Status is inactive no enhanced-status heartbeat request is required.
 5. Add `viewer/engine-warning.js` as the isolated owner of startup engine-warning behavior and
    `viewer/engine-warning.css` as its isolated styling owner. Add both to `viewer/viewer.html` in dependency-safe order.
-6. On viewer startup, perform one enhanced-status check and show the modal if neither `reject_engine_rpm` nor
-   `reject_engine_on` has `availability === "active"`. Do not re-open it later during the same page load even if status
-   changes.
-7. Popup copy must explain the actual limitation: without an active definitive RPM or engine-state signal, Polar
-   Recorder cannot reliably distinguish motoring from good sailing in ordinary wind; the user should pause recording
-   while motoring or configure an engine rule in Settings > Enhanced Rules.
+6. On viewer startup, perform one enhanced-status check and show the modal unless `reject_engine_on` has
+   `availability === "active"`. Do not re-open it later during the same page load even if status changes.
+7. Popup copy must explain the actual limitation: RPM rejects only above its configured idle ceiling, so lower readings
+   cannot reliably distinguish motoring from good sailing; the user should pause recording while motoring or configure
+   a definitive engine-state rule in Settings > Enhanced Rules.
 8. The popup has exactly two buttons:
    - **Close**: remove the popup only.
    - **Never show again**: persist a versioned `localStorage` preference then remove the popup.
@@ -530,8 +546,8 @@ than inventing another polling system.
 - `tests/test_enhanced_status.py`: every detailed state maps to the correct three-state availability.
 - `tests/js/viewer-enhanced.test.mjs`: Settings renders normalized availability plus detailed cause.
 - New `tests/js/viewer-engine-warning.test.mjs` covers:
-  - warning appears when neither definitive engine rule is active;
-  - warning does not appear when either RPM or engine-state rule is active;
+  - warning appears when no definitive engine-state rule is active, including when RPM alone is active;
+  - warning does not appear when the engine-state rule is active;
   - **Close** dismisses without writing suppression;
   - reopening a fresh harness after **Close** can show it again;
   - **Never show again** writes the versioned storage key and suppresses later page loads;
@@ -704,7 +720,7 @@ The following documentation updates are required because behavior/defaults/UI ch
 - Status uses **Candidates** terminology and does not imply missing-input reason counts are candidate counts.
 - Every enhanced rule has normalized availability `active`, `disabled`, or `unavailable`, with the detailed cause still
   accessible.
-- The engine popup is checked only at viewer startup, appears when neither definitive engine rule is active, has exactly
+- The engine popup is checked only at viewer startup, appears when no definitive engine-state rule is active, has exactly
   **Close** and **Never show again**, and browser-local suppression works across page loads.
 - No engine popup preference is written to Polar Recorder runtime config or `polar.json`.
 - `debug_logging=false` keeps per-iteration diagnostics off; `debug_logging=true` emits exactly one finite structured
