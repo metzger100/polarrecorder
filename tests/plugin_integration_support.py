@@ -168,6 +168,12 @@ def _assert_read_routes(plugin: plugin_module.Plugin) -> None:
 
 def _assert_export_routes(plugin: plugin_module.Plugin) -> None:
     windy_csv = _csv(plugin._handle_request("export", object(), {"format": ["windy"]}))
+    incomplete_pol = plugin._handle_request("export/pol", object(), {})
+    high_confidence_pol = plugin._handle_request(
+        "export/pol", object(), {"high_confidence": ["yes"]}
+    )
+    invalid_percentile_pol = plugin._handle_request("export/pol", object(), {"percentile": ["0"]})
+    custom_pol = plugin._handle_request("export/pol", object(), {"twa": ["30"]})
     save = plugin._handle_request(
         "presets/save",
         object(),
@@ -203,6 +209,17 @@ def _assert_export_routes(plugin: plugin_module.Plugin) -> None:
 
     assert windy_csv.startswith("TWA\\TWS;4;6;8;10;12")
     assert "6.0" in windy_csv
+    assert incomplete_pol["status"] == "ERROR"
+    assert "of 108 polar cells lack sufficient data" in str(incomplete_pol["error"])
+    assert "108 of 108 polar cells lack sufficient data" in str(high_confidence_pol["error"])
+    assert invalid_percentile_pol == {
+        "status": "ERROR",
+        "error": "Invalid parameter 'percentile': expected integer 1-99, got '0'",
+    }
+    assert custom_pol == {
+        "status": "ERROR",
+        "error": "Invalid parameters: 'export/pol' uses its fixed routing grid",
+    }
     assert save["status"] == "OK"
     assert preset_csv == "TWA\\TWS;12\r\n90;6.0\r\n"
     assert inline_csv == repeat_csv == preset_csv

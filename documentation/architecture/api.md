@@ -40,6 +40,7 @@ Endpoints:
 | GET    | `rejections`        | none                                                                                            | `{global, per_bin}` histograms. Per-bin keys are `"<twa>_<tws>"`.                                                                                                                                                                               |
 | GET    | `timeline`          | `minutes` optional integer 1-240, default 240                                                   | `{buckets}` oldest first, with minute wall time `t`, decision counts, and reason-code counts.                                                                                                                                                   |
 | GET    | `export`            | `format`, or inline `twa`+`tws`; optional `percentile`; optional `high_confidence=yes\|true\|1` | `{csv}` containing semicolon-delimited CSV. Circular grids emit TWA rows above 180 deg.                                                                                                                                                         |
+| GET    | `export/pol`        | optional `percentile`; optional `high_confidence=yes\|true\|1`                                  | `{pol}` containing a complete tab-delimited routing polar. Uses a fixed 30-180 deg TWA grid and folds both tacks before percentile calculation.                                                                                                 |
 | GET    | `config`            | none                                                                                            | Parsed runtime config values in native JSON types.                                                                                                                                                                                              |
 | GET    | `presets`           | none                                                                                            | Built-in presets (`DefaultStarboard180`, `DefaultPort180`, `Default360`, `windy`) first, then user presets, as `{name, builtin, twa, tws}` entries.                                                                                             |
 | GET    | `presets/save`      | `name`, `twa`, `tws`                                                                            | Saves or overwrites a user preset and returns the saved preset. TWA values 0-359 are accepted.                                                                                                                                                  |
@@ -82,12 +83,19 @@ deg omit the row.
 `Default360`, `windy`, plus the pre-rename `Default180` alias) and then case-sensitive user presets; absent mode
 defaults to `DefaultStarboard180`. One-sided inline grids are errors. Inline and saved `twa` grids accept values 0-359.
 
+`GET export/pol` is deliberately separate and does not accept `format`, `twa`, or `tws`. Under the lock it snapshots the
+same true 0-359 deg learned bins and resolves the configured or overridden percentile and normal/high-confidence sample
+floor. Outside the lock, it folds every source angle with `min(twa, 360 - twa)`, assigns it to the fixed routing grid,
+merges the source histograms and counts from both tacks, then computes one percentile over that merged population. The
+serializer requires all 108 cells; an incomplete matrix returns an application error with missing and total counts. It
+does not call `anchor_origin`, interpolate, extrapolate, or change the stored model.
+
 `GET polar` and default `GET export` share the same projection function, configured percentile, and
 `MIN_SAMPLES_DISPLAY = 3` floor. Projection never folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges
 starboard bins by linear midpoint boundaries capped at 180 deg, excluding port bins; a circular grid (any TWA above 180
 deg) assigns each raw bin to its nearest grid point on the circle, including the 360 deg/0 deg wrap. Both use the fixed
-TWS upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`, `true`, or `1` affects CSV export
-only and swaps the floor to `min_samples_for_export`.
+TWS upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`, `true`, or `1` affects CSV and POL
+export and swaps the floor to `min_samples_for_export`.
 
 No response may contain non-finite floats. Current values are updated only from a built finite `Sample`; later missing
 or non-finite reads leave the previous finite values frozen. Their Status stale flag uses the same temporal classifier

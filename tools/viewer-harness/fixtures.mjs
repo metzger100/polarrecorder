@@ -167,6 +167,9 @@ export function defaultResponseBody(endpoint) {
   if (endpoint.startsWith("import/abort")) {
     return ok({});
   }
+  if (endpoint.startsWith("export/pol")) {
+    return ok({ pol: "TWA\\TWS\t4\r\n30\t4.0\r\n180\t5.0\r\n" });
+  }
   if (endpoint.startsWith("export?")) {
     return ok({ csv: "twa/tws,4,6\n0,0.0,0.0\n90,5.0,6.0\n" });
   }

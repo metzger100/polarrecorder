@@ -217,7 +217,7 @@ def resolve_export_selection(
     logger: Logger | None = None,
 ) -> ExportSelection:
     """Resolve CSV export mode, grid, and confidence floor."""
-    min_samples = _resolve_min_samples(args, min_samples_for_export)
+    min_samples = resolve_min_samples(args, min_samples_for_export)
     has_twa = "twa" in args
     has_tws = "tws" in args
     if "format" in args and (has_twa or has_tws):
@@ -287,7 +287,8 @@ def csv_export(
     return csv_from_projection(projected, selection.twa, selection.tws)
 
 
-def _resolve_min_samples(args: Mapping[str, str], min_samples_for_export: int) -> int:
+def resolve_min_samples(args: Mapping[str, str], min_samples_for_export: int) -> int:
+    """Resolve the display or high-confidence export sample floor."""
     if args.get("high_confidence", "").lower() in {"yes", "true", "1"}:
         return min_samples_for_export
     return MIN_SAMPLES_DISPLAY

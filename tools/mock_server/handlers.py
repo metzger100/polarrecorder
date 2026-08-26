@@ -21,6 +21,9 @@ from mock_server.state import (
     scalar,
 )
 
+ROUTING_TWA = (30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180)
+ROUTING_TWS = (4, 6, 8, 10, 12, 14, 16, 20, 25)
+
 
 def pause_response() -> dict[str, object]:
     with STATE.lock:
@@ -329,6 +332,24 @@ def _export_endpoint(query: dict[str, list[str]]) -> dict[str, object]:
     return {"status": "OK", "data": {"csv": export_csv(query)}}
 
 
+def _routing_pol_endpoint(query: dict[str, list[str]]) -> dict[str, object]:
+    if any(name in query for name in ("format", "twa", "tws")):
+        msg = "Invalid parameters: 'export/pol' uses its fixed routing grid"
+        raise MockError(msg)
+    percentile = int_arg(query, "percentile", 65)
+    with STATE.lock:
+        reset_model = STATE.reset_model
+    if reset_model:
+        msg = "NavimetriX export is incomplete: 108 of 108 polar cells lack sufficient data."
+        raise MockError(msg)
+    rows = ["TWA\\TWS\t" + "\t".join(str(tws) for tws in ROUTING_TWS)]
+    for twa in ROUTING_TWA:
+        values = [str(twa)]
+        values.extend(str(speed(twa, tws, percentile)) for tws in ROUTING_TWS)
+        rows.append("\t".join(values))
+    return ok_response({"pol": "\r\n".join(rows) + "\r\n"})
+
+
 ROUTES: dict[str, Callable[[dict[str, list[str]]], dict[str, object]]] = {
     "pause": lambda _query: pause_response(),
     "resume": lambda _query: resume_response(),
@@ -345,6 +366,7 @@ ROUTES: dict[str, Callable[[dict[str, list[str]]], dict[str, object]]] = {
     "polar": _polar_endpoint,
     "export/json": lambda _query: backup_response(),
     "export": _export_endpoint,
+    "export/pol": _routing_pol_endpoint,
 }
 
 

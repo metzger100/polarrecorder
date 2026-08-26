@@ -32,8 +32,7 @@ Section 8 that ruff/mypy cannot see:
 - canonical-helper-redefinition : a module-level ``def`` re-implements a
                       canonical domain helper owned by another module. Import
                       the canonical helper instead of forking the contract.
-                      This catches a divergent re-implementation under the
-                      same name that body-based duplication detection misses.
+                      This catches divergence that body-based detection misses.
 - canonical-helper-map-stale : the ``_CANONICAL_HELPERS`` owner map points at a
                       module/name that no longer defines that helper (renamed,
                       moved, or deleted). A stale map silently stops guarding the
@@ -92,6 +91,7 @@ _CANONICAL_HELPERS = {
     "circular_distance": "server/polarrecorder/validation/angle_math.py",
     "circular_range": "server/polarrecorder/validation/angle_math.py",
     "project_grid": "server/polarrecorder/projection.py",
+    "project_folded_grid": "server/polarrecorder/projection.py",
     "anchor_origin": "server/polarrecorder/projection.py",
 }
 

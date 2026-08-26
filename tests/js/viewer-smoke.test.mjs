@@ -68,7 +68,8 @@ test("viewer modules work together", async () => {
   env.clickTab("export");
   await flushViewer();
   assert.equal(env.elements["export-panel"].classList.contains("has-data"), true);
-  assert.ok(textTree(env.elements["export-panel"]).includes("Export Configurator"));
+  assert.ok(textTree(env.elements["export-panel"]).includes("Routing POL"));
+  assert.ok(textTree(env.elements["export-panel"]).includes("Tack-aware CSV"));
 
   const preview = env.elements["export-panel"].querySelector(".preview-button");
   assert.ok(preview, "expected a preview button");
