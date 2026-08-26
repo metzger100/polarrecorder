@@ -24,7 +24,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     warningChecked = true;
     Polarrecorder.FetchJson("enhanced/status", { action: true }).then(
       function (/** @type {{rules?: Array<{availability: string, rule: string}>}} */ data) {
-        if (!hasActiveEngineRule(data.rules || [])) renderWarning();
+        if (!hasDefinitiveEngineRule(data.rules || [])) renderWarning();
       },
       function () {
         renderWarning();
@@ -33,9 +33,9 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /** @param {Array<{availability: string, rule: string}>} rules */
-  function hasActiveEngineRule(rules) {
+  function hasDefinitiveEngineRule(rules) {
     return rules.some(function (rule) {
-      return rule.availability === "active" && (rule.rule === "reject_engine_rpm" || rule.rule === "reject_engine_on");
+      return rule.availability === "active" && rule.rule === "reject_engine_on";
     });
   }
 
@@ -75,7 +75,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       Polarrecorder.Dom.Node(
         "p",
         "",
-        "Without an active RPM or engine-state signal, Polar Recorder cannot reliably distinguish motoring from good sailing in ordinary wind. Pause recording while motoring or configure an engine rule in Settings > Enhanced Rules."
+        "RPM protection rejects only above its configured idle ceiling, so an RPM source alone cannot rule out motoring at lower RPM. Pause recording while motoring or configure a definitive engine-state rule in Settings > Enhanced Rules."
       )
     );
     const message = Polarrecorder.Dom.Node("p", "error-text", "");

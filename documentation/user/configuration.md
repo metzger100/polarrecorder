@@ -13,8 +13,8 @@ a restart handler. Runtime tuning values are managed from the viewer Settings ta
 
 `plugin.py` calls `api.registerEditableParameters(paramList, changeCallback)` with an empty `paramList` during
 construction, so the AvNav plugin configuration dialog shows only AvNav's built-in enable switch. The runtime settings
-listed below live in `polarrecorder.params.CONFIG_PARAMETERS`; viewer Settings endpoints self-apply validated changes
-and then persist them with `api.saveConfigValues`.
+listed below live in `polarrecorder.params.CONFIG_PARAMETERS`; viewer Settings endpoints validate changes, persist them
+with `api.saveConfigValues`, and install them in the live runtime only after that host write succeeds.
 
 Each runtime parameter dict includes `name` and may include `default`, `type`, `rangeOrList`, and `description`. Polar
 Recorder supports the `STRING`, `NUMBER`, `FLOAT`, and `BOOLEAN` parameter types. `rangeOrList` supplies numeric min/max
@@ -26,8 +26,9 @@ AvNav persists plugin configuration outside `polar.json`. Polar Recorder reads i
 persistence `config` block is metadata about the saved dataset.
 
 AvNav stores and forwards editable values as strings. Polar Recorder strictly accepts boolean strings `true` and `false`
-(case-insensitive). Numeric settings must parse to finite `int` or `float` values before being clamped to their
-`rangeOrList`. Invalid, non-finite, or unrepresentably large values fall back to the previous value or default.
+(case-insensitive). Viewer save requests require numeric settings to parse as finite `int` or `float` values inside
+their `rangeOrList`; invalid requests are rejected without persistence or runtime mutation. Invalid, non-finite, or
+unrepresentably large values found during initial host-config parsing fall back to the previous value or default.
 
 AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole plugin. Polar Recorder
 does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
@@ -78,7 +79,9 @@ disabled. The head-to-wind default remains 10 degrees.
 Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and uses them to reject
 samples those signals prove unrepresentative. Each rule fires only when its switch is on, its store key(s) are
 configured, and the value is present, fresh, finite, and valid for its role; otherwise the rule is a no-op (fail-open
-per signal). Boolean values are valid only for the engine-state role. Every switch defaults on.
+per signal). RPM, engine-state numeric values, depth, SOG, current-drift magnitude, and apparent-wind speed must be
+nonnegative. AWA and heel remain signed. Boolean values are valid only for the engine-state role. Every switch defaults
+on.
 
 The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, so those rules
 (R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the heading/COG turn confirmation) **activate
@@ -116,10 +119,10 @@ key in the Settings tab's Enhanced Rules section. The genuinely custom signals (
 | `enh_cog_key`                   |  STRING |          `"gps.track"` |           - | Store key for course over ground.                                                    |
 | `enh_turn_min_roc`              |   FLOAT |                  `3.0` |    0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.              |
 
-Config changes are hot-swapped. Viewer Settings endpoints validate changed string values, acquire the single `plugin.py`
-lock, parse and clamp the new values, and replace the `Config` object before persisting the raw values through AvNav.
-The sampling loop snapshots the current config under that lock once per iteration. If a change lands during external
-store reads, that read is discarded, so no sample is committed with a superseded threshold set.
+Config changes are hot-swapped. Viewer Settings endpoints validate changed string values and persist them through AvNav
+before acquiring the single `plugin.py` lock to install the parsed `Config`. Persistence failure leaves the previous
+runtime config intact. The sampling loop snapshots the current config under that lock once per iteration. If a change
+lands during external store reads, that read is discarded, so no sample is committed with a superseded threshold set.
 
 Validation state is not reset on config changes. The rolling stability observations, cooldown timer, and previous sample
 continue from their current contents; the active config snapshot supplies the window duration during each iteration, so

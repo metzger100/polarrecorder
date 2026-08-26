@@ -345,3 +345,38 @@ def test_reader_rejects_boolean_physical_signal_but_accepts_boolean_engine_state
     assert read_result.enhanced_inputs is not None
     assert read_result.enhanced_inputs["depth_m"].state == "invalid"
     assert read_result.enhanced_inputs["engine_signal"].state == "usable"
+
+
+def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    keys = {
+        "rpm": "engine.rpm",
+        "engine_signal": "engine.state",
+        "depth_m": "gps.depthBelowKeel",
+        "sog_kt": "gps.speed",
+        "current_drift_kt": "gps.currentDrift",
+        "aws_kt": "gps.windSpeed",
+    }
+    for key in keys.values():
+        api.set_entry(key, -1.0, 99.5)
+    api.set_entry("gps.windAngle", -30.0, 99.5)
+    api.set_entry("heel.angle", -12.0, 99.5)
+    config = parse_config_values(
+        {
+            "enh_rpm_key": "engine.rpm",
+            "enh_engine_state_key": "engine.state",
+            "enh_heel_key": "heel.angle",
+        }
+    )
+
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
+
+    assert read_result.enhanced_inputs is not None
+    for role in keys:
+        acquisition = read_result.enhanced_inputs[role]
+        assert acquisition.state == "invalid"
+        assert acquisition.invalid_cause == "range"
+    assert read_result.enhanced_inputs["awa_deg"].state == "usable"
+    assert read_result.enhanced_inputs["heel_deg"].state == "usable"
+    assert read_result.enhanced_raw == {"awa_deg": (-30.0, 99.5), "heel_deg": (-12.0, 99.5)}

@@ -20,8 +20,8 @@ RPM_OFF_CEILING = 50.0
 def engine_heuristic(sample: Sample, config: Config) -> RuleResult:
     """Quarantine low-wind, moderate-speed samples as suspected engine use.
 
-    Defers to a definitive engine signal: when ``rpm``/``engine_signal`` reads off,
-    the quarantine is suppressed; engine-on is already a pre-candidate R17/R18 reject
+    Suppresses the quarantine only when an engine-state signal reads off or RPM is at
+    the stopped-engine ceiling; engine-on is already a pre-candidate R17/R18 reject
     and never reaches this rule. A present-but-idling RPM does not settle the question,
     so the low-wind/moving heuristic still applies in the idle band.
     """

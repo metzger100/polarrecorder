@@ -211,14 +211,14 @@ def advanced_settings(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
 
 
 def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
-    """Persist safe viewer settings, self-applying before saving to AvNav config."""
+    """Validate and persist safe viewer settings before installing them."""
     unknown = sorted(name for name in args if name not in SAVABLE_PARAM_NAMES)
     if unknown:
         return api_handlers.error(f"Unknown advanced parameter(s): {', '.join(unknown)}")
     updates = {name: value for name, value in args.items() if name in SAVABLE_PARAM_NAMES}
     if not updates:
         return api_handlers.error("No advanced parameters supplied")
-    validation_error = _first_validation_error(updates)
+    validation_error = first_validation_error(updates)
     if validation_error:
         return api_handlers.error(validation_error)
     new_config = apply_config_updates(plugin, updates)
@@ -227,12 +227,23 @@ def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
 
 
 def apply_config_updates(plugin: Any, updates: dict[str, str]) -> Config:
-    """Apply validated string config updates under the plugin lock and persist them."""
+    """Persist validated updates, then merge them into the live config.
+
+    Persistence happens before runtime mutation so a host write failure leaves
+    the active configuration unchanged. The second parse preserves any
+    concurrent update installed while the external host write was in progress.
+    """
     with plugin._lock:
-        new_config = parse_config_values(updates, plugin._logger, plugin.config)
-        plugin.config = new_config
+        previous_config = plugin.config
+        new_config = parse_config_values(updates, plugin._logger, previous_config)
     plugin._save_config_values(dict(updates))
-    return new_config
+    with plugin._lock:
+        if plugin.config is previous_config:
+            installed_config = new_config
+        else:
+            installed_config = parse_config_values(updates, plugin._logger, plugin.config)
+        plugin.config = installed_config
+        return installed_config
 
 
 def _format_group(group: AdvancedGroup, config: Any) -> dict[str, object]:
@@ -266,21 +277,34 @@ def _bounds(spec: Mapping[str, object]) -> tuple[int | float, int | float]:
     return bounds[0], bounds[1]
 
 
-def _first_validation_error(updates: Mapping[str, str]) -> str:
+def first_validation_error(
+    updates: Mapping[str, str],
+    *,
+    allow_empty_strings: frozenset[str] = frozenset(),
+) -> str:
+    """Return the first invalid config update, or an empty string.
+
+    Args:
+        updates: Endpoint-allowlisted raw configuration strings.
+        allow_empty_strings: String fields for which clearing the value is valid.
+
+    Returns:
+        A validation message, or an empty string when every update is valid.
+    """
     for name, raw_value in updates.items():
-        error = _validation_error(name, raw_value)
+        error = _validation_error(name, raw_value, name in allow_empty_strings)
         if error:
             return error
     return ""
 
 
-def _validation_error(name: str, raw_value: str) -> str:
+def _validation_error(name: str, raw_value: str, allow_empty_string: bool) -> str:
     spec = _PARAM_SPECS[name]
     value_type = cast("str", spec["type"])
     if value_type == "BOOLEAN":
         return _boolean_validation_error(name, raw_value)
     if value_type == "STRING":
-        return _string_validation_error(name, raw_value)
+        return _string_validation_error(name, raw_value, allow_empty_string)
     return _numeric_validation_error(name, raw_value, value_type, spec)
 
 
@@ -294,22 +318,22 @@ def _numeric_validation_error(
     try:
         value = _parse_numeric(value_type, raw_value)
     except ValueError:
-        return f"Invalid advanced parameter '{name}': expected {value_type.lower()}"
+        return f"Invalid parameter '{name}': expected {value_type.lower()}"
     if value < lower or value > upper:
-        return f"Invalid advanced parameter '{name}': expected {lower}..{upper}"
+        return f"Invalid parameter '{name}': expected {lower}..{upper}"
     return ""
 
 
 def _boolean_validation_error(name: str, raw_value: str) -> str:
     if raw_value.strip().lower() in {"true", "false"}:
         return ""
-    return f"Invalid advanced parameter '{name}': expected boolean"
+    return f"Invalid parameter '{name}': expected boolean"
 
 
-def _string_validation_error(name: str, raw_value: str) -> str:
-    if raw_value.strip():
+def _string_validation_error(name: str, raw_value: str, allow_empty: bool) -> str:
+    if allow_empty or raw_value.strip():
         return ""
-    return f"Invalid advanced parameter '{name}': expected a store key"
+    return f"Invalid parameter '{name}': expected a store key"
 
 
 def _parse_numeric(value_type: str, raw_value: str) -> int | float:

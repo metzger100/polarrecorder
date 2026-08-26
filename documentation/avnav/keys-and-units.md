@@ -45,7 +45,8 @@ shared `enhanced_input.assess_enhanced_input` contract: booleans, finite numbers
 numbers; missing, stale, invalid (including implausibly future timestamps), and usable states remain distinct.
 `ReadResult.enhanced_inputs` retains those states for status-quality diagnostics, while only usable values enter
 `ReadResult.enhanced_raw`. `build_sample` converts each usable role to its canonical unit once and stores it in
-`Sample.enhanced`; unavailable signals are omitted from the dict (never represented by a `NaN`/`-1`/`0` sentinel).
+`Sample.enhanced`; unavailable signals are omitted from the dict (never represented by a `NaN`/`-1`/`0` sentinel). RPM,
+engine-state numeric values, depth, SOG, current-drift magnitude, and AWS must be nonnegative; AWA and heel are signed.
 
 | Role in `Sample.enhanced` | Config key (default)                         |          Store unit | Canonical unit |
 | ------------------------- | -------------------------------------------- | ------------------: | -------------: |
@@ -65,8 +66,9 @@ keel-clearance key. AvNav core has no built-in roll/heel/attitude key, so `enh_h
 (for example a SignalK `navigation.attitude.roll` bridge), expressed in degrees of transverse roll.
 
 AvNav does not provide a portable core engine-running signal that Polar Recorder can rely on. R16 is therefore a
-heuristic quarantine based on low TWS and high STW, but it defers to a definitive `rpm`/`engine_signal` reading when one
-is configured (see the rejection-rules doc).
+heuristic quarantine based on low TWS and high STW. A configured `engine_signal` can be definitive when its producer
+semantics encode running state; RPM remains threshold-based and has an ambiguous idle band (see the rejection-rules
+doc).
 
 ## Related
 

@@ -145,7 +145,11 @@ window.Polarrecorder = window.Polarrecorder || {};
     tile.appendChild(el("span", "helper", item[0]));
     tile.appendChild(el("span", "value-number", value));
     const stale = values && values[item[3] + "_stale"];
-    const age = values ? Number(values[item[3] + "_age_s"]).toFixed(1) + "s ago" : "";
+    let age = "";
+    if (values) {
+      const ageValue = Number(values[item[3] + "_age_s"]);
+      age = stale && ageValue < 0 ? "future timestamp" : ageValue.toFixed(1) + "s ago";
+    }
     const line = el("p", "helper");
     line.appendChild(el("span", "dot " + (stale ? "stale" : "accepted")));
     line.appendChild(document.createTextNode(" " + age));

@@ -19,7 +19,7 @@ AvNav plugin editable-parameter contract:
 - Supported Polar Recorder types are `BOOLEAN`, `NUMBER`, `FLOAT`, and `STRING` (store-key fields).
 - AvNav stores and forwards configuration values as strings.
 - When a user changes values, AvNav calls the registered callback with only the changed key/value pairs.
-- The plugin must validate and start using new values before saving them as durable configuration.
+- The viewer save path must validate values and make them durable before changing the live runtime configuration.
 
 Polar Recorder registration and parsing:
 
@@ -29,7 +29,7 @@ Polar Recorder registration and parsing:
 | Runtime configuration specs    | `server/polarrecorder/params.py` (`CONFIG_PARAMETERS`)                                                                  |
 | Runtime typed config           | `server/polarrecorder/config.py`                                                                                        |
 | Initial runtime value read     | `plugin.py` via `api.getConfigValue(name, default)`                                                                     |
-| Viewer save path               | Settings-tab API handlers self-apply values and then call `api.saveConfigValues`                                        |
+| Viewer save path               | Settings-tab API handlers validate, call `api.saveConfigValues`, then install the live config                           |
 | Hot-change callback            | `plugin.py` registers `_on_config_change` for the AvNav contract; runtime edits now arrive through the viewer save path |
 | User-facing setting reference  | [Configuration](../user/configuration.md)                                                                               |
 
@@ -39,7 +39,8 @@ Parsing rules:
 - `NUMBER` values parse as integers and are clamped to `rangeOrList`.
 - `FLOAT` values parse as floats and are clamped to `rangeOrList`.
 - `STRING` values pass through unchanged; they hold optional store keys for the enhanced rules.
-- Invalid changed values keep the previous runtime value; invalid initial values fall back to defaults.
+- Invalid viewer changes are rejected before persistence or runtime mutation; invalid initial values fall back to
+  defaults.
 - Polar Recorder registers no editable parameters of its own (`EDITABLE_PARAMETERS` is empty).
 - AvNav still surfaces its built-in `enabled` start/stop switch because the plugin registers a restart handler; that
   switch is owned by AvNav, not by Polar Recorder.

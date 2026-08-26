@@ -165,6 +165,26 @@ export async function runViewerContracts({ root = process.cwd(), print = true } 
     failures.push(`viewer-falsy-preservation: status-panel rendered a '${token}' token for zero readings`);
   }
 
+  const future = await renderAllPanels(
+    root,
+    statusResponder({
+      current_values: {
+        stw_age_s: 0,
+        stw_kt: 5,
+        stw_stale: false,
+        twa_age_s: -1,
+        twa_deg: 90,
+        twa_stale: true,
+        tws_age_s: 0,
+        tws_kt: 12,
+        tws_stale: false
+      }
+    })
+  );
+  if (!future["status-panel"].includes("future timestamp")) {
+    failures.push("viewer-future-timestamp: future values must render as invalid, not as negative age");
+  }
+
   if (print) reportViewerContracts(failures);
   return { ok: failures.length === 0, failures };
 }

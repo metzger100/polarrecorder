@@ -34,7 +34,8 @@ must be amended rather than worked around.
     `tests/`, `viewer/*.js`, `viewer/*.css`, `viewer/*.html`, project Markdown files, and `documentation/**/*.md`; split
     modules or docs instead of compressing code or prose. This limit overrides exec-plan assumptions: if a phase would
     push a file past 400 lines, split it within that same phase rather than deferring to a later cleanup step or using
-    one-liner compression.
+    one-liner compression. Historical and active files under `exec-plans/` are exempt so a complete execution record can
+    remain in one place; plans still cannot waive size limits for any shipped or maintained project file.
 13. **Never fake a green gate.** Do not weaken or delete tests, lower a coverage threshold, skip a check, or suppress a
     smell to make `npm run check:all` pass. Fix the root cause; a passing gate must reflect real behavior.
 

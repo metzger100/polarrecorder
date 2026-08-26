@@ -40,15 +40,16 @@ return `pass`, `reject`, or `quarantine`; only the runner emits the final `accep
 
 Enhanced rules (R17-R22) are optional. Each fires only when its rule is enabled, its store key(s) are configured, and a
 fresh, finite, role-valid value is present in `Sample.enhanced`; an absent, stale, or invalid signal leaves the rule a
-no-op (`pass`). Only the engine-state role accepts booleans. R17-R19 are pre-candidate (`is_sailing_candidate=False`,
-counted via `record_non_candidate`) because motoring and shallow-water squat are non-representative conditions, like
-`reject_head_to_wind`. R20-R22 are quality-gate rejects (`is_sailing_candidate=True`, counted via `record_rejected`):
-the boat was sailing in a clean condition but the specific sample or sensor is unrepresentative. R20-R22 run in
-`_run_candidate_rules` after `stability_window` and before R16, so a definitive enhanced reject wins over the R16
-quarantine.
+no-op (`pass`). Unsigned physical roles reject negative values, while AWA and heel remain signed. Only the engine-state
+role accepts booleans. R17-R19 are pre-candidate (`is_sailing_candidate=False`, counted via `record_non_candidate`)
+because motoring and shallow-water squat are non-representative conditions, like `reject_head_to_wind`. R20-R22 are
+quality-gate rejects (`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean
+condition but the specific sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after
+`stability_window` and before R16, so a definitive enhanced reject wins over the R16 quarantine.
 
-R16 enhancement: when a definitive engine signal is configured, R16 defers to it. Engine-on is already a pre-candidate
-R17/R18 reject and never reaches R16. When the signal reads **off** (`engine_signal < enh_engine_state_on_threshold`, or
+R16 enhancement: a configured engine-state signal is definitive only when its producer semantics really encode running
+state; the generic RPM rule remains threshold-based and partial. Engine-on is already a pre-candidate R17/R18 reject and
+never reaches R16. When the signal reads **off** (`engine_signal < enh_engine_state_on_threshold`, or
 `rpm <= RPM_OFF_CEILING`, a named stopped-engine constant of 50 rpm) the R16 quarantine is suppressed. A
 present-but-idling RPM in the band `RPM_OFF_CEILING < rpm <= enh_rpm_idle_max` does **not** settle the motoring
 question, so R16's low-wind/moving heuristic still applies there. With no engine signal, R16 is unchanged.

@@ -20,6 +20,11 @@ from polarrecorder.source_params import CORE_KEY_FIELDS
 ENHANCED_PARAM_NAMES = frozenset(
     str(spec["name"]) for spec in CONFIG_PARAMETERS if str(spec["name"]).startswith("enh_")
 )
+ENHANCED_STRING_PARAM_NAMES = frozenset(
+    str(spec["name"])
+    for spec in CONFIG_PARAMETERS
+    if str(spec["name"]).startswith("enh_") and spec["type"] == "STRING"
+)
 
 
 def enhanced_keys(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
@@ -44,13 +49,19 @@ def enhanced_status_view(plugin: Any, _args: dict[str, str]) -> dict[str, object
 
 
 def enhanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
-    """Persist enhanced settings, self-applying under the lock before saving to disk."""
+    """Validate and persist enhanced settings before installing them."""
     unknown = sorted(name for name in args if name not in ENHANCED_PARAM_NAMES)
     if unknown:
         return api_handlers.error(f"Unknown enhanced parameter(s): {', '.join(unknown)}")
     updates = {name: value for name, value in args.items() if name in ENHANCED_PARAM_NAMES}
     if not updates:
         return api_handlers.error("No enhanced parameters supplied")
+    validation_error = api_config.first_validation_error(
+        updates,
+        allow_empty_strings=ENHANCED_STRING_PARAM_NAMES,
+    )
+    if validation_error:
+        return api_handlers.error(validation_error)
     new_config = api_config.apply_config_updates(plugin, updates)
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.format_enhanced_config(saved)
@@ -95,6 +106,7 @@ def _probe_keys(
                     now,
                     stale_threshold,
                     accepts_bool=signal.accepts_bool,
+                    minimum_value=signal.minimum_value,
                 )
     return probes
 
@@ -106,6 +118,13 @@ def _probe(
     stale_threshold: float,
     *,
     accepts_bool: bool,
+    minimum_value: float | None,
 ) -> EnhancedInput:
     entry = plugin.get_single_value(key, include_info=True)
-    return assess_enhanced_input(entry, now, stale_threshold, accepts_bool=accepts_bool)
+    return assess_enhanced_input(
+        entry,
+        now,
+        stale_threshold,
+        accepts_bool=accepts_bool,
+        minimum_value=minimum_value,
+    )

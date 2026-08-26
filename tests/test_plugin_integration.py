@@ -116,6 +116,9 @@ def test_enhanced_endpoints_keys_status_and_save(tmp_path: Path) -> None:
     assert rules["turn_confirm"] == "active"
 
     unknown = plugin._handle_request("enhanced/save", object(), {"nope": ["1"]})
+    cleared = response_data(
+        plugin._handle_request("enhanced/save", object(), {"enh_rpm_key": [""]})
+    )
     saved = response_data(
         plugin._handle_request(
             "enhanced/save",
@@ -127,6 +130,8 @@ def test_enhanced_endpoints_keys_status_and_save(tmp_path: Path) -> None:
     assert unknown["status"] == "ERROR"
     assert plugin.config.enh_rpm_enabled is False
     assert plugin.config.enh_rpm_idle_max == 1200
+    assert cast("dict[str, object]", cleared["config"])["enh_rpm_key"] == ""
+    assert {"enh_rpm_key": ""} in api.saved_configs
     assert {"enh_rpm_enabled": "false", "enh_rpm_idle_max": "1200"} in api.saved_configs
     assert cast("dict[str, object]", saved["config"])["enh_rpm_idle_max"] == 1200
 

@@ -32,24 +32,40 @@ class EnhancedSignalSpec:
     enable_fields: tuple[str, ...]
     to_knots: bool
     accepts_bool: bool = False
+    minimum_value: float | None = None
 
 
 ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
-    EnhancedSignalSpec("rpm", "enh_rpm_key", ("enh_rpm_enabled",), to_knots=False),
+    EnhancedSignalSpec(
+        "rpm", "enh_rpm_key", ("enh_rpm_enabled",), to_knots=False, minimum_value=0.0
+    ),
     EnhancedSignalSpec(
         "engine_signal",
         "enh_engine_state_key",
         ("enh_engine_state_enabled",),
         to_knots=False,
         accepts_bool=True,
+        minimum_value=0.0,
     ),
-    EnhancedSignalSpec("depth_m", "enh_depth_key", ("enh_depth_enabled",), to_knots=False),
-    EnhancedSignalSpec("sog_kt", "enh_sog_key", (), to_knots=True),
     EnhancedSignalSpec(
-        "current_drift_kt", "enh_current_drift_key", ("enh_slip_enabled",), to_knots=True
+        "depth_m", "enh_depth_key", ("enh_depth_enabled",), to_knots=False, minimum_value=0.0
+    ),
+    EnhancedSignalSpec("sog_kt", "enh_sog_key", (), to_knots=True, minimum_value=0.0),
+    EnhancedSignalSpec(
+        "current_drift_kt",
+        "enh_current_drift_key",
+        ("enh_slip_enabled",),
+        to_knots=True,
+        minimum_value=0.0,
     ),
     EnhancedSignalSpec("awa_deg", "enh_awa_key", ("enh_tw_crosscheck_enabled",), to_knots=False),
-    EnhancedSignalSpec("aws_kt", "enh_aws_key", ("enh_tw_crosscheck_enabled",), to_knots=True),
+    EnhancedSignalSpec(
+        "aws_kt",
+        "enh_aws_key",
+        ("enh_tw_crosscheck_enabled",),
+        to_knots=True,
+        minimum_value=0.0,
+    ),
     EnhancedSignalSpec("heel_deg", "enh_heel_key", ("enh_heel_enabled",), to_knots=False),
     EnhancedSignalSpec(
         "heading_deg", "enh_heading_key", ("enh_turnconfirm_enabled",), to_knots=False

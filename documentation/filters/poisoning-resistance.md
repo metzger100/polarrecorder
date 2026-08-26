@@ -20,10 +20,10 @@ future-dated, out of range, head-to-wind, low-wind, or anchored-like before they
 R15 reject quality-gate transients such as rapid TWA changes, sensor spikes, cooldown periods, and unstable rolling
 windows. R16 quarantines suspected low-wind engine use.
 
-Optional enhanced signals (R17-R22) harden the model further when a boat publishes them. A definitive engine signal (RPM
-or engine-state) turns R16's guess into a fact: engine-on becomes a direct R17/R18 reject and engine-off suppresses the
-R16 quarantine, so motoring is excluded without discarding genuine light-air sailing. A depth signal rejects
-shallow-water squat (R19).
+Optional enhanced signals (R17-R22) harden the model further when a boat publishes them. A true engine-state source can
+turn R16's guess into a fact: engine-on becomes a direct R18 reject and engine-off suppresses the R16 quarantine. RPM is
+only threshold evidence: R17 rejects above the idle ceiling, a stopped reading suppresses R16, and the middle band
+remains ambiguous. A depth signal rejects shallow-water squat (R19).
 
 There is deliberately **no current-strength reject**. A polar maps STW (through water) against true wind over water, and
 AvNav publishes `gps.trueWindAngle` as `angleTrueWater`, so TWS and STW live in the same water frame. A uniform current
@@ -53,8 +53,9 @@ candidacy-gate or warming-up rejections touch no bin. The scenario tests drive r
 `ValidationState.observe`, and `commit_sample`, matching the production normal path.
 
 R15 includes the current sample in its stability range, so the first bad spike is rejected without first entering the
-state window. A definitive engine signal is still the only reliable automatic distinction between motoring and ordinary
-good sailing; without one, users should pause recording while motoring.
+state window. A semantically definitive engine-state source is still the only reliable automatic distinction between
+motoring and ordinary good sailing; RPM-only protection has an ambiguous idle band, so users should pause recording
+while motoring.
 
 The executable proof lives in `tests/test_poisoning_scenarios.py`. It covers valid learning, slow-sample resistance,
 anchored bursts, far-future timestamp poisoning, sensor spikes, gradual drift, low-wind rejection, maneuver-rich
