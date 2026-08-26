@@ -55,25 +55,21 @@ window.Polarrecorder = window.Polarrecorder || {};
     const host = state.host;
     state.previewActive = false;
     Polarrecorder.Dom.Clear(host);
+    host.appendChild(routingCard());
     host.appendChild(configCard());
     applyValidity();
   }
 
   /** @returns {HTMLElement} */
-  function configCard() {
-    const card = Polarrecorder.ExportFields.Section("Export Configurator");
-    const preset = Polarrecorder.ExportFields.Field("Preset", "select");
-    fillPresets(preset.control);
-    preset.control.value = Polarrecorder.ExportPresets.Selected();
-    preset.control.addEventListener("change", function () {
-      Polarrecorder.ExportPresets.SetSelected(preset.control.value);
-      Polarrecorder.ExportPresets.LoadSelected();
-      render();
-    });
-    card.appendChild(preset.wrap);
-    const editors = Polarrecorder.ExportPresets.Editors();
-    card.appendChild(editors.twa.Element);
-    card.appendChild(editors.tws.Element);
+  function routingCard() {
+    const card = Polarrecorder.ExportFields.Section("Routing POL");
+    card.appendChild(
+      Polarrecorder.Dom.Node(
+        "p",
+        "helper",
+        "For NavimetriX and compatible routing apps. POL folds port and starboard onto a fixed 30-180° grid; the CSV preset and grid below remain tack-aware and do not apply. Percentile and confidence apply to both downloads."
+      )
+    );
     const percentile = Polarrecorder.ExportFields.Field("Percentile override", "input");
     percentile.control.type = "number";
     percentile.control.min = "1";
@@ -96,6 +92,27 @@ window.Polarrecorder = window.Polarrecorder || {};
         }
       )
     );
+    card.appendChild(
+      Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button("Download Routing POL", downloadPol, "primary-action")])
+    );
+    return card;
+  }
+
+  /** @returns {HTMLElement} */
+  function configCard() {
+    const card = Polarrecorder.ExportFields.Section("Tack-aware CSV");
+    const preset = Polarrecorder.ExportFields.Field("Preset", "select");
+    fillPresets(preset.control);
+    preset.control.value = Polarrecorder.ExportPresets.Selected();
+    preset.control.addEventListener("change", function () {
+      Polarrecorder.ExportPresets.SetSelected(preset.control.value);
+      Polarrecorder.ExportPresets.LoadSelected();
+      render();
+    });
+    card.appendChild(preset.wrap);
+    const editors = Polarrecorder.ExportPresets.Editors();
+    card.appendChild(editors.twa.Element);
+    card.appendChild(editors.tws.Element);
     card.appendChild(
       Polarrecorder.Dom.ActionRow([
         Polarrecorder.Dom.Button("Preview", previewCsv, "primary-action preview-button"),
@@ -131,9 +148,14 @@ window.Polarrecorder = window.Polarrecorder || {};
     const params = new URLSearchParams();
     params.set("twa", editors.twa.Values().join(","));
     params.set("tws", editors.tws.Values().join(","));
+    addQualityParams(params);
+    return params;
+  }
+
+  /** @param {URLSearchParams} params */
+  function addQualityParams(params) {
     if (state.percentile) params.set("percentile", state.percentile);
     if (state.highConfidence) params.set("high_confidence", "yes");
-    return params;
   }
 
   function previewCsv() {
@@ -174,6 +196,19 @@ window.Polarrecorder = window.Polarrecorder || {};
       .then(function (csv) {
         Polarrecorder.Dom.Download("polarrecorder-custom.csv", csv, "text/csv");
         setMessage("CSV downloaded.", "info");
+      })
+      .catch(function (error) {
+        setMessage(error.message, "error");
+      });
+  }
+
+  function downloadPol() {
+    const params = new URLSearchParams();
+    addQualityParams(params);
+    fetchJson("export/pol?" + params.toString(), true)
+      .then(function (data) {
+        Polarrecorder.Dom.Download("polarrecorder-routing.pol", data.pol, "text/plain;charset=utf-8");
+        setMessage("Routing POL downloaded.", "info");
       })
       .catch(function (error) {
         setMessage(error.message, "error");

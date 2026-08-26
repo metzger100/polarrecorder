@@ -44,7 +44,10 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `PercentileHelp`), the stateless Export-tab field builders `export-ui.js` composes so its preset/CSV orchestration
   logic stays under the file-size budget. `viewer/export-presets.js` adds `ExportPresets`, owning the selected-preset
   name and the TWA/TWS `GridEditor` instances (`Configure`, `All`, `Sorted`, `Selected`, `SetSelected`,
-  `SelectedPreset`, `Editors`, `LoadSelected`, `IsValid`) so `export-ui.js` stays under its file-size budget.
+  `SelectedPreset`, `Editors`, `LoadSelected`, `IsValid`) so `export-ui.js` stays under its file-size budget. The Export
+  tab presents a primary fixed-grid **Download Routing POL** card before the CSV configurator. POL explains that it
+  folds both tacks for NavimetriX-compatible routing, while CSV preview, grids, presets, and tack-aware behavior remain
+  separate and unchanged; POL API failures are rendered in the same visible message area as CSV failures.
   `viewer/advanced-settings.js` adds `SourceSettings`, the Settings tab's first card, and `AdvancedSettings`, its fifth
   card. `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's fourth card, mounted by
   `settings-ui.js` so the transport-heavy markup stays out of the Settings budget. `viewer/presets.js` adds `Presets`,
@@ -56,8 +59,8 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   offers `DefaultPort180` ("Default (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"), and
   the legacy `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all four when the `presets` fetch fails.
   The pre-rename `Default180` selection still resolves to the starboard half server-side.
-- The tabs are Polar, Status, Timeline, Export, and Settings. Export is limited to CSV and preset workflows. Settings
-  starts with a **Data Sources** card whose TWA, TWS, and STW selectors default to `gps.trueWindAngle`,
+- The tabs are Polar, Status, Timeline, Export, and Settings. Export provides routing POL plus CSV/preset workflows.
+  Settings starts with a **Data Sources** card whose TWA, TWS, and STW selectors default to `gps.trueWindAngle`,
   `gps.trueWindSpeed`, and `gps.waterSpeed`. The selected keys are saved through the runtime-config endpoint and apply
   on the next sampling cycle. Two maintenance cards follow: a **Learned Data** card with Download, Restore, and Reset
   subsections, and a **Presets** card with Download and Restore subsections. Each subsection is a `.settings-group` (the

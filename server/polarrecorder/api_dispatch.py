@@ -1,9 +1,9 @@
 """Module: API Dispatch - Request dispatch for the AvNav plugin shell.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.api_config, polarrecorder.api_enhanced, polarrecorder.api_handlers,
-polarrecorder.bins, polarrecorder.export, polarrecorder.import_common, polarrecorder.persistence,
-polarrecorder.preset_backup
+Depends: polarrecorder.api_config, polarrecorder.api_enhanced, polarrecorder.api_export,
+polarrecorder.api_handlers, polarrecorder.bins, polarrecorder.export, polarrecorder.import_common,
+polarrecorder.persistence, polarrecorder.preset_backup, polarrecorder.routing_pol
 """
 
 from __future__ import annotations
@@ -15,11 +15,13 @@ from typing import Any
 from polarrecorder import (
     api_config,
     api_enhanced,
+    api_export,
     api_handlers,
     export,
     import_common,
     persistence,
     preset_backup,
+    routing_pol,
 )
 from polarrecorder.bins import TWS_BIN_MAX
 from polarrecorder.import_common import BackupError
@@ -37,7 +39,7 @@ def handle_request(plugin: Any, url: str, raw_args: Mapping[str, object]) -> dic
         if route is None:
             return api_handlers.error(f"Unknown endpoint '{url}'")
         return route(plugin, args)
-    except (export.ExportError, BackupError) as exc:
+    except (export.ExportError, routing_pol.RoutingPolError, BackupError) as exc:
         return api_handlers.error(str(exc))
 
 
@@ -78,26 +80,6 @@ def _timeline(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
         entries = plugin._timeline.query(minutes)
     return api_handlers.format_timeline(entries)
-
-
-def _export_csv(plugin: Any, args: dict[str, str]) -> dict[str, object]:
-    with plugin._lock:
-        selection = export.resolve_export_selection(
-            plugin._data_dir,
-            args,
-            plugin.config.max_tws,
-            plugin.config.min_samples_for_export,
-            plugin._logger,
-        )
-        percentile = export.parse_percentile(args, plugin.config.percentile)
-        model_bins = plugin._model.snapshot_bins()
-    return api_handlers.format_export(
-        model_bins,
-        selection.twa,
-        selection.tws,
-        percentile,
-        selection.min_samples,
-    )
 
 
 def _config(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
@@ -381,7 +363,8 @@ ROUTES: dict[str, Route] = {
     "polar": _polar,
     "rejections": _rejections,
     "timeline": _timeline,
-    "export": _export_csv,
+    "export": api_export.export_csv,
+    "export/pol": api_export.export_routing_pol,
     "config": _config,
     "presets": _presets,
     "export/json": _export_json,

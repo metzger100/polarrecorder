@@ -23,6 +23,8 @@ import {
 const saveRequests = [];
 /** @type {string[]} */
 const deleteRequests = [];
+/** @type {string[]} */
+const polRequests = [];
 
 /** @returns {{name: string, builtin: boolean, twa: number[], tws: number[]}[]} */
 function customPresets() {
@@ -46,6 +48,10 @@ function responder(endpoint) {
   }
   if (endpoint.startsWith("presets")) {
     return ok({ presets: customPresets() });
+  }
+  if (endpoint.startsWith("export/pol")) {
+    polRequests.push(endpoint);
+    return ok({ pol: "TWA\\TWS\t4\r\n30\t4.0\r\n" });
   }
   if (endpoint.startsWith("export?")) {
     return ok({ csv: "twa/tws,4\n0,0.0\n" });
@@ -293,4 +299,64 @@ test("an export action failure shows the error message", async () => {
   await flushViewer();
 
   assert.ok(textTree(panel).includes("boom"), textTree(panel));
+});
+
+test("routing POL is the first export action and downloads the dedicated response", async () => {
+  const env = createEnvironment({ responder });
+  const panel = await openExportPanel(env);
+  /** @type {{filename: string, text: string, type: string}[]} */
+  const downloads = [];
+  const recorder = /** @type {{Dom: {Download: (filename: string, text: string, type: string) => void}}} */ (
+    env.window.Polarrecorder
+  );
+  recorder.Dom.Download = function (filename, text, type) {
+    downloads.push({ filename, text, type });
+  };
+
+  const buttons = panel.querySelectorAll(".primary-action");
+  assert.equal(buttons[0].textContent, "Download Routing POL");
+  assert.ok(textTree(panel).includes("folds port and starboard"), textTree(panel));
+  const inputs = allByTag(panel, "input");
+  const percentile = inputs.find((node) => inputType(node) === "number");
+  const confidence = inputs.find((node) => inputType(node) === "checkbox");
+  assert.ok(percentile, "expected the shared percentile control");
+  assert.ok(confidence, "expected the shared confidence control");
+  percentile.value = "70";
+  confidence.checked = true;
+  const onPercentile = /** @type {Record<string, unknown>} */ (percentile).oninput;
+  const onConfidence = /** @type {Record<string, unknown>} */ (confidence).onchange;
+  if (typeof onPercentile === "function") onPercentile();
+  if (typeof onConfidence === "function") onConfidence();
+  const before = polRequests.length;
+  clickButton(panel, "Download Routing POL");
+  await flushViewer();
+
+  assert.equal(polRequests.length, before + 1);
+  assert.equal(polRequests[polRequests.length - 1], "export/pol?percentile=70&high_confidence=yes");
+  assert.deepEqual(downloads, [
+    {
+      filename: "polarrecorder-routing.pol",
+      text: "TWA\\TWS\t4\r\n30\t4.0\r\n",
+      type: "text/plain;charset=utf-8"
+    }
+  ]);
+  assert.ok(textTree(panel).includes("Routing POL downloaded."), textTree(panel));
+});
+
+test("routing POL errors are visible and CSV download remains available", async () => {
+  const env = createEnvironment({
+    responder(endpoint) {
+      if (endpoint.startsWith("export/pol")) {
+        return { status: "ERROR", data: null, error: "POL matrix incomplete" };
+      }
+      return responder(endpoint);
+    }
+  });
+  const panel = await openExportPanel(env);
+
+  assert.ok(buttonByText(panel, "Download CSV"), "expected CSV download to remain available");
+  clickButton(panel, "Download Routing POL");
+  await flushViewer();
+
+  assert.ok(textTree(panel).includes("POL matrix incomplete"), textTree(panel));
 });

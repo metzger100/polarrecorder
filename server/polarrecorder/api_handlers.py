@@ -1,7 +1,8 @@
 """Module: API Handlers - Pure API request and response formatting.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.export
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.export,
+polarrecorder.routing_pol
 """
 
 from __future__ import annotations
@@ -9,7 +10,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
-from polarrecorder import export
+from polarrecorder import export, routing_pol
 from polarrecorder.enhanced_input import classify_timestamp_age
 
 if TYPE_CHECKING:
@@ -182,6 +183,15 @@ def format_export(
     """Format the CSV export endpoint."""
     selection = export.ExportSelection("custom", list(twa_grid), list(tws_grid), min_samples)
     return ok({"csv": export.csv_export(model_bins, selection, percentile)})
+
+
+def format_routing_pol(
+    model_bins: export.SnapshotBins,
+    percentile: int,
+    min_samples: int,
+) -> Response:
+    """Format the tack-folded routing POL export endpoint."""
+    return ok({"pol": routing_pol.routing_pol_export(model_bins, percentile, min_samples)})
 
 
 def format_config(config: Config) -> Response:

@@ -69,6 +69,7 @@ _LAYER_RANK = {
     # 2 - domain: the learned model, export, intake, and validation rules.
     "polar_model": 2,
     "export": 2,
+    "routing_pol": 2,
     "preset_backup": 2,
     "reader": 2,
     "timeline": 2,
@@ -86,6 +87,7 @@ _LAYER_RANK = {
     "api_dispatch": 3,
     "api_config": 3,
     "api_enhanced": 3,
+    "api_export": 3,
     "diagnostics": 3,
 }
 # Package markers carry no logic and are exempt from a layer assignment.

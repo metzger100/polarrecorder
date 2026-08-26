@@ -56,6 +56,40 @@ def project_grid(
         cells = _linear_cells(raw, twa_grid, tws_intervals, TWA_FOLD_MAX, TWA_FULL_CIRCLE)
     else:
         cells = _linear_cells(raw, twa_grid, tws_intervals, 0, TWA_FOLD_MAX)
+    return _project_cells(cells, percentile, min_samples)
+
+
+def project_folded_grid(
+    model_bins: SnapshotBins,
+    twa_grid: Sequence[int],
+    tws_grid: Sequence[int],
+    percentile: int,
+    min_samples: int,
+) -> dict[tuple[int, int], ProjectedCell]:
+    """Project both tacks onto an absolute 0-180 degree routing grid.
+
+    Source angles are folded with ``min(twa, 360 - twa)`` before target-cell
+    assignment. Histograms from both tacks are merged first, so the percentile
+    and minimum-sample floor apply to the combined sample population.
+    """
+    folded = [
+        (min(twa, TWA_FULL_CIRCLE - twa), tws, source) for twa, tws, source in _raw_bins(model_bins)
+    ]
+    cells = _linear_cells(
+        folded,
+        twa_grid,
+        _intervals(tws_grid, TWS_BIN_MAX),
+        0,
+        TWA_FOLD_MAX,
+    )
+    return _project_cells(cells, percentile, min_samples)
+
+
+def _project_cells(
+    cells: Mapping[tuple[int, int], Mapping[int, int]],
+    percentile: int,
+    min_samples: int,
+) -> dict[tuple[int, int], ProjectedCell]:
     projected: dict[tuple[int, int], ProjectedCell] = {}
     for (twa, tws), merged in cells.items():
         samples = sum(merged.values())

@@ -10,7 +10,7 @@ speeds.
 A polar describes the boat speed you can expect for a true wind angle and speed. Use Polar Recorder to:
 
 - compare your real performance with what you expected
-- export a boat-specific polar to tools such as Windy (Passage Planner Plugin)
+- export a boat-specific routing POL for NavimetriX-compatible apps or tack-aware CSV for Windy and analysis
 - plan passages with numbers from your own boat
 
 Polar Recorder is not a sail-trim teacher or weather router; it records and filters data.
@@ -119,9 +119,16 @@ recording worked and why samples were excluded.
 
 ### Export
 
-The Export tab creates a CSV polar table.
+The Export tab offers routing POL and CSV polar tables.
 
-You can preview or download CSV, edit the TWA/TWS grid, save presets, and require high-confidence cells.
+**Download Routing POL** creates a fixed 30-180° absolute-TWA table for NavimetriX and compatible routing apps. It folds
+port and starboard observations together by merging their sample histograms before percentile calculation. POL never
+changes or folds the stored learned model. Because NavimetriX does not publicly document blank-cell support, the
+download fails with a missing-cell count until all 108 routing cells meet the selected confidence floor; no performance
+is interpolated or extrapolated.
+
+CSV remains available for spreadsheets, custom TWA/TWS grids, starboard-only or port-only inspection, and full 360° tack
+asymmetry. You can preview or download CSV, edit its grid, save presets, and require high-confidence cells.
 
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
@@ -286,13 +293,6 @@ Common causes:
 - recording is paused, or the plugin is disabled in AvNav
 - the boat has mostly been motoring, maneuvering, drifting, or sailing in very low wind
 - the plugin is still warming up its stability checks
-
-Pause/Resume, loss of fresh usable core data, non-sailing conditions, suspected engine use, and enhanced sensor-quality
-rejections restart the stability warm-up. R15 requires both a full time span and a bounded observation density that
-tolerates up to 10% sustained scheduler slippage. One missed tick can be absorbed when the surrounding timestamp span
-still meets that density, while sparse histories remain warming up. Status reports data as present only when all three
-core readings are numeric and finite both before and after speed-unit normalization, and their source timestamps are
-finite, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

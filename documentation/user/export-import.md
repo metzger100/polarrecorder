@@ -4,9 +4,9 @@
 
 ## Overview
 
-Polar Recorder can export the learned polar as CSV or as a full JSON backup, and export the user presets as a JSON
-backup. CSV export is for planners and spreadsheets. The two JSON backups round-trip: each can be downloaded from the
-Settings tab and restored there. Both restores replace their target and are strict and fail-closed.
+Polar Recorder exports a tack-folded routing POL, tack-aware CSV, a full JSON backup, and a user-preset JSON backup. POL
+targets NavimetriX and compatible routing applications; CSV remains the inspection, spreadsheet, custom-grid, and
+port/starboard format. The JSON backups round-trip through the Settings tab and restore strictly by replacement.
 
 ## Key Details
 
@@ -27,6 +27,43 @@ trimmed, case-sensitive, 1-30 characters, and may contain letters, digits, space
 `DefaultStarboard180`, `DefaultPort180`, `Default360`, and `windy` are reserved case-insensitively, as is the pre-rename
 `Default180` (it still resolves to the starboard half). TWA values must be integers 0-359; values above 180 deg capture
 port-side data. TWS values must be integers 1 through the active `max_tws`. Values are sorted on save.
+
+### Routing POL
+
+`GET /api/export/pol` returns `{pol}` containing a conventional absolute-TWA routing table. The Export tab downloads it
+as `polarrecorder-routing.pol`. Its fixed grid is:
+
+- TWA rows: `[30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]`.
+- TWS columns: `[4, 6, 8, 10, 12, 14, 16, 20, 25]` knots.
+
+The table starts with the common `TWA\TWS` label used by Polar Recorder CSV and published routing-format examples,
+places TWS across columns and TWA down rows, separates every field with a tab, formats STW in knots to one decimal, and
+uses CRLF line endings. The browser writes UTF-8 text without a BOM. No row exceeds 180 deg. The grid reuses the
+practical Windy sailing angles but deliberately omits its artificial 0 deg origin row: NavimetriX does not document a
+requirement for 0 deg, published Adrena examples begin at a sailing angle, and SailGrib describes 0 deg as recommended
+rather than mandatory.
+
+POL folding is export-only; stored learned data remains true 0-359 deg and tack-aware. For each source bin, POL computes
+`min(twa, 360 - twa)`, assigns that absolute angle and its TWS to the target cell, merges the underlying port and
+starboard STW histograms and sample counts, then applies the percentile and sample floor to the merged population. It
+never averages separately calculated tack speeds. The optional `percentile=1..99` override and
+`high_confidence=yes|true|1` have the same meanings as CSV.
+
+NavimetriX's public documentation specifies tab-separated `.pol` and identifies it as the format used by SailGrib,
+Adrena, and other navigation applications, but does not specify blank-cell acceptance, arbitrary-grid limits, encoding,
+newline style, exact first-cell spelling, or a mandatory 0 deg row. Polar Recorder therefore does not fabricate,
+interpolate, or extrapolate missing performance. All 108 fixed-grid cells must meet the selected sample floor; otherwise
+export fails with the number of insufficient cells. This is intentionally conservative until NavimetriX documents
+incomplete matrices.
+
+Format references:
+
+- [NavimetriX FAQ: polar import and CSV-to-POL conversion](https://navimetrix.com/en/faq/)
+- [Adrena: creating a POL table](https://www.adrena-software.com/en/2-how-can-i-create-a-pol-file-from-data-in-table/)
+- [SailGrib WR guide](https://www.sailgrib.com/wp-content/uploads/2020/06/sailgrib_wr_help_faq_tips_fr_20200624-compressed.pdf)
+- [qtVlm documentation: CSV and tab-separated POL formats](https://download.meltemus.com/qtvlm/qtVlm_documentation_en.pdf)
+
+### Tack-aware CSV
 
 CSV export supports two modes:
 
