@@ -13,11 +13,11 @@ imply priority.
 
 ### Add an enhanced Input key computation
 
-Currently we use TWA, TWS and STW for the Polarrecorder. But in most cases TWA and TWS is calculated based on STW, AWA and
-AWS. But that is not the whole truth. Actually you have to also include CTW to include Drift in the Polar. CTW can be
-calculated with COG and HDT. If all those values are available: STW, AWA, AWS, COG and HDT, it is recommended to make a own
-TWA TWS calculation. We need to add a seperate section for that in the advanced settings to set the keys and activate the new
-calculation with an including popup to reset the already gathered data.
+Currently we use TWA, TWS and STW for the Polarrecorder. But in most cases TWA and TWS is calculated based on STW, AWA
+and AWS. But that is not the whole truth. Actually you have to also include CTW to include Drift in the Polar. CTW can
+be calculated with COG and HDT. If all those values are available: STW, AWA, AWS, COG and HDT, it is recommended to make
+a own TWA TWS calculation. We need to add a seperate section for that in the advanced settings to set the keys and
+activate the new calculation with an including popup to reset the already gathered data.
 
 ### Investigation — isolated slow accepted samples
 
