@@ -2,7 +2,8 @@
 
 Documentation: documentation/architecture/data-pipeline.md
 Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample,
-polarrecorder.validation.pipeline, polarrecorder.validation.rules_stability
+polarrecorder.units, polarrecorder.validation.pipeline,
+polarrecorder.validation.rules_stability
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from polarrecorder.enhanced_input import classify_timestamp, coerce_finite_timestamp
 from polarrecorder.sample import is_finite_core_value
+from polarrecorder.units import is_finite_meters_per_second_input
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -38,16 +40,21 @@ class CurrentValues(NamedTuple):
 def data_status(read_result: ReadResult, stale_threshold: float) -> str:
     """Classify whether core inputs are complete, finite, timestamped, and fresh."""
     values = (read_result.twa_raw, read_result.tws_raw, read_result.stw_raw)
+    value_checks = (
+        is_finite_core_value,
+        is_finite_meters_per_second_input,
+        is_finite_meters_per_second_input,
+    )
     timestamps = (
         read_result.twa_timestamp,
         read_result.tws_timestamp,
         read_result.stw_timestamp,
     )
     usable = tuple(
-        is_finite_core_value(value)
+        value_check(value)
         and classify_timestamp(timestamp, read_result.timestamp_monotonic, stale_threshold)[0]
         == "usable"
-        for value, timestamp in zip(values, timestamps)
+        for value, timestamp, value_check in zip(values, timestamps, value_checks)
     )
     if all(usable):
         return "receiving"

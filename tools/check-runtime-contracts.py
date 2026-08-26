@@ -3,10 +3,11 @@
 
 The static ``nan-sentinel`` rule in check-py-contracts.py only catches *literal*
 ``float("nan")`` / ``math.nan``. A non-finite value produced at runtime (a
-division, a percentile over an empty band, a projection edge case) is invisible
-to AST scanning. This checker populates a real model, formats the polar and
-CSV/Windy boundary responses, and fails if any
-number is NaN/Infinity or any export text carries a ``nan``/``inf`` sentinel.
+division, unit-conversion overflow, percentile over an empty band, or projection
+edge case) is invisible to AST scanning. This checker exercises hostile core
+normalization and formats status, polar, and CSV/Windy boundary responses. It
+fails if any number is NaN/Infinity or export text carries a ``nan``/``inf``
+sentinel.
 
 Run from the repo root. Exit 0 when clean, 1 when a non-finite value leaks.
 """
@@ -19,8 +20,11 @@ import sys
 from typing import Any
 
 from polarrecorder import api_handlers, export
+from polarrecorder.config import default_config
 from polarrecorder.polar_model import PolarModel
-from polarrecorder.sample import Freshness, Sample
+from polarrecorder.sample import Freshness, ReadResult, Sample
+from polarrecorder.validation import pipeline
+from polarrecorder.validation.state import ValidationState
 
 SAMPLE_COUNT = 4000
 KNOTS_PER_METER_PER_SECOND = 1.9438444924406048
@@ -45,6 +49,12 @@ def main() -> int:
     name = export.DEFAULT_STARBOARD180_NAME
 
     failures: list[str] = []
+    status = status_response(sample_for(0))
+    failures.extend(
+        f"format_status{path}: non-finite value {value!r}"
+        for path, value in nonfinite_paths(status)
+    )
+    failures.extend(hostile_core_normalization_failures())
     for percentile in (50, 65, 90):
         polar = api_handlers.format_polar(snapshot, twa_grid, tws_grid, percentile, 1, name)
         failures.extend(
@@ -69,7 +79,8 @@ def main() -> int:
         sys.stderr.write(f"[runtime-contracts] {len(failures)} violation(s) found.\n")
         return 1
     sys.stdout.write(
-        f"[runtime-contracts] polar and export boundaries finite across {SAMPLE_COUNT} samples.\n"
+        f"[runtime-contracts] status, polar, and export boundaries finite across "
+        f"{SAMPLE_COUNT} samples.\n"
     )
     sys.stdout.write("Runtime contract check passed.\n")
     return 0
@@ -120,6 +131,78 @@ def _csv_text(export_response: dict[str, object]) -> str:
         msg = f"format_export csv is not a string: {type(csv).__name__}"
         raise TypeError(msg)
     return csv
+
+
+def hostile_core_normalization_failures() -> list[str]:
+    """Return failures when finite raw core speeds escape as non-finite knots."""
+    failures: list[str] = []
+    for role in ("tws", "stw"):
+        read_result = hostile_core_read(role)
+        result, sample = pipeline.run(read_result, ValidationState(), default_config())
+        expected_reason = f"reject_non_finite_{role}"
+        if sample is not None:
+            failures.extend(
+                f"hostile_{role}_normalization{path}: non-finite value {value!r}"
+                for path, value in nonfinite_paths(status_response(sample))
+            )
+            failures.append(f"hostile_{role}_normalization: built a Sample")
+        if result.reason_codes != (expected_reason,):
+            failures.append(
+                f"hostile_{role}_normalization: expected {expected_reason}, "
+                f"got {result.reason_codes!r}"
+            )
+    return failures
+
+
+def hostile_core_read(role: str) -> ReadResult:
+    """Build one finite raw read whose selected speed overflows in knots."""
+    return ReadResult(
+        timestamp_monotonic=10.0,
+        timestamp_wall=1000.0,
+        twa_raw=90.0,
+        tws_raw=1e308 if role == "tws" else 6.0,
+        stw_raw=1e308 if role == "stw" else 3.0,
+        twa_timestamp=10.0,
+        tws_timestamp=10.0,
+        stw_timestamp=10.0,
+    )
+
+
+def status_response(sample: Sample) -> dict[str, object]:
+    """Format a representative status response from a finite sample."""
+    current_values = api_handlers.CurrentValuesSnapshot(
+        twa_deg=sample.twa_deg_raw,
+        tws_kt=sample.tws_kt,
+        stw_kt=sample.stw_kt,
+        twa_timestamp=sample.timestamp_monotonic,
+        tws_timestamp=sample.timestamp_monotonic,
+        stw_timestamp=sample.timestamp_monotonic,
+    )
+    return api_handlers.format_status(
+        api_handlers.StatusSnapshot(
+            recording=True,
+            data_status="receiving",
+            warming_up=False,
+            uptime_seconds=sample.timestamp_monotonic,
+            current_values=current_values,
+            current_decision={"state": "accepted", "reason_codes": []},
+            counters={
+                "total_seen": 1,
+                "total_accepted": 1,
+                "total_rejected": 0,
+                "total_quarantined": 0,
+            },
+            top_rejections=[],
+            top_predicates=[],
+            last_flush_wall=sample.timestamp_wall,
+            file_size_bytes=0,
+            bins_with_data=1,
+            bins_total=1,
+            generation=1,
+            now_monotonic=sample.timestamp_monotonic,
+            stale_threshold=3.0,
+        )
+    )
 
 
 def sample_for(index: int) -> Any:

@@ -50,7 +50,8 @@ anchored rejection. That limitation excludes data rather than poisoning the lear
 R21 (true-wind cross-check) has real teeth in the AvNav-core NMEA model: true wind is parsed from instrument MWV
 (ref=T)/MWD sentences independently of `gps.windAngle`/`windSpeed` + STW, so the recompute catches a miscalibrated wind
 sensor or a divergent boat-speed feed. It degrades to a near-tautology only in a SignalK/plugin setup where true wind is
-derived from the same AWA/AWS/STW it is checked against.
+derived from the same AWA/AWS/STW it is checked against. The recomputed magnitude uses the apparent-wind vector's
+Cartesian components with `math.hypot()`, avoiding law-of-cosines cancellation when AWS and STW nearly match head-on.
 
 `polarrecorder.commit.commit_sample()` is the single dispatch point from a `PipelineResult` to the model update
 contract. Accepted samples update histograms, quality-gate rejections and quarantines update per-bin diagnostics, and
@@ -58,9 +59,10 @@ candidacy-gate or warming-up rejections touch no bin. The scenario tests drive r
 `ValidationState.observe`, and `commit_sample`, matching the production normal path.
 
 R15 includes the current sample in its stability range, so the first bad spike is rejected without first entering the
-state window. A semantically definitive engine-state source is still the only reliable automatic distinction between
-motoring and ordinary good sailing; RPM-only protection has an ambiguous idle band, so users should pause recording
-while motoring.
+state window. Density is derived from the actual anchor-to-current span, which bounds sustained scheduler slippage at
+10% across the supported interval/window space while the independent maximum-gap rule still rejects discontinuities. A
+semantically definitive engine-state source is still the only reliable automatic distinction between motoring and
+ordinary good sailing; RPM-only protection has an ambiguous idle band, so users should pause recording while motoring.
 
 The executable proof lives in `tests/test_poisoning_scenarios.py` plus the acquisition-boundary cases in
 `tests/test_reader.py`. It covers valid learning, slow-sample resistance, anchored bursts, far-future timestamp

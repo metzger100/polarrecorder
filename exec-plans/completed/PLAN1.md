@@ -2,7 +2,23 @@
 
 ## Status
 
-Implemented through all six phases and eight implementation-review remediation passes.
+Implemented through all six phases and nine implementation-review remediation passes.
+
+### Amendment — 2026-08-26: ninth implementation-review remediation
+
+A fresh archive review found that finite raw TWS/STW could overflow during knot normalization and escape through
+Status, R15's nominal-window count could admit more than 10% sustained slippage or never fill one legal configuration,
+and R21's law-of-cosines magnitude could suffer a tiny negative radicand through floating-point cancellation.
+Completion now additionally requires finite post-normalization core values before `Sample` construction, Status-aware
+runtime-contract coverage with hostile finite inputs, timestamp-span-derived R15 density across the supported
+interval/window grid with an explicit beyond-tolerance negative case, a viable equal-window/equal-interval warm-up, and
+`math.hypot()` vector magnitude for R21 with the reported cancellation counterexample locked down.
+
+**Ninth-review exit evidence:** `npm run check:all` exited successfully with 463 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.33% aggregate Python coverage, and 92.77% viewer/plugin line coverage. The focused core
+normalization, R15, R21, diagnostics, and runtime-contract suite passed 81 tests. The smell scan checked 333 files with
+zero findings; strict typing, packaging, documentation, duplication, complexity, scaling, file-size, Status-aware
+runtime-contract, and coverage-inventory checks all passed.
 
 ### Amendment — 2026-08-26: eighth implementation-review remediation
 

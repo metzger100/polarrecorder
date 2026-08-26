@@ -32,6 +32,26 @@ def test_runner_returns_none_sample_for_r1_and_r2_rejections() -> None:
     assert missing_sample is None
 
 
+def test_runner_rejects_finite_core_speeds_that_overflow_during_normalization() -> None:
+    tws_read = make_read_result(tws_kt=None)
+    tws_result, tws_sample = run(
+        replace(tws_read, tws_raw=1e308, tws_timestamp=99.5),
+        ValidationState(),
+        default_config(),
+    )
+    stw_read = make_read_result(stw_kt=None)
+    stw_result, stw_sample = run(
+        replace(stw_read, stw_raw=1e308, stw_timestamp=99.5),
+        ValidationState(),
+        default_config(),
+    )
+
+    assert tws_result.reason_codes == ("reject_non_finite_tws",)
+    assert tws_sample is None
+    assert stw_result.reason_codes == ("reject_non_finite_stw",)
+    assert stw_sample is None
+
+
 def test_non_finite_config_text_cannot_disable_r3_r10_r15_or_r20() -> None:
     config = parse_config_values(
         {

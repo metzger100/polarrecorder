@@ -71,6 +71,11 @@ def test_build_sample_returns_none_for_non_finite_core_values() -> None:
     assert build_sample(make_read_result(stw_raw=-math.inf)) is None
 
 
+def test_build_sample_returns_none_when_finite_core_speed_overflows_in_knots() -> None:
+    assert build_sample(make_read_result(tws_raw=1e308)) is None
+    assert build_sample(make_read_result(stw_raw=-1e308)) is None
+
+
 def test_build_sample_returns_none_for_nonnumeric_boolean_and_huge_integer_values() -> None:
     assert build_sample(make_read_result(twa_raw="bad")) is None
     assert build_sample(make_read_result(tws_raw=True)) is None
