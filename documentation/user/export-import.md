@@ -47,7 +47,9 @@ POL folding is export-only; stored learned data remains true 0-359 deg and tack-
 `min(twa, 360 - twa)`, assigns that absolute angle and its TWS to the target cell, merges the underlying port and
 starboard STW histograms and sample counts, then applies the percentile and sample floor to the merged population. It
 never averages separately calculated tack speeds. The optional `percentile=1..99` override and
-`high_confidence=yes|true|1` have the same meanings as CSV.
+`high_confidence=yes|true|1` have the same meanings as CSV, but the Export tab keeps them per format: the POL card's
+percentile and confidence settings apply to the POL download only, and the CSV card's apply to the CSV preview and
+download only.
 
 NavimetriX's public documentation specifies tab-separated `.pol` and identifies it as the format used by SailGrib,
 Adrena, and other navigation applications, but does not specify blank-cell acceptance, arbitrary-grid limits, encoding,

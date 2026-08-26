@@ -41,20 +41,28 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `viewer/polar-chart-geometry.js` adds `PolarChartGeometry` (`SvgNode`, `AddGrid`, `AddCurve`, `BandColor`), the SVG
   grid/curve drawing math that `polar-chart.js` calls into so its own state/orchestration logic stays under the
   file-size budget. `viewer/export-fields.js` adds `ExportFields` (`Section`, `Header`, `Field`, `ConfidenceField`,
-  `PercentileHelp`), the stateless Export-tab field builders `export-ui.js` composes so its preset/CSV orchestration
-  logic stays under the file-size budget. `viewer/export-presets.js` adds `ExportPresets`, owning the selected-preset
-  name and the TWA/TWS `GridEditor` instances (`Configure`, `All`, `Sorted`, `Selected`, `SetSelected`,
-  `SelectedPreset`, `Editors`, `LoadSelected`, `IsValid`) so `export-ui.js` stays under its file-size budget. The Export
-  tab presents a primary fixed-grid **Download Routing POL** card before the CSV configurator. POL explains that it
-  folds both tacks for NavimetriX-compatible routing, while CSV preview, grids, presets, and tack-aware behavior remain
-  separate and unchanged; POL API failures are rendered in the same visible message area as CSV failures.
-  `viewer/advanced-settings.js` adds `SourceSettings`, the Settings tab's first card, and `AdvancedSettings`, its fifth
-  card. `viewer/enhanced-settings.js` adds `EnhancedSettings`, the Settings tab's fourth card, mounted by
-  `settings-ui.js` so the transport-heavy markup stays out of the Settings budget. `viewer/presets.js` adds `Presets`,
-  owning the built-in fallback list and display labels so `viewer.js` stays within its line budget.
-  `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload helper
-  (`UploadBackup(kind, text, onSummary, onError)`) used by both Settings restore cards, keeping the transport in one
-  place and `settings-ui.js` under its budget.
+  `PercentileHelp`, `QualityControls`, `MessageNode`, `SetMessage`), the Export-tab field builders and per-format
+  message channel `export-ui.js` composes so its preset/CSV orchestration logic stays under the file-size budget.
+  `QualityControls(format, defaultPercentile, minSamples)` builds one percentile-override field, its help text, and one
+  high-confidence switch bound to the passed format state, and `MessageNode(format)` / `SetMessage(format, text, kind)`
+  render and update that format's own message line by its `messageId`, so each export card gets its own controls and its
+  own message area from one builder set instead of a copied block. `viewer/export-presets.js` adds `ExportPresets`,
+  owning the selected-preset name and the TWA/TWS `GridEditor` instances (`Configure`, `All`, `Sorted`, `Selected`,
+  `SetSelected`, `SelectedPreset`, `Editors`, `LoadSelected`, `IsValid`) so `export-ui.js` stays under its file-size
+  budget. The Export tab holds two strictly separated format cards: **Routing POL (.pol)** first, then **Tack-aware CSV
+  (.csv)**. Each card is self-contained and carries its own percentile override, high-confidence switch, action row, and
+  message line (`#export-pol-message`, `#export-csv-message`); `ExportUI` keeps a separate `pol` and `csv` format state,
+  so a setting or a failure in one card never applies to or appears in the other. Neither card's copy refers to the
+  other: POL states its fixed 30-180 deg tack-merged grid, CSV states its user-chosen tack-separate grid, and both say
+  their settings apply to that download only. Presets, the TWA/TWS grid editors, the preview textarea, and the CSV grid
+  validity gate (`.preview-button`, `.download-button`, `.save-button`) belong to the CSV card alone; the POL button
+  (`.pol-download-button`) is never disabled by CSV grid state. `viewer/advanced-settings.js` adds `SourceSettings`, the
+  Settings tab's first card, and `AdvancedSettings`, its fifth card. `viewer/enhanced-settings.js` adds
+  `EnhancedSettings`, the Settings tab's fourth card, mounted by `settings-ui.js` so the transport-heavy markup stays
+  out of the Settings budget. `viewer/presets.js` adds `Presets`, owning the built-in fallback list and display labels
+  so `viewer.js` stays within its line budget. `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload
+  helper (`UploadBackup(kind, text, onSummary, onError)`) used by both Settings restore cards, keeping the transport in
+  one place and `settings-ui.js` under its budget.
 - The viewer defaults to the `DefaultStarboard180` preset (label "Default (Starboard 180°)"). The preset selector also
   offers `DefaultPort180` ("Default (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"), and
   the legacy `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all four when the `presets` fetch fails.

@@ -13,24 +13,43 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @typedef {{refreshPresets?: () => void}} ExportHooks */
   /**
    * @typedef {{
-   *   host: HTMLElement | null,
+   *   messageId: string,
    *   percentile: string,
    *   highConfidence: boolean,
    *   message: string,
-   *   messageKind: "info" | "error",
+   *   messageKind: "info" | "error"
+   * }} FormatState
+   */
+  /**
+   * @typedef {{
+   *   host: HTMLElement | null,
+   *   pol: FormatState,
+   *   csv: FormatState,
    *   saveOpen: boolean,
    *   previewActive: boolean,
    *   hooks: ExportHooks
    * }} ExportState
    */
 
+  /**
+   * @param {string} messageId
+   * @returns {FormatState}
+   */
+  function formatState(messageId) {
+    return {
+      messageId: messageId,
+      percentile: "",
+      highConfidence: false,
+      message: "",
+      messageKind: "info"
+    };
+  }
+
   /** @type {ExportState} */
   const state = {
     host: null,
-    percentile: "",
-    highConfidence: false,
-    message: "",
-    messageKind: "info",
+    pol: formatState("export-pol-message"),
+    csv: formatState("export-csv-message"),
     saveOpen: false,
     previewActive: false,
     hooks: {}
@@ -62,45 +81,49 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function routingCard() {
-    const card = Polarrecorder.ExportFields.Section("Routing POL");
+    const card = Polarrecorder.ExportFields.Section("Routing POL (.pol)");
     card.appendChild(
       Polarrecorder.Dom.Node(
         "p",
         "helper",
-        "For NavimetriX and compatible routing apps. POL folds port and starboard onto a fixed 30-180° grid; the CSV preset and grid below remain tack-aware and do not apply. Percentile and confidence apply to both downloads."
+        "Tab-separated table for NavimetriX and other routing apps that read .pol. The grid is fixed at TWA " +
+          "30-180° and TWS 4-25 kn, and port and starboard observations are merged onto each absolute angle " +
+          "before the percentile is taken. The settings below apply to the POL download only."
       )
     );
-    const percentile = Polarrecorder.ExportFields.Field("Percentile override", "input");
-    percentile.control.type = "number";
-    percentile.control.min = "1";
-    percentile.control.max = "99";
-    percentile.control.inputMode = "numeric";
-    percentile.control.placeholder = "Default " + defaultPercentile();
-    percentile.control.value = state.percentile;
-    percentile.control.addEventListener("input", function () {
-      state.percentile = percentile.control.value;
-    });
-    card.appendChild(percentile.wrap);
-    card.appendChild(Polarrecorder.ExportFields.PercentileHelp());
+    appendQualityControls(card, state.pol);
     card.appendChild(
-      Polarrecorder.ExportFields.ConfidenceField(
-        state.highConfidence,
-        minSamples(),
-        /** @param {boolean} checked */
-        function (checked) {
-          state.highConfidence = checked;
-        }
-      )
+      Polarrecorder.Dom.ActionRow([
+        Polarrecorder.Dom.Button("Download Routing POL", downloadPol, "primary-action pol-download-button")
+      ])
     );
-    card.appendChild(
-      Polarrecorder.Dom.ActionRow([Polarrecorder.Dom.Button("Download Routing POL", downloadPol, "primary-action")])
-    );
+    card.appendChild(Polarrecorder.ExportFields.MessageNode(state.pol));
     return card;
+  }
+
+  /**
+   * @param {HTMLElement} card
+   * @param {FormatState} format
+   */
+  function appendQualityControls(card, format) {
+    const controls = Polarrecorder.ExportFields.QualityControls(format, defaultPercentile(), minSamples());
+    controls.forEach(function (/** @type {HTMLElement} */ control) {
+      card.appendChild(control);
+    });
   }
 
   /** @returns {HTMLElement} */
   function configCard() {
-    const card = Polarrecorder.ExportFields.Section("Tack-aware CSV");
+    const card = Polarrecorder.ExportFields.Section("Tack-aware CSV (.csv)");
+    card.appendChild(
+      Polarrecorder.Dom.Node(
+        "p",
+        "helper",
+        "Semicolon-separated table for spreadsheets, Windy, and tack-by-tack inspection. You pick the TWA/TWS grid, " +
+          "and port and starboard stay separate with no folding. The settings below apply to the CSV preview and " +
+          "download only."
+      )
+    );
     const preset = Polarrecorder.ExportFields.Field("Preset", "select");
     fillPresets(preset.control);
     preset.control.value = Polarrecorder.ExportPresets.Selected();
@@ -113,6 +136,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const editors = Polarrecorder.ExportPresets.Editors();
     card.appendChild(editors.twa.Element);
     card.appendChild(editors.tws.Element);
+    appendQualityControls(card, state.csv);
     card.appendChild(
       Polarrecorder.Dom.ActionRow([
         Polarrecorder.Dom.Button("Preview", previewCsv, "primary-action preview-button"),
@@ -122,7 +146,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       ])
     );
     if (state.saveOpen) card.appendChild(saveBox());
-    card.appendChild(messageNode());
+    card.appendChild(Polarrecorder.ExportFields.MessageNode(state.csv));
     const preview = document.createElement("textarea");
     preview.id = "csv-preview";
     preview.readOnly = true;
@@ -148,14 +172,17 @@ window.Polarrecorder = window.Polarrecorder || {};
     const params = new URLSearchParams();
     params.set("twa", editors.twa.Values().join(","));
     params.set("tws", editors.tws.Values().join(","));
-    addQualityParams(params);
+    addQualityParams(params, state.csv);
     return params;
   }
 
-  /** @param {URLSearchParams} params */
-  function addQualityParams(params) {
-    if (state.percentile) params.set("percentile", state.percentile);
-    if (state.highConfidence) params.set("high_confidence", "yes");
+  /**
+   * @param {URLSearchParams} params
+   * @param {FormatState} format
+   */
+  function addQualityParams(params, format) {
+    if (format.percentile) params.set("percentile", format.percentile);
+    if (format.highConfidence) params.set("high_confidence", "yes");
   }
 
   function previewCsv() {
@@ -164,10 +191,10 @@ window.Polarrecorder = window.Polarrecorder || {};
         state.previewActive = true;
         const preview = /** @type {HTMLTextAreaElement} */ (Polarrecorder.Dom.RequireById("csv-preview"));
         preview.value = previewRows(csv);
-        setMessage("Preview updated.", "info");
+        Polarrecorder.ExportFields.SetMessage(state.csv, "Preview updated.", "info");
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        Polarrecorder.ExportFields.SetMessage(state.csv, error.message, "error");
       });
   }
 
@@ -179,7 +206,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         preview.value = previewRows(csv);
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        Polarrecorder.ExportFields.SetMessage(state.csv, error.message, "error");
       });
   }
 
@@ -195,23 +222,23 @@ window.Polarrecorder = window.Polarrecorder || {};
     requestCsv()
       .then(function (csv) {
         Polarrecorder.Dom.Download("polarrecorder-custom.csv", csv, "text/csv");
-        setMessage("CSV downloaded.", "info");
+        Polarrecorder.ExportFields.SetMessage(state.csv, "CSV downloaded.", "info");
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        Polarrecorder.ExportFields.SetMessage(state.csv, error.message, "error");
       });
   }
 
   function downloadPol() {
     const params = new URLSearchParams();
-    addQualityParams(params);
+    addQualityParams(params, state.pol);
     fetchJson("export/pol?" + params.toString(), true)
       .then(function (data) {
         Polarrecorder.Dom.Download("polarrecorder-routing.pol", data.pol, "text/plain;charset=utf-8");
-        setMessage("Routing POL downloaded.", "info");
+        Polarrecorder.ExportFields.SetMessage(state.pol, "Routing POL downloaded.", "info");
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        Polarrecorder.ExportFields.SetMessage(state.pol, error.message, "error");
       });
   }
 
@@ -261,7 +288,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function savePreset(rawName) {
     const name = rawName.trim();
     if (!name) {
-      setMessage("Enter a preset name.", "error");
+      Polarrecorder.ExportFields.SetMessage(state.csv, "Enter a preset name.", "error");
       return;
     }
     const existing = Polarrecorder.ExportPresets.All().find(function (/** @type {Preset} */ preset) {
@@ -280,7 +307,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function deletePreset() {
     const preset = Polarrecorder.ExportPresets.SelectedPreset();
     if (preset.builtin) {
-      setMessage("Built-in presets cannot be deleted.", "error");
+      Polarrecorder.ExportFields.SetMessage(state.csv, "Built-in presets cannot be deleted.", "error");
       return;
     }
     if (!window.confirm("Delete preset '" + preset.name + "'?")) return;
@@ -301,11 +328,11 @@ window.Polarrecorder = window.Polarrecorder || {};
   function action(endpoint, success, done) {
     fetchJson(endpoint, true)
       .then(function () {
-        setMessage(success, "info");
+        Polarrecorder.ExportFields.SetMessage(state.csv, success, "info");
         if (done) done();
       })
       .catch(function (error) {
-        setMessage(error.message, "error");
+        Polarrecorder.ExportFields.SetMessage(state.csv, error.message, "error");
       });
   }
 
@@ -341,34 +368,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @returns {string} */
   function defaultPercentile() {
     return String(Polarrecorder["ConfigCache"].percentile);
-  }
-
-  /** @returns {HTMLParagraphElement} */
-  function messageNode() {
-    const node = document.createElement("p");
-    node.className = messageClass();
-    node.id = "export-message";
-    node.textContent = state.message;
-    return node;
-  }
-
-  /** @returns {string} */
-  function messageClass() {
-    return state.message && state.messageKind === "error" ? "error-text" : "helper";
-  }
-
-  /**
-   * @param {string} text
-   * @param {"info" | "error"} [kind]
-   */
-  function setMessage(text, kind) {
-    state.message = text;
-    state.messageKind = kind || "info";
-    const node = document.getElementById("export-message");
-    if (node) {
-      node.className = messageClass();
-      node.textContent = text;
-    }
   }
 
   Polarrecorder.ExportUI = {

@@ -78,6 +78,44 @@ window.Polarrecorder = window.Polarrecorder || {};
     return label;
   }
 
+  /**
+   * @typedef {{
+   *   messageId: string,
+   *   percentile: string,
+   *   highConfidence: boolean,
+   *   message: string,
+   *   messageKind: "info" | "error"
+   * }} FormatState
+   */
+
+  /**
+   * @param {FormatState} target
+   * @param {string} defaultPercentile
+   * @param {string} minSamplesText
+   * @returns {HTMLElement[]}
+   */
+  function qualityControls(target, defaultPercentile, minSamplesText) {
+    const percentile = field("Percentile override", "input");
+    percentile.control.type = "number";
+    percentile.control.min = "1";
+    percentile.control.max = "99";
+    percentile.control.inputMode = "numeric";
+    percentile.control.placeholder = "Default " + defaultPercentile;
+    percentile.control.value = target.percentile;
+    percentile.control.addEventListener("input", function () {
+      target.percentile = percentile.control.value;
+    });
+    const confidence = confidenceField(
+      target.highConfidence,
+      minSamplesText,
+      /** @param {boolean} checked */
+      function (checked) {
+        target.highConfidence = checked;
+      }
+    );
+    return [percentile.wrap, percentileHelp(), confidence];
+  }
+
   /** @returns {HTMLParagraphElement} */
   function percentileHelp() {
     const node = document.createElement("p");
@@ -90,11 +128,49 @@ window.Polarrecorder = window.Polarrecorder || {};
     return node;
   }
 
+  /**
+   * @param {FormatState} format
+   * @returns {HTMLParagraphElement}
+   */
+  function messageNode(format) {
+    const node = document.createElement("p");
+    node.className = messageClass(format);
+    node.id = format.messageId;
+    node.textContent = format.message;
+    return node;
+  }
+
+  /**
+   * @param {FormatState} format
+   * @returns {string}
+   */
+  function messageClass(format) {
+    return format.message && format.messageKind === "error" ? "error-text" : "helper";
+  }
+
+  /**
+   * @param {FormatState} format
+   * @param {string} text
+   * @param {"info" | "error"} kind
+   */
+  function setMessage(format, text, kind) {
+    format.message = text;
+    format.messageKind = kind;
+    const node = document.getElementById(format.messageId);
+    if (node) {
+      node.className = messageClass(format);
+      node.textContent = text;
+    }
+  }
+
   window.Polarrecorder.ExportFields = {
     Section: section,
     Header: header,
     Field: field,
     ConfidenceField: confidenceField,
-    PercentileHelp: percentileHelp
+    PercentileHelp: percentileHelp,
+    QualityControls: qualityControls,
+    MessageNode: messageNode,
+    SetMessage: setMessage
   };
 })();
