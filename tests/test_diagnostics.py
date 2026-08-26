@@ -52,7 +52,7 @@ def test_formatter_includes_replay_values_enhanced_roles_and_config() -> None:
         "sog_kt": {
             "state": "usable",
             "raw": 2.0,
-            "normalized": 3.88768,
+            "normalized": 2.0,
             "timestamp": 99.5,
             "age_seconds": 0.5,
         },

@@ -53,15 +53,16 @@ Optional signal hooks read a bounded set of configured store keys alongside the 
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
 is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
 through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
-contract parses finite values and finite numeric timestamps, applies the bounded future-skew policy and role-specific
-physical bounds, and is shared by the live enhanced-status endpoint. RPM, engine-state numeric values, depth, SOG,
-current-drift magnitude, and AWS reject negative values; AWA and heel remain signed. Boolean values are accepted only
-for the `engine_signal` role. Numeric strings are accepted as signal values but never as timestamps.
-`ReadResult.enhanced_inputs` retains every acquisition state for diagnostics, while `ReadResult.enhanced_raw` contains
-only usable values in store units with timestamps. `build_sample` converts each usable role to its canonical unit once
-(`units.py`) and stores it in `Sample.enhanced`; absent or stale roles are omitted, and `Sample.enhanced` is `None` when
-nothing was read. Enhanced rules read only from `Sample.enhanced` (and `Config`), return `RuleResult`, and keep the same
-no-AvNav, no-I/O, no-threading purity as the core rules. The role/unit table lives in
+contract parses finite values and finite numeric timestamps, converts speed roles to knots, rejects conversion overflow,
+applies the bounded future-skew policy and role-specific lower and upper physical bounds, and is shared by the live
+enhanced-status endpoint. RPM, engine-state numeric values, depth, SOG, current-drift magnitude, and AWS reject negative
+values; AWA and heel remain signed. Boolean values are accepted only for the `engine_signal` role. Numeric strings are
+accepted as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains every acquisition state for
+diagnostics, while `ReadResult.enhanced_raw` contains only usable canonical values with timestamps. `build_sample`
+copies those already-normalized values into `Sample.enhanced`; absent, stale, and invalid roles are omitted, while
+invalid role identity is retained separately so corrupt evidence cannot masquerade as an unavailable optional source.
+Enhanced rules read only from the built `Sample` (and `Config`), return `RuleResult`, and keep the same no-AvNav,
+no-I/O, no-threading purity as the core rules. The role/unit table lives in
 [AvNav keys and units](../avnav/keys-and-units.md).
 
 Implemented enhanced rules and candidacy:
@@ -84,8 +85,9 @@ Implemented enhanced rules and candidacy:
   `enh_turn_min_roc`) as a wind shift: it passes and sets no cooldown. It requires heading or COG in `enhanced`; without
   either, R11/R14 are unchanged.
 
-Each enhanced rule passes when its signal is absent, so a boat that does not publish a given key keeps the exact
-pre-enhanced behavior for that rule.
+Each enhanced rule passes when its signal is genuinely absent, so a boat that does not publish a given key keeps the
+pre-enhanced behavior for that rule. R20 is the deliberate invalid-data exception: an invalid configured current-drift
+source cannot explain away a SOG/STW mismatch, while a missing or stale drift source remains fail-open.
 
 ## Related
 

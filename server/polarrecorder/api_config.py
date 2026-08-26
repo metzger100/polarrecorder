@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder import api_handlers
-from polarrecorder.config import Config, parse_config_values
+from polarrecorder.config import Config, first_config_relation_error, parse_config_values
 from polarrecorder.params import CONFIG_PARAMETERS
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
@@ -201,6 +201,11 @@ ADVANCED_PARAM_NAMES = frozenset(field.name for group in ADVANCED_GROUPS for fie
 SOURCE_PARAM_NAMES = frozenset(CORE_KEY_FIELDS)
 SAVABLE_PARAM_NAMES = ADVANCED_PARAM_NAMES | SOURCE_PARAM_NAMES
 _PARAM_SPECS = {str(spec["name"]): spec for spec in CONFIG_PARAMETERS}
+TURN_SOURCE_KEY_FIELDS = ("enh_heading_key", "enh_cog_key")
+
+
+class ConfigUpdateError(ValueError):
+    """Expected configuration transaction rejection."""
 
 
 def advanced_settings(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
@@ -213,15 +218,20 @@ def advanced_settings(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
 def advanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     """Validate and persist safe viewer settings before installing them."""
     unknown = sorted(name for name in args if name not in SAVABLE_PARAM_NAMES)
+    validation_error = ""
     if unknown:
-        return api_handlers.error(f"Unknown advanced parameter(s): {', '.join(unknown)}")
+        validation_error = f"Unknown advanced parameter(s): {', '.join(unknown)}"
     updates = {name: value for name, value in args.items() if name in SAVABLE_PARAM_NAMES}
-    if not updates:
-        return api_handlers.error("No advanced parameters supplied")
-    validation_error = first_validation_error(updates)
+    if not validation_error and not updates:
+        validation_error = "No advanced parameters supplied"
+    if not validation_error:
+        validation_error = first_validation_error(updates)
     if validation_error:
         return api_handlers.error(validation_error)
-    new_config = apply_config_updates(plugin, updates)
+    try:
+        new_config = apply_config_updates(plugin, updates)
+    except ConfigUpdateError as exc:
+        return api_handlers.error(str(exc))
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.ok({"config": saved})
 
@@ -230,20 +240,56 @@ def apply_config_updates(plugin: Any, updates: dict[str, str]) -> Config:
     """Persist validated updates, then merge them into the live config.
 
     Persistence happens before runtime mutation so a host write failure leaves
-    the active configuration unchanged. The second parse preserves any
-    concurrent update installed while the external host write was in progress.
+    the active configuration unchanged. Only one host save may be in flight.
     """
     with plugin._lock:
+        if plugin._config_save_active:
+            message = "Configuration save already in progress"
+            raise ConfigUpdateError(message)
         previous_config = plugin.config
         new_config = parse_config_values(updates, plugin._logger, previous_config)
-    plugin._save_config_values(dict(updates))
-    with plugin._lock:
-        if plugin.config is previous_config:
-            installed_config = new_config
-        else:
-            installed_config = parse_config_values(updates, plugin._logger, plugin.config)
-        plugin.config = installed_config
-        return installed_config
+        relation_error = first_config_relation_error(new_config)
+        if relation_error:
+            raise ConfigUpdateError(relation_error)
+        plugin._config_save_active = True
+    persisted = False
+    try:
+        plugin._save_config_values(dict(updates))
+        persisted = True
+    finally:
+        with plugin._lock:
+            if persisted:
+                plugin.config = new_config
+                reset_validation_state_for_source_changes(
+                    plugin._state, previous_config, new_config
+                )
+            plugin._config_save_active = False
+    return new_config
+
+
+def reset_validation_state_for_source_changes(
+    state: Any, previous: Config, current: Config
+) -> None:
+    """Reset retained observations when their configured source identity changes."""
+    if any(getattr(previous, field) != getattr(current, field) for field in CORE_KEY_FIELDS):
+        state.reset_source_history()
+        return
+    if any(getattr(previous, field) != getattr(current, field) for field in TURN_SOURCE_KEY_FIELDS):
+        state.reset_transition()
+
+
+def apply_host_config_change(
+    previous: Config, state: Any, changed: Mapping[str, str], logger: Any
+) -> Config:
+    """Parse one host callback update and reset source-dependent state."""
+    candidate = parse_config_values(changed, logger, previous)
+    relation_error = first_config_relation_error(candidate)
+    if relation_error:
+        message = f"configuration callback rejected: {relation_error}"
+        logger.debug(message)
+        return previous
+    reset_validation_state_for_source_changes(state, previous, candidate)
+    return candidate
 
 
 def _format_group(group: AdvancedGroup, config: Any) -> dict[str, object]:

@@ -14,7 +14,7 @@ from polarrecorder import api_config, api_handlers, enhanced_status
 from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS
 from polarrecorder.params import CONFIG_PARAMETERS
-from polarrecorder.sample import ENHANCED_SIGNAL_BY_ROLE
+from polarrecorder.sample import ENHANCED_SIGNAL_BY_ROLE, EnhancedSignalSpec
 from polarrecorder.source_params import CORE_KEY_FIELDS
 
 ENHANCED_PARAM_NAMES = frozenset(
@@ -51,18 +51,23 @@ def enhanced_status_view(plugin: Any, _args: dict[str, str]) -> dict[str, object
 def enhanced_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     """Validate and persist enhanced settings before installing them."""
     unknown = sorted(name for name in args if name not in ENHANCED_PARAM_NAMES)
+    validation_error = ""
     if unknown:
-        return api_handlers.error(f"Unknown enhanced parameter(s): {', '.join(unknown)}")
+        validation_error = f"Unknown enhanced parameter(s): {', '.join(unknown)}"
     updates = {name: value for name, value in args.items() if name in ENHANCED_PARAM_NAMES}
-    if not updates:
-        return api_handlers.error("No enhanced parameters supplied")
-    validation_error = api_config.first_validation_error(
-        updates,
-        allow_empty_strings=ENHANCED_STRING_PARAM_NAMES,
-    )
+    if not validation_error and not updates:
+        validation_error = "No enhanced parameters supplied"
+    if not validation_error:
+        validation_error = api_config.first_validation_error(
+            updates,
+            allow_empty_strings=ENHANCED_STRING_PARAM_NAMES,
+        )
     if validation_error:
         return api_handlers.error(validation_error)
-    new_config = api_config.apply_config_updates(plugin, updates)
+    try:
+        new_config = api_config.apply_config_updates(plugin, updates)
+    except api_config.ConfigUpdateError as exc:
+        return api_handlers.error(str(exc))
     saved = {name: getattr(new_config, name) for name in sorted(updates)}
     return api_handlers.format_enhanced_config(saved)
 
@@ -105,8 +110,7 @@ def _probe_keys(
                     key,
                     now,
                     stale_threshold,
-                    accepts_bool=signal.accepts_bool,
-                    minimum_value=signal.minimum_value,
+                    signal,
                 )
     return probes
 
@@ -116,15 +120,12 @@ def _probe(
     key: str,
     now: float,
     stale_threshold: float,
-    *,
-    accepts_bool: bool,
-    minimum_value: float | None,
+    signal: EnhancedSignalSpec,
 ) -> EnhancedInput:
     entry = plugin.get_single_value(key, include_info=True)
     return assess_enhanced_input(
         entry,
         now,
         stale_threshold,
-        accepts_bool=accepts_bool,
-        minimum_value=minimum_value,
+        policy=signal,
     )

@@ -48,14 +48,17 @@ def reject_sog_stw_mismatch(sample: Sample, config: Config) -> RuleResult:
     """Reject (R20) when SOG and STW disagree beyond explainable current drift."""
     sog_kt = enhanced_value(sample, "sog_kt")
     current_drift_kt = enhanced_value(sample, "current_drift_kt")
-    if sog_kt is None or current_drift_kt is None:
+    if sog_kt is None:
+        return _pass()
+    current_is_invalid = "current_drift_kt" in sample.invalid_enhanced_roles
+    if current_drift_kt is None and not current_is_invalid:
         return _pass()
     faster = max(sog_kt, sample.stw_kt)
     slower = min(sog_kt, sample.stw_kt)
     gap = faster - slower
     moving = faster > config.enh_slip_sog_floor_kt
     ratio_mismatch = slower < faster * config.enh_slip_ratio
-    current_too_small = current_drift_kt < gap
+    current_too_small = current_drift_kt is None or current_drift_kt < gap
     if moving and ratio_mismatch and current_too_small:
         return _reject("reject_sog_stw_mismatch")
     return _pass()

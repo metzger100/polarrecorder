@@ -39,13 +39,16 @@ R1, R2, and R3 report every offending core value in one result. R4 through R22 e
 return `pass`, `reject`, or `quarantine`; only the runner emits the final `accepted` decision.
 
 Enhanced rules (R17-R22) are optional. Each fires only when its rule is enabled, its store key(s) are configured, and a
-fresh, finite, role-valid value is present in `Sample.enhanced`; an absent, stale, or invalid signal leaves the rule a
-no-op (`pass`). Unsigned physical roles reject negative values, while AWA and heel remain signed. Only the engine-state
-role accepts booleans. R17-R19 are pre-candidate (`is_sailing_candidate=False`, counted via `record_non_candidate`)
-because motoring and shallow-water squat are non-representative conditions, like `reject_head_to_wind`. R20-R22 are
-quality-gate rejects (`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean
-condition but the specific sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after
-`stability_window` and before R16, so a definitive enhanced reject wins over the R16 quarantine.
+fresh, finite, role-valid value is present in `Sample.enhanced`; an absent or stale signal leaves the rule a no-op
+(`pass`). Invalid values are omitted after canonical normalization and lower/upper physical bounds. R20 additionally
+remembers an invalid configured current-drift role and refuses to use it as corroborating evidence, so it can still
+reject a SOG/STW mismatch; missing or stale drift remains fail-open. Unsigned physical roles reject negative values,
+while AWA and heel remain signed. Only the engine-state role accepts booleans. R17-R19 are pre-candidate
+(`is_sailing_candidate=False`, counted via `record_non_candidate`) because motoring and shallow-water squat are
+non-representative conditions, like `reject_head_to_wind`. R20-R22 are quality-gate rejects
+(`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean condition but the specific
+sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after `stability_window` and before R16, so
+a definitive enhanced reject wins over the R16 quarantine.
 
 R16 enhancement: a configured engine-state signal is definitive only when its producer semantics really encode running
 state; the generic RPM rule remains threshold-based and partial. Engine-on is already a pre-candidate R17/R18 reject and

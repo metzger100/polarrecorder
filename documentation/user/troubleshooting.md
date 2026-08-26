@@ -48,12 +48,10 @@ unsupported schema, Polar Recorder discards the user presets for that run and ke
 
 ### Maneuver cooldown and stability window
 
-Keep `cooldown_seconds >= stability_window_seconds` if you rely on the post-maneuver stability guarantee. The plugin
-does not cross-validate those two settings.
-
-When cooldown is at least as long as the stability window, maneuver-era samples age out before the first post-cooldown
-sample can be accepted. If a user lowers `cooldown_seconds` below `stability_window_seconds`, the first accepted sample
-after a maneuver may still have maneuver-era readings in its stability window.
+Polar Recorder enforces `cooldown_seconds >= stability_window_seconds` when settings are saved, so maneuver-era samples
+age out before the first post-cooldown sample can be accepted. An update that would violate that relationship is
+rejected without persistence or runtime mutation. If manually edited persisted values contain an invalid pair at
+startup, both settings return to their safe defaults.
 
 ### System clock corrections
 

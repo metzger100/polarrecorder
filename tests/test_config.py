@@ -5,7 +5,12 @@ from typing import cast
 
 import polarrecorder.logger as logger_module
 from conftest import FakeLogger
-from polarrecorder.config import Config, default_config, parse_config_values
+from polarrecorder.config import (
+    Config,
+    default_config,
+    parse_config_values,
+    repair_initial_config_relations,
+)
 from polarrecorder.params import CONFIG_PARAMETERS, EDITABLE_PARAMETERS
 
 
@@ -246,4 +251,27 @@ def test_enhanced_numeric_invalid_keeps_previous_or_default() -> None:
     assert config.enh_rpm_idle_max == 1200
     assert logger.messages == [
         ("warn", "Invalid config enh_rpm_idle_max='bad'; keeping previous/default value")
+    ]
+
+
+def test_initial_config_repairs_invalid_cross_field_pairs() -> None:
+    logger = FakeLogger()
+    parsed = parse_config_values(
+        {
+            "enh_heel_min_deg": "40",
+            "enh_heel_max_deg": "20",
+            "cooldown_seconds": "10",
+            "stability_window_seconds": "30",
+        }
+    )
+
+    repaired = repair_initial_config_relations(parsed, logger)
+
+    assert repaired.enh_heel_min_deg == 0.0
+    assert repaired.enh_heel_max_deg == 35.0
+    assert repaired.cooldown_seconds == 30
+    assert repaired.stability_window_seconds == 15
+    assert logger.messages == [
+        ("warn", "Invalid persisted heel range; using defaults"),
+        ("warn", "Invalid persisted cooldown/stability relationship; using defaults"),
     ]

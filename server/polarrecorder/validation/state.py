@@ -82,6 +82,16 @@ class ValidationState:
         """Discard R15 history after a break in sailing eligibility."""
         self.window.clear()
 
+    def reset_source_history(self) -> None:
+        """Discard all validation history derived from core source values."""
+        self.window.clear()
+        self.previous_sample = None
+        self.cooldown_expires = 0.0
+
+    def reset_transition(self) -> None:
+        """Discard the prior observation used by transition-rate rules."""
+        self.previous_sample = None
+
     def prune(self, now_monotonic: float, *, window_seconds: float) -> None:
         """Trim old entries while retaining one boundary anchor when available.
 

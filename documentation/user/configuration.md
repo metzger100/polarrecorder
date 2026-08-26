@@ -71,17 +71,20 @@ AvNav's built-in switch and pause/resume stays in the viewer.
 `debug_logging` records schema version 4; JSON-safe raw scalar and normalized core values; source timestamps and ages;
 enhanced missing/stale/invalid/usable states with raw, normalized, and timestamp metadata; decision/reasons/predicates;
 the exact pipeline-produced R15 span, gap, density, and range metrics; and the relevant R10/R15/R20 thresholds.
-Diagnostic emission happens after normal decision accounting and no per-iteration diagnostic is emitted while it is
-disabled. The head-to-wind default remains 10 degrees.
+Diagnostic emission happens after normal decision accounting. A read discarded because its configuration snapshot was
+superseded is recorded explicitly with decision `discarded` and reason `config_superseded`; no per-iteration diagnostic
+is emitted while logging is disabled. The head-to-wind default remains 10 degrees.
 
 ### Enhanced (optional-signal) rule settings
 
 Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and uses them to reject
 samples those signals prove unrepresentative. Each rule fires only when its switch is on, its store key(s) are
-configured, and the value is present, fresh, finite, and valid for its role; otherwise the rule is a no-op (fail-open
-per signal). RPM, engine-state numeric values, depth, SOG, current-drift magnitude, and apparent-wind speed must be
-nonnegative. AWA and heel remain signed. Boolean values are valid only for the engine-state role. Every switch defaults
-on.
+configured, and the value is present, fresh, finite, and valid for its role; otherwise the rule is normally a no-op
+(fail-open per signal). Acquisition converts speed roles to knots once and enforces broad role-specific physical
+ceilings before status or validation can consume a value. RPM, engine-state numeric values, depth, SOG, current-drift
+magnitude, and apparent-wind speed must be nonnegative. AWA and heel remain signed. Boolean values are valid only for
+the engine-state role. R20 is stricter for poisoned corroboration: invalid configured current drift cannot explain a
+SOG/STW mismatch, while genuinely missing or stale current drift remains fail-open. Every switch defaults on.
 
 The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, so those rules
 (R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the heading/COG turn confirmation) **activate
@@ -119,19 +122,17 @@ key in the Settings tab's Enhanced Rules section. The genuinely custom signals (
 | `enh_cog_key`                   |  STRING |          `"gps.track"` |           - | Store key for course over ground.                                                    |
 | `enh_turn_min_roc`              |   FLOAT |                  `3.0` |    0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.              |
 
-Config changes are hot-swapped. Viewer Settings endpoints validate changed string values and persist them through AvNav
-before acquiring the single `plugin.py` lock to install the parsed `Config`. Persistence failure leaves the previous
-runtime config intact. The sampling loop snapshots the current config under that lock once per iteration. If a change
-lands during external store reads, that read is discarded, so no sample is committed with a superseded threshold set.
+Config changes are hot-swapped. Viewer Settings endpoints validate changed string values and the resulting complete
+configuration, including `enh_heel_min_deg <= enh_heel_max_deg` and `cooldown_seconds >= stability_window_seconds`. One
+save transaction may be in flight; overlapping saves are rejected. The host write occurs without the plugin lock, but
+runtime installation happens only after persistence succeeds. The sampling loop snapshots the current config under that
+lock once per iteration. If a change lands during external store reads, that read is discarded and, when debug logging
+is enabled, recorded as `config_superseded`.
 
-Validation state is not reset on config changes. The rolling stability observations, cooldown timer, and previous sample
-continue from their current contents; the active config snapshot supplies the window duration during each iteration, so
-there is no second mutable copy. If `stability_window_seconds` is increased, R15 naturally warms up until the retained
-buffer spans the new window; if it is decreased, older entries simply fall outside the new window.
-
-Known limitation: keep `cooldown_seconds >= stability_window_seconds` if you want the post-maneuver stability guarantee.
-The plugin does not cross-validate these two settings. If cooldown is shorter than the stability window, the first
-accepted sample after a maneuver can still have maneuver-era values inside its stability window.
+Ordinary threshold changes retain validation history. Changing `twa_key`, `tws_key`, or `stw_key` clears the rolling
+stability observations, cooldown, and previous transition sample so measurements from different core sources cannot be
+compared. Changing `enh_heading_key` or `enh_cog_key` clears the prior transition reference while retaining the
+stability window.
 
 ## Related
 

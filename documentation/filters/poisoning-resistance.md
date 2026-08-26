@@ -34,9 +34,11 @@ Current drift is read only by R20.
 
 R20 (SOG/STW consistency check) compares the faster and slower of SOG/STW, so it catches implausibly low **or high**
 speed-log readings only when current drift is too small to account for their gap. Limitations: boats without a
-current-drift source get no SOG/STW-mismatch detection, and if the VDR set/drift device derives drift from the same
-paddlewheel that feeds `gps.waterSpeed`, a broken log inflates the computed drift too and R20 is silently defeated. Both
-are deliberate prices of never discarding honest following-current data, which shares the STW-below-SOG signature.
+current-drift source get no SOG/STW-mismatch detection. A configured drift source that is present but invalid cannot
+explain the gap, preventing overflow or out-of-range corroboration from suppressing R20. If the VDR set/drift device
+derives drift from the same paddlewheel that feeds `gps.waterSpeed`, a broken log inflates the computed drift too and
+R20 is silently defeated. Both are deliberate prices of never discarding honest following-current data, which shares the
+STW-below-SOG signature.
 
 R10 independently prefers fresh SOG over STW for anchor detection, even when R20 is disabled. This protects against a
 stopped paddlewheel on a moving boat, but sailing against strong adverse current can produce near-zero SOG and a false
@@ -57,11 +59,13 @@ state window. A semantically definitive engine-state source is still the only re
 motoring and ordinary good sailing; RPM-only protection has an ambiguous idle band, so users should pause recording
 while motoring.
 
-The executable proof lives in `tests/test_poisoning_scenarios.py`. It covers valid learning, slow-sample resistance,
-anchored bursts, far-future timestamp poisoning, sensor spikes, gradual drift, low-wind rejection, maneuver-rich
-sequences where only stable between-tack segments are learned, and the enhanced scenarios: motoring-with-RPM, shallow
-water, failing paddlewheel (SOG/STW), and miscalibrated wind reject as expected, while a strong following-current sample
-is accepted (no current-strength reject exists and R20's gap test does not fire when drift explains the gap).
+The executable proof lives in `tests/test_poisoning_scenarios.py` plus the acquisition-boundary cases in
+`tests/test_reader.py`. It covers valid learning, slow-sample resistance, anchored bursts, far-future timestamp
+poisoning, sensor spikes, gradual drift, low-wind rejection, maneuver-rich sequences where only stable between-tack
+segments are learned, and the enhanced scenarios: motoring-with-RPM, shallow water, failing paddlewheel (SOG/STW),
+conversion overflow, invalid current corroboration, and miscalibrated wind reject as expected, while a strong
+following-current sample is accepted (no current-strength reject exists and R20's gap test does not fire when valid
+drift explains the gap).
 
 ## Related
 
