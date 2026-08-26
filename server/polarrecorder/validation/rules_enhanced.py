@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from polarrecorder.sample import Sample
 
 _FULL_CIRCLE_DEG = 360.0
-_LAW_OF_COSINES_COEFF = 2.0
 
 
 def reject_engine_rpm(sample: Sample, config: Config) -> RuleResult:
@@ -72,13 +71,10 @@ def reject_true_wind_crosscheck(sample: Sample, config: Config) -> RuleResult:
         return _pass()
     awa_rad = math.radians(awa_deg)
     stw = sample.stw_kt
-    tws_calc = math.sqrt(
-        aws_kt**2 + stw**2 - _LAW_OF_COSINES_COEFF * aws_kt * stw * math.cos(awa_rad)
-    )
-    twa_calc = (
-        math.degrees(math.atan2(aws_kt * math.sin(awa_rad), aws_kt * math.cos(awa_rad) - stw))
-        % _FULL_CIRCLE_DEG
-    )
+    x = aws_kt * math.cos(awa_rad) - stw
+    y = aws_kt * math.sin(awa_rad)
+    tws_calc = math.hypot(x, y)
+    twa_calc = math.degrees(math.atan2(y, x)) % _FULL_CIRCLE_DEG
     twa_off = circular_distance(twa_calc, sample.twa_deg_raw) > config.enh_tw_twa_tol_deg
     tws_off = abs(tws_calc - sample.tws_kt) > config.enh_tw_tws_tol_kt
     if twa_off or tws_off:

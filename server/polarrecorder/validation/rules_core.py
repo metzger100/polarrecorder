@@ -1,7 +1,8 @@
 """Module: Core Validation Rules - Candidacy-gate checks R1 through R10.
 
 Documentation: documentation/filters/rejection-rules.md
-Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample
+Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.sample,
+polarrecorder.units
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from polarrecorder.sample import (
     pass_rule,
     reject_rule,
 )
+from polarrecorder.units import is_finite_meters_per_second_input
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
@@ -36,8 +38,8 @@ def finite_values(read_result: ReadResult) -> RuleResult:
     """
     codes: list[str] = []
     _add_non_finite_code(codes, read_result.twa_raw, "reject_non_finite_twa")
-    _add_non_finite_code(codes, read_result.tws_raw, "reject_non_finite_tws")
-    _add_non_finite_code(codes, read_result.stw_raw, "reject_non_finite_stw")
+    _add_non_finite_speed_code(codes, read_result.tws_raw, "reject_non_finite_tws")
+    _add_non_finite_speed_code(codes, read_result.stw_raw, "reject_non_finite_stw")
     _add_invalid_timestamp_code(codes, read_result.twa_timestamp, "reject_non_finite_twa")
     _add_invalid_timestamp_code(codes, read_result.tws_timestamp, "reject_non_finite_tws")
     _add_invalid_timestamp_code(codes, read_result.stw_timestamp, "reject_non_finite_stw")
@@ -145,6 +147,11 @@ def _add_non_finite_code(codes: list[str], value: object | None, code: str) -> N
     if value is None:
         return
     if not is_finite_core_value(value):
+        codes.append(code)
+
+
+def _add_non_finite_speed_code(codes: list[str], value: object | None, code: str) -> None:
+    if value is not None and not is_finite_meters_per_second_input(value):
         codes.append(code)
 
 

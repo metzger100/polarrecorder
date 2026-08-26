@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -248,7 +249,23 @@ def test_r15_passes_with_persistent_scheduler_slip() -> None:
         )
 
         assert evaluation.filled
-        assert evaluation.minimum_sample_count == 15
+        assert evaluation.sample_count >= evaluation.minimum_sample_count
+
+
+def test_r15_rejects_sustained_scheduler_slip_beyond_tolerance() -> None:
+    config = default_config()
+    cadence = 1.11
+    state = ValidationState()
+    for index in range(15):
+        state.observe(
+            make_sample(now=index * cadence),
+            window_seconds=config.stability_window_seconds,
+        )
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=15 * cadence), state, config)
+
+    assert not evaluation.filled
+    assert evaluation.sample_count < evaluation.minimum_sample_count
 
 
 def test_r15_passes_with_one_missed_tick_inside_a_continuous_window() -> None:
@@ -337,3 +354,46 @@ def test_r15_two_endpoints_never_fill_a_slow_sampling_window() -> None:
     assert evaluation.sample_count == 2
     assert evaluation.minimum_sample_count == 4
     assert not evaluation.filled
+
+
+def test_r15_allows_supported_cadence_across_interval_window_grid() -> None:
+    intervals = (0.5, 0.75, 1.0, 1.1, 2.0, 3.3, 5.0)
+    for sample_interval in intervals:
+        for window_seconds in range(5, 61):
+            for cadence_ratio in (1.0, 1.1):
+                config = replace(
+                    default_config(),
+                    sample_interval=sample_interval,
+                    stability_window_seconds=window_seconds,
+                )
+                cadence = sample_interval * cadence_ratio
+                final_index = math.ceil(window_seconds / cadence)
+                state = ValidationState()
+                for index in range(final_index):
+                    state.observe(
+                        make_sample(now=index * cadence),
+                        window_seconds=window_seconds,
+                    )
+
+                evaluation = rules_stability.evaluate_stability(
+                    make_sample(now=final_index * cadence), state, config
+                )
+
+                assert evaluation.filled, (
+                    sample_interval,
+                    window_seconds,
+                    cadence_ratio,
+                    evaluation,
+                )
+
+
+def test_r15_fills_short_window_with_two_nominally_spaced_endpoints() -> None:
+    config = replace(default_config(), sample_interval=5.0, stability_window_seconds=5)
+    state = ValidationState()
+    state.observe(make_sample(now=0.0), window_seconds=config.stability_window_seconds)
+
+    evaluation = rules_stability.evaluate_stability(make_sample(now=5.0), state, config)
+
+    assert evaluation.filled
+    assert evaluation.sample_count == 2
+    assert evaluation.minimum_sample_count == 2

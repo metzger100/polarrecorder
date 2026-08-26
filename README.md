@@ -289,9 +289,10 @@ Common causes:
 
 Pause/Resume, loss of fresh usable core data, non-sailing conditions, suspected engine use, and enhanced sensor-quality
 rejections restart the stability warm-up. R15 requires both a full time span and a bounded observation density that
-tolerates up to 10% sustained scheduler slippage or one missed tick, while still preventing sparse histories from
-proving stability. Status reports data as present only when all three core readings and their source timestamps are
-finite, numeric, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
+tolerates up to 10% sustained scheduler slippage. One missed tick can be absorbed when the surrounding timestamp span
+still meets that density, while sparse histories remain warming up. Status reports data as present only when all three
+core readings are numeric and finite both before and after speed-unit normalization, and their source timestamps are
+finite, fresh, and not more than 0.5 seconds ahead of the reader's monotonic clock.
 
 Open the Status tab and look at the current decision and top rejection reasons.
 

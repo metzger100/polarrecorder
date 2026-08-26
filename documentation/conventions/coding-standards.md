@@ -52,9 +52,10 @@ Depends: <list of polarrecorder/ module dependencies>
   `*legacy*`/`*compat*`/`*deprecated*` declarations that nothing references — the Python twins of the viewer
   contract-trust rules. It additionally validates that the `_CANONICAL_HELPERS` owner map still matches reality
   (`canonical-helper-map-stale`).
-- Runtime numeric output must stay finite. `tools/check-runtime-contracts.py` populates a real model and fails if any
-  NaN/Infinity, or a `nan`/`inf` sentinel string, reaches the polar or CSV/Windy export boundary; it catches non-finites
-  produced at runtime that the static `nan-sentinel` rule cannot see.
+- Runtime numeric output must stay finite. `tools/check-runtime-contracts.py` exercises finite raw core-speed overflow,
+  populates a real model, and fails if any NaN/Infinity reaches Status, polar, or CSV/Windy export output, or if export
+  text contains a `nan`/`inf` sentinel. It catches runtime-produced non-finites that the static `nan-sentinel` rule
+  cannot see.
 - Hot paths are gated by `npm run check:scaling`'s deterministic counted-operation contracts
   (`tests/operation_count_evaluator.py`, `tests/test_polar_model.py`, `tests/test_projection_scaling_contract.py`,
   `tests/test_api_handlers_scaling_contract.py`), which fail on super-linear (e.g. accidental O(n^2)) regressions in

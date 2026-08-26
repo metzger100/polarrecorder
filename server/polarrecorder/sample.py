@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Literal
 
 from polarrecorder.enhanced_input import coerce_finite_timestamp
-from polarrecorder.units import meters_per_second_to_knots
+from polarrecorder.units import is_finite_meters_per_second_input, meters_per_second_to_knots
 
 if TYPE_CHECKING:
     from polarrecorder.enhanced_input import EnhancedInput
@@ -218,7 +218,7 @@ def build_sample(read_result: ReadResult) -> Sample | None:
         non-finite.
     """
     timestamps = _finite_timestamps(read_result)
-    if not _required_values_are_finite(read_result) or timestamps is None:
+    if not _required_values_are_normalizable(read_result) or timestamps is None:
         return None
 
     assert isinstance(read_result.twa_raw, (int, float))
@@ -270,9 +270,12 @@ def is_finite_core_value(value: object | None) -> bool:
         return False
 
 
-def _required_values_are_finite(read_result: ReadResult) -> bool:
-    values = (read_result.twa_raw, read_result.tws_raw, read_result.stw_raw)
-    return all(is_finite_core_value(value) for value in values)
+def _required_values_are_normalizable(read_result: ReadResult) -> bool:
+    return (
+        is_finite_core_value(read_result.twa_raw)
+        and is_finite_meters_per_second_input(read_result.tws_raw)
+        and is_finite_meters_per_second_input(read_result.stw_raw)
+    )
 
 
 def _finite_timestamps(read_result: ReadResult) -> tuple[float, float, float] | None:

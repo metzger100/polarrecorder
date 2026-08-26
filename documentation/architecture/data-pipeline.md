@@ -10,12 +10,13 @@ updates model bins, counters, timeline state, persistence, and AvNav-visible sta
 ## Key Details
 
 The reader produces `ReadResult`, whose raw core values and source timestamps are untrusted objects and may be missing,
-nonnumeric, boolean, non-finite, or too large to convert safely. One total timestamp coercer accepts only finite numeric
-timestamps (not booleans or strings) before freshness arithmetic. A shared classifier permits at most 0.5 seconds of
-future skew, matching the lowest supported sampling cadence; larger offsets fail freshness. Invalid core timestamps
-reject in R1/R2, implausibly future core timestamps reject in R3, and invalid or future enhanced timestamps make that
-optional acquisition unusable. If R1 or R2 rejects, the runner returns a rejected `PipelineResult` and `Sample` is
-`None`.
+nonnumeric, boolean, non-finite, or too large to convert safely. Core speed classification proves that finite raw
+TWS/STW remain finite after knot conversion before `Sample` construction or live Status publication. One total timestamp
+coercer accepts only finite numeric timestamps (not booleans or strings) before freshness arithmetic. A shared
+classifier permits at most 0.5 seconds of future skew, matching the lowest supported sampling cadence; larger offsets
+fail freshness. Invalid core timestamps reject in R1/R2, implausibly future core timestamps reject in R3, and invalid or
+future enhanced timestamps make that optional acquisition unusable. If R1 or R2 rejects, the runner returns a rejected
+`PipelineResult` and `Sample` is `None`.
 
 After R1 and R2 pass, the runner calls `build_sample(read_result)`. The resulting `Sample` has non-optional float
 fields, TWS/STW converted to knots, TWA normalized for model use, and freshness ages computed from the store timestamps.
@@ -37,17 +38,20 @@ reason.
 
 R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
 the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
-reconfigures, or otherwise mutates live validation state. Its observation-density floor uses the configured sample
-interval with a bounded 10% scheduler-slippage allowance, while the separate three-interval maximum-gap rule still
-rejects sparse history. Diagnostic records also retain JSON-safe raw core scalar values, core source timestamps/ages,
-enhanced raw/normalized values with timestamps/ages, acquisition states, invalid causes, and a record schema. Schema 5
-preserves strings and booleans as actually received while replacing unsupported or non-finite objects with `null`; it
-also includes R15's largest observed gap, allowed gap, observed/required sample counts, and the active sample interval,
-making the recorded decision inspectable. Diagnostic emission follows canonical state, model, counter, timeline, and
-status accounting, so logging cannot change the recorded decision. One record is emitted for each completed store read,
-including a read discarded after a configuration change. A reader exception that produces no `ReadResult` is reported
-through the normal AvNav loop error path instead. These are structured decision diagnostics, not a promise of literal
-full-pipeline replay across arbitrary configuration changes.
+reconfigures, or otherwise mutates live validation state. Its observation-density floor derives the required count from
+the observed timestamp span and the configured sample interval with a bounded 10% scheduler-slippage allowance. This
+keeps the boundary anchor useful for elapsed-time proof without weakening cadence evidence, permits a missed tick only
+when the overall observed cadence remains within the allowance, and gives the legal equal-window/equal-interval
+configuration a two-endpoint warm-up. The separate three-interval maximum-gap rule still rejects sparse history.
+Diagnostic records also retain JSON-safe raw core scalar values, core source timestamps/ages, enhanced raw/normalized
+values with timestamps/ages, acquisition states, invalid causes, and a record schema. Schema 5 preserves strings and
+booleans as actually received while replacing unsupported or non-finite objects with `null`; it also includes R15's
+largest observed gap, allowed gap, observed/required sample counts, and the active sample interval, making the recorded
+decision inspectable. Diagnostic emission follows canonical state, model, counter, timeline, and status accounting, so
+logging cannot change the recorded decision. One record is emitted for each completed store read, including a read
+discarded after a configuration change. A reader exception that produces no `ReadResult` is reported through the normal
+AvNav loop error path instead. These are structured decision diagnostics, not a promise of literal full-pipeline replay
+across arbitrary configuration changes.
 
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.

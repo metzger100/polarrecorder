@@ -227,3 +227,5 @@ def test_data_status_requires_complete_finite_fresh_core_values() -> None:
     assert data_status(make_read_result(twa_raw="bad"), 3.0) == "partial"
     assert data_status(make_read_result(twa_raw=True), 3.0) == "partial"
     assert data_status(make_read_result(twa_raw=None), 3.0) == "partial"
+    overflow = replace(make_read_result(), tws_raw=1e308)
+    assert data_status(overflow, 3.0) == "partial"

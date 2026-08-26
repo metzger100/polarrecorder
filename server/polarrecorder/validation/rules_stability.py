@@ -22,8 +22,9 @@ if TYPE_CHECKING:
 
 
 STABILITY_MAX_GAP_INTERVALS = 3.0
-STABILITY_MIN_SAMPLE_COUNT = 3
+STABILITY_MIN_SAMPLE_COUNT = 2
 STABILITY_CADENCE_TOLERANCE_RATIO = 0.1
+STABILITY_CADENCE_ROUNDING_TOLERANCE = 1e-12
 
 
 @dataclass(frozen=True)
@@ -158,10 +159,7 @@ def evaluate_stability(
     largest_gap = _largest_gap(entries)
     max_allowed_gap = config.sample_interval * STABILITY_MAX_GAP_INTERVALS
     tolerated_interval = config.sample_interval * (1.0 + STABILITY_CADENCE_TOLERANCE_RATIO)
-    minimum_samples = max(
-        STABILITY_MIN_SAMPLE_COUNT,
-        math.ceil(window_seconds / tolerated_interval) + 1,
-    )
+    minimum_samples = _minimum_samples_for_span(span, tolerated_interval)
     continuous = largest_gap <= max_allowed_gap
     dense = len(entries) >= minimum_samples
     if (
@@ -204,12 +202,28 @@ def evaluate_stability(
     )
 
 
+def _minimum_samples_for_span(span: float | None, tolerated_interval: float) -> int:
+    if span is None:
+        return STABILITY_MIN_SAMPLE_COUNT
+    interval_ratio = span / tolerated_interval
+    nearest_integer = round(interval_ratio)
+    intervals = (
+        nearest_integer
+        if math.isclose(
+            interval_ratio,
+            nearest_integer,
+            rel_tol=STABILITY_CADENCE_ROUNDING_TOLERANCE,
+            abs_tol=STABILITY_CADENCE_ROUNDING_TOLERANCE,
+        )
+        else math.ceil(interval_ratio)
+    )
+    return max(STABILITY_MIN_SAMPLE_COUNT, intervals + 1)
+
+
 def _retained_entries(
     entries: list[WindowEntry], now: float, window_seconds: float
 ) -> list[WindowEntry]:
     oldest_allowed = now - window_seconds
-    if entries and entries[-1].timestamp_monotonic < oldest_allowed:
-        return []
     first_retained = 0
     while len(entries) - first_retained > 1:
         if entries[first_retained + 1].timestamp_monotonic > oldest_allowed:

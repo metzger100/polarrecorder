@@ -127,6 +127,8 @@ Polar Recorder actually uses.
   (`allow_nan=False, allow_infinity=False`) so no NaN/Infinity filtering is hidden inside production code; float-bound
   assertions carry a small epsilon where floating-point modulo/rounding can legitimately overshoot an exact mathematical
   bound by a few ULPs.
+- `tools/check-runtime-contracts.py` complements static checks by rejecting finite raw core speeds that overflow during
+  knot normalization and scanning representative Status, polar, CSV, and Windy responses for runtime non-finites.
 - The final reproducibility proof runs `npm run check:all` in the normal checkout and in a fresh isolated copy that
   contains only this repository. Required gates do not install dependencies or read sibling directories; the portable
   attestation is emitted twice and the bytes must match exactly.

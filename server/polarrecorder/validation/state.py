@@ -100,9 +100,6 @@ class ValidationState:
             window_seconds: Active R15 history duration from the iteration config.
         """
         oldest_allowed = now_monotonic - window_seconds
-        if self.window and self.window[-1].timestamp_monotonic < oldest_allowed:
-            self.window.clear()
-            return
         while len(self.window) > 1 and self.window[1].timestamp_monotonic <= oldest_allowed:
             self.window.popleft()
 

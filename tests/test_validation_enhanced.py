@@ -109,6 +109,25 @@ def test_reject_true_wind_crosscheck_with_known_triangle() -> None:
     assert crosscheck(_sample(None, stw_kt=0.0), config).decision == "pass"
 
 
+def test_true_wind_crosscheck_is_stable_near_a_zero_vector() -> None:
+    config = default_config()
+    aws_kt = 1.7323007191377249
+    stw_kt = 1.7323007124993557
+    awa_deg = 0.0000000649836801516
+
+    result = rules_enhanced.reject_true_wind_crosscheck(
+        _sample(
+            {"awa_deg": awa_deg, "aws_kt": aws_kt},
+            twa_raw=9.0,
+            tws_kt=0.0,
+            stw_kt=stw_kt,
+        ),
+        config,
+    )
+
+    assert result.decision == "pass"
+
+
 def test_reject_heel_out_of_band_upper_and_lower() -> None:
     config = default_config()
     heel = rules_enhanced.reject_heel_out_of_band
