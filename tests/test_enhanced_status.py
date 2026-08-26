@@ -6,6 +6,8 @@ from polarrecorder.config import Config, default_config
 from polarrecorder.enhanced_input import EnhancedInput
 from polarrecorder.enhanced_status import ENHANCED_RULE_SPECS, compute_enhanced_status
 from polarrecorder.sample import ENHANCED_SIGNAL_BY_ROLE
+from polarrecorder.validation.pipeline import run
+from validation_helpers import make_read_result, make_warmed_state
 
 
 def _status(config: Config, probes: dict[str, EnhancedInput], rule: str) -> str:
@@ -16,6 +18,10 @@ def _status(config: Config, probes: dict[str, EnhancedInput], rule: str) -> str:
 def _availability(config: Config, probes: dict[str, EnhancedInput], rule: str) -> str:
     rows = compute_enhanced_status(config, probes)
     return next(str(row["availability"]) for row in rows if row["rule"] == rule)
+
+
+def _row(config: Config, probes: dict[str, EnhancedInput], rule: str) -> dict[str, object]:
+    return next(row for row in compute_enhanced_status(config, probes) if row["rule"] == rule)
 
 
 _FRESH = EnhancedInput("usable", 1.0, 99.5, 1.0)
@@ -38,6 +44,17 @@ def test_every_rule_source_role_has_one_canonical_signal_spec() -> None:
     roles = {role for spec in ENHANCED_RULE_SPECS for role in spec.source_roles}
 
     assert roles <= ENHANCED_SIGNAL_BY_ROLE.keys()
+
+
+def test_signal_acquisition_switches_match_rule_registry_with_shared_sog_exception() -> None:
+    expected_fields: dict[str, set[str]] = {}
+    for rule_spec in ENHANCED_RULE_SPECS:
+        for role in rule_spec.source_roles:
+            expected_fields.setdefault(role, set()).add(rule_spec.enable_field)
+
+    for role, signal in ENHANCED_SIGNAL_BY_ROLE.items():
+        expected = set() if role == "sog_kt" else expected_fields[role]
+        assert set(signal.enable_fields) == expected
 
 
 def test_each_row_carries_its_enable_field() -> None:
@@ -108,6 +125,30 @@ def test_all_combinator_requires_both_keys_fresh() -> None:
     assert _status(config, both_fresh, "reject_sog_stw_mismatch") == "active"
 
 
+def test_invalid_drift_keeps_r20_active_and_matches_fail_closed_rejection() -> None:
+    config = default_config()
+    usable_sog = EnhancedInput("usable", 15.0, 99.5, 15.0)
+    probes = {"sog_kt": usable_sog, "current_drift_kt": _INVALID}
+    row = _row(config, probes, "reject_sog_stw_mismatch")
+    read_result = replace(
+        make_read_result(
+            stw_kt=6.0,
+            enhanced_values={"sog_kt": (15.0, 99.5)},
+        ),
+        enhanced_inputs={
+            "sog_kt": usable_sog,
+            "current_drift_kt": _INVALID,
+        },
+    )
+
+    result, _sample = run(read_result, make_warmed_state(), config)
+
+    assert row["status"] == "active_invalid_corroboration"
+    assert row["availability"] == "active"
+    assert row["sources"] == {"sog_kt": "usable", "current_drift_kt": "invalid"}
+    assert result.reason_codes == ("reject_sog_stw_mismatch",)
+
+
 def test_all_combinator_key_missing_when_drift_key_unconfigured() -> None:
     config = replace(default_config(), enh_current_drift_key="")
 
@@ -139,6 +180,10 @@ def test_any_combinator_reports_missing_before_stale_when_none_are_fresh() -> No
     probes = {"heading_deg": _STALE, "cog_deg": _MISSING}
 
     assert _status(config, probes, "turn_confirm") == "inactive_key_missing"
+    assert _row(config, probes, "turn_confirm")["sources"] == {
+        "heading_deg": "stale",
+        "cog_deg": "missing",
+    }
 
 
 def test_all_combinator_reports_stale_only_when_no_source_is_missing() -> None:

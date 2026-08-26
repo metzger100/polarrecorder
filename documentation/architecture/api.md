@@ -99,15 +99,19 @@ store keys (AvNav exposes no list-all-registered-keys endpoint), so the viewer o
 allows free-text entry for custom keys (RPM, engine state, heel) that are not standard AvNav keys. `enhanced/status`
 computes each role's missing/stale/invalid/usable state at the boundary (snapshotting `self.config` under the lock,
 probing via `getSingleValue`) and resolves the per-rule live status in the pure `enhanced_status` module outside the
-lock. Status uses the same missing/stale/invalid/usable acquisition contract as `StoreReader`, so `active` means every
-required source is currently consumable by validation; invalid values, including negative unsigned physical roles,
-report `inactive_value_invalid` and `unavailable`. Unavailable causes use a deterministic priority: incomplete
-configuration, missing store source, then stale value; an any-source rule remains active when any configured source is
-fresh. Both viewer settings save endpoints validate the complete allowlisted update and cross-field relationships,
-reserve the single configuration transaction under the plugin lock, call `api.saveConfigValues` without holding the
-lock, and only then install the parsed `Config`. An overlapping save is rejected before host I/O, and a failed host
-write leaves runtime state unchanged. Core source-key changes clear stability, cooldown, and prior-transition history;
-heading/COG source changes clear only the prior transition reference.
+lock. Every row includes a `sources` object mapping its roles to `unconfigured`, `missing`, `stale`, `invalid`, or
+`usable`, so mixed causes remain visible. Status normally reports `active` only when the rule's required source contract
+is consumable. R20 is the deliberate exception: usable SOG plus invalid current drift reports
+`active_invalid_corroboration` with normalized availability `active`, because invalid drift cannot corroborate the speed
+gap and R20 can still reject; missing or stale drift remains unavailable and fail-open. Other invalid required values,
+including negative unsigned physical roles, report `inactive_value_invalid` and `unavailable`. Unavailable headline
+causes use a deterministic priority: incomplete configuration, missing store source, then stale value; an any-source
+rule remains active when any configured source is fresh. Both viewer settings save endpoints trim source keys, validate
+the complete allowlisted update and cross-field relationships, reserve the single configuration transaction under the
+plugin lock, call `api.saveConfigValues` without holding the lock, and only then install the parsed `Config`. An
+overlapping save is rejected before host I/O, and a failed host write leaves runtime state unchanged. The in-flight
+guard is released even when post-save state reset fails. Core source-key changes clear stability, cooldown, and
+prior-transition history; heading/COG source changes clear only the prior transition reference.
 
 State mutations use GET for AvNav/viewer simplicity. Destructive reset requires `confirm=yes`; preset deletion also
 requires confirmation. Polar persistence writes still happen on the plugin thread. Preset writes are the exception:

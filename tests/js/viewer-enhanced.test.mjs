@@ -97,6 +97,7 @@ test("enhanced display preserves unknown server identifiers", () => {
   assert.equal(display.RuleLabel("future_rule"), "future_rule");
   assert.equal(display.StatusLabel("future_status"), "future_status");
   assert.equal(display.AvailabilityLabel("future_availability"), "future_availability");
+  assert.equal(display.StatusLabel("active_invalid_corroboration"), "Active (invalid drift is fail-closed)");
 });
 
 test("enhanced settings render and save", async () => {

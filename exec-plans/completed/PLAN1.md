@@ -2,7 +2,27 @@
 
 ## Status
 
-Implemented through all six phases and six implementation-review remediation passes.
+Implemented through all six phases and seven implementation-review remediation passes.
+
+### Amendment — 2026-08-26: seventh implementation-review remediation
+
+A fresh archive review found that R20 could reject when usable SOG was paired with invalid current drift while its live
+status incorrectly reported unavailable; multi-source status rows also hid secondary invalid causes. Completion now
+additionally requires an explicit `active_invalid_corroboration` R20 state with normalized availability `active`,
+per-source status states, canonical `ReadResult.enhanced_values` naming, diagnostic invalid causes, trimmed persisted
+source keys, unconditional configuration-transaction guard cleanup, a mechanical acquisition/rule-registry consistency
+test with the shared SOG exception, and corrected lifecycle/API/README contracts. Structured logging is specified as
+decision diagnostics for completed store reads, not literal full-pipeline replay; reader exceptions remain ordinary
+AvNav loop errors. `plugin.py` remains at its hotspot ceiling, so future integration growth requires planned
+decomposition before new responsibilities are added. Optional-source timing skew remains an investigation item because
+the available evidence still does not establish a safe threshold.
+
+**Seventh-review exit evidence:** `npm run check:all` exited successfully with 453 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.33% aggregate Python coverage, and 92.75% viewer/plugin line coverage. The focused
+status, diagnostics, configuration, acquisition, validation, poisoning, API, and integration suite passed 163 Python
+tests; focused enhanced/advanced viewer coverage passed 6 tests. The smell scan checked 333 files with zero findings,
+and strict typing, packaging, documentation, duplication, complexity, scaling, file-size, and coverage-inventory checks
+all passed. `plugin.py` remains unchanged at its 379-non-empty-line hotspot ceiling.
 
 ### Amendment — 2026-08-26: sixth implementation-review remediation
 
@@ -45,7 +65,7 @@ file-size, and coverage-inventory checks all passed.
 
 A fresh archive review found a recursive-lock regression with nested paused-path acquisition, unsafe arithmetic on
 untrusted core and enhanced timestamps, R16/R20-R22 outcomes incorrectly retaining R15 history, an R15 continuity rule
-that two sparse endpoints could satisfy at slower configured sampling, incomplete replay evidence, stale lifecycle
+that two sparse endpoints could satisfy at slower configured sampling, incomplete diagnostic evidence, stale lifecycle
 prose, duplicated mutable window duration, and shallowly immutable decision evidence. Completion now additionally
 requires exactly one mechanically enforced ordinary plugin lock with external callbacks after release; total finite
 timestamp boundaries; outcome-specific stability-history retention; time-span, gap, and observation-density continuity;
@@ -116,7 +136,7 @@ following are confirmed defects and are required before this plan can return to 
 This is one review-remediation phase and one commit. It changes no validation threshold or primary-decision ordering,
 adds no new reject rule, and does not expand persistence or runtime configuration. Its exit conditions are:
 
-- focused Python tests prove suppressed reason/predicate accounting, diagnostic state purity and complete replay fields,
+- focused Python tests prove suppressed reason/predicate accounting, diagnostic state purity and complete decision fields,
   SOG/R10 independence from R20, deterministic enhanced causes, the adverse-current counterexample, corrected restore
   labels, and host-boundary enforcement;
 - focused viewer/tool tests prove explicit storage failure handling, accessible modal behavior, shared labels, and the
@@ -176,7 +196,7 @@ After completion, Polar Recorder will:
    the existing detailed status cause.
 7. Show a startup engine-protection popup when no definitive engine-state rule is active, with exactly **Close** and
    **Never show again** actions; RPM-only protection remains explicitly partial.
-8. Expand the existing `debug_logging` mode into one structured diagnostic log record per sampling iteration containing
+8. Expand the existing `debug_logging` mode into one structured diagnostic log record per completed store read containing
    raw/normalized sample values, available enhanced inputs, the primary decision, all triggered predicates, and R15
    rolling-window metrics suitable for later threshold analysis.
 9. Add two explicit post-MVP items to `ROADMAP.md`: an investigation of isolated slow accepted samples despite P65
@@ -242,8 +262,8 @@ After completion, Polar Recorder will:
 18. The viewer currently has no popup/modal module and no local-storage preference for engine warnings.
 19. The engine RPM and engine-state rules already have live enhanced-status rows. On default config their keys are
     empty, so a fresh install can have those rules enabled but unavailable.
-20. `debug_logging` currently emits one short line per iteration containing only decision and reason codes. User
-    configuration documentation explicitly describes one debug line per pipeline iteration.
+20. `debug_logging` currently emits one short line per completed store read containing only decision and reason codes.
+    User configuration documentation explicitly describes one debug line per completed read.
 21. `viewer/viewer.html` statically orders all viewer scripts and styles; any new viewer module must be added there and
     remain a plain script under `window.Polarrecorder`.
 22. `tools/release-archive.mjs` automatically includes `viewer/*.js` and `viewer/*.css`, so an isolated warning module
@@ -278,8 +298,9 @@ After completion, Polar Recorder will:
    anchoring speed floor for fresh SOG when present and as the STW fallback when SOG is absent.
 10. R10 keeps the existing `TWS > 0` requirement. When fresh SOG exists, SOG is authoritative for R10 and STW is not
     used as a second anchor predicate; STW is the fallback only when SOG is unavailable.
-11. R20 remains fail-open when either SOG or current drift is unavailable/stale. No new enhanced source or threshold is
-    added for the symmetric check.
+11. R20 remains fail-open when SOG is unavailable or current drift is missing/stale. Invalid configured current drift
+    cannot corroborate the gap, so usable SOG may still produce the existing R20 rejection. No new enhanced source or
+    threshold is added for the symmetric check.
 12. The symmetric R20 formula is prescriptive:
 
     ```text
@@ -293,7 +314,8 @@ After completion, Polar Recorder will:
     ```
 
 13. Keep the existing enhanced detailed status strings for compatibility and add a normalized availability field:
-    `active`, `disabled`, or `unavailable`. All `inactive_*` detailed states map to `unavailable`.
+    `active`, `disabled`, or `unavailable`. The R20-only `active_invalid_corroboration` detail maps to `active`; all
+    `inactive_*` detailed states map to `unavailable`. Every row exposes its per-source states.
 14. The engine warning is a viewer-startup check, not a heartbeat popup. It may be evaluated once per page load and is
     suppressed only when `reject_engine_on` has normalized availability `active`; an active RPM rule alone is partial.
 15. The engine warning has exactly two user actions:
@@ -304,8 +326,9 @@ After completion, Polar Recorder will:
     preference could not be saved and allow **Close**.
 17. Use the existing `debug_logging` switch for #28. Do not add a second diagnostics switch, a background writer, an
     unbounded NDJSON file, a new lock, or a new timer.
-18. Diagnostic logs remain one line per sampling iteration and must serialize finite JSON-compatible values only;
-    unavailable values are `null`, never NaN/Infinity sentinels.
+18. Diagnostic logs remain one line per completed store read and must serialize finite JSON-compatible values only;
+    unavailable values are `null`, never NaN/Infinity sentinels. Reader exceptions before a `ReadResult` use the AvNav
+    loop error path.
 19. Keep runtime Python 3.9+ stdlib-only and maintain the single-lock boundary in `plugin.py`.
 20. New domain modules must receive the mandatory module header and a valid layer assignment in
     `tools/check-py-dependencies.py`; no AvNav imports may enter `server/polarrecorder/`.
@@ -586,7 +609,7 @@ than inventing another polling system.
 **Exit condition:** The three-state availability is consistent in API/Settings/Status, startup warning behavior exactly
 matches the two-button persistence contract, no extra timer exists, and `npm run check:all` is green.
 
-### Phase 4 — Make `debug_logging` a structured replay-quality diagnostic stream
+### Phase 4 — Make `debug_logging` a structured decision-diagnostic stream
 
 **Intent:** Implement finding #28 using the telemetry and R15 metrics already built in Phases 1-2, without creating a
 new persistence subsystem.
@@ -597,9 +620,9 @@ new persistence subsystem.
 
 1. Add one pure diagnostics formatter in `server/polarrecorder/` (prefer a dedicated `diagnostics.py` if that is the
    cleanest dependency owner). It must not import AvNav or own I/O.
-2. The formatter produces one compact JSON-compatible payload per reader iteration with at least:
+2. The formatter produces one compact JSON-compatible payload per completed reader iteration with at least:
    - `timestamp_wall` and `timestamp_monotonic`;
-   - core values sufficient for replay/inspection: TWA degrees plus TWS/STW in knots when a normalized sample exists,
+   - core values sufficient for decision inspection: TWA degrees plus TWS/STW in knots when a normalized sample exists,
      and explicit `null` for unavailable normalized values;
    - available normalized enhanced roles from the sample (SOG, current drift, AWA, AWS, heading, COG, RPM, engine-state,
      depth, heel) without inventing absent keys/values;
@@ -608,11 +631,12 @@ new persistence subsystem.
      span, TWA range, TWS range, STW range;
    - enough config context to interpret the R15/R10/R20 diagnostics if those thresholds are changed during a session (at
      minimum the stability ranges/window, anchoring threshold, R20 movement floor, and R20 ratio).
-3. Replace the existing simple `debug_logging` message with exactly one prefixed compact structured line per iteration,
+3. Replace the existing simple `debug_logging` message with exactly one prefixed compact structured line per completed
+   read,
    for example `diagnostic_sample=<json>`. Do not emit an additional second per-sample line.
 4. Missing/non-finite core reads must still be loggable without calling `build_sample` unsafely or serializing NaN/Inf;
    unsafe raw values are represented as `null` plus their applicable decision/predicate codes.
-5. When `debug_logging` is false, no per-iteration diagnostic payload is formatted or logged on the hot path beyond the
+5. When `debug_logging` is false, no per-read diagnostic payload is formatted or logged on the hot path beyond the
    existing validation work.
 6. If a new `diagnostics.py` module is introduced, add it to the canonical Python dependency layer map and add focused
    tests. Keep the module under the project line/complexity limits.
@@ -621,7 +645,7 @@ new persistence subsystem.
 
 - Unit tests for the formatter prove accepted, rejected, quarantined, warming-up, missing-input, enhanced-input, and
   multi-predicate cases produce deterministic finite payloads.
-- Plugin integration tests prove exactly one structured debug line is emitted per iteration when enabled and none when
+- Plugin integration tests prove exactly one structured debug line is emitted per completed read when enabled and none when
   disabled.
 - R15 logged ranges must equal the ranges used for the live R15 decision in the same test sample.
 - Runtime-contract tests must prove no NaN/Infinity reaches the diagnostic JSON payload.
@@ -630,7 +654,7 @@ new persistence subsystem.
   - `npm run check:python-contracts`
   - `npm run check:scaling`
 
-**Exit condition:** `debug_logging` yields one deterministic finite structured record per iteration with replay-relevant
+**Exit condition:** `debug_logging` yields one deterministic finite structured record per completed read with decision-relevant
 values and predicates, remains zero-output when disabled, and `npm run check:all` is green.
 
 ### Phase 5 — Synchronize ROADMAP and maintained documentation
@@ -735,16 +759,18 @@ The following documentation updates are required because behavior/defaults/UI ch
 - All triggered predicates in the reached phase are retained and recorded globally; candidate-bin predicate counts are
   recorded for rejected/quarantined candidate samples.
 - Old schema-v1 backups without predicate histograms still load and restore successfully with empty new histograms.
-- R20 catches both low-STW/high-SOG and high-STW/low-SOG ratio failures when current drift cannot explain the gap, and
-  passes when required enhanced data is unavailable or current drift is sufficient.
+- R20 catches both low-STW/high-SOG and high-STW/low-SOG ratio failures when current drift cannot explain the gap. It
+  passes when SOG is unavailable, drift is missing/stale, or valid drift is sufficient; invalid drift cannot suppress
+  rejection.
 - Status uses **Candidates** terminology and does not imply missing-input reason counts are candidate counts.
 - Every enhanced rule has normalized availability `active`, `disabled`, or `unavailable`, with the detailed cause still
   accessible.
 - The engine popup is checked only at viewer startup, appears when no definitive engine-state rule is active, has exactly
   **Close** and **Never show again**, and browser-local suppression works across page loads.
 - No engine popup preference is written to Polar Recorder runtime config or `polar.json`.
-- `debug_logging=false` keeps per-iteration diagnostics off; `debug_logging=true` emits exactly one finite structured
-  diagnostic record per iteration containing the required raw/normalized values, decision, predicates, and R15 metrics.
+- `debug_logging=false` keeps per-read diagnostics off; `debug_logging=true` emits exactly one finite structured
+  diagnostic record per completed read containing the required raw/normalized values, decision, predicates, and R15
+  metrics.
 - No new slow-sample filter and no segment-learning implementation are introduced.
 
 ### Tests and quality
@@ -768,7 +794,8 @@ The following documentation updates are required because behavior/defaults/UI ch
 - README and maintained docs contain no stale `0.3` anchor default.
 - README/docs explicitly retain the `10` degree head-to-wind default.
 - R15 docs state that the current sample participates in stability evaluation.
-- R20 docs describe bidirectional SOG/STW mismatch detection and current-drift fail-open behavior.
+- R20 docs describe bidirectional SOG/STW mismatch detection, missing/stale drift fail-open behavior, and invalid-drift
+  fail-closed behavior.
 - Debug logging docs describe the structured one-line diagnostic record, not the old decision-only line.
 - ROADMAP contains the finding #6 Investigation and finding #22 stable-segment idea, both clearly unimplemented.
 

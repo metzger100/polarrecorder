@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 COMBINATOR_ALL = "all"
 COMBINATOR_ANY = "any"
+ACTIVE_INVALID_CORROBORATION = "active_invalid_corroboration"
+SOG_STW_MISMATCH_RULE = "reject_sog_stw_mismatch"
 
 
 @dataclass(frozen=True)
@@ -107,8 +109,9 @@ def _rule_row(
     probes: Mapping[str, EnhancedInput],
 ) -> dict[str, object]:
     enabled = bool(getattr(config, spec.enable_field))
-    status = _resolve_status(config, spec, probes, enabled=enabled)
     signals = _signals(spec)
+    sources = {signal.role: _configured_source_state(config, signal, probes) for signal in signals}
+    status = _resolve_status(spec, sources, enabled=enabled)
     return {
         "rule": spec.rule,
         "enable_field": spec.enable_field,
@@ -119,33 +122,44 @@ def _rule_row(
             for signal in signals
         ],
         "thresholds": {field: getattr(config, field) for field in spec.threshold_fields},
+        "sources": sources,
         "status": status,
         "availability": _availability(status),
     }
 
 
 def _availability(status: str) -> str:
-    if status in {"active", "disabled"}:
+    if status in {"active", ACTIVE_INVALID_CORROBORATION}:
+        return "active"
+    if status == "disabled":
         return status
     return "unavailable"
 
 
 def _resolve_status(
-    config: Config,
     spec: EnhancedRuleSpec,
-    probes: Mapping[str, EnhancedInput],
+    sources: Mapping[str, str],
     *,
     enabled: bool,
 ) -> str:
     if not enabled:
         return "disabled"
-    configured_roles = [
-        signal.role for signal in _signals(spec) if str(getattr(config, signal.key_field))
-    ]
-    if not _configuration_satisfies(spec, len(configured_roles)):
+    configured_states = [state for state in sources.values() if state != "unconfigured"]
+    if not _configuration_satisfies(spec, len(configured_states)):
         return "inactive_key_not_configured"
-    states = [_key_state(probes.get(role)) for role in configured_roles]
-    return _status_from_states(spec, states)
+    if _invalid_corroboration_remains_active(spec, sources):
+        return ACTIVE_INVALID_CORROBORATION
+    return _status_from_states(spec, configured_states)
+
+
+def _invalid_corroboration_remains_active(
+    spec: EnhancedRuleSpec, sources: Mapping[str, str]
+) -> bool:
+    return (
+        spec.rule == SOG_STW_MISMATCH_RULE
+        and sources.get("sog_kt") == "usable"
+        and sources.get("current_drift_kt") == "invalid"
+    )
 
 
 def _status_from_states(spec: EnhancedRuleSpec, states: list[str]) -> str:
@@ -169,6 +183,16 @@ def _is_active(combinator: str, total_fields: int, states: list[str]) -> bool:
     if combinator == COMBINATOR_ALL:
         return len(states) == total_fields and usable == total_fields
     return usable >= 1
+
+
+def _configured_source_state(
+    config: Config,
+    signal: EnhancedSignalSpec,
+    probes: Mapping[str, EnhancedInput],
+) -> str:
+    if not str(getattr(config, signal.key_field)):
+        return "unconfigured"
+    return _key_state(probes.get(signal.role))
 
 
 def _key_state(probe: EnhancedInput | None) -> str:

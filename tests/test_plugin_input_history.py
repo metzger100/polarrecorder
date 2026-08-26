@@ -121,7 +121,7 @@ def test_sog_stw_mismatch_breaks_history_before_mismatch_clears() -> None:
     model = PolarModel()
     mismatch = {"sog_kt": (5.0, 99.5), "current_drift_kt": (0.1, 99.5)}
     mismatch_reads = [
-        make_read_result(now=float(timestamp), stw_kt=1.0, enhanced_raw=mismatch)
+        make_read_result(now=float(timestamp), stw_kt=1.0, enhanced_values=mismatch)
         for timestamp in range(85, 101)
     ]
 

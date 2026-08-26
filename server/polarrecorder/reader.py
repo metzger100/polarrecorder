@@ -85,7 +85,7 @@ class StoreReader:
         twa_entry = self._read_entry(twa_key)
         tws_entry = self._read_entry(tws_key)
         stw_entry = self._read_entry(stw_key)
-        enhanced_raw, enhanced_inputs = self._read_enhanced(now_monotonic)
+        enhanced_values, enhanced_inputs = self._read_enhanced(now_monotonic)
         return ReadResult(
             timestamp_monotonic=now_monotonic,
             timestamp_wall=self._wall_clock(),
@@ -95,7 +95,7 @@ class StoreReader:
             twa_timestamp=_entry_timestamp(twa_entry),
             tws_timestamp=_entry_timestamp(tws_entry),
             stw_timestamp=_entry_timestamp(stw_entry),
-            enhanced_raw=enhanced_raw,
+            enhanced_values=enhanced_values,
             enhanced_inputs=enhanced_inputs,
         )
 
@@ -108,7 +108,7 @@ class StoreReader:
         config = self._config
         if config is None:
             return None, None
-        enhanced_raw: dict[str, tuple[float, float]] = {}
+        enhanced_values: dict[str, tuple[float, float]] = {}
         enhanced_inputs: dict[str, EnhancedInput] = {}
         for spec in ENHANCED_SIGNAL_SPECS:
             if spec.enable_fields and not any(
@@ -130,11 +130,11 @@ class StoreReader:
             if acquisition.state == "usable":
                 assert acquisition.numeric_value is not None
                 assert acquisition.timestamp is not None
-                enhanced_raw[spec.role] = (
+                enhanced_values[spec.role] = (
                     acquisition.numeric_value,
                     acquisition.timestamp,
                 )
-        return enhanced_raw or None, enhanced_inputs or None
+        return enhanced_values or None, enhanced_inputs or None
 
     def _log_invalid(self, role: str, key: str, acquisition: EnhancedInput) -> None:
         if self._logger is not None:

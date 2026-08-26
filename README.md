@@ -25,8 +25,8 @@ Polar Recorder uses three AvNav values:
 | TWS        | True wind speed. The real wind speed after AvNav has calculated true wind. | `gps.trueWindSpeed` |
 | STW        | Speed through water. Usually from the log or paddlewheel.                  | `gps.waterSpeed`    |
 
-Change these defaults in **Settings > Data Sources**; TWA uses degrees, while TWS and STW use m/s before Polar Recorder
-converts and displays the speeds in knots.
+Change these defaults in **Settings > Data Sources**; surrounding whitespace is removed from saved keys. TWA uses
+degrees, while TWS and STW use m/s before Polar Recorder converts and displays the speeds in knots.
 
 Core learning uses true wind angle/speed and speed through water. A configured fresh SOG is also used to distinguish
 anchored from moving samples. Other optional signals are described under
@@ -105,10 +105,11 @@ The Status tab explains what is happening now:
 - persistence and optional enhanced-rule availability
 
 Status also shows whether each optional enhanced rule is active, disabled, or unavailable and why, including invalid
-source data. On startup, a warning appears when no definitive engine-state protection is active or its status cannot be
-verified. RPM-only protection is partial because values below its idle ceiling do not prove the propeller is disengaged;
-pause while motoring or map a definitive engine-state source. Close affects only the page; Never show again stores a
-browser-local preference.
+source data. Speed-log sanity remains active when SOG is usable but current drift is invalid, because corrupt drift
+cannot safely explain a SOG/STW gap; missing or stale drift still makes that rule unavailable. On startup, a warning
+appears when no definitive engine-state protection is active or its status cannot be verified. RPM-only protection is
+partial because values below its idle ceiling do not prove the propeller is disengaged; pause while motoring or map a
+definitive engine-state source. Close affects only the page; Never show again stores a browser-local preference.
 
 ### Timeline
 

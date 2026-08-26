@@ -38,11 +38,14 @@ reason.
 R15 evaluation is pure over a retained-state snapshot plus the current sample. The deeply immutable evaluation used for
 the decision is carried on `PipelineResult`; structured debug formatting serializes that object and never prunes,
 reconfigures, or otherwise mutates live validation state. Diagnostic records also retain JSON-safe raw core scalar
-values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages and acquisition states, and a
-record schema. Schema 4 preserves strings and booleans as actually received while replacing unsupported or non-finite
-objects with `null`; it also includes R15's largest observed gap, allowed gap, observed/required sample counts, and the
-active sample interval, making the continuity decision replayable. Diagnostic emission follows canonical state, model,
-counter, timeline, and status accounting, so logging cannot change the recorded decision.
+values, core source timestamps/ages, enhanced raw/normalized values with timestamps/ages, acquisition states, invalid
+causes, and a record schema. Schema 5 preserves strings and booleans as actually received while replacing unsupported or
+non-finite objects with `null`; it also includes R15's largest observed gap, allowed gap, observed/required sample
+counts, and the active sample interval, making the recorded decision inspectable. Diagnostic emission follows canonical
+state, model, counter, timeline, and status accounting, so logging cannot change the recorded decision. One record is
+emitted for each completed store read, including a read discarded after a configuration change. A reader exception that
+produces no `ReadResult` is reported through the normal AvNav loop error path instead. These are structured decision
+diagnostics, not a promise of literal full-pipeline replay across arbitrary configuration changes.
 
 Model dispatch consumes `(PipelineResult, Sample | None)`. Accepted samples enter the histogram. Quality-gate rejections
 and quarantines update per-bin diagnostics. Candidacy-gate rejections and `reject_warming_up` do not touch the model.
@@ -58,7 +61,7 @@ applies the bounded future-skew policy and role-specific lower and upper physica
 enhanced-status endpoint. RPM, engine-state numeric values, depth, SOG, current-drift magnitude, and AWS reject negative
 values; AWA and heel remain signed. Boolean values are accepted only for the `engine_signal` role. Numeric strings are
 accepted as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains every acquisition state for
-diagnostics, while `ReadResult.enhanced_raw` contains only usable canonical values with timestamps. `build_sample`
+diagnostics, while `ReadResult.enhanced_values` contains only usable canonical values with timestamps. `build_sample`
 copies those already-normalized values into `Sample.enhanced`; absent, stale, and invalid roles are omitted, while
 invalid role identity is retained separately so corrupt evidence cannot masquerade as an unavailable optional source.
 Enhanced rules read only from the built `Sample` (and `Config`), return `RuleResult`, and keep the same no-AvNav,

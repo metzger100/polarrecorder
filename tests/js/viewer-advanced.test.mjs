@@ -43,7 +43,7 @@ function advancedGroups() {
           value: 10
         },
         {
-          description: "Writes one diagnostic log line per sampling iteration.",
+          description: "Writes one decision diagnostic per completed store read.",
           field: "debug_logging",
           label: "Debug logging",
           type: "BOOLEAN",

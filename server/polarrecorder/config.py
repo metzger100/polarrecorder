@@ -18,6 +18,10 @@ if TYPE_CHECKING:
 
     from polarrecorder.logger import Logger
 
+SOURCE_KEY_FIELDS = frozenset(
+    str(spec["name"]) for spec in CONFIG_PARAMETERS if spec["type"] == "STRING"
+)
+
 
 @dataclass(frozen=True)
 class Config:
@@ -160,7 +164,8 @@ def _parse_spec_value(
         return int(_clamp(float(int(raw_value)), spec, logger))
     if value_type == "FLOAT":
         return _clamp(float(raw_value), spec, logger)
-    return raw_value
+    name = _spec_string(spec, "name")
+    return raw_value.strip() if name in SOURCE_KEY_FIELDS else raw_value
 
 
 def _parse_supplied_value(
