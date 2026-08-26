@@ -126,8 +126,9 @@ other.
 **Routing POL (.pol)** creates a fixed 30-180° absolute-TWA table for NavimetriX and compatible routing apps. It folds
 port and starboard observations together by merging their sample histograms before percentile calculation. POL never
 changes or folds the stored learned model. Because NavimetriX does not publicly document blank-cell support, the
-download fails with a missing-cell count until all 108 routing cells meet the selected confidence floor; no performance
-is interpolated or extrapolated.
+download fails with a missing-cell count until every routing cell meets the selected confidence floor; no performance is
+interpolated or extrapolated. Wind columns above your "Maximum true wind" setting are left out of the table, because
+recording rejects that wind and the column could never fill.
 
 **Tack-aware CSV (.csv)** is for spreadsheets, Windy, custom TWA/TWS grids, starboard-only or port-only inspection, and
 full 360° tack asymmetry. You can preview or download CSV, edit its grid, and save presets. Presets and the grid editor

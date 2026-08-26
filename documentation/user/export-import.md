@@ -34,18 +34,29 @@ port-side data. TWS values must be integers 1 through the active `max_tws`. Valu
 as `polarrecorder-routing.pol`. Its fixed grid is:
 
 - TWA rows: `[30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]`.
-- TWS columns: `[4, 6, 8, 10, 12, 14, 16, 20, 25]` knots.
+- TWS columns: `[4, 6, 8, 10, 12, 14, 16, 20, 25]` knots, trimmed to the columns at or below the active `max_tws`.
 
-The table starts with the common `TWA\TWS` label used by Polar Recorder CSV and published routing-format examples,
-places TWS across columns and TWA down rows, separates every field with a tab, formats STW in knots to one decimal, and
-uses CRLF line endings. The browser writes UTF-8 text without a BOM. No row exceeds 180 deg. The grid reuses the
-practical Windy sailing angles but deliberately omits its artificial 0 deg origin row: NavimetriX does not document a
-requirement for 0 deg, published Adrena examples begin at a sailing angle, and SailGrib describes 0 deg as recommended
-rather than mandatory.
+Recording rejects true wind above `max_tws`, so a column above that ceiling could never fill and would fail every
+export. `max_tws` is a 20-60 knot setting, so at `max_tws=20` or `22` the 25-knot column is dropped and the table is
+12x8; at 25 and above it is the full 12x9. Nothing else about the grid varies.
+
+The table starts with `TWA/TWS`, the spelling Adrena's and SailGrib's published `.pol` examples use and one of the two
+qtVlm documents as accepted; Polar Recorder CSV keeps its own `TWA\TWS` first cell, so the two formats do not share a
+header. POL places TWS across columns and TWA down rows, separates every field with a tab, formats STW in knots to one
+decimal, and uses CRLF line endings. The browser writes UTF-8 text without a BOM. No row exceeds 180 deg. The grid
+reuses the practical Windy sailing angles but deliberately omits its artificial 0 deg origin row: NavimetriX does not
+document a requirement for 0 deg, published Adrena examples begin at a sailing angle, and SailGrib describes 0 deg as
+recommended rather than mandatory.
 
 POL folding is export-only; stored learned data remains true 0-359 deg and tack-aware. For each source bin, POL computes
 `min(twa, 360 - twa)`, assigns that absolute angle and its TWS to the target cell, merges the underlying port and
-starboard STW histograms and sample counts, then applies the percentile and sample floor to the merged population. It
+starboard STW histograms and sample counts, then applies the percentile and sample floor to the merged population.
+
+Projection runs on `[0, 30, 40, ... , 180]` while serialization emits only 30 deg and above. That hidden head-to-wind
+point is a boundary, not an exported row: without it the first exported angle's midpoint interval would stretch down to
+0 deg and samples nearer the bow than any sailing angle would set the 30 deg boat speed. With it, folded angles 0-14 deg
+land in the discarded 0 deg bucket and 15-34 deg in the 30 deg row, matching the CSV projection's midpoint semantics.
+`head_to_wind_threshold` is configurable down to 5 deg, so accepted samples below 15 deg are real, not hypothetical. It
 never averages separately calculated tack speeds. The optional `percentile=1..99` override and
 `high_confidence=yes|true|1` have the same meanings as CSV, but the Export tab keeps them per format: the POL card's
 percentile and confidence settings apply to the POL download only, and the CSV card's apply to the CSV preview and
@@ -54,9 +65,9 @@ download only.
 NavimetriX's public documentation specifies tab-separated `.pol` and identifies it as the format used by SailGrib,
 Adrena, and other navigation applications, but does not specify blank-cell acceptance, arbitrary-grid limits, encoding,
 newline style, exact first-cell spelling, or a mandatory 0 deg row. Polar Recorder therefore does not fabricate,
-interpolate, or extrapolate missing performance. All 108 fixed-grid cells must meet the selected sample floor; otherwise
-export fails with the number of insufficient cells. This is intentionally conservative until NavimetriX documents
-incomplete matrices.
+interpolate, or extrapolate missing performance. Every cell of the active grid (108 at `max_tws` 25 or above, 96 below
+it) must meet the selected sample floor; otherwise export fails with the number of insufficient cells. This is
+intentionally conservative until NavimetriX documents incomplete matrices.
 
 Format references:
 
