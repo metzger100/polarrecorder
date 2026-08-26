@@ -11,7 +11,12 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder.params import CONFIG_PARAMETERS
-from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
+from polarrecorder.source_params import (
+    CORE_KEY_FIELDS,
+    STW_KEY_DEFAULT,
+    TWA_KEY_DEFAULT,
+    TWS_KEY_DEFAULT,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -159,13 +164,18 @@ def _parse_spec_value(
         if normalized not in {"TRUE", "FALSE"}:
             message = f"Invalid boolean value {raw_value!r}"
             raise ValueError(message)
-        return normalized == "TRUE"
-    if value_type == "NUMBER":
-        return int(_clamp(float(int(raw_value)), spec, logger))
-    if value_type == "FLOAT":
-        return _clamp(float(raw_value), spec, logger)
-    name = _spec_string(spec, "name")
-    return raw_value.strip() if name in SOURCE_KEY_FIELDS else raw_value
+        parsed: object = normalized == "TRUE"
+    elif value_type == "NUMBER":
+        parsed = int(_clamp(float(int(raw_value)), spec, logger))
+    elif value_type == "FLOAT":
+        parsed = _clamp(float(raw_value), spec, logger)
+    else:
+        name = _spec_string(spec, "name")
+        parsed = raw_value.strip() if name in SOURCE_KEY_FIELDS else raw_value
+        if name in CORE_KEY_FIELDS and not parsed:
+            message = f"Empty core source key {name}"
+            raise ValueError(message)
+    return parsed
 
 
 def _parse_supplied_value(

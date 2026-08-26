@@ -53,7 +53,8 @@ SOG/current drift, 200 kt AWS, +/-360 degrees AWA, +/-180 degrees heel, and 0-36
 sanity bounds, separate from the lower configurable rejection thresholds.
 
 Leading and trailing whitespace is removed from every core and optional store-key setting before it is parsed,
-persisted, or installed. Optional keys may normalize to an empty string to disable that source; core keys may not.
+persisted, or installed. Optional keys may normalize to an empty string to disable that source; core keys may not. Blank
+initial core keys are treated as invalid persisted values and restored to the defaults in the table above.
 
 | Role in `Sample.enhanced` | Config key (default)                         |          Store unit | Canonical unit |
 | ------------------------- | -------------------------------------------- | ------------------: | -------------: |

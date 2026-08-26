@@ -67,16 +67,17 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   server's summary or its precise rejection. Reset still requires the `RESET` confirmation.
 - Settings also owns a fourth **Enhanced Rules** card (`EnhancedSettings.Render()`), rendered from `GET enhanced/keys`
   and `GET enhanced/status`. Each rule shows an Enabled switch (the shared `.switch-field` control also used by the
-  Export tab), one `<select>` per configured key field listing the currently-present store keys (SignalK keys appear as
-  `gps.signalk.*`; an already-configured key stays selected even when it is not publishing), the rule's threshold
-  inputs, and a live status badge whose primary vocabulary is `active`, `disabled`, or `unavailable`, with the detailed
-  cause (`no key set`, `key not in store`, `value stale`, or `value invalid`) retained as supporting text. R20's
-  fail-closed invalid-drift case is labeled active, and the API retains each role's source state. A single "Save
-  Enhanced Settings" button validates that every threshold is a finite number (`Number.isFinite`) before collecting
-  every control into one `GET enhanced/save` call and then re-fetching status to refresh the badges; a non-numeric
-  threshold blocks the save with a visible error. The badge classes are `.enhanced-badge-<status>`, each with its own
-  `--polarrecorder-*` treatment: `active` reads accepted-green, `value stale` quarantined-amber, `key not in store`
-  rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted second-color.
+  Export tab), one editable text input per configured key field backed by a `<datalist>` of currently-present store keys
+  (SignalK keys appear as `gps.signalk.*`; arbitrary custom keys can be typed, and an already-configured key stays
+  selected even when it is not publishing), the rule's threshold inputs, and a live status badge whose primary
+  vocabulary is `active`, `disabled`, or `unavailable`, with the detailed cause (`no key set`, `key not in store`,
+  `value stale`, or `value invalid`) retained as supporting text. R20's fail-closed invalid-drift case is labeled
+  active, and the API retains each role's source state. A single "Save Enhanced Settings" button validates that every
+  threshold is a finite number (`Number.isFinite`) before collecting every control into one `GET enhanced/save` call and
+  then re-fetching status to refresh the badges; a non-numeric threshold blocks the save with a visible error. The badge
+  classes are `.enhanced-badge-<status>`, each with its own `--polarrecorder-*` treatment: `active` reads
+  accepted-green, `value stale` quarantined-amber, `key not in store` rejected-red, `no key set` a dashed neutral
+  outline, and `disabled` the muted second-color.
 - A fifth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below Enhanced Rules and is rendered from
   `GET advanced/settings`. It exposes the safe runtime-tuning settings from the server allowlist, grouped as Sampling
   and Persistence, Sensor Freshness, Core Filters, Stability and Maneuvers, and Engine Heuristic. Numeric fields use

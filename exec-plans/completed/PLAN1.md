@@ -2,7 +2,27 @@
 
 ## Status
 
-Implemented through all six phases and seven implementation-review remediation passes.
+Implemented through all six phases and eight implementation-review remediation passes.
+
+### Amendment — 2026-08-26: eighth implementation-review remediation
+
+A fresh archive review found that R15's exact nominal-cadence density floor could remain in warm-up forever under
+moderate sustained scheduler delay, the Enhanced Settings UI advertised custom source keys but exposed select-only
+controls, blank initial core source keys survived parsing, and one maintained AvNav configuration contract still said
+string values were unchanged. Completion now additionally requires a bounded 10% R15 cadence-slippage allowance while
+retaining the independent span, density, and three-interval gap protections; sustained 5–10% delay, one missed tick,
+and evenly sparse counterexamples; editable suggestion-backed enhanced key inputs; initial blank-core-key default
+repair; synchronized README/API/UI/configuration contracts; focused deterministic regressions; and a green full gate.
+The optional per-source Status expansion and explicit rule-level enable checks remain future hardening rather than
+closure blockers. Optional enhanced-source skew remains evidence-gathering work, and `plugin.py` remains at its hotspot
+ceiling pending a deliberately planned integration-shell split.
+
+**Eighth-review exit evidence:** `npm run check:all` exited successfully with 457 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.34% aggregate Python coverage, and 92.77% viewer/plugin line coverage. The focused R15,
+configuration, diagnostics, and plugin-integration suite passed 78 Python tests; focused enhanced/smoke viewer coverage
+passed 8 tests. The smell scan checked 333 files with zero findings, and strict typing, packaging, documentation,
+duplication, complexity, scaling, file-size, runtime-contract, and coverage-inventory checks all passed. `plugin.py`
+remains unchanged at its 379-non-empty-line hotspot ceiling.
 
 ### Amendment — 2026-08-26: seventh implementation-review remediation
 
@@ -738,9 +758,11 @@ The following documentation updates are required because behavior/defaults/UI ch
 | `documentation/filters/poisoning-resistance.md` | Data-quality consequences and remaining engine limitation.                                                                                               |
 | `documentation/architecture/data-pipeline.md`   | Current-sample R15, primary decision + all predicates, state observation order.                                                                          |
 | `documentation/architecture/persistence.md`     | Additive predicate histograms and old-backup behavior.                                                                                                   |
-| `documentation/architecture/api.md`             | `top_predicates`, enhanced `availability`, compatibility fields.                                                                                         |
-| `documentation/architecture/ui.md`              | Candidates wording, enhanced status card, popup/storage behavior, heartbeat contract.                                                                    |
-| `documentation/user/configuration.md`           | `anchored_stw_threshold=0.5`, SOG/STW semantics, head-to-wind remains 10, structured `debug_logging`.                                                    |
+| `documentation/architecture/api.md`             | `top_predicates`, enhanced `availability`, editable custom-key contract, compatibility fields.                                                            |
+| `documentation/architecture/ui.md`              | Candidates wording, editable enhanced key inputs, enhanced status card, popup/storage behavior, heartbeat contract.                                       |
+| `documentation/user/configuration.md`           | `anchored_stw_threshold=0.5`, SOG/STW semantics, source-key normalization, head-to-wind remains 10, structured `debug_logging`.                            |
+| `documentation/avnav/editable-parameters.md`    | Trimmed source strings, optional-empty keys, and initial blank-core-key fallback.                                                                          |
+| `documentation/avnav/keys-and-units.md`          | Blank initial core-key repair and optional custom-key behavior.                                                                                            |
 
 `documentation/TABLEOFCONTENTS.md` needs no new entry because no new maintained documentation page is planned.
 
@@ -753,6 +775,8 @@ The following documentation updates are required because behavior/defaults/UI ch
 - With fresh SOG, R10 uses SOG as the anchor speed; without SOG it falls back to STW; it never evaluates both as
   independent anchor predicates for the same sample.
 - R15 includes the current sample in the evaluated stability ranges without observing/committing it early.
+- R15 density tolerates up to 10% sustained scheduler slippage and one missed nominal tick while evenly sparse history
+  remains warming up under the independent density and maximum-gap checks.
 - R15 primary reason remains `reject_unstable`, with `unstable_twa`, `unstable_tws`, and `unstable_stw` available as
   independent predicate diagnostics.
 - Existing first-match primary decision/reason ordering remains unchanged across all rules.
@@ -765,6 +789,8 @@ The following documentation updates are required because behavior/defaults/UI ch
 - Status uses **Candidates** terminology and does not imply missing-input reason counts are candidate counts.
 - Every enhanced rule has normalized availability `active`, `disabled`, or `unavailable`, with the detailed cause still
   accessible.
+- Enhanced source-key controls retain discovered-key suggestions and accept arbitrary free-text custom keys.
+- Blank initial core TWA/TWS/STW keys restore their defaults; optional enhanced keys may remain empty.
 - The engine popup is checked only at viewer startup, appears when no definitive engine-state rule is active, has exactly
   **Close** and **Never show again**, and browser-local suppression works across page loads.
 - No engine popup preference is written to Polar Recorder runtime config or `polar.json`.
@@ -794,6 +820,7 @@ The following documentation updates are required because behavior/defaults/UI ch
 - README and maintained docs contain no stale `0.3` anchor default.
 - README/docs explicitly retain the `10` degree head-to-wind default.
 - R15 docs state that the current sample participates in stability evaluation.
+- R15 docs state the bounded scheduler-slippage allowance and retained sparse-history protections.
 - R20 docs describe bidirectional SOG/STW mismatch detection, missing/stale drift fail-open behavior, and invalid-drift
   fail-closed behavior.
 - Debug logging docs describe the structured one-line diagnostic record, not the old decision-only line.

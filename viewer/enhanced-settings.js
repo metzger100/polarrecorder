@@ -22,16 +22,17 @@ window.Polarrecorder = window.Polarrecorder || {};
    * }} EnhancedRule
    */
   /** @typedef {{field: string, kind: "bool", control: HTMLInputElement}} BoolControlItem */
-  /** @typedef {{field: string, kind: "text", control: HTMLSelectElement}} TextControlItem */
+  /** @typedef {{field: string, kind: "text", control: HTMLInputElement}} TextControlItem */
   /** @typedef {{field: string, kind: "number", control: HTMLInputElement}} NumberControlItem */
   /** @typedef {BoolControlItem | TextControlItem | NumberControlItem} ControlItem */
+  /** @typedef {{control: HTMLInputElement, suggestions: HTMLDataListElement}} KeyControl */
   /**
    * @typedef {{
    *   body: HTMLElement,
    *   messageNode: HTMLElement,
    *   keys: string[],
    *   controls: ControlItem[],
-   *   keySelects: HTMLSelectElement[],
+   *   keyControls: KeyControl[],
    *   keysLoading: boolean
    * }} EnhancedState
    */
@@ -66,7 +67,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     messageNode: document.createElement("p"),
     keys: [],
     controls: [],
-    keySelects: [],
+    keyControls: [],
     keysLoading: false
   };
 
@@ -108,7 +109,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @param {EnhancedRule[]} rules */
   function renderRules(rules) {
     state.controls = [];
-    state.keySelects = [];
+    state.keyControls = [];
     Polarrecorder.Dom.Clear(state.body);
     if (!rules.length) {
       state.body.appendChild(Polarrecorder.Dom.Node("p", "helper", "Enhanced status is unavailable."));
@@ -166,39 +167,44 @@ window.Polarrecorder = window.Polarrecorder || {};
   function keyField(entry) {
     const wrap = Polarrecorder.Dom.Node("label", "field enhanced-key");
     wrap.appendChild(Polarrecorder.Dom.Node("span", null, fieldLabel(entry.field)));
-    const select = keySelect(entry.key || "");
-    wrap.appendChild(select);
-    state.controls.push({ field: entry.field, kind: "text", control: select });
+    const control = keyInput(entry.field, entry.key || "");
+    wrap.appendChild(control.input);
+    wrap.appendChild(control.suggestions);
+    state.controls.push({ field: entry.field, kind: "text", control: control.input });
     return wrap;
   }
 
   /**
+   * @param {string} field
    * @param {string} current
-   * @returns {HTMLSelectElement}
+   * @returns {{input: HTMLInputElement, suggestions: HTMLDataListElement}}
    */
-  function keySelect(current) {
-    const select = document.createElement("select");
-    populateSelect(select, current);
-    select.addEventListener("focus", refreshKeys);
-    state.keySelects.push(select);
-    return select;
+  function keyInput(field, current) {
+    const input = document.createElement("input");
+    const suggestions = document.createElement("datalist");
+    suggestions.id = "enhanced-key-options-" + field;
+    input.type = "text";
+    input.value = current;
+    input.setAttribute("list", suggestions.id);
+    populateSuggestions(suggestions, current);
+    input.addEventListener("focus", refreshKeys);
+    state.keyControls.push({ control: input, suggestions: suggestions });
+    return { input: input, suggestions: suggestions };
   }
 
   /**
-   * @param {HTMLSelectElement} select
+   * @param {HTMLDataListElement} suggestions
    * @param {string} current
    */
-  function populateSelect(select, current) {
-    Polarrecorder.Dom.Clear(select);
-    appendOption(select, "", "— none —");
+  function populateSuggestions(suggestions, current) {
+    Polarrecorder.Dom.Clear(suggestions);
     const options = state.keys.slice();
     if (current && options.indexOf(current) === -1) {
       options.push(current);
     }
     options.forEach(function (key) {
-      appendOption(select, key, key);
+      appendOption(suggestions, key);
     });
-    select.value = current;
   }
 
   function refreshKeys() {
@@ -209,8 +215,8 @@ window.Polarrecorder = window.Polarrecorder || {};
     action("enhanced/keys")
       .then(function (data) {
         state.keys = (data && data.keys) || [];
-        state.keySelects.forEach(function (select) {
-          populateSelect(select, select.value);
+        state.keyControls.forEach(function (item) {
+          populateSuggestions(item.suggestions, item.control.value);
         });
       })
       .catch(function (error) {
@@ -222,15 +228,14 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
-   * @param {HTMLSelectElement} select
+   * @param {HTMLDataListElement} suggestions
    * @param {string} value
-   * @param {string} label
    */
-  function appendOption(select, value, label) {
+  function appendOption(suggestions, value) {
     const option = document.createElement("option");
     option.value = value;
-    option.textContent = label;
-    select.appendChild(option);
+    option.textContent = value;
+    suggestions.appendChild(option);
   }
 
   /**

@@ -172,7 +172,7 @@
   background: var(--polarrecorder-second-color);
 }
 
-.enhanced-key select {
+.enhanced-key input {
   margin-bottom: 0.2857rem;
 }
 

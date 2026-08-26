@@ -38,7 +38,8 @@ Parsing rules:
 - `BOOLEAN` is true only when the stripped upper-case string is `TRUE`.
 - `NUMBER` values parse as integers and are clamped to `rangeOrList`.
 - `FLOAT` values parse as floats and are clamped to `rangeOrList`.
-- `STRING` values pass through unchanged; they hold optional store keys for the enhanced rules.
+- Store-key `STRING` values are whitespace-trimmed. Optional enhanced keys may be empty; blank core TWA/TWS/STW keys are
+  invalid and fall back to their defaults during initial parsing.
 - Invalid viewer changes are rejected before persistence or runtime mutation; invalid initial values fall back to
   defaults.
 - Polar Recorder registers no editable parameters of its own (`EDITABLE_PARAMETERS` is empty).

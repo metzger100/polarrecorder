@@ -29,6 +29,8 @@ AvNav stores and forwards editable values as strings. Polar Recorder strictly ac
 (case-insensitive). Viewer save requests require numeric settings to parse as finite `int` or `float` values inside
 their `rangeOrList`; invalid requests are rejected without persistence or runtime mutation. Invalid, non-finite, or
 unrepresentably large values found during initial host-config parsing fall back to the previous value or default.
+Source-key strings are trimmed; blank initial core TWA/TWS/STW keys are invalid and restore their defaults, while
+optional enhanced keys may remain empty.
 
 AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole plugin. Polar Recorder
 does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
@@ -94,6 +96,8 @@ The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to s
 automatically on upgrade** for any boat that already publishes those keys. To opt out, toggle the rule off or clear its
 key in the Settings tab's Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine_state_key`,
 `enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no standard key for them.
+Each Enhanced Rules key control is editable: currently-published AvNav keys appear as suggestions, and you can type an
+arbitrary custom store key when discovery cannot enumerate its prefix.
 
 | Name                            |    Type |                Default |       Range | Behavior                                                                             |
 | ------------------------------- | ------: | ---------------------: | ----------: | ------------------------------------------------------------------------------------ |

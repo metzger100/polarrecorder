@@ -75,6 +75,30 @@ def test_parse_config_values_trims_core_and_optional_source_keys() -> None:
     assert config.enh_heel_key == ""
 
 
+def test_blank_initial_core_source_keys_restore_defaults() -> None:
+    logger = FakeLogger()
+
+    config = parse_config_values(
+        {
+            "twa_key": "   ",
+            "tws_key": "",
+            "stw_key": "\t",
+            "enh_rpm_key": "   ",
+        },
+        logger,
+    )
+
+    assert config.twa_key == "gps.trueWindAngle"
+    assert config.tws_key == "gps.trueWindSpeed"
+    assert config.stw_key == "gps.waterSpeed"
+    assert config.enh_rpm_key == ""
+    assert logger.messages == [
+        ("warn", "Invalid config twa_key='   '; keeping previous/default value"),
+        ("warn", "Invalid config tws_key=''; keeping previous/default value"),
+        ("warn", "Invalid config stw_key='\\t'; keeping previous/default value"),
+    ]
+
+
 def test_parse_config_values_clamps_numeric_ranges_from_params() -> None:
     logger = FakeLogger()
     below: dict[str, str] = {}
