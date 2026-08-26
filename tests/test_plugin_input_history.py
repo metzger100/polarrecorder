@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -59,6 +60,25 @@ def test_iteration_drops_read_when_config_snapshot_is_superseded(tmp_path: Path)
 
     assert plugin._counters.total_seen == 0
     assert plugin._last_data_status == "no_data"
+
+
+def test_superseded_read_emits_explicit_diagnostic_when_enabled(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.set_value(reader.TWA_KEY, 90.0, 100.0)
+    api.set_value(reader.TWS_KEY, 6.0, 100.0)
+    api.set_value(reader.STW_KEY, 3.0, 100.0)
+    plugin = make_plugin(tmp_path, api)
+    stale_config = replace(plugin.config, debug_logging=True)
+    with plugin._lock:
+        plugin.config = replace(stale_config, max_stw=10)
+
+    plugin._run_iteration(stale_config)
+
+    diagnostic = next(message for level, message in api.logs if level == "debug")
+    payload = json.loads(diagnostic.removeprefix("diagnostic_sample="))
+    assert payload["pipeline"]["decision"] == "discarded"
+    assert payload["pipeline"]["reason_codes"] == ["config_superseded"]
+    assert plugin._counters.total_seen == 0
 
 
 def test_pause_and_resume_each_clear_stability_history(tmp_path: Path) -> None:

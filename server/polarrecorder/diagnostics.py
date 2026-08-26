@@ -7,6 +7,7 @@ polarrecorder.validation.pipeline, polarrecorder.validation.rules_stability
 
 from __future__ import annotations
 
+import json
 import math
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from polarrecorder.validation.rules_stability import StabilityEvaluation
 
 DIAGNOSTIC_SCHEMA_VERSION = 4
+DIAGNOSTIC_PREFIX = "diagnostic_sample="
 
 
 class CurrentValues(NamedTuple):
@@ -71,7 +73,42 @@ def format_sample_diagnostic(
     Returns:
         Replay-oriented diagnostic fields with unavailable numbers represented by ``None``.
     """
-    payload: dict[str, object] = {
+    payload = _diagnostic_base(read_result, sample, config)
+    payload["pipeline"] = {
+        "decision": result.decision,
+        "reason_codes": list(result.reason_codes),
+        "failed_predicates": list(result.failed_predicates),
+        "is_sailing_candidate": result.is_sailing_candidate,
+        "retain_stability_history": result.retain_stability_history,
+    }
+    payload["r15"] = _stability_values(result.stability_evaluation)
+    return payload
+
+
+def format_superseded_diagnostic(read_result: ReadResult, config: Config) -> dict[str, object]:
+    """Format a discarded read whose configuration snapshot was superseded."""
+    payload = _diagnostic_base(read_result, None, config)
+    payload["pipeline"] = {
+        "decision": "discarded",
+        "reason_codes": ["config_superseded"],
+        "failed_predicates": [],
+        "is_sailing_candidate": False,
+        "retain_stability_history": False,
+    }
+    payload["r15"] = _stability_values(None)
+    return payload
+
+
+def serialize_diagnostic(payload: dict[str, object]) -> str:
+    """Serialize one finite diagnostic payload with its log prefix."""
+    serialized = json.dumps(payload, allow_nan=False, separators=(",", ":"), sort_keys=True)
+    return DIAGNOSTIC_PREFIX + serialized
+
+
+def _diagnostic_base(
+    read_result: ReadResult, sample: Sample | None, config: Config
+) -> dict[str, object]:
+    return {
         "schema_version": DIAGNOSTIC_SCHEMA_VERSION,
         "timestamp_wall": _finite_or_none(read_result.timestamp_wall),
         "timestamp_monotonic": _finite_or_none(read_result.timestamp_monotonic),
@@ -79,17 +116,8 @@ def format_sample_diagnostic(
         "core_normalized": _core_normalized_values(sample),
         "core_sources": _core_sources(read_result),
         "enhanced": _enhanced_values(read_result, sample),
-        "pipeline": {
-            "decision": result.decision,
-            "reason_codes": list(result.reason_codes),
-            "failed_predicates": list(result.failed_predicates),
-            "is_sailing_candidate": result.is_sailing_candidate,
-            "retain_stability_history": result.retain_stability_history,
-        },
-        "r15": _stability_values(result.stability_evaluation),
         "config": _diagnostic_config(config),
     }
-    return payload
 
 
 def _core_raw_values(read_result: ReadResult) -> dict[str, object]:

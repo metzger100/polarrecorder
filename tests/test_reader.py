@@ -308,7 +308,7 @@ def test_reader_retains_missing_stale_and_usable_acquisition_states() -> None:
 
     assert read_result.enhanced_inputs is not None
     assert read_result.enhanced_inputs["sog_kt"].state == "usable"
-    assert read_result.enhanced_inputs["sog_kt"].numeric_value == 2.5
+    assert read_result.enhanced_inputs["sog_kt"].numeric_value == 2.5 * 1.94384
     assert read_result.enhanced_inputs["depth_m"].state == "stale"
     assert read_result.enhanced_inputs["awa_deg"].state == "missing"
 
@@ -380,3 +380,73 @@ def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
     assert read_result.enhanced_inputs["awa_deg"].state == "usable"
     assert read_result.enhanced_inputs["heel_deg"].state == "usable"
     assert read_result.enhanced_raw == {"awa_deg": (-30.0, 99.5), "heel_deg": (-12.0, 99.5)}
+
+
+def test_reader_rejects_values_that_overflow_during_unit_normalization() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry("gps.speed", 1e308, 99.5)
+    api.set_entry("gps.currentDrift", 1e308, 99.5)
+
+    read_result = StoreReader(
+        api, FakeClock(100.0), FakeClock(1000.0), config=default_config()
+    ).read()
+
+    assert read_result.enhanced_inputs is not None
+    assert read_result.enhanced_inputs["sog_kt"].state == "invalid"
+    assert read_result.enhanced_inputs["current_drift_kt"].state == "invalid"
+    assert read_result.enhanced_raw is None or "sog_kt" not in read_result.enhanced_raw
+    assert read_result.enhanced_raw is None or "current_drift_kt" not in read_result.enhanced_raw
+
+
+def test_reader_rejects_finite_value_above_canonical_role_ceiling() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry("gps.speed", 60.0, 99.5)
+
+    read_result = StoreReader(
+        api, FakeClock(100.0), FakeClock(1000.0), config=default_config()
+    ).read()
+
+    assert read_result.enhanced_inputs is not None
+    acquisition = read_result.enhanced_inputs["sog_kt"]
+    assert acquisition.state == "invalid"
+    assert acquisition.invalid_cause == "range"
+
+
+def test_overflowing_sog_cannot_bypass_anchored_rejection() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry(STW_KEY, 0.2 / 1.94384, 99.5)
+    api.set_entry("gps.speed", 1e308, 99.5)
+    config = default_config()
+
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
+    result, sample = pipeline.run(read_result, ValidationState(), config)
+
+    assert sample is not None
+    assert sample.enhanced is None
+    assert result.reason_codes == ("reject_anchored",)
+
+
+def test_invalid_current_drift_cannot_explain_sog_stw_mismatch() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry(STW_KEY, 1.0 / 1.94384, 99.5)
+    api.set_entry("gps.speed", 5.0 / 1.94384, 99.5)
+    api.set_entry("gps.currentDrift", 1e308, 99.5)
+    config = default_config()
+    state = ValidationState()
+    for timestamp in range(85, 100):
+        sample = build_sample(
+            StoreReader(api, FakeClock(float(timestamp)), FakeClock(1000.0), config=config).read()
+        )
+        assert sample is not None
+        state.observe(sample, window_seconds=config.stability_window_seconds)
+
+    read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
+    result, sample = pipeline.run(read_result, state, config)
+
+    assert sample is not None
+    assert "current_drift_kt" in sample.invalid_enhanced_roles
+    assert result.reason_codes == ("reject_sog_stw_mismatch",)

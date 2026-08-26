@@ -77,7 +77,7 @@ def test_build_sample_returns_none_for_nonnumeric_boolean_and_huge_integer_value
     assert build_sample(make_read_result(stw_raw=10**10_000)) is None
 
 
-def test_build_sample_converts_enhanced_speeds_and_passes_through_other_roles() -> None:
+def test_build_sample_trusts_canonical_enhanced_values() -> None:
     sample = build_sample(
         make_read_result(
             enhanced_raw={
@@ -93,9 +93,9 @@ def test_build_sample_converts_enhanced_speeds_and_passes_through_other_roles() 
 
     assert sample is not None
     assert sample.enhanced is not None
-    assert math.isclose(sample.enhanced["sog_kt"], 5.0 * 1.94384)
-    assert math.isclose(sample.enhanced["aws_kt"], 4.0 * 1.94384)
-    assert math.isclose(sample.enhanced["current_drift_kt"], 0.5 * 1.94384)
+    assert sample.enhanced["sog_kt"] == 5.0
+    assert sample.enhanced["aws_kt"] == 4.0
+    assert sample.enhanced["current_drift_kt"] == 0.5
     assert sample.enhanced["depth_m"] == 3.0
     assert sample.enhanced["rpm"] == 800.0
     assert sample.enhanced["awa_deg"] == 30.0

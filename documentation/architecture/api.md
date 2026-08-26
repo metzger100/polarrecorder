@@ -103,10 +103,11 @@ lock. Status uses the same missing/stale/invalid/usable acquisition contract as 
 required source is currently consumable by validation; invalid values, including negative unsigned physical roles,
 report `inactive_value_invalid` and `unavailable`. Unavailable causes use a deterministic priority: incomplete
 configuration, missing store source, then stale value; an any-source rule remains active when any configured source is
-fresh. Both viewer settings save endpoints validate the complete allowlisted update, call `api.saveConfigValues` without
-holding the plugin lock, and only then install the parsed `Config` under the lock. A failed host write therefore leaves
-runtime state unchanged. If another update lands during host I/O, the requested values are re-parsed over that newer
-config so unrelated concurrent changes survive.
+fresh. Both viewer settings save endpoints validate the complete allowlisted update and cross-field relationships,
+reserve the single configuration transaction under the plugin lock, call `api.saveConfigValues` without holding the
+lock, and only then install the parsed `Config`. An overlapping save is rejected before host I/O, and a failed host
+write leaves runtime state unchanged. Core source-key changes clear stability, cooldown, and prior-transition history;
+heading/COG source changes clear only the prior transition reference.
 
 State mutations use GET for AvNav/viewer simplicity. Destructive reset requires `confirm=yes`; preset deletion also
 requires confirmation. Polar persistence writes still happen on the plugin thread. Preset writes are the exception:

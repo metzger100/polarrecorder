@@ -41,14 +41,14 @@ Single-lock discipline:
 
 Runtime state ownership:
 
-| State             | Owner            | Notes                                                                         |
-| ----------------- | ---------------- | ----------------------------------------------------------------------------- |
-| `Config`          | `plugin.py`      | Parsed from AvNav plugin configuration values and hot-swapped under the lock. |
-| `ValidationState` | `plugin.py`      | Observed after each built sample; not reset on normal config changes.         |
-| `PolarModel`      | `plugin.py`      | Mutated only through `commit.commit_sample()` or reset under the lock.        |
-| `Counters`        | `plugin.py`      | Updated with the same pipeline decision that updates the model.               |
-| `Timeline`        | `plugin.py`      | Uses injected wall clock for minute buckets.                                  |
-| `polar.json`      | `persistence.py` | Serialized from locked snapshots and written by the plugin thread.            |
+| State             | Owner            | Notes                                                                                            |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `Config`          | `plugin.py`      | Parsed from AvNav plugin configuration values and hot-swapped under the lock.                    |
+| `ValidationState` | `plugin.py`      | Observed after each built sample; source-identity changes reset dependent retained observations. |
+| `PolarModel`      | `plugin.py`      | Mutated only through `commit.commit_sample()` or reset under the lock.                           |
+| `Counters`        | `plugin.py`      | Updated with the same pipeline decision that updates the model.                                  |
+| `Timeline`        | `plugin.py`      | Uses injected wall clock for minute buckets.                                                     |
+| `polar.json`      | `persistence.py` | Serialized from locked snapshots and written by the plugin thread.                               |
 
 Version authority lives in release tooling. Development checkouts can run without a stamped version in `plugin.json`;
 packaged releases stamp the runtime version during zip creation.

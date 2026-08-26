@@ -20,10 +20,10 @@ _server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
-from polarrecorder import diagnostics
+from polarrecorder import api_config, diagnostics
+from polarrecorder import config as config_module
 from polarrecorder.api_dispatch import handle_request as handle_api_request
 from polarrecorder.commit import commit_sample
-from polarrecorder.config import Config, parse_config_values
 from polarrecorder.counters import Counters
 from polarrecorder.export import replace_user_presets
 from polarrecorder.logger import AvNavLogger
@@ -89,6 +89,7 @@ class Plugin:
         self._startup_error_active = False
         self._stop_requested = False
         self._flush_requested = False
+        self._config_save_active = False
         self._paused = False
         self._incomplete_reads = 0
         self._run_start_monotonic = self._clock()
@@ -169,19 +170,18 @@ class Plugin:
     def _save_config_values(self, updates: dict[str, str]) -> None:
         self.api.saveConfigValues(updates)
 
-    def _run_iteration(self, config: Config) -> None:
+    def _run_iteration(self, config: config_module.Config) -> None:
         store_reader = StoreReader(self, self._clock, self._wall_clock, self._logger, config)
         read_result = store_reader.read()
         data_status = diagnostics.data_status(read_result, config.stale_threshold)
         with self._lock:
-            if config is not self.config:
-                return
-            if self._paused:
+            superseded = config is not self.config
+            if not superseded and self._paused:
                 sample, pipeline_result = self._record_suppressed(
                     read_result, data_status, "reject_user_paused"
                 )
                 status_result = None
-            else:
+            elif not superseded:
                 pipeline_result, sample = pipeline.run(read_result, self._state, config)
                 self._state.observe_iteration(
                     sample,
@@ -201,6 +201,11 @@ class Plugin:
                     "reason_codes": list(pipeline_result.reason_codes),
                 }
                 status_result = pipeline_result
+        if superseded:
+            if config.debug_logging:
+                payload = diagnostics.format_superseded_diagnostic(read_result, config)
+                self._logger.debug(diagnostics.serialize_diagnostic(payload))
+            return
         self._update_avnav_status(data_status, status_result)
         self._log_diagnostic(read_result, sample, pipeline_result, config)
 
@@ -221,14 +226,11 @@ class Plugin:
         read_result: ReadResult,
         sample: Sample | None,
         result: PipelineResult,
-        config: Config,
+        config: config_module.Config,
     ) -> None:
         if config.debug_logging:
             payload = diagnostics.format_sample_diagnostic(read_result, sample, result, config)
-            message = "diagnostic_sample={}".format(
-                json.dumps(payload, allow_nan=False, separators=(",", ":"), sort_keys=True)
-            )
-            self._logger.debug(message)
+            self._logger.debug(diagnostics.serialize_diagnostic(payload))
 
     def _record_counters(self, pipeline_result: PipelineResult) -> None:
         if pipeline_result.decision == "accepted":
@@ -308,12 +310,13 @@ class Plugin:
             )
             return serialize_to_dict(self._model, self._counters, metadata)
 
-    def _load_initial_config(self) -> Config:
+    def _load_initial_config(self) -> config_module.Config:
         raw_values = {
             str(spec["name"]): str(self.api.getConfigValue(str(spec["name"]), str(spec["default"])))
             for spec in CONFIG_PARAMETERS
         }
-        return parse_config_values(raw_values, self._logger)
+        parsed = config_module.parse_config_values(raw_values, self._logger)
+        return config_module.repair_initial_config_relations(parsed, self._logger)
 
     def _load_persistence(self) -> None:
         result = load(self._data_dir, self._logger)
@@ -362,7 +365,9 @@ class Plugin:
 
     def _on_config_change(self, changed: Mapping[str, str]) -> None:
         with self._lock:
-            self.config = parse_config_values(changed, self._logger, self.config)
+            self.config = api_config.apply_host_config_change(
+                self.config, self._state, changed, self._logger
+            )
 
     def _handle_request(
         self,

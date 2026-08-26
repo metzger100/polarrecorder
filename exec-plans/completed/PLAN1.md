@@ -2,7 +2,27 @@
 
 ## Status
 
-Implemented through all six phases and five implementation-review remediation passes.
+Implemented through all six phases and six implementation-review remediation passes.
+
+### Amendment — 2026-08-26: sixth implementation-review remediation
+
+A fresh archive review found that optional speed conversion could overflow after acquisition had already classified the
+raw value as usable, overlapping persist-before-install configuration saves could leave runtime and persisted state
+different, source-key changes retained observations from the old source, cross-field setting relationships were not
+validated, and a read discarded after a configuration change produced no diagnostic record. Completion now additionally
+requires canonical one-time enhanced normalization with role-specific upper bounds shared by sampling and live status;
+poison-resistant R20 handling for invalid current corroboration; one in-flight configuration transaction using the
+existing plugin lock; complete-config heel/cooldown validation; source-dependent history reset; explicit
+`config_superseded` diagnostics; synchronized README/docs; focused deterministic regressions; and a green full gate.
+
+The review's enhanced-source timing-skew observation remains an investigation item rather than a behavior change: the
+available evidence does not establish a safe cross-source skew threshold for optional signals.
+
+**Sixth-review exit evidence:** `npm run check:all` exited successfully with 448 Python tests, 365 tooling tests, 61
+viewer tests, 1 plugin test, 96.31% aggregate Python coverage, and 92.75% viewer/plugin line coverage. The focused
+acquisition, poisoning, configuration, status, diagnostic, and integration suite passed 81 tests before the full gate;
+strict typing, packaging, documentation, smell, duplication, complexity, scaling, hotspot, file-size, and coverage-
+inventory checks all passed. `plugin.py` remains at 379 non-empty lines, exactly within its enforced hotspot budget.
 
 ### Amendment — 2026-08-24: fifth implementation-review remediation
 

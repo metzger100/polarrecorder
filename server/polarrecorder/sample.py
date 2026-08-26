@@ -21,6 +21,14 @@ WallClockFn = Callable[[], float]
 RuleDecision = Literal["accept", "reject", "quarantine", "pass"]
 TWA_FULL_CIRCLE_DEG = 360.0
 TWA_HALF_CIRCLE_DEG = 180.0
+MAX_ENGINE_RPM = 100_000.0
+MAX_ENGINE_SIGNAL = 100_000.0
+MAX_DEPTH_M = 12_000.0
+MAX_BOAT_SPEED_KT = 100.0
+MAX_WIND_SPEED_KT = 200.0
+MAX_SIGNED_ANGLE_DEG = 360.0
+MAX_HEEL_DEG = 180.0
+MAX_BEARING_DEG = 360.0
 
 
 @dataclass(frozen=True)
@@ -30,47 +38,94 @@ class EnhancedSignalSpec:
     role: str
     key_field: str
     enable_fields: tuple[str, ...]
-    to_knots: bool
+    normalizer: Callable[[float], float] | None
     accepts_bool: bool = False
     minimum_value: float | None = None
+    maximum_value: float | None = None
 
 
 ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
     EnhancedSignalSpec(
-        "rpm", "enh_rpm_key", ("enh_rpm_enabled",), to_knots=False, minimum_value=0.0
+        "rpm",
+        "enh_rpm_key",
+        ("enh_rpm_enabled",),
+        normalizer=None,
+        minimum_value=0.0,
+        maximum_value=MAX_ENGINE_RPM,
     ),
     EnhancedSignalSpec(
         "engine_signal",
         "enh_engine_state_key",
         ("enh_engine_state_enabled",),
-        to_knots=False,
+        normalizer=None,
         accepts_bool=True,
         minimum_value=0.0,
+        maximum_value=MAX_ENGINE_SIGNAL,
     ),
     EnhancedSignalSpec(
-        "depth_m", "enh_depth_key", ("enh_depth_enabled",), to_knots=False, minimum_value=0.0
+        "depth_m",
+        "enh_depth_key",
+        ("enh_depth_enabled",),
+        normalizer=None,
+        minimum_value=0.0,
+        maximum_value=MAX_DEPTH_M,
     ),
-    EnhancedSignalSpec("sog_kt", "enh_sog_key", (), to_knots=True, minimum_value=0.0),
+    EnhancedSignalSpec(
+        "sog_kt",
+        "enh_sog_key",
+        (),
+        normalizer=meters_per_second_to_knots,
+        minimum_value=0.0,
+        maximum_value=MAX_BOAT_SPEED_KT,
+    ),
     EnhancedSignalSpec(
         "current_drift_kt",
         "enh_current_drift_key",
         ("enh_slip_enabled",),
-        to_knots=True,
+        normalizer=meters_per_second_to_knots,
         minimum_value=0.0,
+        maximum_value=MAX_BOAT_SPEED_KT,
     ),
-    EnhancedSignalSpec("awa_deg", "enh_awa_key", ("enh_tw_crosscheck_enabled",), to_knots=False),
+    EnhancedSignalSpec(
+        "awa_deg",
+        "enh_awa_key",
+        ("enh_tw_crosscheck_enabled",),
+        normalizer=None,
+        minimum_value=-MAX_SIGNED_ANGLE_DEG,
+        maximum_value=MAX_SIGNED_ANGLE_DEG,
+    ),
     EnhancedSignalSpec(
         "aws_kt",
         "enh_aws_key",
         ("enh_tw_crosscheck_enabled",),
-        to_knots=True,
+        normalizer=meters_per_second_to_knots,
         minimum_value=0.0,
+        maximum_value=MAX_WIND_SPEED_KT,
     ),
-    EnhancedSignalSpec("heel_deg", "enh_heel_key", ("enh_heel_enabled",), to_knots=False),
     EnhancedSignalSpec(
-        "heading_deg", "enh_heading_key", ("enh_turnconfirm_enabled",), to_knots=False
+        "heel_deg",
+        "enh_heel_key",
+        ("enh_heel_enabled",),
+        normalizer=None,
+        minimum_value=-MAX_HEEL_DEG,
+        maximum_value=MAX_HEEL_DEG,
     ),
-    EnhancedSignalSpec("cog_deg", "enh_cog_key", ("enh_turnconfirm_enabled",), to_knots=False),
+    EnhancedSignalSpec(
+        "heading_deg",
+        "enh_heading_key",
+        ("enh_turnconfirm_enabled",),
+        normalizer=None,
+        minimum_value=0.0,
+        maximum_value=MAX_BEARING_DEG,
+    ),
+    EnhancedSignalSpec(
+        "cog_deg",
+        "enh_cog_key",
+        ("enh_turnconfirm_enabled",),
+        normalizer=None,
+        minimum_value=0.0,
+        maximum_value=MAX_BEARING_DEG,
+    ),
 )
 ENHANCED_SIGNAL_BY_ROLE = {spec.role: spec for spec in ENHANCED_SIGNAL_SPECS}
 
@@ -117,6 +172,7 @@ class Sample:
     stw_kt: float
     freshness: Freshness
     enhanced: dict[str, float] | None = None
+    invalid_enhanced_roles: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -182,6 +238,7 @@ def build_sample(read_result: ReadResult) -> Sample | None:
         stw_kt=meters_per_second_to_knots(read_result.stw_raw),
         freshness=freshness,
         enhanced=_build_enhanced(read_result.enhanced_raw),
+        invalid_enhanced_roles=_invalid_enhanced_roles(read_result),
     )
 
 
@@ -190,12 +247,17 @@ def _build_enhanced(
 ) -> dict[str, float] | None:
     if not enhanced_raw:
         return None
-    to_knots = {spec.role: spec.to_knots for spec in ENHANCED_SIGNAL_SPECS}
-    enhanced: dict[str, float] = {}
-    for role, raw in enhanced_raw.items():
-        value = raw[0]
-        enhanced[role] = meters_per_second_to_knots(value) if to_knots[role] else value
-    return enhanced
+    return {role: value[0] for role, value in enhanced_raw.items()}
+
+
+def _invalid_enhanced_roles(read_result: ReadResult) -> frozenset[str]:
+    if read_result.enhanced_inputs is None:
+        return frozenset()
+    return frozenset(
+        role
+        for role, acquisition in read_result.enhanced_inputs.items()
+        if acquisition.state == "invalid"
+    )
 
 
 def is_finite_core_value(value: object | None) -> bool:

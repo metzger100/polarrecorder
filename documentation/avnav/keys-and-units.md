@@ -44,9 +44,13 @@ SOG is also always read because R10 anchoring uses it independently of the R20 s
 shared `enhanced_input.assess_enhanced_input` contract: booleans, finite numbers, and numeric strings become usable
 numbers; missing, stale, invalid (including implausibly future timestamps), and usable states remain distinct.
 `ReadResult.enhanced_inputs` retains those states for status-quality diagnostics, while only usable values enter
-`ReadResult.enhanced_raw`. `build_sample` converts each usable role to its canonical unit once and stores it in
-`Sample.enhanced`; unavailable signals are omitted from the dict (never represented by a `NaN`/`-1`/`0` sentinel). RPM,
+`ReadResult.enhanced_raw`. The acquisition contract converts speed roles to knots and applies role-specific finite
+physical bounds before marking a value usable. `build_sample` copies each canonical value into `Sample.enhanced` without
+converting again; unavailable signals are omitted from the dict (never represented by a `NaN`/`-1`/`0` sentinel). RPM,
 engine-state numeric values, depth, SOG, current-drift magnitude, and AWS must be nonnegative; AWA and heel are signed.
+The broad acquisition ceilings are 100,000 rpm for RPM and engine-state numeric signals, 12,000 m depth, 100 kt for
+SOG/current drift, 200 kt AWS, +/-360 degrees AWA, +/-180 degrees heel, and 0-360 degrees heading/COG. These are input
+sanity bounds, separate from the lower configurable rejection thresholds.
 
 | Role in `Sample.enhanced` | Config key (default)                         |          Store unit | Canonical unit |
 | ------------------------- | -------------------------------------------- | ------------------: | -------------: |

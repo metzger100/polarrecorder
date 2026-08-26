@@ -7,7 +7,7 @@ Depends: polarrecorder.logger, polarrecorder.params, polarrecorder.source_params
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder.params import CONFIG_PARAMETERS
@@ -107,6 +107,41 @@ def parse_config_values(
 def default_config() -> Config:
     """Return the config produced by editable parameter defaults."""
     return parse_config_values({})
+
+
+def first_config_relation_error(config: Config) -> str:
+    """Return the first invalid cross-field relationship, or an empty string."""
+    if config.enh_heel_min_deg > config.enh_heel_max_deg:
+        return "Heel minimum must not exceed heel maximum"
+    if config.cooldown_seconds < config.stability_window_seconds:
+        return "Maneuver cooldown must be at least the stability window"
+    return ""
+
+
+def repair_initial_config_relations(config: Config, logger: Logger | None) -> Config:
+    """Restore safe default pairs when persisted cross-field values conflict."""
+    defaults = Config()
+    repaired = config
+    if config.enh_heel_min_deg > config.enh_heel_max_deg:
+        _warn(logger, "Invalid persisted heel range; using defaults")
+        repaired = replace(
+            repaired,
+            enh_heel_min_deg=defaults.enh_heel_min_deg,
+            enh_heel_max_deg=defaults.enh_heel_max_deg,
+        )
+    if config.cooldown_seconds < config.stability_window_seconds:
+        _warn(logger, "Invalid persisted cooldown/stability relationship; using defaults")
+        repaired = replace(
+            repaired,
+            cooldown_seconds=defaults.cooldown_seconds,
+            stability_window_seconds=defaults.stability_window_seconds,
+        )
+    return repaired
+
+
+def _warn(logger: Logger | None, message: str) -> None:
+    if logger is not None:
+        logger.warning(message)
 
 
 def _parse_spec_value(

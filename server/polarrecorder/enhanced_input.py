@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Literal, Protocol
+from typing import Callable, Literal, Protocol
 
 EnhancedInputState = Literal["missing", "stale", "invalid", "usable"]
 TimestampState = Literal["invalid", "stale", "future", "usable"]
@@ -30,6 +30,43 @@ class StoreEntryLike(Protocol):
         ...
 
 
+class EnhancedInputPolicy(Protocol):
+    """Role-specific normalization and physical-bound policy."""
+
+    @property
+    def accepts_bool(self) -> bool:
+        """Return whether the role accepts boolean values."""
+        ...
+
+    @property
+    def minimum_value(self) -> float | None:
+        """Return the canonical inclusive lower bound."""
+        ...
+
+    @property
+    def maximum_value(self) -> float | None:
+        """Return the canonical inclusive upper bound."""
+        ...
+
+    @property
+    def normalizer(self) -> Callable[[float], float] | None:
+        """Return the store-to-canonical conversion function."""
+        ...
+
+
+@dataclass(frozen=True)
+class DefaultInputPolicy:
+    """Unbounded identity policy for generic timestamp-focused acquisition."""
+
+    accepts_bool: bool = False
+    minimum_value: float | None = None
+    maximum_value: float | None = None
+    normalizer: Callable[[float], float] | None = None
+
+
+DEFAULT_INPUT_POLICY = DefaultInputPolicy()
+
+
 @dataclass(frozen=True)
 class EnhancedInput:
     """One optional signal's canonical acquisition result."""
@@ -46,8 +83,7 @@ def assess_enhanced_input(
     now_monotonic: float,
     stale_threshold: float,
     *,
-    accepts_bool: bool = False,
-    minimum_value: float | None = None,
+    policy: EnhancedInputPolicy = DEFAULT_INPUT_POLICY,
 ) -> EnhancedInput:
     """Classify one store entry exactly as the sampling path consumes it.
 
@@ -55,8 +91,7 @@ def assess_enhanced_input(
         entry: Store entry, or ``None`` when the key is unavailable.
         now_monotonic: Current monotonic timestamp.
         stale_threshold: Maximum usable source age in seconds.
-        accepts_bool: Whether this signal role permits boolean input.
-        minimum_value: Inclusive lower physical bound, when the role has one.
+        policy: Role-specific boolean, normalization, and physical-bound policy.
 
     Returns:
         A complete missing, stale, invalid, or usable acquisition result.
@@ -64,22 +99,41 @@ def assess_enhanced_input(
     if entry is None:
         return EnhancedInput("missing", None, None, None)
     timestamp_state, timestamp = classify_timestamp(entry.timestamp, now_monotonic, stale_threshold)
-    numeric = coerce_finite_float(entry.value, accepts_bool=accepts_bool)
+    numeric = coerce_finite_float(entry.value, accepts_bool=policy.accepts_bool)
+    normalized = _normalize_finite(numeric, policy.normalizer)
     invalid_cause: InvalidInputCause | None = None
     if timestamp_state == "invalid":
         invalid_cause = "timestamp"
         timestamp = None
     elif timestamp_state == "future":
         invalid_cause = "future_timestamp"
-    elif numeric is None:
+    elif normalized is None:
         invalid_cause = "value"
-    elif minimum_value is not None and numeric < minimum_value:
+    elif _outside_range(normalized, policy):
         invalid_cause = "range"
     if invalid_cause is not None:
         return EnhancedInput("invalid", entry.value, timestamp, None, invalid_cause)
     if timestamp_state == "stale":
-        return EnhancedInput("stale", entry.value, timestamp, numeric)
-    return EnhancedInput("usable", entry.value, timestamp, numeric)
+        return EnhancedInput("stale", entry.value, timestamp, normalized)
+    return EnhancedInput("usable", entry.value, timestamp, normalized)
+
+
+def _normalize_finite(
+    value: float | None, normalizer: Callable[[float], float] | None
+) -> float | None:
+    if value is None:
+        return None
+    try:
+        normalized = value if normalizer is None else normalizer(value)
+    except OverflowError:
+        return None
+    return normalized if math.isfinite(normalized) else None
+
+
+def _outside_range(value: float, policy: EnhancedInputPolicy) -> bool:
+    below = policy.minimum_value is not None and value < policy.minimum_value
+    above = policy.maximum_value is not None and value > policy.maximum_value
+    return below or above
 
 
 def classify_timestamp(

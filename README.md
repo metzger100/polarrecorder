@@ -151,17 +151,19 @@ limited to 4 MiB. See [Export and import](documentation/user/export-import.md) f
 Enhanced Rules use optional boat signals to reject unrepresentative samples. A rule acts only when enabled and all of
 its configured inputs are fresh, finite, and valid for their signal role. Only engine state accepts boolean values.
 
-The six rules are:
+The enhanced rejection rules are:
 
 - **Engine RPM** — rejects when RPM is above an idle ceiling; lower RPM remains ambiguous.
 - **Engine state** — rejects when a boolean, RPM, or alternator-voltage signal indicates the engine is on.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
-- **SOG source** — is shared with anchored detection even when the SOG/STW consistency rule is disabled.
 - **SOG / STW consistency** — rejects when either speed reading is implausible versus the other and the reported current
   drift is too small to explain the gap.
 - **True-wind cross-check** — recomputes true wind from apparent wind and boat speed and rejects when it disagrees with
   the reported true wind.
 - **Heel band** — rejects when heel is outside a configured range.
+
+The SOG source is also shared with anchored detection even when the SOG/STW consistency rule is disabled. Optional
+signals are normalized and checked against broad physical ceilings before any rule can consume them.
 
 Standard AvNav keys are prefilled where available. Engine and heel rules remain inactive until you map their
 boat-specific keys. The live badge explains whether each rule is active, disabled, or unavailable.
@@ -174,11 +176,13 @@ Advanced Settings exposes boat-specific tuning grouped as:
 - **Sensor Freshness** — stale-value and timestamp-skew limits.
 - **Core Filters** — low wind, head-to-wind, anchored-speed, and maximum wind/boat-speed limits.
 - **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
-- **Engine Heuristic** — low-wind movement checks used when no engine signal is configured.
+- **Engine Heuristic** — low-wind movement checks used when definitive engine-state evidence is unavailable; ambiguous
+  RPM in the idle band does not disable the heuristic.
 
-Values are checked before saving and persist in AvNav plugin configuration; a failed host write leaves the live runtime
-unchanged. The runtime parser also rejects malformed boolean values and non-finite numbers from corrupted or manually
-edited persisted settings. See [Configuration](documentation/user/configuration.md) for defaults and ranges.
+Values are checked before saving and persist in AvNav plugin configuration; overlapping saves are rejected, and a failed
+host write leaves the live runtime unchanged. Heel minimum/maximum and maneuver cooldown/stability-window relationships
+are validated together. The runtime parser also rejects malformed boolean values and non-finite numbers from corrupted
+or manually edited persisted settings. See [Configuration](documentation/user/configuration.md) for defaults and ranges.
 
 ## What are presets?
 

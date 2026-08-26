@@ -175,8 +175,8 @@ def test_shallow_water_samples_are_rejected() -> None:
 
 def test_failing_paddlewheel_sog_stw_mismatch_is_rejected() -> None:
     enhanced = {
-        "sog_kt": (knots_to_meters_per_second(5.0), 0.0),
-        "current_drift_kt": (knots_to_meters_per_second(0.5), 0.0),
+        "sog_kt": (5.0, 0.0),
+        "current_drift_kt": (0.5, 0.0),
     }
     reads = _warmup_at(1.0) + _steady_reads(20, 1.0, enhanced)
 
@@ -189,8 +189,8 @@ def test_failing_paddlewheel_sog_stw_mismatch_is_rejected() -> None:
 
 def test_high_speed_log_failure_is_rejected() -> None:
     enhanced = {
-        "sog_kt": (knots_to_meters_per_second(1.0), 0.0),
-        "current_drift_kt": (knots_to_meters_per_second(0.5), 0.0),
+        "sog_kt": (1.0, 0.0),
+        "current_drift_kt": (0.5, 0.0),
     }
     reads = _warmup_at(5.0) + _steady_reads(20, 5.0, enhanced)
 
@@ -202,7 +202,7 @@ def test_high_speed_log_failure_is_rejected() -> None:
 
 
 def test_miscalibrated_wind_crosscheck_is_rejected() -> None:
-    enhanced = {"awa_deg": (90.0, 0.0), "aws_kt": (knots_to_meters_per_second(30.0), 0.0)}
+    enhanced = {"awa_deg": (90.0, 0.0), "aws_kt": (30.0, 0.0)}
     reads = _warmup_reads() + _steady_reads(20, 6.0, enhanced)
 
     results, _ = _drive(reads)
@@ -214,8 +214,8 @@ def test_miscalibrated_wind_crosscheck_is_rejected() -> None:
 
 def test_strong_following_current_is_accepted() -> None:
     enhanced = {
-        "sog_kt": (knots_to_meters_per_second(2.0), 0.0),
-        "current_drift_kt": (knots_to_meters_per_second(1.3), 0.0),
+        "sog_kt": (2.0, 0.0),
+        "current_drift_kt": (1.3, 0.0),
     }
     reads = _warmup_at(0.8) + _steady_reads(20, 0.8, enhanced)
 
@@ -227,8 +227,8 @@ def test_strong_following_current_is_accepted() -> None:
 
 def test_current_explains_high_stw_difference() -> None:
     enhanced = {
-        "sog_kt": (knots_to_meters_per_second(1.0), 0.0),
-        "current_drift_kt": (knots_to_meters_per_second(4.1), 0.0),
+        "sog_kt": (1.0, 0.0),
+        "current_drift_kt": (4.1, 0.0),
     }
     reads = _warmup_at(5.0) + _steady_reads(20, 5.0, enhanced)
 

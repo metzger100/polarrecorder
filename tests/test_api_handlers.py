@@ -222,6 +222,31 @@ def test_negative_rpm_is_unavailable_and_omitted_by_reader(tmp_path: Path) -> No
     assert read_result.enhanced_raw is None or "rpm" not in read_result.enhanced_raw
 
 
+def test_overflowing_sog_is_unavailable_in_status_and_reader(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.set_value("gps.speed", 1e308, 99.5)
+    api.set_value("gps.currentDrift", 0.2, 99.5)
+    plugin = plugin_module.Plugin(api)
+    plugin._data_dir = str(tmp_path)
+    plugin._clock = FakeClock(100.0)
+
+    status = _data(plugin._handle_request("enhanced/status", object(), {}))
+    rows = cast("list[dict[str, object]]", status["rules"])
+    slip = next(row for row in rows if row["rule"] == "reject_sog_stw_mismatch")
+    read_result = reader.StoreReader(
+        plugin,
+        FakeClock(100.0),
+        FakeClock(1000.0),
+        plugin._logger,
+        plugin.config,
+    ).read()
+
+    assert slip["status"] == "inactive_value_invalid"
+    assert slip["availability"] == "unavailable"
+    assert read_result.enhanced_inputs is not None
+    assert read_result.enhanced_inputs["sog_kt"].state == "invalid"
+
+
 def test_invalid_percentile_returns_error_envelope_through_dispatch(tmp_path: Path) -> None:
     plugin = plugin_module.Plugin(FakeAvNavAPI())
     plugin._data_dir = str(tmp_path)
