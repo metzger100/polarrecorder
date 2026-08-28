@@ -5,6 +5,7 @@ from typing import cast
 
 from conftest import FakeAvNavAPI
 from plugin_integration_support import response_data
+from polarrecorder.source_params import HEEL_KEY_DEFAULT
 from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_warmed_state
 
@@ -158,14 +159,32 @@ def test_enhanced_save_trims_optional_source_keys_before_persistence() -> None:
         plugin._handle_request(
             "enhanced/save",
             object(),
-            {"enh_rpm_key": ["  engine.rpm "], "enh_heel_key": ["   "]},
+            {"enh_rpm_key": ["  engine.rpm "], "enh_heel_key": ["  heel.angle "]},
         )
     )
 
     assert plugin.config.enh_rpm_key == "engine.rpm"
-    assert plugin.config.enh_heel_key == ""
-    assert api.saved_configs == [{"enh_rpm_key": "engine.rpm", "enh_heel_key": ""}]
-    assert saved["config"] == {"enh_heel_key": "", "enh_rpm_key": "engine.rpm"}
+    assert plugin.config.enh_heel_key == "heel.angle"
+    assert api.saved_configs == [{"enh_rpm_key": "engine.rpm", "enh_heel_key": "heel.angle"}]
+    assert saved["config"] == {"enh_heel_key": "heel.angle", "enh_rpm_key": "engine.rpm"}
+
+
+def test_enhanced_save_restores_default_for_blanked_defaulted_key() -> None:
+    api = FakeAvNavAPI()
+    plugin = plugin_module.Plugin(api)
+
+    saved = response_data(
+        plugin._handle_request(
+            "enhanced/save",
+            object(),
+            {"enh_rpm_key": ["   "], "enh_heel_key": ["   "]},
+        )
+    )
+
+    assert plugin.config.enh_rpm_key == ""
+    assert plugin.config.enh_heel_key == HEEL_KEY_DEFAULT
+    assert api.saved_configs == [{"enh_rpm_key": "", "enh_heel_key": HEEL_KEY_DEFAULT}]
+    assert saved["config"] == {"enh_heel_key": HEEL_KEY_DEFAULT, "enh_rpm_key": ""}
 
 
 def test_failed_config_persistence_leaves_runtime_config_unchanged() -> None:

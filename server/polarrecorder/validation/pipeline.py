@@ -143,7 +143,6 @@ def _run_pre_candidate_rules(sample: Sample, config: Config) -> RuleResult:
         rules_core.low_wind(sample, config),
         rules_core.anchored_heuristic(sample, config),
         rules_enhanced.reject_engine_rpm(sample, config),
-        rules_enhanced.reject_engine_on(sample, config),
         rules_enhanced.reject_shallow(sample, config),
     )
     return _first_non_pass(results)

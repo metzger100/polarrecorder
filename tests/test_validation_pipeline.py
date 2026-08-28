@@ -259,7 +259,6 @@ def test_threats_not_detectable_in_mvp_pass_by_design() -> None:
 def test_enhanced_pre_candidate_rejects_are_non_candidates() -> None:
     cases = [
         (make_read_result(enhanced_values={"rpm": (1500.0, 99.5)}), "reject_engine_rpm"),
-        (make_read_result(enhanced_values={"engine_signal": (1.0, 99.5)}), "reject_engine_on"),
         (make_read_result(enhanced_values={"depth_m": (0.4, 99.5)}), "reject_shallow"),
     ]
     for read_result, code in cases:
@@ -371,19 +370,6 @@ def test_rate_rejections_with_secondary_r20_break_stability_history() -> None:
         assert "reject_sog_stw_mismatch" in result.failed_predicates
         assert not result.retain_stability_history
         assert sample is not None
-
-
-def test_engine_off_signal_suppresses_r16_quarantine_end_to_end() -> None:
-    read_result = make_read_result(
-        tws_kt=4.0, stw_kt=4.0, enhanced_values={"engine_signal": (0.0, 99.5)}
-    )
-
-    result, sample = run(read_result, make_warmed_state(), default_config())
-
-    assert result.decision == "accepted"
-    assert result.reason_codes == ()
-    assert result.is_sailing_candidate
-    assert sample is not None
 
 
 def test_wind_shift_with_steady_heading_reaches_r15_end_to_end() -> None:

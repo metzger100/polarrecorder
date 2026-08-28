@@ -7,6 +7,7 @@ from conftest import FakeClock, FakeDataEntry, FakeLogger
 from polarrecorder.config import default_config, parse_config_values
 from polarrecorder.reader import STW_KEY, TWA_KEY, TWS_KEY, StoreReader, _coerce_float, read_store
 from polarrecorder.sample import build_sample
+from polarrecorder.source_params import HEEL_KEY_DEFAULT
 from polarrecorder.validation import pipeline
 from polarrecorder.validation.state import ValidationState
 
@@ -173,8 +174,22 @@ def test_reader_populates_enhanced_from_configured_fresh_keys() -> None:
     assert enhanced["heading_deg"] == 100.0
     assert enhanced["cog_deg"] == 105.0
     assert "rpm" not in enhanced
-    assert "engine_signal" not in enhanced
     assert "heel_deg" not in enhanced
+
+
+def test_reader_converts_default_heel_key_from_radians_to_degrees() -> None:
+    api = FakeStoreAPI()
+    _set_core(api)
+    api.set_entry(HEEL_KEY_DEFAULT, math.radians(18.0), 99.5)
+
+    read_result = StoreReader(
+        api, FakeClock(100.0), FakeClock(1000.0), config=default_config()
+    ).read()
+    sample = build_sample(read_result)
+
+    assert sample is not None
+    assert sample.enhanced is not None
+    assert math.isclose(sample.enhanced["heel_deg"], 18.0)
 
 
 def test_reader_omits_disabled_unconfigured_missing_and_stale_signals() -> None:
@@ -238,25 +253,11 @@ def test_r10_receives_fresh_sog_when_r20_is_disabled() -> None:
     assert "reject_anchored" not in result.reason_codes
 
 
-def test_reader_engine_state_coerces_bool_rpm_and_voltage() -> None:
-    config = parse_config_values({"enh_engine_state_key": "engine.state"})
-    for raw, expected in ((True, 1.0), (50, 50.0), (13.2, 13.2)):
-        api = FakeStoreAPI()
-        _set_core(api)
-        api.set_entry("engine.state", cast("float", raw), 99.5)
-        sample = build_sample(
-            StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
-        )
-        assert sample is not None
-        assert sample.enhanced is not None
-        assert sample.enhanced["engine_signal"] == expected
-
-
 def test_reader_omits_non_numeric_string_signal_and_debug_logs() -> None:
     api = FakeStoreAPI()
     _set_core(api)
-    api.set_entry("engine.state", cast("float", "off"), 99.5)
-    config = parse_config_values({"enh_engine_state_key": "engine.state"})
+    api.set_entry("engine.rpm", cast("float", "off"), 99.5)
+    config = parse_config_values({"enh_rpm_key": "engine.rpm"})
     logger = FakeLogger()
 
     read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), logger, config).read()
@@ -265,11 +266,11 @@ def test_reader_omits_non_numeric_string_signal_and_debug_logs() -> None:
     assert sample is not None
     assert sample.enhanced is None
     assert read_result.enhanced_inputs is not None
-    assert read_result.enhanced_inputs["engine_signal"].state == "invalid"
+    assert read_result.enhanced_inputs["rpm"].state == "invalid"
     assert logger.messages == [
         (
             "debug",
-            "enhanced signal engine_signal key 'engine.state' has invalid value; omitting",
+            "enhanced signal rpm key 'engine.rpm' has invalid value; omitting",
         )
     ]
 
@@ -277,18 +278,18 @@ def test_reader_omits_non_numeric_string_signal_and_debug_logs() -> None:
 def test_reader_logs_invalid_timestamp_cause_without_blame_on_numeric_value() -> None:
     api = FakeStoreAPI()
     _set_core(api)
-    api.set_entry("engine.state", 1200.0, math.nan)
-    config = parse_config_values({"enh_engine_state_key": "engine.state"})
+    api.set_entry("engine.rpm", 1200.0, math.nan)
+    config = parse_config_values({"enh_rpm_key": "engine.rpm"})
     logger = FakeLogger()
 
     read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), logger, config).read()
 
     assert read_result.enhanced_inputs is not None
-    assert read_result.enhanced_inputs["engine_signal"].invalid_cause == "timestamp"
+    assert read_result.enhanced_inputs["rpm"].invalid_cause == "timestamp"
     assert logger.messages == [
         (
             "debug",
-            "enhanced signal engine_signal key 'engine.state' has invalid timestamp; omitting",
+            "enhanced signal rpm key 'engine.rpm' has invalid timestamp; omitting",
         )
     ]
 
@@ -313,13 +314,11 @@ def test_reader_retains_missing_stale_and_usable_acquisition_states() -> None:
     assert read_result.enhanced_inputs["awa_deg"].state == "missing"
 
 
-def test_coerce_float_is_role_aware_and_total() -> None:
+def test_coerce_float_rejects_booleans_and_is_total() -> None:
     true_value: object = True
     false_value: object = False
     assert _coerce_float(true_value) is None
     assert _coerce_float(false_value) is None
-    assert _coerce_float(true_value, accepts_bool=True) == 1.0
-    assert _coerce_float(false_value, accepts_bool=True) == 0.0
     assert _coerce_float(50) == 50.0
     assert _coerce_float(13.2) == 13.2
     assert _coerce_float("47.5") == 47.5
@@ -331,20 +330,19 @@ def test_coerce_float_is_role_aware_and_total() -> None:
     assert _coerce_float(10**10_000) is None
 
 
-def test_reader_rejects_boolean_physical_signal_but_accepts_boolean_engine_state() -> None:
+def test_reader_rejects_boolean_enhanced_signals() -> None:
     api = FakeStoreAPI()
     _set_core(api)
     physical_bool: object = True
-    engine_bool: object = True
     api.set_entry("gps.depthBelowKeel", physical_bool, 99.5)
-    api.set_entry("engine.state", engine_bool, 99.5)
-    config = parse_config_values({"enh_engine_state_key": "engine.state"})
+    api.set_entry("engine.rpm", physical_bool, 99.5)
+    config = parse_config_values({"enh_rpm_key": "engine.rpm"})
 
     read_result = StoreReader(api, FakeClock(100.0), FakeClock(1000.0), config=config).read()
 
     assert read_result.enhanced_inputs is not None
     assert read_result.enhanced_inputs["depth_m"].state == "invalid"
-    assert read_result.enhanced_inputs["engine_signal"].state == "usable"
+    assert read_result.enhanced_inputs["rpm"].state == "invalid"
 
 
 def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
@@ -352,7 +350,6 @@ def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
     _set_core(api)
     keys = {
         "rpm": "engine.rpm",
-        "engine_signal": "engine.state",
         "depth_m": "gps.depthBelowKeel",
         "sog_kt": "gps.speed",
         "current_drift_kt": "gps.currentDrift",
@@ -361,11 +358,10 @@ def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
     for key in keys.values():
         api.set_entry(key, -1.0, 99.5)
     api.set_entry("gps.windAngle", -30.0, 99.5)
-    api.set_entry("heel.angle", -12.0, 99.5)
+    api.set_entry("heel.angle", math.radians(-12.0), 99.5)
     config = parse_config_values(
         {
             "enh_rpm_key": "engine.rpm",
-            "enh_engine_state_key": "engine.state",
             "enh_heel_key": "heel.angle",
         }
     )
@@ -379,10 +375,11 @@ def test_reader_rejects_negative_unsigned_enhanced_signals() -> None:
         assert acquisition.invalid_cause == "range"
     assert read_result.enhanced_inputs["awa_deg"].state == "usable"
     assert read_result.enhanced_inputs["heel_deg"].state == "usable"
-    assert read_result.enhanced_values == {
-        "awa_deg": (-30.0, 99.5),
-        "heel_deg": (-12.0, 99.5),
-    }
+    assert read_result.enhanced_values is not None
+    assert read_result.enhanced_values["awa_deg"] == (-30.0, 99.5)
+    heel_value, heel_timestamp = read_result.enhanced_values["heel_deg"]
+    assert math.isclose(heel_value, -12.0)
+    assert heel_timestamp == 99.5
 
 
 def test_reader_rejects_values_that_overflow_during_unit_normalization() -> None:

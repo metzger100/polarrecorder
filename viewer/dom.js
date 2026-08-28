@@ -60,6 +60,27 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
+   * @param {string[]} keys
+   * @param {string} current
+   * @returns {HTMLSelectElement}
+   */
+  function storeKeySelect(keys, current) {
+    const select = document.createElement("select");
+    const options = keys.filter(function (key) {
+      return key !== current;
+    });
+    options.unshift(current);
+    options.forEach(function (key) {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = key;
+      select.appendChild(option);
+    });
+    select.value = current;
+    return select;
+  }
+
+  /**
    * @param {string} filename
    * @param {string} text
    * @param {string} type
@@ -132,6 +153,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     Node: node,
     RequireById: requireById,
     ShowTooltip: showTooltip,
+    StoreKeySelect: storeKeySelect,
     SvgText: svgText
   };
 })();

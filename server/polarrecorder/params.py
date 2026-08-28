@@ -6,7 +6,7 @@ Depends: polarrecorder.source_params
 
 from __future__ import annotations
 
-from polarrecorder.source_params import CORE_SOURCE_PARAMETERS
+from polarrecorder.source_params import CORE_SOURCE_PARAMETERS, HEEL_KEY_DEFAULT
 
 CONFIG_PARAMETERS: list[dict[str, object]] = [
     *CORE_SOURCE_PARAMETERS,
@@ -183,25 +183,6 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
         "description": "RPM above this rejects the sample as motoring (R17)",
     },
     {
-        "name": "enh_engine_state_enabled",
-        "type": "BOOLEAN",
-        "default": "true",
-        "description": "Enable engine-state reject (R18)",
-    },
-    {
-        "name": "enh_engine_state_key",
-        "type": "STRING",
-        "default": "",
-        "description": "Store key for engine state (boolean, RPM, alternator voltage, ...)",
-    },
-    {
-        "name": "enh_engine_state_on_threshold",
-        "type": "FLOAT",
-        "default": "0.5",
-        "rangeOrList": [0.0, 10000.0],
-        "description": "engine_signal at/above this means on (boolean 0.5, RPM ~50, volts ~13.2)",
-    },
-    {
         "name": "enh_depth_enabled",
         "type": "BOOLEAN",
         "default": "true",
@@ -293,8 +274,8 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
     {
         "name": "enh_heel_key",
         "type": "STRING",
-        "default": "",
-        "description": "Store key for heel/roll in degrees",
+        "default": HEEL_KEY_DEFAULT,
+        "description": "Store key for heel/roll in radians",
     },
     {
         "name": "enh_heel_min_deg",

@@ -34,11 +34,6 @@ class EnhancedInputPolicy(Protocol):
     """Role-specific normalization and physical-bound policy."""
 
     @property
-    def accepts_bool(self) -> bool:
-        """Return whether the role accepts boolean values."""
-        ...
-
-    @property
     def minimum_value(self) -> float | None:
         """Return the canonical inclusive lower bound."""
         ...
@@ -58,7 +53,6 @@ class EnhancedInputPolicy(Protocol):
 class DefaultInputPolicy:
     """Unbounded identity policy for generic timestamp-focused acquisition."""
 
-    accepts_bool: bool = False
     minimum_value: float | None = None
     maximum_value: float | None = None
     normalizer: Callable[[float], float] | None = None
@@ -91,7 +85,7 @@ def assess_enhanced_input(
         entry: Store entry, or ``None`` when the key is unavailable.
         now_monotonic: Current monotonic timestamp.
         stale_threshold: Maximum usable source age in seconds.
-        policy: Role-specific boolean, normalization, and physical-bound policy.
+        policy: Role-specific normalization and physical-bound policy.
 
     Returns:
         A complete missing, stale, invalid, or usable acquisition result.
@@ -99,7 +93,7 @@ def assess_enhanced_input(
     if entry is None:
         return EnhancedInput("missing", None, None, None)
     timestamp_state, timestamp = classify_timestamp(entry.timestamp, now_monotonic, stale_threshold)
-    numeric = coerce_finite_float(entry.value, accepts_bool=policy.accepts_bool)
+    numeric = coerce_finite_float(entry.value)
     normalized = _normalize_finite(numeric, policy.normalizer)
     invalid_cause: InvalidInputCause | None = None
     if timestamp_state == "invalid":
@@ -168,21 +162,21 @@ def coerce_finite_timestamp(value: object) -> float | None:
     return timestamp if math.isfinite(timestamp) else None
 
 
-def coerce_finite_float(value: object, *, accepts_bool: bool = False) -> float | None:
+def coerce_finite_float(value: object) -> float | None:
     """Coerce a supported scalar to a finite float.
 
+    Booleans are rejected for every signal role: no physical role encodes an
+    on/off state, and ``bool`` is an ``int`` subclass that would otherwise
+    coerce to ``1.0``/``0.0``.
+
     Args:
-        value: Raw bool, number, or numeric string.
-        accepts_bool: Whether boolean input maps to zero or one.
+        value: Raw number or numeric string.
 
     Returns:
         The finite float, or ``None`` for unsupported or non-finite input.
     """
     coerced: float | None = None
-    if isinstance(value, bool):
-        if accepts_bool:
-            coerced = 1.0 if value else 0.0
-    elif isinstance(value, (int, float, str)):
+    if not isinstance(value, bool) and isinstance(value, (int, float, str)):
         try:
             coerced = float(value)
         except (OverflowError, ValueError):

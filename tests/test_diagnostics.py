@@ -177,18 +177,12 @@ def test_formatter_is_total_for_rejected_nonnumeric_core_and_enhanced_values() -
     assert json.dumps(payload, allow_nan=False)
 
 
-def test_formatter_preserves_supported_string_and_boolean_raw_values() -> None:
+def test_formatter_preserves_supported_string_raw_values() -> None:
     config = default_config()
     read_result = replace(
         make_read_result(),
         enhanced_inputs={
             "rpm": EnhancedInput("usable", "1200", 99.5, 1200.0),
-            "engine_signal": EnhancedInput(
-                state="usable",
-                raw_value=True,
-                timestamp=99.5,
-                numeric_value=1.0,
-            ),
         },
     )
     result, sample = run(read_result, make_warmed_state(), config)
@@ -197,7 +191,6 @@ def test_formatter_preserves_supported_string_and_boolean_raw_values() -> None:
     enhanced = cast("dict[str, dict[str, object]]", payload["enhanced"])
 
     assert enhanced["rpm"]["raw"] == "1200"
-    assert enhanced["engine_signal"]["raw"] is True
 
 
 def test_formatter_uses_the_pipeline_current_sample_r15_evaluation() -> None:

@@ -26,8 +26,8 @@ Polar Recorder uses three AvNav values:
 | STW        | Speed through water. Usually from the log or paddlewheel.                  | `gps.waterSpeed`    |
 
 Change these defaults in **Settings > Data Sources**; surrounding whitespace is removed from saved keys. TWA uses
-degrees, while TWS and STW use m/s before Polar Recorder converts and displays the speeds in knots. Blank persisted core
-keys are restored to these defaults at startup.
+degrees, while TWS and STW use m/s before Polar Recorder converts and displays the speeds in knots. Blank persisted keys
+are restored to these defaults at startup.
 
 Core learning uses true wind angle/speed and speed through water. A configured fresh SOG is also used to distinguish
 anchored from moving samples. Other optional signals are described under
@@ -108,9 +108,8 @@ The Status tab explains what is happening now:
 Status also shows whether each optional enhanced rule is active, disabled, or unavailable and why, including invalid
 source data. Speed-log sanity remains active when SOG is usable but current drift is invalid, because corrupt drift
 cannot safely explain a SOG/STW gap; missing or stale drift still makes that rule unavailable. On startup, a warning
-appears when no definitive engine-state protection is active or its status cannot be verified. RPM-only protection is
-partial because values below its idle ceiling do not prove the propeller is disengaged; pause while motoring or map a
-definitive engine-state source. Close affects only the page; Never show again stores a browser-local preference.
+appears when the Engine RPM rule is not confirmed active. Close dismisses it for the current page; Never show again
+stores a browser-local preference.
 
 ### Timeline
 
@@ -162,12 +161,11 @@ limited to 4 MiB. See [Export and import](documentation/user/export-import.md) f
 ### Enhanced Rules (optional signals)
 
 Enhanced Rules use optional boat signals to reject unrepresentative samples. A rule acts only when enabled and all of
-its configured inputs are fresh, finite, and valid for their signal role. Only engine state accepts boolean values.
+its configured inputs are fresh, finite, and valid for their signal role.
 
 The enhanced rejection rules are:
 
-- **Engine RPM** — rejects when RPM is above an idle ceiling; lower RPM remains ambiguous.
-- **Engine state** — rejects when a boolean, RPM, or alternator-voltage signal indicates the engine is on.
+- **Engine RPM** — rejects when RPM is above an idle ceiling.
 - **Shallow water** — rejects when depth/keel clearance is below a floor (shallow-water squat).
 - **SOG / STW consistency** — rejects when either speed reading is implausible versus the other and the reported current
   drift is too small to explain the gap.
@@ -178,10 +176,10 @@ The enhanced rejection rules are:
 The SOG source is also shared with anchored detection even when the SOG/STW consistency rule is disabled. Optional
 signals are normalized and checked against broad physical ceilings before any rule can consume them.
 
-Standard AvNav keys are offered as suggestions where available. The key fields remain editable, so engine, RPM, heel,
-and other custom store keys can be typed even when AvNav discovery cannot enumerate their prefix. Engine and heel rules
-remain inactive until you map their boat-specific keys. The live badge explains whether each rule is active, disabled,
-or unavailable.
+Currently published AvNav keys are offered in selectors, using the same controls as Data Sources. An already configured
+key remains selected even when it is not currently publishing. The heel source defaults to AvNav's mirrored SignalK
+attitude key (`gps.signalk.navigation.attitude.roll`, read in radians); only the RPM rule remains inactive until you map
+its boat-specific key. The live badge explains whether each rule is active, disabled, or unavailable.
 
 ### Advanced Settings
 
@@ -191,8 +189,7 @@ Advanced Settings exposes boat-specific tuning grouped as:
 - **Sensor Freshness** — stale-value and timestamp-skew limits.
 - **Core Filters** — low wind, head-to-wind, anchored-speed, and maximum wind/boat-speed limits.
 - **Stability and Maneuvers** — turn, gust, acceleration, cooldown, and steady-window limits.
-- **Engine Heuristic** — low-wind movement checks used when definitive engine-state evidence is unavailable; ambiguous
-  RPM in the idle band does not disable the heuristic.
+- **Engine Heuristic** — low-wind movement checks; RPM in the idle band does not disable the heuristic.
 
 Values are checked before saving and persist in AvNav plugin configuration; overlapping saves are rejected, and a failed
 host write leaves the live runtime unchanged. Heel minimum/maximum and maneuver cooldown/stability-window relationships

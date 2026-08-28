@@ -11,7 +11,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @type {Record<string, string>} */
   const RULE_LABELS = {
     reject_engine_rpm: "Engine RPM",
-    reject_engine_on: "Engine on/off",
     reject_shallow: "Shallow water",
     reject_sog_stw_mismatch: "Speed-log sanity (SOG vs STW)",
     reject_true_wind_crosscheck: "Wind sensor cross-check",

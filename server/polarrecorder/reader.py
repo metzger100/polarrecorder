@@ -167,17 +167,16 @@ def read_store(
     return StoreReader(api, clock, wall_clock, logger, config).read()
 
 
-def _coerce_float(value: object, *, accepts_bool: bool = False) -> float | None:
+def _coerce_float(value: object) -> float | None:
     """Coerce a raw store value to a finite float, or ``None`` if not numeric.
 
     Args:
-        value: Raw store value (bool, int, float, or string).
-        accepts_bool: Whether boolean input maps to zero or one.
+        value: Raw store value (int, float, or string; booleans are rejected).
 
     Returns:
         The coerced finite float, or ``None`` for non-numeric or non-finite input.
     """
-    return coerce_finite_float(value, accepts_bool=accepts_bool)
+    return coerce_finite_float(value)
 
 
 def _entry_value(entry: DataEntryLike | None) -> object | None:

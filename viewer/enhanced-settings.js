@@ -22,18 +22,15 @@ window.Polarrecorder = window.Polarrecorder || {};
    * }} EnhancedRule
    */
   /** @typedef {{field: string, kind: "bool", control: HTMLInputElement}} BoolControlItem */
-  /** @typedef {{field: string, kind: "text", control: HTMLInputElement}} TextControlItem */
+  /** @typedef {{field: string, kind: "text", control: HTMLSelectElement}} TextControlItem */
   /** @typedef {{field: string, kind: "number", control: HTMLInputElement}} NumberControlItem */
   /** @typedef {BoolControlItem | TextControlItem | NumberControlItem} ControlItem */
-  /** @typedef {{control: HTMLInputElement, suggestions: HTMLDataListElement}} KeyControl */
   /**
    * @typedef {{
    *   body: HTMLElement,
    *   messageNode: HTMLElement,
    *   keys: string[],
    *   controls: ControlItem[],
-   *   keyControls: KeyControl[],
-   *   keysLoading: boolean
    * }} EnhancedState
    */
 
@@ -41,8 +38,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   const FIELD_LABELS = {
     enh_rpm_key: "Engine RPM source",
     enh_rpm_idle_max: "Reject above RPM",
-    enh_engine_state_key: "Engine on/off source",
-    enh_engine_state_on_threshold: "Engine-on threshold",
     enh_depth_key: "Depth source",
     enh_depth_floor_m: "Minimum depth (m)",
     enh_sog_key: "Shared SOG source (anchoring and consistency)",
@@ -53,7 +48,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     enh_aws_key: "Apparent wind speed source",
     enh_tw_twa_tol_deg: "Wind angle tolerance (°)",
     enh_tw_tws_tol_kt: "Wind speed tolerance (kn)",
-    enh_heel_key: "Heel / roll source",
+    enh_heel_key: "Heel / roll source (rad)",
     enh_heel_min_deg: "Minimum heel (°)",
     enh_heel_max_deg: "Maximum heel (°)",
     enh_heading_key: "Heading source",
@@ -66,9 +61,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     body: document.createElement("div"),
     messageNode: document.createElement("p"),
     keys: [],
-    controls: [],
-    keyControls: [],
-    keysLoading: false
+    controls: []
   };
 
   /** @returns {HTMLElement} */
@@ -81,7 +74,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       Polarrecorder.Dom.Node(
         "p",
         "helper",
-        "Optional boat signals that reject unrepresentative samples. Each rule defaults on; clear its key or switch it off to opt out. The SOG source also remains active for anchored detection when the SOG/STW consistency rule is off."
+        "Optional boat signals that reject unrepresentative samples. Each rule defaults on; switch a rule off to opt out. The SOG source also remains active for anchored detection when the SOG/STW consistency rule is off."
       )
     );
     state.body = Polarrecorder.Dom.Node("div", "enhanced-rules");
@@ -109,7 +102,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   /** @param {EnhancedRule[]} rules */
   function renderRules(rules) {
     state.controls = [];
-    state.keyControls = [];
     Polarrecorder.Dom.Clear(state.body);
     if (!rules.length) {
       state.body.appendChild(Polarrecorder.Dom.Node("p", "helper", "Enhanced status is unavailable."));
@@ -167,75 +159,10 @@ window.Polarrecorder = window.Polarrecorder || {};
   function keyField(entry) {
     const wrap = Polarrecorder.Dom.Node("label", "field enhanced-key");
     wrap.appendChild(Polarrecorder.Dom.Node("span", null, fieldLabel(entry.field)));
-    const control = keyInput(entry.field, entry.key || "");
-    wrap.appendChild(control.input);
-    wrap.appendChild(control.suggestions);
-    state.controls.push({ field: entry.field, kind: "text", control: control.input });
+    const control = Polarrecorder.Dom.StoreKeySelect(state.keys, entry.key || "");
+    wrap.appendChild(control);
+    state.controls.push({ field: entry.field, kind: "text", control: control });
     return wrap;
-  }
-
-  /**
-   * @param {string} field
-   * @param {string} current
-   * @returns {{input: HTMLInputElement, suggestions: HTMLDataListElement}}
-   */
-  function keyInput(field, current) {
-    const input = document.createElement("input");
-    const suggestions = document.createElement("datalist");
-    suggestions.id = "enhanced-key-options-" + field;
-    input.type = "text";
-    input.value = current;
-    input.setAttribute("list", suggestions.id);
-    populateSuggestions(suggestions, current);
-    input.addEventListener("focus", refreshKeys);
-    state.keyControls.push({ control: input, suggestions: suggestions });
-    return { input: input, suggestions: suggestions };
-  }
-
-  /**
-   * @param {HTMLDataListElement} suggestions
-   * @param {string} current
-   */
-  function populateSuggestions(suggestions, current) {
-    Polarrecorder.Dom.Clear(suggestions);
-    const options = state.keys.slice();
-    if (current && options.indexOf(current) === -1) {
-      options.push(current);
-    }
-    options.forEach(function (key) {
-      appendOption(suggestions, key);
-    });
-  }
-
-  function refreshKeys() {
-    if (state.keysLoading) {
-      return;
-    }
-    state.keysLoading = true;
-    action("enhanced/keys")
-      .then(function (data) {
-        state.keys = (data && data.keys) || [];
-        state.keyControls.forEach(function (item) {
-          populateSuggestions(item.suggestions, item.control.value);
-        });
-      })
-      .catch(function (error) {
-        setMessage(error.message, "error");
-      })
-      .then(function () {
-        state.keysLoading = false;
-      });
-  }
-
-  /**
-   * @param {HTMLDataListElement} suggestions
-   * @param {string} value
-   */
-  function appendOption(suggestions, value) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    suggestions.appendChild(option);
   }
 
   /**

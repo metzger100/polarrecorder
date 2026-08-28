@@ -43,13 +43,6 @@ ENHANCED_RULE_SPECS: tuple[EnhancedRuleSpec, ...] = (
         ("enh_rpm_idle_max",),
     ),
     EnhancedRuleSpec(
-        "reject_engine_on",
-        "enh_engine_state_enabled",
-        ("engine_signal",),
-        COMBINATOR_ALL,
-        ("enh_engine_state_on_threshold",),
-    ),
-    EnhancedRuleSpec(
         "reject_shallow",
         "enh_depth_enabled",
         ("depth_m",),

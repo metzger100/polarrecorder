@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from polarrecorder.params import CONFIG_PARAMETERS
 from polarrecorder.source_params import (
-    CORE_KEY_FIELDS,
+    HEEL_KEY_DEFAULT,
     STW_KEY_DEFAULT,
     TWA_KEY_DEFAULT,
     TWS_KEY_DEFAULT,
@@ -25,6 +25,14 @@ if TYPE_CHECKING:
 
 SOURCE_KEY_FIELDS = frozenset(
     str(spec["name"]) for spec in CONFIG_PARAMETERS if spec["type"] == "STRING"
+)
+# Source keys that ship a real default. A blank persisted value for one of these
+# is an unset key, not an opt-out, so it is restored to the default; only keys
+# with no default (engine RPM) stay blank until the user maps them.
+DEFAULTED_KEY_FIELDS = frozenset(
+    str(spec["name"])
+    for spec in CONFIG_PARAMETERS
+    if spec["type"] == "STRING" and str(spec["default"])
 )
 
 
@@ -60,9 +68,6 @@ class Config:
     enh_rpm_enabled: bool = True
     enh_rpm_key: str = ""
     enh_rpm_idle_max: int = 900
-    enh_engine_state_enabled: bool = True
-    enh_engine_state_key: str = ""
-    enh_engine_state_on_threshold: float = 0.5
     enh_depth_enabled: bool = True
     enh_depth_key: str = "gps.depthBelowKeel"
     enh_depth_floor_m: float = 1.0
@@ -77,7 +82,7 @@ class Config:
     enh_tw_twa_tol_deg: float = 15.0
     enh_tw_tws_tol_kt: float = 3.0
     enh_heel_enabled: bool = True
-    enh_heel_key: str = ""
+    enh_heel_key: str = HEEL_KEY_DEFAULT
     enh_heel_min_deg: float = 0.0
     enh_heel_max_deg: float = 35.0
     enh_turnconfirm_enabled: bool = True
@@ -172,8 +177,8 @@ def _parse_spec_value(
     else:
         name = _spec_string(spec, "name")
         parsed = raw_value.strip() if name in SOURCE_KEY_FIELDS else raw_value
-        if name in CORE_KEY_FIELDS and not parsed:
-            message = f"Empty core source key {name}"
+        if name in DEFAULTED_KEY_FIELDS and not parsed:
+            message = f"Empty defaulted source key {name}"
             raise ValueError(message)
     return parsed
 

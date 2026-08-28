@@ -30,9 +30,9 @@
     "viewer/export-fields.js",
     "viewer/export-presets.js",
     "viewer/export-ui.js",
-    "viewer/engine-warning.js",
     "viewer/viewer.js",
     "viewer/settings-ui.js",
+    "viewer/engine-warning.js",
     "plugin.js",
     "plugin.mjs"
   ]

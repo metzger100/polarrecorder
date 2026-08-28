@@ -69,23 +69,24 @@ function warning(env) {
   return env.document.body.querySelector(".engine-warning");
 }
 
-test("startup warning requires a definitive engine-state rule", async () => {
-  const missing = warningEnvironment([
-    { rule: "reject_engine_rpm", availability: "unavailable" },
-    { rule: "reject_engine_on", availability: "disabled" }
-  ]);
-  await start(missing);
-  assert.ok(warning(missing));
+test("startup warning requires an active Engine RPM rule", async () => {
+  const unavailable = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }]);
+  await start(unavailable);
+  const unavailableWarning = warning(unavailable);
+  assert.ok(unavailableWarning);
+  assert.ok(textTree(unavailableWarning).includes("Engine RPM enhanced rule is not active"));
 
-  const rpmOnly = warningEnvironment([{ rule: "reject_engine_rpm", availability: "active" }]);
-  await start(rpmOnly);
-  const rpmWarning = warning(rpmOnly);
-  assert.ok(rpmWarning);
-  assert.ok(textTree(rpmWarning).includes("RPM protection rejects only above"));
+  const disabled = warningEnvironment([{ rule: "reject_engine_rpm", availability: "disabled" }]);
+  await start(disabled);
+  assert.ok(warning(disabled));
 
-  const protectedEnv = warningEnvironment([{ rule: "reject_engine_on", availability: "active" }]);
-  await start(protectedEnv);
-  assert.equal(warning(protectedEnv), null);
+  const unrelated = warningEnvironment([{ rule: "reject_shallow", availability: "active" }]);
+  await start(unrelated);
+  assert.ok(warning(unrelated));
+
+  const active = warningEnvironment([{ rule: "reject_engine_rpm", availability: "active" }]);
+  await start(active);
+  assert.equal(warning(active), null);
 });
 
 test("Close only dismisses the current warning", async () => {
@@ -102,15 +103,17 @@ test("Close only dismisses the current warning", async () => {
   assert.ok(warning(fresh));
 });
 
-test("Never show again stores the versioned suppression preference", async () => {
+test("Never show again stores the RPM-specific suppression preference", async () => {
   const rules = [{ rule: "reject_engine_rpm", availability: "unavailable" }];
   const env = warningEnvironment(rules);
   await start(env);
   const modal = warning(env);
   assert.ok(modal);
-  modal.querySelectorAll(".primary-action")[0].click();
+  const never = modal.querySelectorAll(".primary-action")[0];
+  assert.equal(never.textContent, "Never show again");
+  never.click();
   assert.equal(warning(env), null);
-  assert.equal(env.storage.get("polarrecorder.engine-warning.v1"), "hidden");
+  assert.equal(env.storage.get("polarrecorder.engine-rpm-warning.v1"), "hidden");
   const fresh = warningEnvironment(rules, {}, env.storage);
   await start(fresh);
   assert.equal(warning(fresh), null);
@@ -131,7 +134,7 @@ test("enhanced-status failure warns without blocking viewer startup", async () =
   assert.equal(env.window.Polarrecorder.ApiBase, "../api/");
 });
 
-test("storage read failures fail open without crashing startup", async () => {
+test("storage read failures warn without crashing startup", async () => {
   const env = warningEnvironment([{ rule: "reject_engine_rpm", availability: "unavailable" }], {
     storageGetFails: true
   });
@@ -198,5 +201,7 @@ test("warning CSS keeps the dialog content-sized and centered", () => {
   assert.ok(source.includes("transform: translate(-50%, -50%);"));
   assert.ok(source.includes("width: min(34rem, calc(100vw - 2rem));"));
   assert.ok(source.includes("max-height: calc(100vh - 2rem);"));
+  assert.ok(source.includes(".engine-warning .action-row"));
+  assert.ok(source.includes("flex-wrap: wrap;"));
   assert.equal(source.includes("inset: 1rem;"), false);
 });

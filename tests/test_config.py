@@ -66,16 +66,16 @@ def test_parse_config_values_trims_core_and_optional_source_keys() -> None:
         {
             "twa_key": "  custom.twa ",
             "enh_rpm_key": " engine.rpm  ",
-            "enh_heel_key": "   ",
+            "enh_heel_key": "  heel.angle ",
         }
     )
 
     assert config.twa_key == "custom.twa"
     assert config.enh_rpm_key == "engine.rpm"
-    assert config.enh_heel_key == ""
+    assert config.enh_heel_key == "heel.angle"
 
 
-def test_blank_initial_core_source_keys_restore_defaults() -> None:
+def test_blank_initial_defaulted_source_keys_restore_defaults() -> None:
     logger = FakeLogger()
 
     config = parse_config_values(
@@ -83,6 +83,8 @@ def test_blank_initial_core_source_keys_restore_defaults() -> None:
             "twa_key": "   ",
             "tws_key": "",
             "stw_key": "\t",
+            "enh_depth_key": "",
+            "enh_heel_key": "   ",
             "enh_rpm_key": "   ",
         },
         logger,
@@ -91,11 +93,15 @@ def test_blank_initial_core_source_keys_restore_defaults() -> None:
     assert config.twa_key == "gps.trueWindAngle"
     assert config.tws_key == "gps.trueWindSpeed"
     assert config.stw_key == "gps.waterSpeed"
+    assert config.enh_depth_key == "gps.depthBelowKeel"
+    assert config.enh_heel_key == "gps.signalk.navigation.attitude.roll"
     assert config.enh_rpm_key == ""
     assert logger.messages == [
         ("warn", "Invalid config twa_key='   '; keeping previous/default value"),
         ("warn", "Invalid config tws_key=''; keeping previous/default value"),
         ("warn", "Invalid config stw_key='\\t'; keeping previous/default value"),
+        ("warn", "Invalid config enh_depth_key=''; keeping previous/default value"),
+        ("warn", "Invalid config enh_heel_key='   '; keeping previous/default value"),
     ]
 
 
@@ -251,7 +257,6 @@ def test_enhanced_defaults_match_documented_values() -> None:
     assert config.enh_rpm_enabled is True
     assert config.enh_rpm_key == ""
     assert config.enh_rpm_idle_max == 900
-    assert config.enh_engine_state_on_threshold == 0.5
     assert config.enh_depth_key == "gps.depthBelowKeel"
     assert config.enh_depth_floor_m == 1.0
     assert config.enh_sog_key == "gps.speed"
@@ -259,6 +264,7 @@ def test_enhanced_defaults_match_documented_values() -> None:
     assert config.enh_slip_ratio == 0.5
     assert config.enh_awa_key == "gps.windAngle"
     assert config.enh_aws_key == "gps.windSpeed"
+    assert config.enh_heel_key == "gps.signalk.navigation.attitude.roll"
     assert config.enh_heel_min_deg == 0.0
     assert config.enh_heel_max_deg == 35.0
     assert config.enh_heading_key == "gps.headingTrue"
@@ -271,13 +277,13 @@ def test_enhanced_string_keys_pass_through_unchanged() -> None:
         {
             "enh_rpm_key": "n2k.engine.0.rpm",
             "enh_heel_key": "signalk.navigation.attitude.roll",
-            "enh_depth_key": "",
+            "enh_depth_key": "gps.depthBelowWaterline",
         }
     )
 
     assert config.enh_rpm_key == "n2k.engine.0.rpm"
     assert config.enh_heel_key == "signalk.navigation.attitude.roll"
-    assert config.enh_depth_key == ""
+    assert config.enh_depth_key == "gps.depthBelowWaterline"
 
 
 def test_enhanced_numeric_invalid_keeps_previous_or_default() -> None:
