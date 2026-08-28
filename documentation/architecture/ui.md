@@ -78,17 +78,16 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   server's summary or its precise rejection. Reset still requires the `RESET` confirmation.
 - Settings also owns a fourth **Enhanced Rules** card (`EnhancedSettings.Render()`), rendered from `GET enhanced/keys`
   and `GET enhanced/status`. Each rule shows an Enabled switch (the shared `.switch-field` control also used by the
-  Export tab), one editable text input per configured key field backed by a `<datalist>` of currently-present store keys
-  (SignalK keys appear as `gps.signalk.*`; arbitrary custom keys can be typed, and an already-configured key stays
-  selected even when it is not publishing), the rule's threshold inputs, and a live status badge whose primary
-  vocabulary is `active`, `disabled`, or `unavailable`, with the detailed cause (`no key set`, `key not in store`,
-  `value stale`, or `value invalid`) retained as supporting text. R20's fail-closed invalid-drift case is labeled
-  active, and the API retains each role's source state. A single "Save Enhanced Settings" button validates that every
-  threshold is a finite number (`Number.isFinite`) before collecting every control into one `GET enhanced/save` call and
-  then re-fetching status to refresh the badges; a non-numeric threshold blocks the save with a visible error. The badge
-  classes are `.enhanced-badge-<status>`, each with its own `--polarrecorder-*` treatment: `active` reads
-  accepted-green, `value stale` quarantined-amber, `key not in store` rejected-red, `no key set` a dashed neutral
-  outline, and `disabled` the muted second-color.
+  Export tab), one store-key selector per configured key field using the same shared control builder as Data Sources
+  (SignalK keys appear as `gps.signalk.*`, and an already-configured key stays selected even when it is not publishing),
+  the rule's threshold inputs, and a live status badge whose primary vocabulary is `active`, `disabled`, or
+  `unavailable`, with the detailed cause (`no key set`, `key not in store`, `value stale`, or `value invalid`) retained
+  as supporting text. R20's fail-closed invalid-drift case is labeled active, and the API retains each role's source
+  state. A single "Save Enhanced Settings" button validates that every threshold is a finite number (`Number.isFinite`)
+  before collecting every control into one `GET enhanced/save` call and then re-fetching status to refresh the badges; a
+  non-numeric threshold blocks the save with a visible error. The badge classes are `.enhanced-badge-<status>`, each
+  with its own `--polarrecorder-*` treatment: `active` reads accepted-green, `value stale` quarantined-amber,
+  `key not in store` rejected-red, `no key set` a dashed neutral outline, and `disabled` the muted second-color.
 - A fifth **Advanced Settings** card (`AdvancedSettings.Render()`) sits below Enhanced Rules and is rendered from
   `GET advanced/settings`. It exposes the safe runtime-tuning settings from the server allowlist, grouped as Sampling
   and Persistence, Sensor Freshness, Core Filters, Stability and Maneuvers, and Engine Heuristic. Numeric fields use
@@ -97,12 +96,11 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `GET advanced/save` request and then re-fetching the groups.
 - The Status tab and Enhanced Settings use `enhanced-rule-display.js` as the single source of user-facing rule,
   availability, and cause labels; internal API identifiers are not shown as headings. `engine-warning.js` performs one
-  startup check only: when no definitive engine-state rule is active, or protection status cannot be verified, it offers
-  Close or browser-local Never show again. RPM-only protection remains partial because values at or below its idle
-  ceiling do not prove that propulsion is disengaged. The warning never changes plugin configuration or persistence. Its
-  modal has dialog semantics, a backdrop, initial and contained focus, Escape handling, focus restoration, and an inert
-  background. It is content-sized, centered, viewport-constrained, and layered above the app navigation and overlays.
-  Storage failures remain local to the modal rather than using a global browser error listener.
+  startup check and opens its modal unless `reject_engine_rpm` reports active availability; a failed status request also
+  warns because RPM protection cannot be confirmed. Close affects only the current page, while Never show again stores
+  the versioned `polarrecorder.engine-rpm-warning.v1` browser-local preference. The modal has dialog semantics, a
+  backdrop, contained focus, Escape handling, focus restoration, and an inert background. Storage failures stay local to
+  the modal and leave it visible. Its action row wraps in narrow viewer panes so Never show again remains reachable.
 - Status diagnostic headings use the card's shared inset, so Enhanced Rule Availability and the reason/predicate
   sections align with their card content rather than the rounded border.
 - Export grid controls reserve room for the browser's numeric spinner as well as a three-digit TWA value, so port-side

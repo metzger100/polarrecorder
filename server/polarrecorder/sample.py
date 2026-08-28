@@ -22,7 +22,6 @@ RuleDecision = Literal["accept", "reject", "quarantine", "pass"]
 TWA_FULL_CIRCLE_DEG = 360.0
 TWA_HALF_CIRCLE_DEG = 180.0
 MAX_ENGINE_RPM = 100_000.0
-MAX_ENGINE_SIGNAL = 100_000.0
 MAX_DEPTH_M = 12_000.0
 MAX_BOAT_SPEED_KT = 100.0
 MAX_WIND_SPEED_KT = 200.0
@@ -39,7 +38,6 @@ class EnhancedSignalSpec:
     key_field: str
     enable_fields: tuple[str, ...]
     normalizer: Callable[[float], float] | None
-    accepts_bool: bool = False
     minimum_value: float | None = None
     maximum_value: float | None = None
 
@@ -52,15 +50,6 @@ ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
         normalizer=None,
         minimum_value=0.0,
         maximum_value=MAX_ENGINE_RPM,
-    ),
-    EnhancedSignalSpec(
-        "engine_signal",
-        "enh_engine_state_key",
-        ("enh_engine_state_enabled",),
-        normalizer=None,
-        accepts_bool=True,
-        minimum_value=0.0,
-        maximum_value=MAX_ENGINE_SIGNAL,
     ),
     EnhancedSignalSpec(
         "depth_m",
@@ -106,7 +95,7 @@ ENHANCED_SIGNAL_SPECS: tuple[EnhancedSignalSpec, ...] = (
         "heel_deg",
         "enh_heel_key",
         ("enh_heel_enabled",),
-        normalizer=None,
+        normalizer=math.degrees,
         minimum_value=-MAX_HEEL_DEG,
         maximum_value=MAX_HEEL_DEG,
     ),

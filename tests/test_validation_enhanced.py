@@ -31,21 +31,6 @@ def test_reject_engine_rpm_above_idle_ceiling() -> None:
     assert rules_enhanced.reject_engine_rpm(_sample(None), config).decision == "pass"
 
 
-def test_reject_engine_on_against_threshold_for_each_source() -> None:
-    boolean_config = replace(default_config(), enh_engine_state_on_threshold=0.5)
-    rpm_config = replace(default_config(), enh_engine_state_on_threshold=50.0)
-    voltage_config = replace(default_config(), enh_engine_state_on_threshold=13.2)
-
-    on = rules_enhanced.reject_engine_on
-    assert on(_sample({"engine_signal": 0.5}), boolean_config).decision == "reject"
-    assert on(_sample({"engine_signal": 0.0}), boolean_config).decision == "pass"
-    assert on(_sample({"engine_signal": 50.0}), rpm_config).decision == "reject"
-    assert on(_sample({"engine_signal": 30.0}), rpm_config).decision == "pass"
-    assert on(_sample({"engine_signal": 13.2}), voltage_config).decision == "reject"
-    assert on(_sample({"engine_signal": 12.0}), voltage_config).decision == "pass"
-    assert on(_sample(None), boolean_config).decision == "pass"
-
-
 def test_reject_shallow_below_floor() -> None:
     config = default_config()
 
@@ -148,9 +133,6 @@ def test_each_enhanced_reject_emits_only_its_reason_code() -> None:
     assert rules_enhanced.reject_engine_rpm(_sample({"rpm": 2000.0}), config).reason_codes == (
         "reject_engine_rpm",
     )
-    assert rules_enhanced.reject_engine_on(
-        _sample({"engine_signal": 1.0}), config
-    ).reason_codes == ("reject_engine_on",)
     assert rules_enhanced.reject_shallow(_sample({"depth_m": 0.2}), config).reason_codes == (
         "reject_shallow",
     )

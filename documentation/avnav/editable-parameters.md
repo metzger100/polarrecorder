@@ -38,8 +38,8 @@ Parsing rules:
 - `BOOLEAN` is true only when the stripped upper-case string is `TRUE`.
 - `NUMBER` values parse as integers and are clamped to `rangeOrList`.
 - `FLOAT` values parse as floats and are clamped to `rangeOrList`.
-- Store-key `STRING` values are whitespace-trimmed. Optional enhanced keys may be empty; blank core TWA/TWS/STW keys are
-  invalid and fall back to their defaults during initial parsing.
+- Store-key `STRING` values are whitespace-trimmed. Only `enh_rpm_key` may be empty; every other store key ships a
+  default, so blank values are invalid and fall back to that default (or the running value) during parsing.
 - Invalid viewer changes are rejected before persistence or runtime mutation; invalid initial values fall back to
   defaults.
 - Polar Recorder registers no editable parameters of its own (`EDITABLE_PARAMETERS` is empty).
@@ -58,12 +58,13 @@ Polar Recorder's internal runtime configuration schema contains these 49 names:
 
 | Group                           | Parameters                                                                                                                                                                         |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core source keys                | `twa_key`, `tws_key`, `stw_key`                                                                                                                                                    |
 | Recording and persistence       | `sample_interval`, `flush_interval`, `debug_logging`                                                                                                                               |
 | Model/export                    | `percentile`, `max_tws`, `max_stw`, `min_samples_for_export`                                                                                                                       |
 | Freshness and candidacy gate    | `stale_threshold`, `age_skew_threshold`, `low_wind_threshold`, `head_to_wind_threshold`, `anchored_stw_threshold`                                                                  |
 | Rate/cooldown stability gate    | `twa_roc_threshold`, `tws_roc_threshold`, `stw_roc_threshold`, `cooldown_seconds`, `stability_window_seconds`, `stability_twa_range`, `stability_tws_range`, `stability_stw_range` |
 | Quarantine heuristic            | `engine_tws_ceil`, `engine_stw_floor`                                                                                                                                              |
-| Enhanced engine (R17/R18)       | `enh_rpm_enabled`, `enh_rpm_key`, `enh_rpm_idle_max`, `enh_engine_state_enabled`, `enh_engine_state_key`, `enh_engine_state_on_threshold`                                          |
+| Enhanced engine RPM (R17)       | `enh_rpm_enabled`, `enh_rpm_key`, `enh_rpm_idle_max`                                                                                                                               |
 | Enhanced depth (R19)            | `enh_depth_enabled`, `enh_depth_key`, `enh_depth_floor_m`                                                                                                                          |
 | Enhanced SOG/STW (R20)          | `enh_slip_enabled`, `enh_sog_key`, `enh_current_drift_key`, `enh_slip_sog_floor_kt`, `enh_slip_ratio`                                                                              |
 | Enhanced true-wind (R21)        | `enh_tw_crosscheck_enabled`, `enh_awa_key`, `enh_aws_key`, `enh_tw_twa_tol_deg`, `enh_tw_tws_tol_kt`                                                                               |

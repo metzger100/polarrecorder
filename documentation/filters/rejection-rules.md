@@ -6,7 +6,7 @@
 
 The validation pipeline classifies each core TWA/TWS/STW read as accepted, rejected, or quarantined. R1 and R2 run
 before `Sample` construction. R3 through R22 run on a built `Sample`, with R11 through R15 reading `ValidationState`.
-R17 through R22 are optional enhanced rules that read additional signals from `Sample.enhanced`.
+R17 and R19 through R22 are optional enhanced rules that read additional signals from `Sample.enhanced`.
 
 ## Key Details
 
@@ -27,9 +27,8 @@ R17 through R22 are optional enhanced rules that read additional signals from `S
 | R13  | `stw_acceleration`            | reject     | `reject_stw_roc`                                                          | STW rate must be `<= stw_roc_threshold`, default 2 kt/s.                                                                                                                                           | D-TWA/TWS/STW                 |
 | R14  | `maneuver_cooldown`           | reject     | `reject_maneuver_cooldown`                                                | Current monotonic time must be after `cooldown_expires`.                                                                                                                                           | D-TWA/TWS/STW                 |
 | R15  | `stability_window`            | reject     | `reject_warming_up`, `reject_unstable`                                    | Eligible history plus current sample must span the configured window, have at least `max(2, ceil(observed span / (sample interval × 1.10)) + 1)` observations, and no gap over 3 sample intervals. | P-TWA/TWS/STW                 |
-| R16  | `engine_heuristic`            | quarantine | `quarantine_engine_suspected`                                             | TWS `< engine_tws_ceil`, default 5 kt, and STW `> engine_stw_floor`, default 3 kt. Suppressed when a definitive engine signal reads off (see below).                                               | P-TWA/TWS/STW                 |
+| R16  | `engine_heuristic`            | quarantine | `quarantine_engine_suspected`                                             | TWS `< engine_tws_ceil`, default 5 kt, and STW `> engine_stw_floor`, default 3 kt. Suppressed when RPM is at the stopped-engine ceiling (see below).                                               | P-TWA/TWS/STW                 |
 | R17  | `reject_engine_rpm`           | reject     | `reject_engine_rpm`                                                       | Optional `rpm > enh_rpm_idle_max`, default 900. Pre-candidate (motoring).                                                                                                                          | Enhanced: RPM                 |
-| R18  | `reject_engine_on`            | reject     | `reject_engine_on`                                                        | Optional `engine_signal >= enh_engine_state_on_threshold`, default 0.5. Pre-candidate (motoring).                                                                                                  | Enhanced: engine state        |
 | R19  | `reject_shallow`              | reject     | `reject_shallow`                                                          | Optional `depth_m < enh_depth_floor_m`, default 1.0 m. Pre-candidate (shallow-water squat).                                                                                                        | Enhanced: depth               |
 | R20  | `reject_sog_stw_mismatch`     | reject     | `reject_sog_stw_mismatch`                                                 | Optional faster(SOG, STW) exceeds the movement floor, slower is below faster × ratio, and current drift is smaller than their gap. Quality-gate (speed-log failure).                               | Enhanced: SOG + current drift |
 | R21  | `reject_true_wind_crosscheck` | reject     | `reject_true_wind_crosscheck`                                             | Optional: true wind recomputed from `awa_deg`/`aws_kt`/STW disagrees with reports beyond `enh_tw_twa_tol_deg` (15) or `enh_tw_tws_tol_kt` (3). Quality-gate (wind sensor/calibration).             | Enhanced: AWA + AWS           |
@@ -38,28 +37,25 @@ R17 through R22 are optional enhanced rules that read additional signals from `S
 R1, R2, and R3 report every offending core value in one result. R4 through R22 emit one reason code. Individual rules
 return `pass`, `reject`, or `quarantine`; only the runner emits the final `accepted` decision.
 
-Enhanced rules (R17-R22) are optional. Each fires only when its rule is enabled, its store key(s) are configured, and a
-fresh, finite, role-valid value is present in `Sample.enhanced`; an absent or stale signal leaves the rule a no-op
-(`pass`). Invalid values are omitted after canonical normalization and lower/upper physical bounds. R20 additionally
-remembers an invalid configured current-drift role and refuses to use it as corroborating evidence, so it can still
-reject a SOG/STW mismatch; missing or stale drift remains fail-open. Unsigned physical roles reject negative values,
-while AWA and heel remain signed. Only the engine-state role accepts booleans. R17-R19 are pre-candidate
-(`is_sailing_candidate=False`, counted via `record_non_candidate`) because motoring and shallow-water squat are
-non-representative conditions, like `reject_head_to_wind`. R20-R22 are quality-gate rejects
-(`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean condition but the specific
-sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after `stability_window` and before R16, so
-a definitive enhanced reject wins over the R16 quarantine.
+Enhanced rules are optional. Each fires only when its rule is enabled, its store key(s) are configured, and a fresh,
+finite, role-valid value is present in `Sample.enhanced`; an absent or stale signal leaves the rule a no-op (`pass`).
+Invalid values are omitted after canonical normalization and lower/upper physical bounds. R20 additionally remembers an
+invalid configured current-drift role and refuses to use it as corroborating evidence, so it can still reject a SOG/STW
+mismatch; missing or stale drift remains fail-open. Unsigned physical roles reject negative values, while AWA and heel
+remain signed. R17 and R19 are pre-candidate (`is_sailing_candidate=False`, counted via `record_non_candidate`) because
+motoring and shallow-water squat are non-representative conditions, like `reject_head_to_wind`. R20-R22 are quality-gate
+rejects (`is_sailing_candidate=True`, counted via `record_rejected`): the boat was sailing in a clean condition but the
+specific sample or sensor is unrepresentative. R20-R22 run in `_run_candidate_rules` after `stability_window` and before
+R16, so a definitive enhanced reject wins over the R16 quarantine.
 
 The corresponding R20 status is `active_invalid_corroboration` with normalized availability `active` when SOG is usable
 and current drift is invalid. Each enhanced-status row also exposes per-role source states, so this exceptional
 fail-closed behavior and mixed unavailable causes are visible rather than hidden by one headline.
 
-R16 enhancement: a configured engine-state signal is definitive only when its producer semantics really encode running
-state; the generic RPM rule remains threshold-based and partial. Engine-on is already a pre-candidate R17/R18 reject and
-never reaches R16. When the signal reads **off** (`engine_signal < enh_engine_state_on_threshold`, or
-`rpm <= RPM_OFF_CEILING`, a named stopped-engine constant of 50 rpm) the R16 quarantine is suppressed. A
-present-but-idling RPM in the band `RPM_OFF_CEILING < rpm <= enh_rpm_idle_max` does **not** settle the motoring
-question, so R16's low-wind/moving heuristic still applies there. With no engine signal, R16 is unchanged.
+R16 enhancement: when RPM reads at or below `RPM_OFF_CEILING`, a named stopped-engine constant of 50 rpm, the R16
+quarantine is suppressed. A present-but-idling RPM in the band `RPM_OFF_CEILING < rpm <= enh_rpm_idle_max` does **not**
+settle the motoring question, so R16's low-wind/moving heuristic still applies there. With no RPM signal, R16 is
+unchanged.
 
 R15 derives density from the actual retained-anchor-to-current timestamp span, so sustained cadence slippage above 10%
 cannot pass through integer rounding at slow legal intervals. A missed tick may still pass when nominal surrounding

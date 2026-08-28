@@ -120,19 +120,8 @@ window.Polarrecorder = window.Polarrecorder || {};
       const wrap = Polarrecorder.Dom.Node("label", "field source-key");
       wrap.appendChild(Polarrecorder.Dom.Node("span", null, field.label));
       wrap.appendChild(Polarrecorder.Dom.Node("span", "helper", field.description));
-      const select = document.createElement("select");
       const current = config[field.field];
-      const options = keys.filter(function (key) {
-        return key !== current;
-      });
-      options.unshift(current);
-      options.forEach(function (key) {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = key;
-        select.appendChild(option);
-      });
-      select.value = current;
+      const select = Polarrecorder.Dom.StoreKeySelect(keys, current);
       wrap.appendChild(select);
       sourceState.controls.push({ field: field.field, control: select });
       sourceState.body.appendChild(wrap);

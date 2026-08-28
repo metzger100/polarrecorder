@@ -62,32 +62,30 @@ Optional signal hooks read a bounded set of configured store keys alongside the 
 always acquired because R10 consumes it independently of R20; current drift remains conditional on R20. When a `Config`
 is supplied, `StoreReader` reads each applicable configured optional key through its store protocol and classifies it
 through the canonical `enhanced_input.assess_enhanced_input` contract as missing, stale, invalid, or usable. That
-contract parses finite values and finite numeric timestamps, converts speed roles to knots, rejects conversion overflow,
-applies the bounded future-skew policy and role-specific lower and upper physical bounds, and is shared by the live
-enhanced-status endpoint. RPM, engine-state numeric values, depth, SOG, current-drift magnitude, and AWS reject negative
-values; AWA and heel remain signed. Boolean values are accepted only for the `engine_signal` role. Numeric strings are
-accepted as signal values but never as timestamps. `ReadResult.enhanced_inputs` retains every acquisition state for
-diagnostics, while `ReadResult.enhanced_values` contains only usable canonical values with timestamps. `build_sample`
-copies those already-normalized values into `Sample.enhanced`; absent, stale, and invalid roles are omitted, while
-invalid role identity is retained separately so corrupt evidence cannot masquerade as an unavailable optional source.
-Enhanced rules read only from the built `Sample` (and `Config`), return `RuleResult`, and keep the same no-AvNav,
-no-I/O, no-threading purity as the core rules. The role/unit table lives in
-[AvNav keys and units](../avnav/keys-and-units.md).
+contract parses finite values and finite numeric timestamps, converts speed roles to knots and the heel role from
+radians to degrees, rejects conversion overflow, applies the bounded future-skew policy and role-specific lower and
+upper physical bounds, and is shared by the live enhanced-status endpoint. RPM, depth, SOG, current-drift magnitude, and
+AWS reject negative values; AWA and heel remain signed. Numeric strings are accepted as signal values but never as
+timestamps. `ReadResult.enhanced_inputs` retains every acquisition state for diagnostics, while
+`ReadResult.enhanced_values` contains only usable canonical values with timestamps. `build_sample` copies those
+already-normalized values into `Sample.enhanced`; absent, stale, and invalid roles are omitted, while invalid role
+identity is retained separately so corrupt evidence cannot masquerade as an unavailable optional source. Enhanced rules
+read only from the built `Sample` (and `Config`), return `RuleResult`, and keep the same no-AvNav, no-I/O, no-threading
+purity as the core rules. The role/unit table lives in [AvNav keys and units](../avnav/keys-and-units.md).
 
 Implemented enhanced rules and candidacy:
 
 - Pre-candidate (`is_sailing_candidate=False`), appended after `anchored_heuristic`: R17 `reject_engine_rpm`
-  (`rpm > enh_rpm_idle_max`), R18 `reject_engine_on` (`engine_signal >= enh_engine_state_on_threshold`), R19
-  `reject_shallow` (`depth_m < enh_depth_floor_m`). Motoring and shallow-water squat are non-representative conditions,
-  treated like `reject_head_to_wind`.
+  (`rpm > enh_rpm_idle_max`) and R19 `reject_shallow` (`depth_m < enh_depth_floor_m`). Motoring and shallow-water squat
+  are non-representative conditions, treated like `reject_head_to_wind`.
 - Quality-gate (`is_sailing_candidate=True`), inserted into `_run_candidate_rules` after `stability_window` and before
   `engine_heuristic` (so they win over the R16 quarantine): R20 `reject_sog_stw_mismatch` (the slower of SOG/STW is
   below the configured ratio of the faster and present current drift is too small to explain their gap), R21
   `reject_true_wind_crosscheck` (true wind recomputed from `awa_deg`/`aws_kt`/STW disagrees with reports beyond the
   configured TWA/TWS tolerances), R22 `reject_heel_out_of_band` (`abs(heel_deg)` outside `[min, max]`).
-- R16 enhancement: `engine_heuristic` is suppressed when a configured engine-state signal reads off or RPM is at the
-  stopped-engine ceiling. RPM in the idle band remains ambiguous, so the heuristic still runs there. Engine-on above the
-  configured RPM/state threshold is already an R17/R18 pre-candidate reject.
+- R16 enhancement: `engine_heuristic` is suppressed when RPM is at the stopped-engine ceiling. RPM in the idle band
+  remains ambiguous, so the heuristic still runs there. RPM above the configured threshold is already an R17
+  pre-candidate reject.
 - R11/R14 enhancement (turn confirmation): `WindowEntry` carries optional `heading_deg`/`cog_deg` from
   `Sample.enhanced`. When turn confirmation is enabled and a prior+current heading and/or COG is available,
   `twa_rate_of_change` treats a high TWA rate with steady heading/COG (the maximum available rate below

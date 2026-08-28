@@ -29,8 +29,8 @@ AvNav stores and forwards editable values as strings. Polar Recorder strictly ac
 (case-insensitive). Viewer save requests require numeric settings to parse as finite `int` or `float` values inside
 their `rangeOrList`; invalid requests are rejected without persistence or runtime mutation. Invalid, non-finite, or
 unrepresentably large values found during initial host-config parsing fall back to the previous value or default.
-Source-key strings are trimmed; blank initial core TWA/TWS/STW keys are invalid and restore their defaults, while
-optional enhanced keys may remain empty.
+Source-key strings are trimmed; a blank value for any key that ships a default is invalid and restores that default, so
+only `enh_rpm_key`, the one key with no default, may remain empty.
 
 AvNav's built-in plugin enable switch is named `enabled`; toggling it starts or stops the whole plugin. Polar Recorder
 does not register or own that switch. Within a running plugin, recording is paused and resumed from the viewer (the
@@ -85,49 +85,48 @@ emitted while logging is disabled. The head-to-wind default remains 10 degrees.
 Polar Recorder also reads optional boat signals beyond the three core signals (TWA/TWS/STW) and uses them to reject
 samples those signals prove unrepresentative. Each rule fires only when its switch is on, its store key(s) are
 configured, and the value is present, fresh, finite, and valid for its role; otherwise the rule is normally a no-op
-(fail-open per signal). Acquisition converts speed roles to knots once and enforces broad role-specific physical
-ceilings before status or validation can consume a value. RPM, engine-state numeric values, depth, SOG, current-drift
-magnitude, and apparent-wind speed must be nonnegative. AWA and heel remain signed. Boolean values are valid only for
-the engine-state role. R20 is stricter for poisoned corroboration: invalid configured current drift cannot explain a
-SOG/STW mismatch, while genuinely missing or stale current drift remains fail-open. Every switch defaults on.
+(fail-open per signal). Acquisition converts speed roles to knots and the heel role from radians to degrees once, then
+enforces broad role-specific physical ceilings before status or validation can consume a value. RPM, depth, SOG,
+current-drift magnitude, and apparent-wind speed must be nonnegative. AWA and heel remain signed. R20 is stricter for
+poisoned corroboration: invalid configured current drift cannot explain a SOG/STW mismatch, while genuinely missing or
+stale current drift remains fail-open. Every switch defaults on.
 
-The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, so those rules
-(R19 shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, and the heading/COG turn confirmation) **activate
-automatically on upgrade** for any boat that already publishes those keys. To opt out, toggle the rule off or clear its
-key in the Settings tab's Enhanced Rules section. The genuinely custom signals (`enh_rpm_key`, `enh_engine_state_key`,
-`enh_heel_key`) default to empty and stay inactive until you map a key, because AvNav core has no standard key for them.
-Each Enhanced Rules key control is editable: currently-published AvNav keys appear as suggestions, and you can type an
-arbitrary custom store key when discovery cannot enumerate its prefix.
+The depth, SOG, current-drift, apparent-wind, heading, and COG keys default to standard AvNav store keys, and
+`enh_heel_key` defaults to the mirrored SignalK attitude key `gps.signalk.navigation.attitude.roll`, so those rules (R19
+shallow, R20 SOG/STW paddlewheel, R21 true-wind cross-check, R22 heel band, and the heading/COG turn confirmation)
+**activate automatically on upgrade** for any boat that already publishes those keys, and a persisted blank left over
+from an older install is restored to the default. To opt out, toggle the rule off in the Settings tab's Enhanced Rules
+section; blanking a defaulted key does not disable its rule, because the blank is treated as unset and restored. Only
+`enh_rpm_key` defaults to empty and stays inactive until you map a key, because AvNav has no standard engine-RPM key.
+Each Enhanced Rules key control is a selector of currently-published AvNav keys, using the same control system as Data
+Sources; an existing configured value remains available when it is not currently publishing.
 
-| Name                            |    Type |                Default |       Range | Behavior                                                                             |
-| ------------------------------- | ------: | ---------------------: | ----------: | ------------------------------------------------------------------------------------ |
-| `enh_rpm_enabled`               | BOOLEAN |                 `true` |           - | Enable the engine-RPM reject (R17).                                                  |
-| `enh_rpm_key`                   |  STRING |                   `""` |           - | Store key for engine RPM.                                                            |
-| `enh_rpm_idle_max`              |  NUMBER |                  `900` |    200-4000 | RPM above this rejects the sample as motoring.                                       |
-| `enh_engine_state_enabled`      | BOOLEAN |                 `true` |           - | Enable the engine-state reject (R18).                                                |
-| `enh_engine_state_key`          |  STRING |                   `""` |           - | Store key for engine state (boolean, RPM, or alternator voltage).                    |
-| `enh_engine_state_on_threshold` |   FLOAT |                  `0.5` | 0.0-10000.0 | `engine_signal` at/above this means engine on (boolean 0.5, RPM ~50, voltage ~13.2). |
-| `enh_depth_enabled`             | BOOLEAN |                 `true` |           - | Enable the shallow-water reject (R19).                                               |
-| `enh_depth_key`                 |  STRING | `"gps.depthBelowKeel"` |           - | Store key for depth in meters (keel clearance).                                      |
-| `enh_depth_floor_m`             |   FLOAT |                  `1.0` |    0.5-50.0 | Clearance below this rejects the sample (shallow-water squat).                       |
-| `enh_slip_enabled`              | BOOLEAN |                 `true` |           - | Enable the symmetric SOG/STW mismatch reject (R20).                                  |
-| `enh_sog_key`                   |  STRING |          `"gps.speed"` |           - | Shared SOG source for R10 anchoring and R20 consistency.                             |
-| `enh_current_drift_key`         |  STRING |   `"gps.currentDrift"` |           - | Store key for current drift; corroborates R20.                                       |
-| `enh_slip_sog_floor_kt`         |   FLOAT |                  `1.0` |    0.3-10.0 | Faster of SOG/STW must exceed this for R20 to apply.                                 |
-| `enh_slip_ratio`                |   FLOAT |                  `0.5` |     0.1-0.9 | Reject when slower < faster × ratio and current drift cannot explain the gap.        |
-| `enh_tw_crosscheck_enabled`     | BOOLEAN |                 `true` |           - | Enable the true-wind cross-check reject (R21).                                       |
-| `enh_awa_key`                   |  STRING |      `"gps.windAngle"` |           - | Store key for apparent wind angle.                                                   |
-| `enh_aws_key`                   |  STRING |      `"gps.windSpeed"` |           - | Store key for apparent wind speed.                                                   |
-| `enh_tw_twa_tol_deg`            |   FLOAT |                 `15.0` |    3.0-45.0 | Allowed TWA disagreement for the cross-check.                                        |
-| `enh_tw_tws_tol_kt`             |   FLOAT |                  `3.0` |    0.5-15.0 | Allowed TWS disagreement for the cross-check.                                        |
-| `enh_heel_enabled`              | BOOLEAN |                 `true` |           - | Enable the heel-band reject (R22).                                                   |
-| `enh_heel_key`                  |  STRING |                   `""` |           - | Store key for heel/roll in degrees.                                                  |
-| `enh_heel_min_deg`              |   FLOAT |                  `0.0` |    0.0-45.0 | Reject below this absolute heel (0 disables it, multihull-safe).                     |
-| `enh_heel_max_deg`              |   FLOAT |                 `35.0` |    5.0-90.0 | Reject above this absolute heel.                                                     |
-| `enh_turnconfirm_enabled`       | BOOLEAN |                 `true` |           - | Enable heading/COG turn confirmation for R11/R14.                                    |
-| `enh_heading_key`               |  STRING |    `"gps.headingTrue"` |           - | Store key for heading.                                                               |
-| `enh_cog_key`                   |  STRING |          `"gps.track"` |           - | Store key for course over ground.                                                    |
-| `enh_turn_min_roc`              |   FLOAT |                  `3.0` |    0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.              |
+| Name                        |    Type |                                  Default |    Range | Behavior                                                                      |
+| --------------------------- | ------: | ---------------------------------------: | -------: | ----------------------------------------------------------------------------- |
+| `enh_rpm_enabled`           | BOOLEAN |                                   `true` |        - | Enable the engine-RPM reject (R17).                                           |
+| `enh_rpm_key`               |  STRING |                                     `""` |        - | Store key for engine RPM.                                                     |
+| `enh_rpm_idle_max`          |  NUMBER |                                    `900` | 200-4000 | RPM above this rejects the sample as motoring.                                |
+| `enh_depth_enabled`         | BOOLEAN |                                   `true` |        - | Enable the shallow-water reject (R19).                                        |
+| `enh_depth_key`             |  STRING |                   `"gps.depthBelowKeel"` |        - | Store key for depth in meters (keel clearance).                               |
+| `enh_depth_floor_m`         |   FLOAT |                                    `1.0` | 0.5-50.0 | Clearance below this rejects the sample (shallow-water squat).                |
+| `enh_slip_enabled`          | BOOLEAN |                                   `true` |        - | Enable the symmetric SOG/STW mismatch reject (R20).                           |
+| `enh_sog_key`               |  STRING |                            `"gps.speed"` |        - | Shared SOG source for R10 anchoring and R20 consistency.                      |
+| `enh_current_drift_key`     |  STRING |                     `"gps.currentDrift"` |        - | Store key for current drift; corroborates R20.                                |
+| `enh_slip_sog_floor_kt`     |   FLOAT |                                    `1.0` | 0.3-10.0 | Faster of SOG/STW must exceed this for R20 to apply.                          |
+| `enh_slip_ratio`            |   FLOAT |                                    `0.5` |  0.1-0.9 | Reject when slower < faster × ratio and current drift cannot explain the gap. |
+| `enh_tw_crosscheck_enabled` | BOOLEAN |                                   `true` |        - | Enable the true-wind cross-check reject (R21).                                |
+| `enh_awa_key`               |  STRING |                        `"gps.windAngle"` |        - | Store key for apparent wind angle.                                            |
+| `enh_aws_key`               |  STRING |                        `"gps.windSpeed"` |        - | Store key for apparent wind speed.                                            |
+| `enh_tw_twa_tol_deg`        |   FLOAT |                                   `15.0` | 3.0-45.0 | Allowed TWA disagreement for the cross-check.                                 |
+| `enh_tw_tws_tol_kt`         |   FLOAT |                                    `3.0` | 0.5-15.0 | Allowed TWS disagreement for the cross-check.                                 |
+| `enh_heel_enabled`          | BOOLEAN |                                   `true` |        - | Enable the heel-band reject (R22).                                            |
+| `enh_heel_key`              |  STRING | `"gps.signalk.navigation.attitude.roll"` |        - | Store key for heel/roll in radians.                                           |
+| `enh_heel_min_deg`          |   FLOAT |                                    `0.0` | 0.0-45.0 | Reject below this absolute heel (0 disables it, multihull-safe).              |
+| `enh_heel_max_deg`          |   FLOAT |                                   `35.0` | 5.0-90.0 | Reject above this absolute heel.                                              |
+| `enh_turnconfirm_enabled`   | BOOLEAN |                                   `true` |        - | Enable heading/COG turn confirmation for R11/R14.                             |
+| `enh_heading_key`           |  STRING |                      `"gps.headingTrue"` |        - | Store key for heading.                                                        |
+| `enh_cog_key`               |  STRING |                            `"gps.track"` |        - | Store key for course over ground.                                             |
+| `enh_turn_min_roc`          |   FLOAT |                                    `3.0` | 0.5-30.0 | Heading/COG deg/s at/above which a TWA spike is treated as a real turn.       |
 
 Config changes are hot-swapped. Viewer Settings endpoints validate changed string values and the resulting complete
 configuration, including `enh_heel_min_deg <= enh_heel_max_deg` and `cooldown_seconds >= stability_window_seconds`. One

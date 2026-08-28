@@ -136,14 +136,11 @@ def test_sog_stw_mismatch_breaks_history_before_mismatch_clears() -> None:
     assert recovery.reason_codes == ("reject_warming_up",)
 
 
-def test_enhanced_status_applies_boolean_policy_by_signal_role(tmp_path: Path) -> None:
+def test_enhanced_status_rejects_boolean_physical_signal(tmp_path: Path) -> None:
     api = FakeAvNavAPI()
     physical_bool: object = True
-    engine_bool: object = True
     api.set_value("gps.depthBelowKeel", physical_bool, 99.5)
-    api.set_value("engine.state", engine_bool, 99.5)
     plugin = make_plugin(tmp_path, api)
-    plugin.config = replace(plugin.config, enh_engine_state_key="engine.state")
 
     response = plugin._handle_request("enhanced/status", object(), {})
     data = response["data"]
@@ -153,4 +150,3 @@ def test_enhanced_status_applies_boolean_policy_by_signal_role(tmp_path: Path) -
     statuses = {row["rule"]: row["status"] for row in rows if isinstance(row, dict)}
 
     assert statuses["reject_shallow"] == "inactive_value_invalid"
-    assert statuses["reject_engine_on"] == "active"

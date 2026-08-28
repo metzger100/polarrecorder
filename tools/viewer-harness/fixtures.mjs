@@ -114,7 +114,6 @@ export function defaultResponseBody(endpoint) {
     return ok({
       rules: [
         { rule: "reject_engine_rpm", availability: "unavailable", status: "inactive_key_not_configured" },
-        { rule: "reject_engine_on", availability: "disabled", status: "disabled" },
         { rule: "reject_shallow", availability: "active", status: "active" }
       ]
     });

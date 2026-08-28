@@ -31,7 +31,6 @@ _MISSING = EnhancedInput("missing", None, None, None)
 
 _ENABLE_FIELDS = {
     "reject_engine_rpm": "enh_rpm_enabled",
-    "reject_engine_on": "enh_engine_state_enabled",
     "reject_shallow": "enh_depth_enabled",
     "reject_sog_stw_mismatch": "enh_slip_enabled",
     "reject_true_wind_crosscheck": "enh_tw_crosscheck_enabled",

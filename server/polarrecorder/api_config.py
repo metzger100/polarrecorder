@@ -185,7 +185,7 @@ ADVANCED_GROUPS = (
     ),
     AdvancedGroup(
         "Engine Heuristic",
-        "Low-wind movement checks used when no definitive engine signal is configured.",
+        "Low-wind movement checks supplemented by the optional RPM rule.",
         (
             AdvancedField(
                 "engine_tws_ceil",

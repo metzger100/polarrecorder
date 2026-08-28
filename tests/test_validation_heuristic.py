@@ -30,14 +30,6 @@ def test_r16_passes_non_engine_like_sample() -> None:
     assert result.reason_codes == ()
 
 
-def test_r16_suppressed_when_engine_state_reads_off() -> None:
-    sample = _with_enhanced(4.0, 4.0, {"engine_signal": 0.0})
-
-    result = engine_heuristic(sample, default_config())
-
-    assert result.decision == "pass"
-
-
 def test_r16_suppressed_when_rpm_reads_stopped() -> None:
     sample = _with_enhanced(4.0, 4.0, {"rpm": RPM_OFF_CEILING})
 
@@ -55,7 +47,7 @@ def test_r16_heuristic_still_runs_for_idle_band_rpm() -> None:
     assert result.reason_codes == ("quarantine_engine_suspected",)
 
 
-def test_r16_unchanged_when_no_engine_signal_present() -> None:
+def test_r16_unchanged_when_no_rpm_signal_present() -> None:
     quarantined = engine_heuristic(make_sample(tws_kt=4.0, stw_kt=4.0), default_config())
     passed = engine_heuristic(make_sample(tws_kt=12.0, stw_kt=6.0), default_config())
 

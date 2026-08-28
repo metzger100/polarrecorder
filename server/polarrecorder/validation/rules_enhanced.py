@@ -1,4 +1,4 @@
-"""Module: Enhanced Validation Rules - Optional-signal rejection rules R17-R22.
+"""Module: Enhanced Validation Rules - Optional-signal rejection rules.
 
 Documentation: documentation/filters/rejection-rules.md
 Depends: polarrecorder.config, polarrecorder.sample, polarrecorder.validation.angle_math
@@ -24,14 +24,6 @@ def reject_engine_rpm(sample: Sample, config: Config) -> RuleResult:
     rpm = enhanced_value(sample, "rpm")
     if rpm is not None and rpm > config.enh_rpm_idle_max:
         return _reject("reject_engine_rpm")
-    return _pass()
-
-
-def reject_engine_on(sample: Sample, config: Config) -> RuleResult:
-    """Reject (R18) when the engine-state signal reads at/above the on threshold."""
-    engine_signal = enhanced_value(sample, "engine_signal")
-    if engine_signal is not None and engine_signal >= config.enh_engine_state_on_threshold:
-        return _reject("reject_engine_on")
     return _pass()
 
 

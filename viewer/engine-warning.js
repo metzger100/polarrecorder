@@ -1,5 +1,5 @@
 /**
- * @file Engine Protection Warning
+ * @file Engine RPM Protection Warning
  * Documentation: documentation/architecture/ui.md
  * Depends: viewer.js, dom.js
  */
@@ -8,7 +8,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  const SUPPRESSION_KEY = "polarrecorder.engine-warning.v1";
+  const SUPPRESSION_KEY = "polarrecorder.engine-rpm-warning.v1";
   let warningChecked = false;
 
   document.addEventListener("DOMContentLoaded", start);
@@ -24,7 +24,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     warningChecked = true;
     Polarrecorder.FetchJson("enhanced/status", { action: true }).then(
       function (/** @type {{rules?: Array<{availability: string, rule: string}>}} */ data) {
-        if (!hasDefinitiveEngineRule(data.rules || [])) renderWarning();
+        if (!hasActiveRpmRule(data.rules || [])) renderWarning();
       },
       function () {
         renderWarning();
@@ -33,9 +33,9 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /** @param {Array<{availability: string, rule: string}>} rules */
-  function hasDefinitiveEngineRule(rules) {
+  function hasActiveRpmRule(rules) {
     return rules.some(function (rule) {
-      return rule.availability === "active" && rule.rule === "reject_engine_on";
+      return rule.availability === "active" && rule.rule === "reject_engine_rpm";
     });
   }
 
@@ -65,7 +65,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const previousAriaHidden = background ? background.getAttribute("aria-hidden") : null;
     const backdrop = Polarrecorder.Dom.Node("div", "engine-warning-backdrop");
     const modal = Polarrecorder.Dom.Node("section", "engine-warning");
-    const heading = Polarrecorder.Dom.Node("h2", "", "Engine protection unavailable");
+    const heading = Polarrecorder.Dom.Node("h2", "", "Engine RPM protection unavailable");
     heading.id = "engine-warning-title";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
@@ -75,7 +75,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       Polarrecorder.Dom.Node(
         "p",
         "",
-        "RPM protection rejects only above its configured idle ceiling, so an RPM source alone cannot rule out motoring at lower RPM. Pause recording while motoring or configure a definitive engine-state rule in Settings > Enhanced Rules."
+        "The Engine RPM enhanced rule is not active, so Polar Recorder cannot reject samples using RPM. Pause recording while motoring or select a live RPM source in Settings > Enhanced Rules."
       )
     );
     const message = Polarrecorder.Dom.Node("p", "error-text", "");
