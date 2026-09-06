@@ -141,6 +141,10 @@ test("check:fast is exactly check:standard && typecheck && test:unit", () => {
   assert.equal(PKG.scripts["check:fast"], "npm run check:standard && npm run typecheck && npm run test:unit");
 });
 
+test("setup activates the tracked hooks after installing Node dependencies", () => {
+  assert.match(PKG.scripts.setup, /^npm ci && npm run hooks:install && /);
+});
+
 test("check:fast never reaches an exhaustive, package, docs, complexity, or scaling group", () => {
   const { reachable } = walkFrom(PKG.scripts, "check:fast");
   for (const excluded of CHECK_FAST_EXCLUDED_GROUPS) {

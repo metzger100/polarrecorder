@@ -17,11 +17,11 @@ dev-only tooling, provisioned once with:
 npm run setup
 ```
 
-This runs `npm ci` (locked Node dev tools), creates/updates a project-local `venv` from the frozen developer-Python
-contract (`tools/quality-policy/developer-python.json`, currently Python 3.14.x) and installs the hash-locked
-`requirements-dev.txt` with `pip install --require-hashes`, and provisions a checksum-verified `actionlint` binary into
-a persistent cache outside the repository. `npm run setup` is the only command allowed to touch the network; every other
-check runs offline against what it installed.
+This runs `npm ci` (locked Node dev tools), activates the tracked pre-push hook for the clone, creates/updates a
+project-local `venv` from the frozen developer-Python contract (`tools/quality-policy/developer-python.json`, currently
+Python 3.14.x) and installs the hash-locked `requirements-dev.txt` with `pip install --require-hashes`, and provisions a
+checksum-verified `actionlint` binary into a persistent cache outside the repository. `npm run setup` is the only
+command allowed to touch the network; every other check runs offline against what it installed.
 
 The git pre-push hook automatically prepends `venv/bin` to `PATH`, so no manual activation is needed. To use a virtual
 environment elsewhere, point it at the hook with the `POLARRECORDER_VENV` environment variable:
@@ -37,7 +37,7 @@ network-using step (never run by a gate):
 npm run requirements:lock
 ```
 
-Install the pre-push hook (sets `core.hooksPath` to `.githooks`) with:
+`npm run setup` installs the pre-push hook automatically. To repair or reinstall it without repeating setup, run:
 
 ```sh
 npm run hooks:install

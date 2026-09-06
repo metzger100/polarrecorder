@@ -327,7 +327,8 @@ automatically.
 ## For developers
 
 Runtime code is Python 3.9+ standard-library only. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests, and release
-workflows; run `npm run check:all` before handoff.
+workflows. `npm run setup` installs the development toolchain and activates the tracked pre-push quality gate for the
+clone; run `npm run check:all` before handoff.
 
 For local viewer/API work without AvNav, use the mock server:
 

@@ -150,8 +150,8 @@ JavaScript standards:
   load the known viewer scripts in the documented order. `tests/js/viewer-structure-contract.test.mjs` enforces both.
 - Do not commit machine-local absolute paths in source, docs, workflow files, or release metadata;
   `tools/check-patterns.mjs` blocks them. Use project-relative or redacted placeholders.
-- The pre-push gate must be installed (`npm run hooks:install`); `npm run hooks:doctor` verifies `core.hooksPath` and
-  the hook are configured.
+- The pre-push gate is installed automatically by `npm run setup`; `npm run hooks:install` repairs it, and
+  `npm run hooks:doctor` verifies `core.hooksPath` and the hook are configured.
 
 Documentation standards:
 

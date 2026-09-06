@@ -5,18 +5,19 @@
 ## Overview
 
 This directory holds the tracked `pre-push` hook that runs the full quality gate (`npm run check:all`) before any push.
-Git does not activate a repository's tracked hooks automatically; each clone must opt in once.
+Git does not activate a repository's tracked hooks automatically, so the project's normal setup activates them for each
+clone.
 
 ## Key Details
 
-One-time per-clone setup:
+Normal one-time setup for a clone runs the hook installer along with the rest of the development toolchain:
 
 ```sh
-npm run hooks:install
+npm run setup
 ```
 
-This sets `core.hooksPath` to `.githooks` and ensures `pre-push` is executable. Verify the hook is active at any time
-with:
+To repair or reinstall only the hook, run `npm run hooks:install`. The installer sets `core.hooksPath` to `.githooks`
+and ensures `pre-push` is executable. Verify the hook is active at any time with:
 
 ```sh
 npm run hooks:doctor

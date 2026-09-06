@@ -67,14 +67,14 @@ Optional maintainer gates:
 
 | Command                                     | Purpose                                                                                   |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `npm run hooks:install`                     | Install the pre-push hook path                                                            |
+| `npm run hooks:install`                     | Repair or reinstall the pre-push hook path configured automatically by `npm run setup`    |
 | `npm run hooks:doctor`                      | Verify hook installation                                                                  |
 | `npm run release:prepare`                   | Collect release context for version and notes decisions                                   |
 | `npm run release:create -- --version=X.Y.Z` | Run the full gate, build release artifacts, commit them, and tag the release              |
 | `npm run actions:lint`                      | actionlint over `.github/workflows/*.yml` plus both workflows' exact structural contracts |
 
-The pre-push hook (`.githooks/pre-push`, installed via `npm run hooks:install`) resolves the repository root, sets a
-stable locale, and runs exactly one `npm run check:all`, propagating its status.
+The pre-push hook (`.githooks/pre-push`, installed by `npm run setup` or repaired via `npm run hooks:install`) resolves
+the repository root, sets a stable locale, and runs exactly one `npm run check:all`, propagating its status.
 
 `.github/workflows/quality.yml` runs the identical `npm run check:all` gate on every pull request and on every push to
 `main`, so enforcement does not depend on a contributor having installed the local hook. It declares only
