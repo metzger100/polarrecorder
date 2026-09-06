@@ -153,8 +153,8 @@ CONFIG_PARAMETERS: list[dict[str, object]] = [
     {
         "name": "min_samples_for_export",
         "type": "NUMBER",
-        "default": "10",
-        "rangeOrList": [3, 100],
+        "default": "50",
+        "rangeOrList": [50, 100],
         "description": "High-confidence export sample floor",
     },
     {

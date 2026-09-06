@@ -121,7 +121,7 @@ def _populate_route_model(
     monotonic: FakeClock,
     wall: FakeClock,
 ) -> None:
-    for _ in range(5):
+    for _ in range(30):
         sample = sample_at(monotonic(), wall())
         assert sample is not None
         plugin._model.update_accepted(sample)
@@ -152,7 +152,7 @@ def _assert_read_routes(plugin: plugin_module.Plugin) -> None:
     backup = response_data(plugin._handle_request("export/json", object(), {}))
     unknown = plugin._handle_request("unknown", object(), {})
 
-    assert status["generation"] == 5
+    assert status["generation"] == 30
     assert polar_first == polar_second
     assert polar_first["status"] == "OK"
     assert polar_inline["status"] == "ERROR"

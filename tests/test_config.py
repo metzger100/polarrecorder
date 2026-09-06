@@ -132,6 +132,19 @@ def test_parse_config_values_clamps_numeric_ranges_from_params() -> None:
     assert any(level == "debug" for level, _ in logger.messages)
 
 
+def test_high_confidence_export_floor_defaults_to_fifty_and_upgrades_lower_values() -> None:
+    logger = FakeLogger()
+
+    default = default_config()
+    upgraded = parse_config_values({"min_samples_for_export": "10"}, logger)
+    stricter = parse_config_values({"min_samples_for_export": "75"})
+
+    assert default.min_samples_for_export == 50
+    assert upgraded.min_samples_for_export == 50
+    assert stricter.min_samples_for_export == 75
+    assert logger.messages == [("debug", "Clamped config min_samples_for_export from 10.0 to 50.0")]
+
+
 def test_invalid_number_with_previous_keeps_previous_value_and_warns() -> None:
     previous = parse_config_values({"percentile": "72"})
     logger = FakeLogger()

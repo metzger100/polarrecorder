@@ -79,7 +79,7 @@ test("the zero-TWA anchor renders at full confidence", () => {
   const env = loadPolarChart();
   const curve = [];
   curve[0] = { stw: 0.0, samples: 0 };
-  curve[30] = { stw: 5.0, samples: 12 };
+  curve[30] = { stw: 5.0, samples: 50 };
 
   env.chart.Render(
     {
@@ -110,6 +110,45 @@ test("the zero-TWA anchor renders at full confidence", () => {
   });
   assert.ok(connector, "expected a connecting line");
   assert.equal(connector.attributes.get("opacity"), "1");
+});
+
+test("normal-confidence points are dimmed until fifty samples", () => {
+  const env = loadPolarChart();
+  const curve = [];
+  curve[30] = { stw: 5.0, samples: 30 };
+  curve[60] = { stw: 5.5, samples: 49 };
+  curve[90] = { stw: 6.0, samples: 50 };
+
+  env.chart.Render(
+    {
+      curves: { 12: curve },
+      format: "windy",
+      generation: 4,
+      percentile: 65,
+      tws_bands: [12]
+    },
+    { force: true, presetTwa: [30, 60, 90] }
+  );
+
+  const svg = env.host.children[0];
+  const dots = svg.children.filter(function (node) {
+    return node.attributes.get("class") === "chart-point";
+  });
+  assert.deepEqual(
+    dots.map(function (dot) {
+      return [dot.attributes.get("r"), dot.attributes.get("opacity")];
+    }),
+    [
+      ["3.6", "0.5"],
+      ["3.6", "0.5"],
+      ["5.1", "1"]
+    ]
+  );
+  const connector = svg.children.find(function (node) {
+    return node.attributes.get("class") === "chart-line";
+  });
+  assert.ok(connector, "expected a connecting line");
+  assert.equal(connector.attributes.get("opacity"), "0.65");
 });
 
 test("a missing grid column breaks the connecting line", () => {

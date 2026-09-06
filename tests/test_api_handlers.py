@@ -119,16 +119,16 @@ def test_format_status_marks_implausibly_future_values_stale() -> None:
 
 
 def test_format_polar_and_export_reuse_projection() -> None:
-    bins = {(100, 12): {"histogram": {60: 3}}}
+    bins = {(100, 12): {"histogram": {60: 30}}}
 
     polar = _data(api_handlers.format_polar(bins, [0, 90], [12], 65, 7, "windy"))
-    export_response = _data(api_handlers.format_export(bins, [0, 90], [12], 65, 3))
+    export_response = _data(api_handlers.format_export(bins, [0, 90], [12], 65, 30))
     curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
 
     assert polar["tws_bands"] == [12]
     # An off-preset-angle sample (100 deg) midpoint-merges into the 90 deg
     # preset column the viewer plots, matching the CSV export projection.
-    assert curves["12"][90] == {"stw": 6.0, "samples": 3}
+    assert curves["12"][90] == {"stw": 6.0, "samples": 30}
     assert curves["12"][100] is None
     # Each populated band shares the 0 deg / 0 STW origin anchor, so the polar
     # curve and the CSV TWA 0 row agree instead of diverging.
@@ -136,8 +136,21 @@ def test_format_polar_and_export_reuse_projection() -> None:
     assert export_response["csv"] == "TWA\\TWS;12\r\n0;0.0\r\n90;6.0\r\n"
 
 
+def test_format_polar_omits_twenty_nine_samples_and_includes_thirty() -> None:
+    bins = {
+        (60, 12): {"histogram": {50: 29}},
+        (90, 12): {"histogram": {60: 30}},
+    }
+
+    polar = _data(api_handlers.format_polar(bins, [60, 90], [12], 65, 1, "mine"))
+    curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
+
+    assert curves["12"][60] is None
+    assert curves["12"][90] == {"stw": 6.0, "samples": 30}
+
+
 def test_format_polar_curve_spans_full_circle_for_port_cells() -> None:
-    bins = {(210, 12): {"histogram": {50: 3}}}
+    bins = {(210, 12): {"histogram": {50: 30}}}
     grid = [0, 180, 210, 270]
 
     polar = _data(api_handlers.format_polar(bins, grid, [12], 65, 3, "Default360"))
@@ -146,12 +159,12 @@ def test_format_polar_curve_spans_full_circle_for_port_cells() -> None:
     assert polar["tws_bands"] == [12]
     # A projected port cell at 210 deg is addressable in the full-circle curve.
     assert len(curves["12"]) == 360
-    assert curves["12"][210] == {"stw": 5.0, "samples": 3}
+    assert curves["12"][210] == {"stw": 5.0, "samples": 30}
     assert curves["12"][0] == {"stw": 0.0, "samples": 0}
 
 
 def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
-    bins = {(90, 12): {"histogram": {60: 3}}}
+    bins = {(90, 12): {"histogram": {60: 30}}}
 
     polar = _data(api_handlers.format_polar(bins, [0, 90], [8, 12], 65, 1, "windy"))
     curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])

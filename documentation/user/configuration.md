@@ -61,7 +61,7 @@ Pause/Resume control), tracked by the transient `_paused` flag rather than a per
 | `stability_stw_range`      |   FLOAT |               `4.0` | 1.0-10.0 | Maximum STW range including the current sample.                                    |
 | `engine_tws_ceil`          |   FLOAT |               `5.0` | 2.0-15.0 | TWS ceiling for the R16 engine-suspected quarantine.                               |
 | `engine_stw_floor`         |   FLOAT |               `3.0` | 1.0-10.0 | STW floor for the R16 engine-suspected quarantine.                                 |
-| `min_samples_for_export`   |  NUMBER |                `10` |    3-100 | High-confidence export floor used when that export mode is requested.              |
+| `min_samples_for_export`   |  NUMBER |                `50` |   50-100 | High-confidence export floor used when that export mode is requested.              |
 | `debug_logging`            | BOOLEAN |             `false` |        - | Emits one finite decision diagnostic per completed store read.                     |
 
 The Settings tab's top **Data Sources** card exposes `twa_key`, `tws_key`, and `stw_key` as store-key selectors. Its
@@ -70,6 +70,10 @@ sensor freshness, core filters, stability/maneuver thresholds, `max_tws`, `max_s
 logging. Export percentile and high-confidence export floors remain in the Export tab; plugin enablement stays on
 AvNav's built-in switch and pause/resume stays in the viewer. All store-key values are trimmed before persistence;
 optional keys may be cleared, while the three core keys must remain nonempty.
+
+Normal exports and polar-diagram cells require 30 accepted samples. The polar diagram uses reduced emphasis from 30
+through 49 samples and full high-confidence emphasis from 50 onward. A persisted `min_samples_for_export` below 50 is
+clamped to 50 when configuration is loaded; values from 50 through 100 remain available for stricter exports.
 
 `debug_logging` records schema version 5; JSON-safe raw scalar and normalized core values; source timestamps and ages;
 enhanced missing/stale/invalid/usable states with invalid causes plus raw, normalized, and timestamp metadata;

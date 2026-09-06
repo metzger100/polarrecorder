@@ -127,11 +127,13 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   full-circle curve that ends at 180 deg (no learned port cells) therefore leaves the seam open instead of cutting a
   straight line across to 0 deg. The server anchors each populated band at 0 deg TWA / 0 STW (the chart center), and the
   viewer treats the 0 deg point as full confidence regardless of its sample count so the zero-sample anchor never dims
-  the curve. Radial TWA angle labels sit a fixed distance outside the outer ring at every scale. Radial STW labels
-  include `kn` units, while tooltips include explicit TWA, TWS, STW, and sample units. It skips redraws only when
-  requested format, returned format, generation, percentile, TWS bands, and the preset TWA grid still describe the same
-  view. When no polar data can be plotted, the empty grid remains visible and a centered overlay box reports that no
-  data is available yet.
+  the curve. Other plotted cells have already met the server's 30-sample normal-confidence floor; cells with 30-49
+  samples use smaller, dimmer points and dim any connecting run, while cells with at least 50 samples use full
+  high-confidence emphasis. A stricter configured export floor does not alter this chart threshold. Radial TWA angle
+  labels sit a fixed distance outside the outer ring at every scale. Radial STW labels include `kn` units, while
+  tooltips include explicit TWA, TWS, STW, and sample units. It skips redraws only when requested format, returned
+  format, generation, percentile, TWS bands, and the preset TWA grid still describe the same view. When no polar data
+  can be plotted, the empty grid remains visible and a centered overlay box reports that no data is available yet.
 - The timeline chart draws server-supplied one-minute buckets with colored swatches for Accepted, Rejected, and
   Quarantined and a time scale with range-relative ticks.
 - `tools/mock-server.py` serves the static viewer and deterministic in-memory API responses generated from one shared

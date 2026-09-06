@@ -68,8 +68,8 @@ def test_format_polar_curve_assembly_is_bounded_by_configured_grid_cells(
 
 def test_format_polar_scaling_instrumentation_preserves_the_full_response() -> None:
     counter = [0]
-    instrumented_bins = build_model_bins(50, counter)
-    ordinary_bins = build_model_bins(50, None)
+    instrumented_bins = build_model_bins(1000, counter)
+    ordinary_bins = build_model_bins(1000, None)
 
     instrumented = _data(
         api_handlers.format_polar(instrumented_bins, FIXED_TWA_GRID, FIXED_TWS_GRID, 65, 7, "windy")

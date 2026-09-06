@@ -4,7 +4,7 @@
     "sample_interval": 1.0,
     "percentile": 65,
     "flush_interval": 300,
-    "min_samples_for_export": 10,
+    "min_samples_for_export": 50,
     "max_tws": 60,
     "enh_rpm_enabled": true,
     "enh_rpm_key": "",

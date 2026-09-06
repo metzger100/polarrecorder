@@ -135,6 +135,10 @@ belong to this card only; they never change the POL table.
 
 Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
 
+Normal CSV, routing POL, and polar-diagram cells require at least 30 accepted samples. In the polar diagram, cells with
+30-49 samples are shown with reduced emphasis; cells reach the standard high-confidence emphasis at 50 samples. The
+high-confidence export switch uses the configured floor, which defaults to 50 and may be raised as high as 100.
+
 A `360°` preset (or any custom grid with angles above `180°`) exports true port/starboard asymmetry, emitting TWA rows
 above `180°`. Note that a `360°` CSV is not Windy.com-importable by design; use the `Windy Passage Planner` preset for
 Windy import.
@@ -304,8 +308,9 @@ sailing. If accepted stays at zero, check instrument data first.
 
 ### Export has blank cells
 
-Blank cells mean not enough accepted data exists for that TWA/TWS cell. Sail more in those conditions, or turn off
-high-confidence export if you only need a rough table.
+Blank cells mean not enough accepted data exists for that TWA/TWS cell. Normal export requires 30 accepted samples per
+cell; high-confidence export requires at least 50. Sail more in those conditions, or turn off high-confidence export
+when the normal-confidence table is sufficient.
 
 ### Timeline times look odd after startup
 

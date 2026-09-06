@@ -90,12 +90,12 @@ merges the source histograms and counts from both tacks, then computes one perce
 serializer requires all 108 cells; an incomplete matrix returns an application error with missing and total counts. It
 does not call `anchor_origin`, interpolate, extrapolate, or change the stored model.
 
-`GET polar` and default `GET export` share the same projection function, configured percentile, and
-`MIN_SAMPLES_DISPLAY = 3` floor. Projection never folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges
+`GET polar` and default `GET export` share the same projection function, configured percentile, and 30-sample
+normal-confidence floor. Projection never folds: it carries true 0-359 TWA. A non-circular (180 deg) grid merges
 starboard bins by linear midpoint boundaries capped at 180 deg, excluding port bins; a circular grid (any TWA above 180
 deg) assigns each raw bin to its nearest grid point on the circle, including the 360 deg/0 deg wrap. Both use the fixed
 TWS upper bound `TWS_BIN_MAX = 60` for the last TWS interval. `high_confidence=yes`, `true`, or `1` affects CSV and POL
-export and swaps the floor to `min_samples_for_export`.
+export and swaps the floor to `min_samples_for_export`, whose default and minimum are 50 samples.
 
 No response may contain non-finite floats. Current values are updated only from a built finite `Sample`; later missing
 or non-finite reads leave the previous finite values frozen. Their Status stale flag uses the same temporal classifier

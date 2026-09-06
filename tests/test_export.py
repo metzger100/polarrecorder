@@ -273,20 +273,26 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
     _assert_export_error(incomplete_inline)
 
 
-def test_floor_selection_changes_projected_cells_and_csv() -> None:
-    bins = {(90, 12): {"histogram": {60: 5}}}
+def test_normal_and_high_confidence_floors_apply_at_thirty_and_fifty_samples() -> None:
+    normal_floor = export.resolve_min_samples({}, 50)
+    high_floor = export.resolve_min_samples({"high_confidence": "yes"}, 50)
+    below_normal = {(90, 12): {"histogram": {60: 29}}}
+    normal = {(90, 12): {"histogram": {60: 30}}}
+    below_high = {(90, 12): {"histogram": {60: 49}}}
+    high = {(90, 12): {"histogram": {60: 50}}}
 
-    low = export.project_grid(bins, [90], [12], percentile=65, min_samples=3)
-    high = export.project_grid(bins, [90], [12], percentile=65, min_samples=10)
-
-    assert low[(90, 12)] == export.ProjectedCell(stw=6.0, samples=5)
-    assert (90, 12) not in high
-    assert export.csv_from_projection(low, [90], [12]) == "TWA\\TWS;12\r\n90;6.0\r\n"
-    assert export.csv_from_projection(high, [90], [12]) == "TWA\\TWS;12\r\n90;\r\n"
+    assert (90, 12) not in export.project_grid(below_normal, [90], [12], 65, normal_floor)
+    assert export.project_grid(normal, [90], [12], 65, normal_floor)[
+        (90, 12)
+    ] == export.ProjectedCell(stw=6.0, samples=30)
+    assert (90, 12) not in export.project_grid(below_high, [90], [12], 65, high_floor)
+    assert export.project_grid(high, [90], [12], 65, high_floor)[(90, 12)] == export.ProjectedCell(
+        stw=6.0, samples=50
+    )
 
 
 def test_projection_is_deterministic_and_reuses_polar_grid() -> None:
-    bins = {(90, 12): {"histogram": {60: 3}}, (91, 12): {"histogram": {61: 3}}}
+    bins = {(90, 12): {"histogram": {60: 30}}, (91, 12): {"histogram": {61: 30}}}
     twa_grid = list(range(181))
     tws_grid = [12]
 
@@ -294,8 +300,8 @@ def test_projection_is_deterministic_and_reuses_polar_grid() -> None:
     second = export.project_grid(bins, twa_grid, tws_grid, 65, export.MIN_SAMPLES_DISPLAY)
 
     assert first == second
-    assert first[(90, 12)] == export.ProjectedCell(stw=6.0, samples=3)
-    assert first[(91, 12)] == export.ProjectedCell(stw=6.1, samples=3)
+    assert first[(90, 12)] == export.ProjectedCell(stw=6.0, samples=30)
+    assert first[(91, 12)] == export.ProjectedCell(stw=6.1, samples=30)
 
 
 def _assert_export_error(call: Callable[[], object]) -> None:

@@ -63,7 +63,7 @@ class Config:
     stability_stw_range: float = 4.0
     engine_tws_ceil: float = 5.0
     engine_stw_floor: float = 3.0
-    min_samples_for_export: int = 10
+    min_samples_for_export: int = 50
     debug_logging: bool = False
     enh_rpm_enabled: bool = True
     enh_rpm_key: str = ""

@@ -92,9 +92,9 @@ rounded to one decimal. Insufficient-data cells are blank. Rows use CRLF line en
 
 Projection is shared with the polar API and never folds: a non-circular (180 deg) grid merges starboard bins by linear
 midpoint boundaries and excludes port bins, while a circular grid assigns each raw bin to its nearest grid point on the
-circle. Each populated cell uses the configured percentile. Default CSV export uses the display floor
-`MIN_SAMPLES_DISPLAY = 3`. Adding `high_confidence=yes`, `true`, or `1` uses the stricter `min_samples_for_export`
-setting.
+circle. Each populated cell uses the configured percentile. Default CSV and routing POL exports use the 30-sample
+normal-confidence floor. Adding `high_confidence=yes`, `true`, or `1` uses the stricter `min_samples_for_export`
+setting, which defaults to 50 and can be raised to 100.
 
 When the requested TWA grid includes 0 deg, each populated TWS band is anchored to 0 STW at TWA 0 (head to wind),
 matching the polar diagram through the shared `anchor_origin` boundary condition. Bands with no data, and grids without

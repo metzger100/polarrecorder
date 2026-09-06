@@ -23,6 +23,9 @@ units, so changing the requested percentile recalculates the learned speed witho
   histograms before applying percentile and sample-floor semantics.
 - Percentiles use a nearest-rank crossing algorithm over deciknot histogram keys. There is no interpolation or midpoint
   averaging.
+- Projection exposes a cell to normal exports and the polar API only after its merged population reaches 30 accepted
+  samples. High-confidence export starts at the configured floor of 50-100 samples; the viewer gives full emphasis at
+  the baseline 50-sample level.
 - `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh nested histogram copies so API
   formatting can run outside the plugin lock without sharing mutable state.
 - Accepted samples update speed histograms. Quality-gate rejections and quarantines update per-bin diagnostics.

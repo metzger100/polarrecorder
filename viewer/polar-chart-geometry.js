@@ -14,7 +14,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   const CENTER_Y = 280;
   const PLOT_RADIUS = 220;
   const ANGLE_LABEL_OFFSET = 18;
-  const LOW_CONFIDENCE = 10;
+  const HIGH_CONFIDENCE_MIN_SAMPLES = 50;
   const STARBOARD_SPOKES = [0, 30, 60, 90, 120, 150, 180];
   const PORT_SPOKES = [210, 240, 270, 300, 330];
   const PORT_HALF_SPOKES = [180, 210, 240, 270, 300, 330, 360];
@@ -195,7 +195,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {boolean}
    */
   function isLowConfidence(twa, entry) {
-    return twa !== 0 && entry.samples < LOW_CONFIDENCE;
+    return twa !== 0 && entry.samples < HIGH_CONFIDENCE_MIN_SAMPLES;
   }
 
   /**
