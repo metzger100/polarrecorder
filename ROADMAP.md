@@ -11,6 +11,12 @@ imply priority.
 
 ## Key Details
 
+### Improvement — Make rules analyzable
+
+Currently there is no real solid possiblity to analyze what data is rejected and why. For that there must be an optional
+possiblity to create an additional dataset about rejects and quarantineed samples to have a saturated data set to make
+and extensive analysis on the current rules.
+
 ### Investigation — isolated slow accepted samples
 
 Isolated slow accepted samples can exist inside otherwise strong bins. P65 is intentionally the current protection; no
