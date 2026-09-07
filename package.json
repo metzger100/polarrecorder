@@ -5,9 +5,9 @@
   "private": true,
   "engines": {
     "node": ">=26 <27",
-    "npm": "12.0.1"
+    "npm": "12.0.2"
   },
-  "packageManager": "npm@12.0.1",
+  "packageManager": "npm@12.0.2",
   "scripts": {
     "docs:lint": "markdownlint-cli2",
     "docs:links": "node tools/check-doc-links.mjs",
@@ -42,7 +42,7 @@
     "check:python-contracts": "bash -c 'PATH=\"$PWD/venv/bin:$PATH\"; PYTHONPATH=\"$PWD/server${PYTHONPATH:+:$PYTHONPATH}\"; export PYTHONPATH; python tools/check-python-compat.py && python tools/check-py-contracts.py && python tools/check-py-dependencies.py && python tools/check-runtime-contracts.py'",
     "schema:check": "node tools/check-schema.mjs",
     "package:check": "npm run schema:check && node tools/release-archive.mjs --dry-run && vitest run --project tools tests/js/release-create.test.mjs tests/js/release-git.test.mjs tests/js/release-prepare.test.mjs tests/js/release-version.test.mjs",
-    "setup": "npm ci && npm run hooks:install && bash -ceu 'interpreter=\"${POLARRECORDER_PYTHON:-python3}\"; venv_dir=\"${POLARRECORDER_VENV:-venv}\"; version=\"$($interpreter --version)\"; case \"$version\" in Python\\ 3.14.*) ;; *) echo \"setup: $interpreter reports $version; expected Python 3.14\" >&2; exit 1 ;; esac; [ -x \"$venv_dir/bin/python\" ] || $interpreter -m venv \"$venv_dir\"; \"$venv_dir/bin/python\" -m pip install \"pip==26.1.2\"; \"$venv_dir/bin/python\" -m pip install --require-hashes -r requirements-dev.txt; bash tools/actionlint.sh --install'",
+    "setup": "npm ci && npm run hooks:install && bash -ceu 'interpreter=\"${POLARRECORDER_PYTHON:-python3}\"; venv_dir=\"${POLARRECORDER_VENV:-venv}\"; version=\"$($interpreter --version)\"; case \"$version\" in Python\\ 3.14.*) ;; *) echo \"setup: $interpreter reports $version; expected Python 3.14\" >&2; exit 1 ;; esac; [ -x \"$venv_dir/bin/python\" ] || $interpreter -m venv \"$venv_dir\"; \"$venv_dir/bin/python\" -m pip install \"pip==26.2.1\"; \"$venv_dir/bin/python\" -m pip install --require-hashes -r requirements-dev.txt; bash tools/actionlint.sh --install'",
     "actions:lint": "bash tools/actionlint.sh -color .github/workflows/*.yml",
     "requirements:lock": "bash -c 'venv/bin/python -m piptools compile --generate-hashes --allow-unsafe --output-file=requirements-dev.txt requirements-dev.in'",
     "dependencies:audit": "npm audit",
@@ -67,26 +67,26 @@
     "check:strict": "npm run check:all"
   },
   "overrides": {
-    "js-yaml": "5.2.2"
+    "js-yaml": "5.4.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@types/node": "26.1.1",
-    "@vitest/coverage-v8": "4.1.10",
-    "acorn": "8.17.0",
+    "@types/node": "26.4.1",
+    "@vitest/coverage-v8": "5.0.0",
+    "acorn": "8.18.0",
     "ajv": "8.20.0",
-    "eslint": "10.8.0",
-    "eslint-plugin-jsdoc": "63.0.13",
-    "globals": "17.8.0",
-    "js-yaml": "5.2.2",
-    "jscpd": "5.0.12",
+    "eslint": "10.10.0",
+    "eslint-plugin-jsdoc": "64.3.6",
+    "globals": "17.12.0",
+    "js-yaml": "5.4.1",
+    "jscpd": "5.1.2",
     "jsonc-parser": "3.3.1",
-    "linkinator": "8.0.2",
-    "markdownlint-cli2": "0.23.1",
+    "linkinator": "8.1.0",
+    "markdownlint-cli2": "0.23.2",
     "prettier": "3.9.6",
-    "stylelint": "17.14.1",
+    "stylelint": "17.15.0",
     "stylelint-config-standard": "40.0.0",
     "typescript": "7.0.2",
-    "vitest": "4.1.10"
+    "vitest": "5.0.0"
   }
 }

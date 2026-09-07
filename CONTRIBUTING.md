@@ -9,7 +9,7 @@ changes that keep code, tests, and documentation synchronized.
 
 ## Local development setup
 
-Development requires Node 26 and npm 12.0.1 (declared in `package.json`'s `engines`/`packageManager`) plus a supported
+Development requires Node 26 and npm 12.0.2 (declared in `package.json`'s `engines`/`packageManager`) plus a supported
 developer Python (`tools/quality-policy/developer-python.json`). The runtime stays stdlib-only; the quality gate needs
 dev-only tooling, provisioned once with:
 

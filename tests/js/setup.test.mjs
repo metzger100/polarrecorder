@@ -19,9 +19,9 @@ test("package identity", () => {
   assert.equal(PKG.version, "0.0.0-test");
   assert.equal(typeof PKG.name, "string");
   assert.ok(PKG.name.length > 0);
-  assert.equal(PKG.engines.npm, "12.0.1");
+  assert.equal(PKG.engines.npm, "12.0.2");
   assert.equal(PKG.engines.node, ">=26 <27");
-  assert.equal(PKG.packageManager, "npm@12.0.1");
+  assert.equal(PKG.packageManager, "npm@12.0.2");
 });
 
 test("exact devDependency pins", () => {
@@ -32,14 +32,14 @@ test("exact devDependency pins", () => {
 });
 
 test("js-yaml override is an exact pin and resolves every dependent to it", () => {
-  assert.equal(PKG.overrides?.["js-yaml"], "5.2.2");
+  assert.equal(PKG.overrides?.["js-yaml"], "5.4.1");
   const lock = JSON.parse(fs.readFileSync(path.join(ROOT, "package-lock.json"), "utf8"));
   const resolvedVersions = Object.entries(lock.packages || {})
     .filter(([lockPath]) => lockPath.endsWith("js-yaml") || lockPath.endsWith("/js-yaml"))
     .map(([, info]) => info.version);
   assert.ok(resolvedVersions.length > 0, "expected at least one resolved js-yaml entry");
   for (const version of resolvedVersions) {
-    assert.equal(version, "5.2.2");
+    assert.equal(version, "5.4.1");
   }
 });
 
@@ -69,7 +69,7 @@ test("setup is inline, provisions the pinned Python environment, and has no hook
   assert.ok(source.includes("npm ci"));
   assert.ok(source.includes("POLARRECORDER_PYTHON"));
   assert.ok(source.includes("Python 3.14"));
-  assert.ok(source.includes("pip==26.1.2"));
+  assert.ok(source.includes("pip==26.2.1"));
   assert.ok(source.includes("--require-hashes -r requirements-dev.txt"));
   assert.ok(source.includes("tools/actionlint.sh --install"));
   assert.ok(!/hooksPath|install-hooks|core\.hooksPath/.test(source));

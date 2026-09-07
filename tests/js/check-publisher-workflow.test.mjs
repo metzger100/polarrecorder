@@ -184,7 +184,7 @@ test("fails when a uses step is pinned to a tag instead of a full SHA", () => {
   const root = makeFakeRoot();
   writeWorkflow(
     root,
-    REAL_WORKFLOW.replace("actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2", "actions/checkout@v4")
+    REAL_WORKFLOW.replace("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1", "actions/checkout@v4")
   );
   const result = runPublisherWorkflowCheck({ root, print: false });
   assert.equal(result.ok, false);
