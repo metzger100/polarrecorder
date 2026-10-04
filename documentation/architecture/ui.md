@@ -29,22 +29,25 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   placate the checker.
 - `viewer/*.js` files are plain scripts that register functionality only on `window.Polarrecorder`. `viewer/viewer.js`
   owns startup, API access, polling, tab switching, preset/polar/timeline/export/settings orchestration, actions, and
-  shared caches (`ApiBase`, `PresetsCache`, `ConfigCache`). `viewer/dom.js` owns shared DOM construction helpers
-  (`Node`, `Clear`, `Button`, `ActionRow`, `Download`) plus `ShowTooltip`, a lower-layer helper both the shell and
-  status rendering call without creating a namespace cycle between them. `viewer/status-ui.js` owns the Status tab:
-  recent-decision derivation and the `RecentDecisions` cache, the state/values/counters/persistence cards, decision
-  strip coloring, and status-local duration/last-flush text, driven by
+  shared caches (`ApiBase`, `PresetsCache`, `ConfigCache`); it exports `FetchJson`, `RefreshPresets`, `FetchTimeline`,
+  and `ApplySavedConfig`. `viewer/dom.js` owns shared DOM construction helpers (`Node`, `Clear`, `Button`, `ActionRow`,
+  `Download`, `StoreKeySelect`, `RequireById`), the single SVG element owner (`SvgNode`, `SvgText`), the shared card
+  builder `Card(title)` (`section.card.export-card` with a `.section-head > h2` title, used by every Export and Settings
+  card), plus `ShowTooltip`, a lower-layer helper both the shell and status rendering call without creating a namespace
+  cycle between them. `viewer/status-ui.js` owns the Status tab: recent-decision derivation and the `RecentDecisions`
+  cache, the state/values/counters/persistence cards, the decision palette `DecisionColor` (also used by the Timeline
+  chart), and status-local duration/last-flush text, driven by
   `StatusUI.Render(host, data, { runAction, fetchStatus, pendingAction })` and `StatusUI.AppendRecentDecision(data)`;
   `viewer.js` passes its own `runAction` and `fetchStatus` in as callbacks rather than status-ui.js reaching back into
   the shell's namespace. `runAction` records the pending Pause/Resume endpoint in viewer state until the action settles,
   and `pendingAction` makes every rebuilt Pause/Resume button render disabled as "Working" until then.
   `viewer/placeholders.js` owns shared absent-value display text so chart and status rendering reuse one vocabulary.
   Component modules add `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
-  `viewer/polar-chart-geometry.js` adds `PolarChartGeometry` (`SvgNode`, `AddGrid`, `AddCurve`, `BandColor`), the SVG
-  grid/curve drawing math that `polar-chart.js` calls into so its own state/orchestration logic stays under the
-  file-size budget. `viewer/export-fields.js` adds `ExportFields` (`Section`, `Header`, `Field`, `ConfidenceField`,
-  `PercentileHelp`, `QualityControls`, `MessageNode`, `SetMessage`), the Export-tab field builders and per-format
-  message channel `export-ui.js` composes so its preset/CSV orchestration logic stays under the file-size budget.
+  `viewer/polar-chart-geometry.js` adds `PolarChartGeometry` (`AddGrid`, `AddCurve`, `BandColor`), the SVG grid/curve
+  drawing math that `polar-chart.js` calls into so its own state/orchestration logic stays under the file-size budget.
+  `viewer/export-fields.js` adds `ExportFields` (`Section`, which returns `Dom.Card`, `Field`, `QualityControls`,
+  `MessageNode`, `SetMessage`), the Export-tab field builders and per-format message channel `export-ui.js` composes so
+  its preset/CSV orchestration logic stays under the file-size budget.
   `QualityControls(format, defaultPercentile, minSamples)` builds one percentile-override field, its help text, and one
   high-confidence switch bound to the passed format state, and `MessageNode(format)` / `SetMessage(format, text, kind)`
   render and update that format's own message line by its `messageId`, so each export card gets its own controls and its
@@ -100,12 +103,13 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   config keys are only used as hidden save wiring. The save button validates finite in-range numbers before sending one
   `GET advanced/save` request and then re-fetching the groups.
 - The Status tab and Enhanced Settings use `enhanced-rule-display.js` as the single source of user-facing rule,
-  availability, and cause labels; internal API identifiers are not shown as headings. `engine-warning.js` performs one
-  startup check and opens its modal unless `reject_engine_rpm` reports active availability; a failed status request also
-  warns because RPM protection cannot be confirmed. Close affects only the current page, while Never show again stores
-  the versioned `polarrecorder.engine-rpm-warning.v1` browser-local preference. The modal has dialog semantics, a
-  backdrop, contained focus, Escape handling, focus restoration, and an inert background. Storage failures stay local to
-  the modal and leave it visible. Its action row wraps in narrow viewer panes so Never show again remains reachable.
+  availability, and cause labels; internal API identifiers are not shown as headings. `engine-warning.js` starts itself
+  on `DOMContentLoaded`, exports nothing, and performs one startup check and opens its modal unless `reject_engine_rpm`
+  reports active availability; a failed status request also warns because RPM protection cannot be confirmed. Close
+  affects only the current page, while Never show again stores the versioned `polarrecorder.engine-rpm-warning.v1`
+  browser-local preference. The modal has dialog semantics, a backdrop, contained focus, Escape handling, focus
+  restoration, and an inert background. Storage failures stay local to the modal and leave it visible. Its action row
+  wraps in narrow viewer panes so Never show again remains reachable.
 - Status diagnostic headings use the card's shared inset, so Enhanced Rule Availability and the reason/predicate
   sections align with their card content rather than the rounded border.
 - Export grid controls reserve room for the browser's numeric spinner as well as a three-digit TWA value, so port-side

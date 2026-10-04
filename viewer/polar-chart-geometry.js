@@ -8,8 +8,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  /** @type {"http://www.w3.org/2000/svg"} */
-  const SVG_NS = "http://www.w3.org/2000/svg";
   const CENTER_X = 280;
   const CENTER_Y = 280;
   const PLOT_RADIUS = 220;
@@ -45,7 +43,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const step = 1;
     for (let speed = step; speed <= max; speed += step) {
       const radius = (speed / max) * PLOT_RADIUS;
-      const circle = svgNode("circle");
+      const circle = Polarrecorder.Dom.SvgNode("circle");
       circle.setAttribute("cx", String(CENTER_X));
       circle.setAttribute("cy", String(CENTER_Y));
       circle.setAttribute("r", String(radius));
@@ -60,7 +58,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const spokes = spokesForMode(mode);
     spokes.forEach(function (angle) {
       const point = mapPoint(angle, max, max);
-      const line = svgNode("line");
+      const line = Polarrecorder.Dom.SvgNode("line");
       line.setAttribute("x1", String(CENTER_X));
       line.setAttribute("y1", String(CENTER_Y));
       line.setAttribute("x2", String(point.x));
@@ -162,7 +160,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
   function addRun(svg, points, color) {
     if (points.length < 2) return;
-    const line = svgNode("polyline");
+    const line = Polarrecorder.Dom.SvgNode("polyline");
     line.setAttribute(
       "points",
       points
@@ -208,7 +206,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
   function addPoint(svg, point, band, twa, entry, color) {
     const lowConfidence = isLowConfidence(twa, entry);
-    const dot = svgNode("circle");
+    const dot = Polarrecorder.Dom.SvgNode("circle");
     dot.setAttribute("cx", point.x.toFixed(1));
     dot.setAttribute("cy", point.y.toFixed(1));
     dot.setAttribute("r", lowConfidence ? "3.6" : "5.1");
@@ -224,15 +222,15 @@ window.Polarrecorder = window.Polarrecorder || {};
       " kt STW · " +
       String(entry.samples) +
       " samples";
-    const hit = svgNode("circle");
+    const hit = Polarrecorder.Dom.SvgNode("circle");
     hit.setAttribute("cx", point.x.toFixed(1));
     hit.setAttribute("cy", point.y.toFixed(1));
     hit.setAttribute("r", "8");
     hit.setAttribute("class", "chart-hit-point");
-    hit.addEventListener("pointerenter", function (event) {
+    hit.addEventListener("pointerenter", function (/** @type {MouseEvent} */ event) {
       showTooltip(message, event.clientX, event.clientY);
     });
-    hit.addEventListener("click", function (event) {
+    hit.addEventListener("click", function (/** @type {MouseEvent} */ event) {
       showTooltip(message, event.clientX, event.clientY);
     });
     svg.appendChild(dot);
@@ -273,15 +271,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
-   * @template {keyof SVGElementTagNameMap} K
-   * @param {K} tag
-   * @returns {SVGElementTagNameMap[K]}
-   */
-  function svgNode(tag) {
-    return document.createElementNS(SVG_NS, tag);
-  }
-
-  /**
    * @param {string} text
    * @param {number} x
    * @param {number} y
@@ -291,7 +280,6 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   Polarrecorder.PolarChartGeometry = {
-    SvgNode: svgNode,
     AddGrid: addGrid,
     AddCurve: addCurve,
     BandColor: bandColor

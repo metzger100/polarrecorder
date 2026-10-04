@@ -59,7 +59,6 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function init() {
     Polarrecorder.ApiBase = readApiBase();
-    Object.defineProperty(Polarrecorder, "fetchJson", { value: fetchJson });
     Polarrecorder.FetchJson = fetchJson;
     wireTabs();
     wirePolarPreset();

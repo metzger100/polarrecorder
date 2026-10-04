@@ -1,7 +1,7 @@
 /**
  * @file Export Fields
  * Documentation: documentation/architecture/ui.md
- * Depends: none
+ * Depends: dom.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
@@ -12,21 +12,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {HTMLElement}
    */
   function section(title) {
-    const card = document.createElement("section");
-    card.className = "card export-card";
-    card.appendChild(header(title));
-    return card;
-  }
-
-  /**
-   * @param {string} title
-   * @returns {HTMLDivElement}
-   */
-  function header(title) {
-    const head = document.createElement("div");
-    head.className = "section-head";
-    head.appendChild(document.createElement("h2")).textContent = title;
-    return head;
+    return window.Polarrecorder.Dom.Card(title);
   }
 
   /**
@@ -172,10 +158,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   window.Polarrecorder.ExportFields = {
     Section: section,
-    Header: header,
     Field: field,
-    ConfidenceField: confidenceField,
-    PercentileHelp: percentileHelp,
     QualityControls: qualityControls,
     MessageNode: messageNode,
     SetMessage: setMessage

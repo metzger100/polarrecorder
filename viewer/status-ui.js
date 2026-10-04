@@ -294,6 +294,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
+   * The shared decision palette for the Status strip and the Timeline chart.
    * @param {string} name
    * @returns {string}
    */
@@ -327,6 +328,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   Polarrecorder.StatusUI = {
     AppendRecentDecision: appendRecentDecision,
+    DecisionColor: decisionColor,
     Render: render
   };
 })();

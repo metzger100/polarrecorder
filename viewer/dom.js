@@ -8,6 +8,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
+  const SVG_NS = "http://www.w3.org/2000/svg";
 
   /**
    * @param {string} text
@@ -50,6 +51,28 @@ window.Polarrecorder = window.Polarrecorder || {};
       created.textContent = String(text);
     }
     return created;
+  }
+
+  /**
+   * Builds the shared `section.card.export-card` card with its `.section-head > h2` title.
+   * @param {string} title
+   * @returns {HTMLElement}
+   */
+  function card(title) {
+    const section = node("section", "card export-card");
+    const head = node("div", "section-head");
+    head.appendChild(node("h2", "", title));
+    section.appendChild(head);
+    return section;
+  }
+
+  /**
+   * @template {keyof SVGElementTagNameMap} K
+   * @param {K} tag
+   * @returns {SVGElementTagNameMap[K]}
+   */
+  function svgNode(tag) {
+    return document.createElementNS(SVG_NS, tag);
   }
 
   /** @param {HTMLElement} node */
@@ -106,7 +129,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {SVGTextElement}
    */
   function svgText(x, y, textValue, fontSize, textAnchor) {
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const text = svgNode("text");
     text.setAttribute("x", String(x));
     text.setAttribute("y", String(y));
     text.setAttribute("fill", "var(--polarrecorder-fore-color)");
@@ -148,12 +171,14 @@ window.Polarrecorder = window.Polarrecorder || {};
   Polarrecorder.Dom = {
     ActionRow: actionRow,
     Button: button,
+    Card: card,
     Clear: clear,
     Download: download,
     Node: node,
     RequireById: requireById,
     ShowTooltip: showTooltip,
     StoreKeySelect: storeKeySelect,
+    SvgNode: svgNode,
     SvgText: svgText
   };
 })();

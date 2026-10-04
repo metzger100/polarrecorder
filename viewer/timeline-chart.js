@@ -1,15 +1,13 @@
 /**
  * @file Timeline Chart
  * Documentation: documentation/architecture/ui.md
- * Depends: viewer.js, dom.js
+ * Depends: viewer.js, dom.js, status-ui.js
  */
 window.Polarrecorder = window.Polarrecorder || {};
 (function () {
   "use strict";
 
   const Polarrecorder = window.Polarrecorder;
-  /** @type {"http://www.w3.org/2000/svg"} */
-  const SVG_NS = "http://www.w3.org/2000/svg";
   const HEIGHT = 150;
   const PAD = 18;
   const WIDTH = 684;
@@ -26,7 +24,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const host = Polarrecorder.Dom.RequireById("timeline-chart");
     Polarrecorder.Dom.Clear(host);
     const buckets = (data && data.buckets) || [];
-    const svg = svgNode("svg");
+    const svg = Polarrecorder.Dom.SvgNode("svg");
     svg.setAttribute("viewBox", "0 0 720 250");
     svg.setAttribute("class", "chart-svg");
     svg.setAttribute("role", "img");
@@ -68,7 +66,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @param {SVGSVGElement} svg */
   function addFrame(svg) {
-    const bg = svgNode("rect");
+    const bg = Polarrecorder.Dom.SvgNode("rect");
     bg.setAttribute("x", String(PAD));
     bg.setAttribute("y", String(PAD));
     bg.setAttribute("width", String(WIDTH));
@@ -85,11 +83,11 @@ window.Polarrecorder = window.Polarrecorder || {};
       ["Quarantined", "quarantined"]
     ].forEach(function (item, index) {
       const x = 26 + index * 145;
-      const dot = svgNode("circle");
+      const dot = Polarrecorder.Dom.SvgNode("circle");
       dot.setAttribute("cx", String(x));
       dot.setAttribute("cy", "228");
       dot.setAttribute("r", "6");
-      dot.setAttribute("fill", decisionColor(item[1]));
+      dot.setAttribute("fill", Polarrecorder.StatusUI.DecisionColor(item[1]));
       svg.appendChild(dot);
       const text = Polarrecorder.Dom.SvgText(x + 12, 232, item[0], "12", "middle");
       text.setAttribute("text-anchor", "start");
@@ -106,7 +104,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const marks = [0, 0.25, 0.5, 0.75, 1];
     marks.forEach(function (mark) {
       const x = PAD + WIDTH * mark;
-      const line = svgNode("line");
+      const line = Polarrecorder.Dom.SvgNode("line");
       line.setAttribute("x1", x.toFixed(1));
       line.setAttribute("x2", x.toFixed(1));
       line.setAttribute("y1", String(PAD + HEIGHT + 4));
@@ -179,13 +177,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     parts.forEach(function (part) {
       if (part[1] <= 0) return;
       const height = (HEIGHT * part[1]) / total;
-      const rect = svgNode("rect");
+      const rect = Polarrecorder.Dom.SvgNode("rect");
       rect.setAttribute("x", x.toFixed(1));
       rect.setAttribute("y", y.toFixed(1));
       rect.setAttribute("width", width.toFixed(1));
       rect.setAttribute("height", Math.max(1, height).toFixed(1));
-      rect.setAttribute("fill", decisionColor(part[0]));
-      rect.addEventListener("click", function (event) {
+      rect.setAttribute("fill", Polarrecorder.StatusUI.DecisionColor(part[0]));
+      rect.addEventListener("click", function (/** @type {MouseEvent} */ event) {
         showTooltip(bucketText(bucket), event.clientX, event.clientY);
       });
       svg.appendChild(rect);
@@ -218,25 +216,6 @@ window.Polarrecorder = window.Polarrecorder || {};
       String(bucket.quarantined) +
       " quarantined";
     return time + " · " + counts + (reasons ? " · " + reasons : "");
-  }
-
-  /**
-   * @param {string} name
-   * @returns {string}
-   */
-  function decisionColor(name) {
-    if (name === "accepted") return "var(--polarrecorder-accepted-color)";
-    if (name === "rejected") return "var(--polarrecorder-rejected-color)";
-    return "var(--polarrecorder-quarantined-color)";
-  }
-
-  /**
-   * @template {keyof SVGElementTagNameMap} K
-   * @param {K} tag
-   * @returns {SVGElementTagNameMap[K]}
-   */
-  function svgNode(tag) {
-    return document.createElementNS(SVG_NS, tag);
   }
 
   /**

@@ -77,10 +77,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function renderSources() {
-    const card = Polarrecorder.Dom.Node("section", "card export-card");
-    const head = Polarrecorder.Dom.Node("div", "section-head");
-    head.appendChild(Polarrecorder.Dom.Node("h2", null, "Data Sources"));
-    card.appendChild(head);
+    const card = Polarrecorder.Dom.Card("Data Sources");
     card.appendChild(
       Polarrecorder.Dom.Node(
         "p",
@@ -152,10 +149,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function render() {
-    const card = Polarrecorder.Dom.Node("section", "card export-card");
-    const head = Polarrecorder.Dom.Node("div", "section-head");
-    head.appendChild(Polarrecorder.Dom.Node("h2", null, "Advanced Settings"));
-    card.appendChild(head);
+    const card = Polarrecorder.Dom.Card("Advanced Settings");
     card.appendChild(
       Polarrecorder.Dom.Node(
         "p",

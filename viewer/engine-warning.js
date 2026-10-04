@@ -130,6 +130,4 @@ window.Polarrecorder = window.Polarrecorder || {};
       }
     }
   }
-
-  Polarrecorder.EngineWarning = { Start: start };
 })();

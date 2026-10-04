@@ -126,7 +126,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {SVGSVGElement}
    */
   function buildSvg(data, presetTwa) {
-    const svg = Polarrecorder.PolarChartGeometry.SvgNode("svg");
+    const svg = Polarrecorder.Dom.SvgNode("svg");
     svg.setAttribute("viewBox", "0 0 560 560");
     svg.setAttribute("class", "chart-svg");
     svg.setAttribute("role", "img");
@@ -155,7 +155,7 @@ window.Polarrecorder = window.Polarrecorder || {};
    * @returns {SVGSVGElement}
    */
   function emptySvg(mode) {
-    const svg = Polarrecorder.PolarChartGeometry.SvgNode("svg");
+    const svg = Polarrecorder.Dom.SvgNode("svg");
     svg.setAttribute("viewBox", "0 0 560 560");
     svg.setAttribute("class", "chart-svg");
     svg.setAttribute("aria-hidden", "true");

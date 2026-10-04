@@ -38,7 +38,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function learnedDataCard() {
-    const card = section("Learned Data");
+    const card = Polarrecorder.Dom.Card("Learned Data");
     card.appendChild(
       downloadGroup(
         "Download all learned data as a JSON file for backup and inspection.",
@@ -60,7 +60,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function presetsCard() {
-    const card = section("Presets");
+    const card = Polarrecorder.Dom.Card("Presets");
     card.appendChild(
       downloadGroup(
         "Download your saved export presets as a JSON backup you can restore later.",
@@ -237,22 +237,6 @@ window.Polarrecorder = window.Polarrecorder || {};
     group.appendChild(field.wrap);
     group.appendChild(Polarrecorder.Dom.ActionRow([reset]));
     return group;
-  }
-
-  /**
-   * @param {string} title
-   * @returns {HTMLElement}
-   */
-  function section(title) {
-    const card = document.createElement("section");
-    card.className = "card export-card";
-    const head = document.createElement("div");
-    head.className = "section-head";
-    const h2 = document.createElement("h2");
-    h2.textContent = title;
-    head.appendChild(h2);
-    card.appendChild(head);
-    return card;
   }
 
   /**

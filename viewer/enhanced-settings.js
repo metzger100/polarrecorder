@@ -66,10 +66,7 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   /** @returns {HTMLElement} */
   function render() {
-    const card = Polarrecorder.Dom.Node("section", "card export-card");
-    const head = Polarrecorder.Dom.Node("div", "section-head");
-    head.appendChild(Polarrecorder.Dom.Node("h2", null, "Enhanced Rules"));
-    card.appendChild(head);
+    const card = Polarrecorder.Dom.Card("Enhanced Rules");
     card.appendChild(
       Polarrecorder.Dom.Node(
         "p",
