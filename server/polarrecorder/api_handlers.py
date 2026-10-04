@@ -2,7 +2,7 @@
 
 Documentation: documentation/architecture/api.md
 Depends: polarrecorder.config, polarrecorder.diagnostics, polarrecorder.enhanced_input,
-polarrecorder.export, polarrecorder.routing_pol
+polarrecorder.export, polarrecorder.projection, polarrecorder.routing_pol
 """
 
 from __future__ import annotations
@@ -12,12 +12,14 @@ from typing import TYPE_CHECKING
 
 from polarrecorder import export, routing_pol
 from polarrecorder.enhanced_input import classify_timestamp_age
+from polarrecorder.projection import TWA_FULL_CIRCLE, ProjectedCell, anchor_origin, project_grid
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from polarrecorder.config import Config
     from polarrecorder.diagnostics import CurrentValues
+    from polarrecorder.projection import SnapshotBins
 
 Response = dict[str, object]
 
@@ -99,7 +101,7 @@ def format_status(snapshot: StatusSnapshot) -> Response:
 
 
 def format_polar(
-    model_bins: export.SnapshotBins,
+    model_bins: SnapshotBins,
     twa_grid: Sequence[int],
     tws_grid: Sequence[int],
     percentile: int,
@@ -109,7 +111,7 @@ def format_polar(
     """Format the polar diagram endpoint.
 
     Projects onto the preset ``twa_grid`` so band membership and per-cell
-    midpoint merging match the CSV export, then shares ``export.anchor_origin``
+    midpoint merging match the CSV export, then shares ``projection.anchor_origin``
     so each populated band starts at 0 deg TWA / 0 STW. Cells are placed into a
     360-entry array indexed by absolute TWA 0-359 deg, so projected port cells
     (181-359 deg) are addressable alongside starboard cells; non-preset indices
@@ -117,8 +119,8 @@ def format_polar(
     full confidence, and because the anchor only touches bands that already have
     data it never creates a band.
     """
-    projected = export.anchor_origin(
-        export.project_grid(
+    projected = anchor_origin(
+        project_grid(
             model_bins,
             twa_grid,
             tws_grid,
@@ -129,7 +131,7 @@ def format_polar(
     curves: dict[str, list[dict[str, object] | None]] = {}
     bands: list[int] = []
     for tws in tws_grid:
-        curve = [_polar_entry(projected.get((twa, tws))) for twa in range(export.TWA_FULL_CIRCLE)]
+        curve = [_polar_entry(projected.get((twa, tws))) for twa in range(TWA_FULL_CIRCLE)]
         if any(entry is not None for entry in curve):
             bands.append(tws)
             curves[str(tws)] = curve
@@ -163,7 +165,7 @@ def format_timeline(entries: Sequence[Mapping[str, object]]) -> Response:
 
 
 def format_export(
-    model_bins: export.SnapshotBins,
+    model_bins: SnapshotBins,
     twa_grid: Sequence[int],
     tws_grid: Sequence[int],
     percentile: int,
@@ -175,7 +177,7 @@ def format_export(
 
 
 def format_routing_pol(
-    model_bins: export.SnapshotBins,
+    model_bins: SnapshotBins,
     percentile: int,
     min_samples: int,
     max_tws: int,
@@ -254,7 +256,7 @@ def _format_current_values(snapshot: StatusSnapshot) -> dict[str, object] | None
     }
 
 
-def _polar_entry(cell: export.ProjectedCell | None) -> dict[str, object] | None:
+def _polar_entry(cell: ProjectedCell | None) -> dict[str, object] | None:
     if cell is None:
         return None
     return {"stw": cell.stw, "samples": cell.samples}

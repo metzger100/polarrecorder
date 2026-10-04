@@ -29,17 +29,6 @@ if TYPE_CHECKING:
 
     from polarrecorder.logger import Logger
 
-# Re-exported so API handlers and tests keep addressing ``export.<name>``.
-__all__ = [
-    "TWA_FOLD_MAX",
-    "TWA_FULL_CIRCLE",
-    "ProjectedCell",
-    "SnapshotBins",
-    "anchor_origin",
-    "project_grid",
-    "to_int",
-]
-
 MIN_SAMPLES_DISPLAY = 30
 PERCENTILE_MIN = 1
 PERCENTILE_MAX = 99
@@ -120,11 +109,6 @@ def _is_builtin_name(name: str) -> bool:
     return _builtin_by_name(name) is not None
 
 
-def builtin_preset() -> Preset:
-    """Return the default built-in preset (DefaultStarboard180)."""
-    return _builtin_presets()[0]
-
-
 def list_presets(data_dir: str | os.PathLike[str], logger: Logger | None = None) -> list[Preset]:
     """Return the built-in presets followed by sorted user presets from disk."""
     presets = _builtin_presets()
@@ -142,7 +126,7 @@ def save_preset(
 ) -> Preset:
     """Create or overwrite a user preset; TWS columns are bounded by the model grid."""
     preset = Preset(
-        name=_validate_name(name),
+        name=validate_preset_name(name),
         builtin=False,
         twa=_parse_grid("twa", twa_text, 0, TWA_GRID_MAX),
         tws=_parse_grid("tws", tws_text, 1, TWS_BIN_MAX),
@@ -306,7 +290,14 @@ def validate_preset_name(name: str) -> str:
         ExportError: If the name is reserved/built-in, empty, too long, or uses
             characters outside the allowed pattern.
     """
-    return _validate_name(name)
+    trimmed = name.strip()
+    if _is_builtin_name(trimmed):
+        msg = f"Preset name '{trimmed}' is reserved"
+        raise ExportError(msg)
+    if not 1 <= len(trimmed) <= PRESET_NAME_MAX_LENGTH or NAME_PATTERN.fullmatch(trimmed) is None:
+        msg = "Invalid parameter 'name': expected 1-30 alphanumeric, hyphen, or space chars"
+        raise ExportError(msg)
+    return trimmed
 
 
 def validate_grid_values(
@@ -343,17 +334,6 @@ def validate_grid_values(
         msg = f"Invalid parameter '{name}': expected at least one value"
         raise ExportError(msg)
     return sorted(set(validated))
-
-
-def _validate_name(name: str) -> str:
-    trimmed = name.strip()
-    if _is_builtin_name(trimmed):
-        msg = f"Preset name '{trimmed}' is reserved"
-        raise ExportError(msg)
-    if not 1 <= len(trimmed) <= PRESET_NAME_MAX_LENGTH or NAME_PATTERN.fullmatch(trimmed) is None:
-        msg = "Invalid parameter 'name': expected 1-30 alphanumeric, hyphen, or space chars"
-        raise ExportError(msg)
-    return trimmed
 
 
 def _parse_grid(name: str, raw: str, lower: int, upper: int) -> list[int]:

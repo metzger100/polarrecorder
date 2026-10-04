@@ -5,6 +5,7 @@ from operation_count_evaluator import evaluate_linear_scaling
 from polarrecorder.bins import Bin
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, Sample
+from validation_helpers import query_model
 
 
 def make_sample(
@@ -70,13 +71,13 @@ def test_rejection_and_quarantine_do_not_bump_generation() -> None:
     }
 
 
-def test_query_returns_per_bin_percentile_for_accepted_samples_only() -> None:
+def test_only_accepted_samples_feed_per_bin_percentile_speeds() -> None:
     model = PolarModel()
     model.update_accepted(make_sample(stw_kt=5.8))
     model.update_accepted(make_sample(stw_kt=6.0))
     model.record_rejection(make_sample(twa_deg_raw=120.0), ["reject_unstable"])
 
-    assert model.query(50) == {(90, 12): 5.8}
+    assert query_model(model, 50) == {(90, 12): 5.8}
 
 
 def test_iter_bins_returns_live_sparse_bins() -> None:

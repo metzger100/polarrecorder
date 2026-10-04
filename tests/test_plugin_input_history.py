@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 from conftest import FakeAvNavAPI, drive_read_results
 from plugin_integration_support import make_plugin
-from polarrecorder import reader
 from polarrecorder.config import default_config
 from polarrecorder.polar_model import PolarModel
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 from polarrecorder.validation.state import ValidationState
 from validation_helpers import make_read_result, make_warmed_state
 
@@ -32,9 +32,9 @@ def test_non_candidate_iteration_clears_stability_but_keeps_transition_observati
     tmp_path: Path,
 ) -> None:
     api = FakeAvNavAPI()
-    api.set_value(reader.TWA_KEY, 90.0, 90.0)
-    api.set_value(reader.TWS_KEY, 6.0, 90.0)
-    api.set_value(reader.STW_KEY, 3.0, 90.0)
+    api.set_value(TWA_KEY_DEFAULT, 90.0, 90.0)
+    api.set_value(TWS_KEY_DEFAULT, 6.0, 90.0)
+    api.set_value(STW_KEY_DEFAULT, 3.0, 90.0)
     plugin = make_plugin(tmp_path, api)
     plugin._state = make_warmed_state()
 
@@ -48,9 +48,9 @@ def test_non_candidate_iteration_clears_stability_but_keeps_transition_observati
 
 def test_iteration_drops_read_when_config_snapshot_is_superseded(tmp_path: Path) -> None:
     api = FakeAvNavAPI()
-    api.set_value(reader.TWA_KEY, 90.0, 100.0)
-    api.set_value(reader.TWS_KEY, 6.0, 100.0)
-    api.set_value(reader.STW_KEY, 3.0, 100.0)
+    api.set_value(TWA_KEY_DEFAULT, 90.0, 100.0)
+    api.set_value(TWS_KEY_DEFAULT, 6.0, 100.0)
+    api.set_value(STW_KEY_DEFAULT, 3.0, 100.0)
     plugin = make_plugin(tmp_path, api)
     stale_config = plugin.config
     with plugin._lock:
@@ -64,9 +64,9 @@ def test_iteration_drops_read_when_config_snapshot_is_superseded(tmp_path: Path)
 
 def test_superseded_read_emits_explicit_diagnostic_when_enabled(tmp_path: Path) -> None:
     api = FakeAvNavAPI()
-    api.set_value(reader.TWA_KEY, 90.0, 100.0)
-    api.set_value(reader.TWS_KEY, 6.0, 100.0)
-    api.set_value(reader.STW_KEY, 3.0, 100.0)
+    api.set_value(TWA_KEY_DEFAULT, 90.0, 100.0)
+    api.set_value(TWS_KEY_DEFAULT, 6.0, 100.0)
+    api.set_value(STW_KEY_DEFAULT, 3.0, 100.0)
     plugin = make_plugin(tmp_path, api)
     stale_config = replace(plugin.config, debug_logging=True)
     with plugin._lock:

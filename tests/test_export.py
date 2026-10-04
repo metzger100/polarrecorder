@@ -7,6 +7,7 @@ import pytest
 from conftest import FakeAvNavAPI, FakeLogger
 from plugin_integration_support import make_plugin, response_data, sample_at
 from polarrecorder import export
+from polarrecorder.projection import ProjectedCell, anchor_origin, project_grid
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,8 +41,8 @@ def test_builtin_preset_values_are_exact(tmp_path: Path) -> None:
     assert windy.twa == [0, 30, 40, 52, 60, 75, 90, 110, 120, 135, 150, 165, 180]
     assert windy.tws == shared_tws
 
-    # builtin_preset() resolves the default view (DefaultStarboard180).
-    assert export.builtin_preset().name == "DefaultStarboard180"
+    # An empty selection resolves the default view (DefaultStarboard180).
+    assert export.resolve_polar_preset(tmp_path, {}) == starboard
 
 
 def test_resolve_polar_preset_defaults_to_starboard180(tmp_path: Path) -> None:
@@ -64,13 +65,13 @@ def test_projection_does_not_fold_port_bins_into_starboard() -> None:
 
     # A 180 deg grid is starboard-only: the 30 deg bin projects on its own and the
     # 330 deg port bin is excluded instead of being mirrored onto 30 deg.
-    starboard = export.project_grid(bins, [30], [4], percentile=65, min_samples=1)
-    assert starboard[(30, 4)] == export.ProjectedCell(stw=5.0, samples=2)
+    starboard = project_grid(bins, [30], [4], percentile=65, min_samples=1)
+    assert starboard[(30, 4)] == ProjectedCell(stw=5.0, samples=2)
 
     # A circular grid containing the port angle keeps starboard and port separate.
-    circular = export.project_grid(bins, [30, 330], [4], percentile=65, min_samples=1)
-    assert circular[(30, 4)] == export.ProjectedCell(stw=5.0, samples=2)
-    assert circular[(330, 4)] == export.ProjectedCell(stw=6.0, samples=1)
+    circular = project_grid(bins, [30, 330], [4], percentile=65, min_samples=1)
+    assert circular[(30, 4)] == ProjectedCell(stw=5.0, samples=2)
+    assert circular[(330, 4)] == ProjectedCell(stw=6.0, samples=1)
 
 
 def test_port_grid_excludes_starboard_bins() -> None:
@@ -82,8 +83,8 @@ def test_port_grid_excludes_starboard_bins() -> None:
     # A port-only (180-360 deg) grid is the mirror of the starboard half: it keeps
     # the 270 deg bin and excludes the 30 deg starboard bin instead of pulling it
     # onto the nearest port column.
-    port = export.project_grid(bins, [180, 270, 345], [4], percentile=65, min_samples=1)
-    assert port[(270, 4)] == export.ProjectedCell(stw=6.0, samples=3)
+    port = project_grid(bins, [180, 270, 345], [4], percentile=65, min_samples=1)
+    assert port[(270, 4)] == ProjectedCell(stw=6.0, samples=3)
     assert (30, 4) not in port
     assert all(twa >= 180 for twa, _tws in port)
 
@@ -101,7 +102,7 @@ def test_starboard_projection_interval_boundaries() -> None:
     }
 
     twa_grid = [0, 30, 60, 180]
-    projected = export.project_grid(bins, twa_grid, [4, 30], percentile=65, min_samples=1)
+    projected = project_grid(bins, twa_grid, [4, 30], percentile=65, min_samples=1)
 
     samples = {cell: value.samples for cell, value in projected.items()}
     # 45 deg sits exactly on the 30/60 midpoint and belongs to the upper, half-open interval.
@@ -125,7 +126,7 @@ def test_port_projection_interval_boundaries() -> None:
         (359, 4): {"histogram": {50: 16}},
     }
 
-    projected = export.project_grid(bins, [180, 270], [4], percentile=65, min_samples=1)
+    projected = project_grid(bins, [180, 270], [4], percentile=65, min_samples=1)
 
     samples = {cell: value.samples for cell, value in projected.items()}
     # 180 deg opens the port axis, 225 deg is the 180/270 midpoint, the last interval is
@@ -142,7 +143,7 @@ def test_circular_projection_assigns_nearest_grid_point_across_wrap() -> None:
         (175, 6): {"histogram": {60: 1}},
     }
 
-    projected = export.project_grid(bins, grid, [6], percentile=65, min_samples=1)
+    projected = project_grid(bins, grid, [6], percentile=65, min_samples=1)
 
     # 358 deg and 5 deg both wrap onto the 0 deg grid point across 360 deg/0 deg.
     assert projected[(0, 6)].samples == 3
@@ -153,7 +154,7 @@ def test_circular_projection_assigns_nearest_grid_point_across_wrap() -> None:
 
 
 def test_csv_format_is_semicolon_crlf_and_blank_for_missing_cells() -> None:
-    projected = {(0, 4): export.ProjectedCell(stw=5.04, samples=4)}
+    projected = {(0, 4): ProjectedCell(stw=5.04, samples=4)}
 
     csv = export.csv_from_projection(projected, [0, 30], [4, 6])
 
@@ -162,21 +163,21 @@ def test_csv_format_is_semicolon_crlf_and_blank_for_missing_cells() -> None:
 
 
 def test_anchor_origin_adds_zero_stw_to_populated_bands_only() -> None:
-    projected = {(90, 12): export.ProjectedCell(stw=6.0, samples=3)}
+    projected = {(90, 12): ProjectedCell(stw=6.0, samples=3)}
 
-    anchored = export.anchor_origin(projected)
+    anchored = anchor_origin(projected)
 
     # The populated 12 kt band gains a 0 deg / 0 STW origin cell and nothing else.
-    assert anchored[(0, 12)] == export.ProjectedCell(stw=0.0, samples=0)
-    assert anchored[(90, 12)] == export.ProjectedCell(stw=6.0, samples=3)
+    assert anchored[(0, 12)] == ProjectedCell(stw=0.0, samples=0)
+    assert anchored[(90, 12)] == ProjectedCell(stw=6.0, samples=3)
     assert len(anchored) == 2
 
 
 def test_anchor_origin_preserves_real_zero_twa_cell() -> None:
-    projected = {(0, 12): export.ProjectedCell(stw=1.5, samples=4)}
+    projected = {(0, 12): ProjectedCell(stw=1.5, samples=4)}
 
     # Genuine data at 0 deg is never overwritten by the anchor.
-    assert export.anchor_origin(projected)[(0, 12)] == export.ProjectedCell(stw=1.5, samples=4)
+    assert anchor_origin(projected)[(0, 12)] == ProjectedCell(stw=1.5, samples=4)
 
 
 def test_csv_export_emits_zero_stw_origin_row_for_populated_bands() -> None:
@@ -392,12 +393,12 @@ def test_normal_and_high_confidence_floors_apply_at_thirty_and_fifty_samples() -
     below_high: SnapshotBins = {(90, 12): {"histogram": {60: 49}}}
     high: SnapshotBins = {(90, 12): {"histogram": {60: 50}}}
 
-    assert (90, 12) not in export.project_grid(below_normal, [90], [12], 65, normal_floor)
-    assert export.project_grid(normal, [90], [12], 65, normal_floor)[
-        (90, 12)
-    ] == export.ProjectedCell(stw=6.0, samples=30)
-    assert (90, 12) not in export.project_grid(below_high, [90], [12], 65, high_floor)
-    assert export.project_grid(high, [90], [12], 65, high_floor)[(90, 12)] == export.ProjectedCell(
+    assert (90, 12) not in project_grid(below_normal, [90], [12], 65, normal_floor)
+    assert project_grid(normal, [90], [12], 65, normal_floor)[(90, 12)] == ProjectedCell(
+        stw=6.0, samples=30
+    )
+    assert (90, 12) not in project_grid(below_high, [90], [12], 65, high_floor)
+    assert project_grid(high, [90], [12], 65, high_floor)[(90, 12)] == ProjectedCell(
         stw=6.0, samples=50
     )
 
@@ -407,12 +408,12 @@ def test_projection_is_deterministic_and_reuses_polar_grid() -> None:
     twa_grid = list(range(181))
     tws_grid = [12]
 
-    first = export.project_grid(bins, twa_grid, tws_grid, 65, export.MIN_SAMPLES_DISPLAY)
-    second = export.project_grid(bins, twa_grid, tws_grid, 65, export.MIN_SAMPLES_DISPLAY)
+    first = project_grid(bins, twa_grid, tws_grid, 65, export.MIN_SAMPLES_DISPLAY)
+    second = project_grid(bins, twa_grid, tws_grid, 65, export.MIN_SAMPLES_DISPLAY)
 
     assert first == second
-    assert first[(90, 12)] == export.ProjectedCell(stw=6.0, samples=30)
-    assert first[(91, 12)] == export.ProjectedCell(stw=6.1, samples=30)
+    assert first[(90, 12)] == ProjectedCell(stw=6.0, samples=30)
+    assert first[(91, 12)] == ProjectedCell(stw=6.1, samples=30)
 
 
 def _assert_export_error(call: Callable[[], object]) -> None:

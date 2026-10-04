@@ -80,15 +80,6 @@ class PolarModel:
         self._bins.clear()
         self.generation += 1
 
-    def query(self, percentile_value: float) -> dict[tuple[int, int], float]:
-        """Return per-bin percentile speeds for populated histograms."""
-        results: dict[tuple[int, int], float] = {}
-        for address, model_bin in self._bins.items():
-            speed = histogram.percentile(model_bin.histogram, percentile_value)
-            if speed is not None:
-                results[address] = speed
-        return results
-
     def snapshot_bins(self) -> dict[tuple[int, int], SnapshotBin]:
         """Return a detached plain-data snapshot of all live bins."""
         return {

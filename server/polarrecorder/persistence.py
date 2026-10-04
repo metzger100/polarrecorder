@@ -122,25 +122,20 @@ def serialize_to_dict(
 
 def save(
     data_dir: str | os.PathLike[str],
-    payload: SerializedDict | PolarModel,
-    counters: Counters | None = None,
-    metadata: PersistenceMetadata | None = None,
+    payload: SerializedDict,
     logger: Logger | None = None,
 ) -> int | None:
-    """Serialize and atomically save polar data.
+    """Atomically save an already serialized polar payload.
 
     Args:
         data_dir: Directory containing the polar persistence files.
-        payload: Either an already serialized dict or the live model to serialize.
-        counters: Required when payload is a model.
-        metadata: Required when payload is a model.
+        payload: The ``serialize_to_dict`` output, snapshotted under the plugin lock.
         logger: Optional logger for write failures.
 
     Returns:
         The UTF-8 byte length of the serialized JSON on success, otherwise None.
     """
-    serialized = _payload_to_dict(payload, counters, metadata)
-    json_text = json.dumps(serialized, sort_keys=True, separators=(",", ":"))
+    json_text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     size_bytes = len(json_text.encode("utf-8"))
     paths = _paths(data_dir)
     try:
@@ -219,19 +214,6 @@ def _paths(data_dir: str | os.PathLike[str]) -> _PersistencePaths:
         backup=root / BACKUP_NAME,
         tmp=root / TMP_NAME,
     )
-
-
-def _payload_to_dict(
-    payload: SerializedDict | PolarModel,
-    counters: Counters | None,
-    metadata: PersistenceMetadata | None,
-) -> SerializedDict:
-    if isinstance(payload, PolarModel):
-        if counters is None or metadata is None:
-            msg = "counters and metadata are required when saving a PolarModel"
-            raise ValueError(msg)
-        return serialize_to_dict(payload, counters, metadata)
-    return payload
 
 
 def _bin_to_dict(model_bin: Bin) -> SerializedDict:

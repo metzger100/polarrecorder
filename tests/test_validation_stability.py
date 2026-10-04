@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from polarrecorder.config import default_config
 from polarrecorder.validation import rules_stability
 from polarrecorder.validation.state import ValidationState, WindowEntry
-from validation_helpers import make_sample, make_warmed_state
+from validation_helpers import make_sample, make_warmed_state, observe
 
 if TYPE_CHECKING:
     from polarrecorder.sample import Sample
@@ -157,7 +157,7 @@ def test_r14_reads_maneuver_cooldown() -> None:
 def test_r15_rejects_warming_up_and_matches_state_status() -> None:
     config = default_config()
     state = ValidationState()
-    state.observe(make_sample(now=90.0), window_seconds=config.stability_window_seconds)
+    observe(state, make_sample(now=90.0), window_seconds=config.stability_window_seconds)
     sample = make_sample(now=100.0)
 
     result = rules_stability.stability_window(sample, state, config)
@@ -227,7 +227,8 @@ def test_r15_passes_with_jittered_one_second_samples() -> None:
     config = default_config()
     state = ValidationState()
     for index in range(15):
-        state.observe(make_sample(now=index * 1.01), window_seconds=config.stability_window_seconds)
+        sample = make_sample(now=index * 1.01)
+        observe(state, sample, window_seconds=config.stability_window_seconds)
 
     result = rules_stability.stability_window(make_sample(now=15.15), state, config)
 
@@ -239,7 +240,8 @@ def test_r15_passes_with_persistent_scheduler_slip() -> None:
     for cadence in (1.05, 1.1):
         state = ValidationState()
         for index in range(15):
-            state.observe(
+            observe(
+                state,
                 make_sample(now=index * cadence),
                 window_seconds=config.stability_window_seconds,
             )
@@ -257,7 +259,8 @@ def test_r15_rejects_sustained_scheduler_slip_beyond_tolerance() -> None:
     cadence = 1.11
     state = ValidationState()
     for index in range(15):
-        state.observe(
+        observe(
+            state,
             make_sample(now=index * cadence),
             window_seconds=config.stability_window_seconds,
         )
@@ -272,7 +275,8 @@ def test_r15_passes_with_one_missed_tick_inside_a_continuous_window() -> None:
     config = default_config()
     state = ValidationState()
     for timestamp in (*range(7), *range(8, 15)):
-        state.observe(
+        observe(
+            state,
             make_sample(now=float(timestamp)),
             window_seconds=config.stability_window_seconds,
         )
@@ -288,7 +292,8 @@ def test_r15_density_still_rejects_evenly_sparse_history() -> None:
     config = default_config()
     state = ValidationState()
     for timestamp in range(0, 16, 2):
-        state.observe(
+        observe(
+            state,
             make_sample(now=float(timestamp)),
             window_seconds=config.stability_window_seconds,
         )
@@ -324,7 +329,7 @@ def test_r15_runtime_config_can_shorten_evaluation_without_mutating_state() -> N
     config = replace(default_config(), stability_window_seconds=5, sample_interval=2.0)
     state = ValidationState()
     for timestamp in (94.0, 96.0, 98.0):
-        state.observe(make_sample(now=timestamp), window_seconds=config.stability_window_seconds)
+        observe(state, make_sample(now=timestamp), window_seconds=config.stability_window_seconds)
     result = rules_stability.stability_window(make_sample(now=100.0), state, config)
 
     assert result.decision == "pass"
@@ -333,8 +338,8 @@ def test_r15_runtime_config_can_shorten_evaluation_without_mutating_state() -> N
 
 def test_r15_restarts_warmup_when_window_has_a_sparse_sampling_gap() -> None:
     state = ValidationState()
-    state.observe(make_sample(now=85.0), window_seconds=15.0)
-    state.observe(make_sample(now=86.0), window_seconds=15.0)
+    observe(state, make_sample(now=85.0), window_seconds=15.0)
+    observe(state, make_sample(now=86.0), window_seconds=15.0)
 
     evaluation = rules_stability.evaluate_stability(make_sample(now=100.0), state, default_config())
 
@@ -345,7 +350,7 @@ def test_r15_restarts_warmup_when_window_has_a_sparse_sampling_gap() -> None:
 def test_r15_two_endpoints_never_fill_a_slow_sampling_window() -> None:
     config = replace(default_config(), sample_interval=5.0)
     state = ValidationState()
-    state.observe(make_sample(now=85.0), window_seconds=config.stability_window_seconds)
+    observe(state, make_sample(now=85.0), window_seconds=config.stability_window_seconds)
 
     evaluation = rules_stability.evaluate_stability(make_sample(now=100.0), state, config)
 
@@ -370,7 +375,8 @@ def test_r15_allows_supported_cadence_across_interval_window_grid() -> None:
                 final_index = math.ceil(window_seconds / cadence)
                 state = ValidationState()
                 for index in range(final_index):
-                    state.observe(
+                    observe(
+                        state,
                         make_sample(now=index * cadence),
                         window_seconds=window_seconds,
                     )
@@ -390,7 +396,7 @@ def test_r15_allows_supported_cadence_across_interval_window_grid() -> None:
 def test_r15_fills_short_window_with_two_nominally_spaced_endpoints() -> None:
     config = replace(default_config(), sample_interval=5.0, stability_window_seconds=5)
     state = ValidationState()
-    state.observe(make_sample(now=0.0), window_seconds=config.stability_window_seconds)
+    observe(state, make_sample(now=0.0), window_seconds=config.stability_window_seconds)
 
     evaluation = rules_stability.evaluate_stability(make_sample(now=5.0), state, config)
 

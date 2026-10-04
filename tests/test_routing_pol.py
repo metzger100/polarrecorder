@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 from polarrecorder import api_handlers, export, routing_pol
-from polarrecorder.projection import ProjectedCell, project_folded_grid
+from polarrecorder.projection import ProjectedCell, project_folded_grid, project_grid
 
 if TYPE_CHECKING:
     from polarrecorder.projection import SnapshotBins
@@ -50,7 +50,7 @@ def test_folded_projection_merges_histograms_before_floor_and_percentile() -> No
     projected = project_folded_grid(bins, [30], [12], percentile=65, min_samples=5)
 
     assert projected[(30, 12)] == ProjectedCell(stw=8.0, samples=8)
-    assert export.project_grid(bins, [30], [12], 65, 5) == {}
+    assert project_grid(bins, [30], [12], 65, 5) == {}
 
 
 def test_pol_serialization_is_exact_tabular_crlf_text() -> None:

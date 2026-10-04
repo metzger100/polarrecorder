@@ -10,17 +10,13 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Protocol
 
-from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input, coerce_finite_float
+from polarrecorder.enhanced_input import EnhancedInput, assess_enhanced_input
 from polarrecorder.sample import ENHANCED_SIGNAL_SPECS, ClockFn, ReadResult, WallClockFn
 from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 
 if TYPE_CHECKING:
     from polarrecorder.config import Config
     from polarrecorder.logger import Logger
-
-TWA_KEY = TWA_KEY_DEFAULT
-TWS_KEY = TWS_KEY_DEFAULT
-STW_KEY = STW_KEY_DEFAULT
 
 
 class DataEntryLike(Protocol):
@@ -79,9 +75,9 @@ class StoreReader:
         """Read the core values, plus any configured optional signals."""
         now_monotonic = self._clock()
         config = self._config
-        twa_key = TWA_KEY if config is None else config.twa_key
-        tws_key = TWS_KEY if config is None else config.tws_key
-        stw_key = STW_KEY if config is None else config.stw_key
+        twa_key = TWA_KEY_DEFAULT if config is None else config.twa_key
+        tws_key = TWS_KEY_DEFAULT if config is None else config.tws_key
+        stw_key = STW_KEY_DEFAULT if config is None else config.stw_key
         twa_entry = self._read_entry(twa_key)
         tws_entry = self._read_entry(tws_key)
         stw_entry = self._read_entry(stw_key)
@@ -143,40 +139,6 @@ class StoreReader:
                 f"{acquisition.invalid_cause}; omitting"
             )
             self._logger.debug(message)
-
-
-def read_store(
-    api: StoreAPI,
-    clock: ClockFn = time.monotonic,
-    wall_clock: WallClockFn = time.time,
-    logger: Logger | None = None,
-    config: Config | None = None,
-) -> ReadResult:
-    """Read the core store values without explicitly constructing a reader.
-
-    Args:
-        api: Store API implementation.
-        clock: Monotonic clock used for read timestamps.
-        wall_clock: Wall clock used for display timestamps.
-        logger: Optional diagnostics hook reserved for reader warnings.
-        config: Optional runtime config; enables optional-signal reads.
-
-    Returns:
-        Raw read result with missing/expired values represented as ``None``.
-    """
-    return StoreReader(api, clock, wall_clock, logger, config).read()
-
-
-def _coerce_float(value: object) -> float | None:
-    """Coerce a raw store value to a finite float, or ``None`` if not numeric.
-
-    Args:
-        value: Raw store value (int, float, or string; booleans are rejected).
-
-    Returns:
-        The coerced finite float, or ``None`` for non-numeric or non-finite input.
-    """
-    return coerce_finite_float(value)
 
 
 def _entry_value(entry: DataEntryLike | None) -> object | None:

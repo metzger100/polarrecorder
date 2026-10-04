@@ -9,6 +9,7 @@ from polarrecorder import api_handlers, export, reader
 from polarrecorder.config import default_config
 from polarrecorder.diagnostics import CurrentValues
 from polarrecorder.sample import ReadResult, build_sample
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 from polarrecorder.units import knots_to_meters_per_second
 
 import plugin as plugin_module
@@ -184,7 +185,7 @@ def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
     assert curves["12"][0] == {"stw": 0.0, "samples": 0}
 
 
-def test_other_read_formatters_wrap_detached_data() -> None:
+def test_other_read_formatters_wrap_detached_data(tmp_path: Path) -> None:
     config = default_config()
     preset = export.Preset("mine", builtin=False, twa=[0, 90], tws=[4, 8])
 
@@ -196,7 +197,8 @@ def test_other_read_formatters_wrap_detached_data() -> None:
     )
     timeline = _data(api_handlers.format_timeline([{"t": 60.0, "accepted": 1}]))
     config_data = _data(api_handlers.format_config(config))
-    presets = _data(api_handlers.format_presets([export.builtin_preset(), preset]))
+    default = export.resolve_polar_preset(tmp_path, {})
+    presets = _data(api_handlers.format_presets([default, preset]))
     backup = _data(api_handlers.export_json({"schema_version": 1}))
 
     assert rejections["per_bin"] == {"90_12": {"reject_unstable": 1}}
@@ -306,9 +308,9 @@ def test_status_through_dispatch_formats_the_live_decision_and_bin_count(tmp_pat
     api = FakeAvNavAPI()
     plugin = make_plugin(tmp_path, api)
     now = plugin._clock()
-    api.set_value(reader.TWA_KEY, 90.0, now)
-    api.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), now)
-    api.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), now)
+    api.set_value(TWA_KEY_DEFAULT, 90.0, now)
+    api.set_value(TWS_KEY_DEFAULT, knots_to_meters_per_second(12.0), now)
+    api.set_value(STW_KEY_DEFAULT, knots_to_meters_per_second(6.0), now)
     sample = build_sample(_read_result(now, 45.0, 8.0, 5.0))
     assert sample is not None
     plugin._model.update_accepted(sample)

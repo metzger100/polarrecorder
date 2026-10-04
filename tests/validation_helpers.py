@@ -1,8 +1,30 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from polarrecorder import histogram
 from polarrecorder.sample import ReadResult, Sample, build_sample
 from polarrecorder.units import knots_to_meters_per_second
 from polarrecorder.validation.state import ValidationState
+
+if TYPE_CHECKING:
+    from polarrecorder.polar_model import PolarModel
+
+
+def query_model(model: PolarModel, percentile_value: float) -> dict[tuple[int, int], float]:
+    """Return per-bin percentile speeds for the model's populated histograms."""
+    results: dict[tuple[int, int], float] = {}
+    for address, model_bin in model.iter_bins():
+        speed = histogram.percentile(model_bin.histogram, percentile_value)
+        if speed is not None:
+            results[address] = speed
+    return results
+
+
+def observe(state: ValidationState, sample: Sample, *, window_seconds: float) -> None:
+    """Observe a sample for both the transition and the stability rules."""
+    state.observe_transition(sample)
+    state.observe_stability(sample, window_seconds=window_seconds)
 
 
 def make_read_result(
@@ -58,7 +80,8 @@ def make_warmed_state(
     timestamps = tuple(now - offset for offset in range(15, 0, -1))
     for index, timestamp in enumerate(timestamps):
         value_index = min(index // 5, 2)
-        state.observe(
+        observe(
+            state,
             make_sample(
                 twa_raw=twa_values[value_index],
                 tws_kt=tws_values[value_index],

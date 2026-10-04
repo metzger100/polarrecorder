@@ -10,6 +10,7 @@ from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import ReadResult
 from polarrecorder.units import knots_to_meters_per_second
 from polarrecorder.validation.state import ValidationState
+from validation_helpers import query_model
 
 if TYPE_CHECKING:
     from polarrecorder.sample import Sample
@@ -27,7 +28,7 @@ def test_1000_valid_samples_learn_expected_p65() -> None:
 
     assert _decision_count(results, "accepted") == 1000
     assert _reason_count(results, "reject_warming_up") == WARMUP_SECONDS
-    assert model.query(65)[POLAR_BIN] == _expected_percentile(valid_speeds)
+    assert query_model(model, 65)[POLAR_BIN] == _expected_percentile(valid_speeds)
 
 
 def test_slow_samples_do_not_significantly_drag_down_p65() -> None:
@@ -42,7 +43,8 @@ def test_slow_samples_do_not_significantly_drag_down_p65() -> None:
 
     assert _decision_count(baseline_results, "accepted") == 1000
     assert _decision_count(poisoned_results, "accepted") >= 1190
-    assert abs(poisoned_model.query(65)[POLAR_BIN] - baseline_model.query(65)[POLAR_BIN]) <= 0.2
+    poisoned_p65 = query_model(poisoned_model, 65)[POLAR_BIN]
+    assert abs(poisoned_p65 - query_model(baseline_model, 65)[POLAR_BIN]) <= 0.2
 
 
 def test_anchored_zero_stw_burst_is_rejected_and_polar_unchanged() -> None:
@@ -74,14 +76,14 @@ def test_sensor_spikes_are_rejected_and_polar_unchanged() -> None:
         model,
     )
     before_histogram = dict(model.bins[POLAR_BIN].histogram)
-    before_p65 = model.query(65)[POLAR_BIN]
+    before_p65 = query_model(model, 65)[POLAR_BIN]
 
     spike_speeds = [12.0, 6.0, 12.0, 6.0, 12.0, 6.0]
     results = drive_read_results(_speed_reads(spike_speeds, 35), state, config, model)
 
     assert _reason_count(results, "reject_stw_roc") == len(spike_speeds)
     assert model.bins[POLAR_BIN].histogram == before_histogram
-    assert model.query(65)[POLAR_BIN] == before_p65
+    assert query_model(model, 65)[POLAR_BIN] == before_p65
     assert model.bins[POLAR_BIN].total_rejected == len(spike_speeds)
 
 
@@ -98,7 +100,8 @@ def test_gradual_instrument_drift_is_absorbed_without_catastrophic_shift() -> No
     assert _decision_count(baseline_results, "accepted") == len(baseline)
     assert _decision_count(drift_results, "accepted") == len(baseline) + len(drift)
     assert _reason_count(drift_results, "reject_stw_roc") == 0
-    assert drift_model.query(65)[POLAR_BIN] - baseline_model.query(65)[POLAR_BIN] <= 0.5
+    drift_p65 = query_model(drift_model, 65)[POLAR_BIN]
+    assert drift_p65 - query_model(baseline_model, 65)[POLAR_BIN] <= 0.5
 
 
 def test_only_low_wind_samples_populate_no_bins() -> None:

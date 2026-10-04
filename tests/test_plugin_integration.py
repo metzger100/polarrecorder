@@ -14,10 +14,11 @@ from plugin_integration_support import (
     response_data,
     sample_at,
 )
-from polarrecorder import export, persistence, reader
+from polarrecorder import export, persistence
 from polarrecorder.counters import Counters
 from polarrecorder.polar_model import PolarModel
-from validation_helpers import make_read_result
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
+from validation_helpers import make_read_result, query_model
 
 import plugin as plugin_module
 
@@ -60,7 +61,7 @@ def test_full_fake_avnav_loop_updates_model_and_flushes_to_tmp_data_dir(tmp_path
 
     plugin.run()
 
-    assert plugin._model.query(65)[(90, 12)] == 6.0
+    assert query_model(plugin._model, 65)[(90, 12)] == 6.0
     assert plugin._counters.total_accepted > 0
     assert plugin._counters.total_seen == (
         plugin._counters.total_accepted
@@ -290,7 +291,7 @@ def test_plugin_info_falls_back_when_plugin_json_is_missing(
 
 def test_import_path_guard_exposes_package() -> None:
     assert plugin_module._plugin_dir in sys.path
-    assert reader.TWA_KEY == "gps.trueWindAngle"
+    assert TWA_KEY_DEFAULT == "gps.trueWindAngle"
 
 
 def test_corrupt_persistence_load_sets_error_status(tmp_path: Path) -> None:
@@ -394,9 +395,9 @@ def test_debug_logging_does_not_change_malformed_input_accounting(tmp_path: Path
     snapshots: list[tuple[dict[str, object], tuple[str, tuple[str, ...]] | None]] = []
     for enabled in (False, True):
         api = FakeAvNavAPI()
-        api.set_value(reader.TWA_KEY, cast("float", "bad"), 99.5)
-        api.set_value(reader.TWS_KEY, 6.0, 99.5)
-        api.set_value(reader.STW_KEY, 3.0, 99.5)
+        api.set_value(TWA_KEY_DEFAULT, cast("float", "bad"), 99.5)
+        api.set_value(TWS_KEY_DEFAULT, 6.0, 99.5)
+        api.set_value(STW_KEY_DEFAULT, 3.0, 99.5)
         plugin = make_plugin(tmp_path / str(enabled), api)
         config = replace(plugin.config, debug_logging=enabled)
         with plugin._lock:

@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 import re
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from polarrecorder import api_handlers, export, routing_pol
 from polarrecorder.config import default_config
@@ -26,6 +26,9 @@ from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, ReadResult, Sample
 from polarrecorder.validation import pipeline
 from polarrecorder.validation.state import ValidationState
+
+if TYPE_CHECKING:
+    from polarrecorder.projection import SnapshotBins
 
 SAMPLE_COUNT = 4000
 KNOTS_PER_METER_PER_SECOND = 1.9438444924406048
@@ -89,7 +92,7 @@ def main() -> int:
     return 0
 
 
-def routing_model_snapshot() -> export.SnapshotBins:
+def routing_model_snapshot() -> SnapshotBins:
     """Return a real model snapshot that populates every routing POL cell.
 
     The POL grid is fixed and fail-closed, so the shared sweep snapshot cannot
@@ -104,7 +107,7 @@ def routing_model_snapshot() -> export.SnapshotBins:
     return model.snapshot_bins()
 
 
-def routing_pol_failures(snapshot: export.SnapshotBins, percentile: int) -> list[str]:
+def routing_pol_failures(snapshot: SnapshotBins, percentile: int) -> list[str]:
     """Return findings for a successful routing POL export at one percentile.
 
     Proves the tack-folded projection, merged-histogram percentile, and tab

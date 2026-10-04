@@ -42,16 +42,6 @@ class ValidationState:
     cooldown_expires: float = 0.0
     previous_sample: WindowEntry | None = None
 
-    def observe(self, sample: Sample, *, window_seconds: float) -> None:
-        """Observe a sample for both transition and stability rules.
-
-        Args:
-            sample: Built sample to add after the pipeline has returned.
-            window_seconds: Active R15 history duration from the iteration config.
-        """
-        self.observe_transition(sample)
-        self.observe_stability(sample, window_seconds=window_seconds)
-
     def observe_iteration(
         self, sample: Sample | None, retain_stability_history: bool, window_seconds: float
     ) -> None:

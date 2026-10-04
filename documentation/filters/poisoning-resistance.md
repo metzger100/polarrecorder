@@ -10,10 +10,10 @@ polar-speed inputs.
 
 ## Key Details
 
-Each populated TWA/TWS bin stores a 0.1-knot STW histogram. `PolarModel.query(percentile)` computes the configured
-percentile from that histogram on demand, using the nearest-rank algorithm in `server/polarrecorder/histogram.py`. The
-default P65 naturally ignores slow tails from undetected drag, bad trim, current, or moderate drift better than a mean
-would.
+Each populated TWA/TWS bin stores a 0.1-knot STW histogram. Projection (`projection.project_grid`) computes the
+configured percentile from those histograms on demand, using the nearest-rank algorithm in
+`server/polarrecorder/histogram.py`. The default P65 naturally ignores slow tails from undetected drag, bad trim,
+current, or moderate drift better than a mean would.
 
 The validation pipeline is the first defense. R1 through R10 reject samples that are missing, stale, implausibly
 future-dated, out of range, head-to-wind, low-wind, or anchored-like before they can touch any model bin. R11 through
@@ -55,7 +55,7 @@ Cartesian components with `math.hypot()`, avoiding law-of-cosines cancellation w
 `polarrecorder.commit.commit_sample()` is the single dispatch point from a `PipelineResult` to the model update
 contract. Accepted samples update histograms, quality-gate rejections and quarantines update per-bin diagnostics, and
 candidacy-gate or warming-up rejections touch no bin. The scenario tests drive reads through `pipeline.run`,
-`ValidationState.observe`, and `commit_sample`, matching the production normal path.
+`ValidationState.observe_iteration`, and `commit_sample`, matching the production normal path.
 
 R15 includes the current sample in its stability range, so the first bad spike is rejected without first entering the
 state window. Density is derived from the actual anchor-to-current span, which bounds sustained scheduler slippage at

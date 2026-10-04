@@ -72,7 +72,7 @@ endpoint. Projection uses the resolved preset's TWA grid, so each curve carries 
 columns the viewer plots, and a TWS enters `tws_bands` only when one of those preset columns has data. The response uses
 a 360 entry TWA curve array per populated TWS band, with array index equal to absolute TWA 0-359, so projected port
 cells (181-359 deg) are addressable; non-preset indices are `null`. Each populated band is anchored at index 0 with
-`{stw: 0.0, samples: 0}` so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared `export.anchor_origin`
+`{stw: 0.0, samples: 0}` so the curve starts at 0 deg TWA / 0 STW. This anchor is the shared `projection.anchor_origin`
 boundary condition (head to wind is 0 STW) applied to the projection that both `GET polar` and `GET export` consume: it
 is added only for bands that already carry data and never overwrites a real cell, so it never creates a band. When the
 requested TWA grid includes 0 deg, `GET export` emits `0.0` in the TWA 0 row of every populated band; grids without 0

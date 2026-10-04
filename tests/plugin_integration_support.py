@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, cast
 
 from conftest import FakeAvNavAPI, FakeClock
-from polarrecorder import reader
 from polarrecorder.sample import ReadResult, Sample, build_sample
+from polarrecorder.source_params import STW_KEY_DEFAULT, TWA_KEY_DEFAULT, TWS_KEY_DEFAULT
 from polarrecorder.timeline import Timeline
 from polarrecorder.units import knots_to_meters_per_second
 
@@ -51,10 +51,10 @@ class LoopAvNavAPI(FakeAvNavAPI):
         self.wall.advance(1.0)
         self.values.clear()
         if self.data_mode in {"receiving", "partial"}:
-            self.set_value(reader.TWA_KEY, 90.0, self.monotonic())
+            self.set_value(TWA_KEY_DEFAULT, 90.0, self.monotonic())
         if self.data_mode == "receiving":
-            self.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), self.monotonic())
-            self.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), self.monotonic())
+            self.set_value(TWS_KEY_DEFAULT, knots_to_meters_per_second(12.0), self.monotonic())
+            self.set_value(STW_KEY_DEFAULT, knots_to_meters_per_second(6.0), self.monotonic())
         if self.fetches == self.restart_on_fetch and self.restart_callback is not None:
             self.restart_callback()
         return super().fetchFromQueue(sequence, number, includeSource, waitTime, filter_values)

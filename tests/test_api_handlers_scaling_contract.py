@@ -8,7 +8,7 @@ from scaling_contract_fixtures import FIXED_TWA_GRID, FIXED_TWS_GRID, build_mode
 
 if TYPE_CHECKING:
     import pytest
-    from polarrecorder.export import ProjectedCell
+    from polarrecorder.projection import ProjectedCell
 
 # 360 deg positions assembled into a curve per configured TWS band, regardless of raw
 # bin count -- format_polar's curve/cell assembly step is grid-cell-bound, not

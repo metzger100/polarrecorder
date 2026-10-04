@@ -92,7 +92,9 @@ def test_round_trip_restores_model_counters_and_integer_keys(tmp_path: Path) -> 
     model = populated_model()
     counters = populated_counters()
 
-    saved_size = persistence.save(tmp_path, model, counters, metadata())
+    saved_size = persistence.save(
+        tmp_path, persistence.serialize_to_dict(model, counters, metadata())
+    )
     result = persistence.load(tmp_path)
 
     assert saved_size is not None
@@ -244,9 +246,7 @@ def test_save_handles_makedirs_failure_without_raising(
 
     saved_size = persistence.save(
         tmp_path,
-        populated_model(),
-        populated_counters(),
-        metadata(),
+        persistence.serialize_to_dict(populated_model(), populated_counters(), metadata()),
         logger,
     )
 
