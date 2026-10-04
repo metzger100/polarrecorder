@@ -111,6 +111,10 @@ def _reset(plugin: Any, args: dict[str, str]) -> dict[str, object]:
         plugin._model.reset()
         plugin._counters.reset()
         plugin._flush_requested = True
+        recovered = plugin._startup_error_active
+        plugin._startup_error_active = False
+    if recovered:
+        plugin._set_status("STARTED", "Polar Recorder started")
     return api_handlers.ok({})
 
 

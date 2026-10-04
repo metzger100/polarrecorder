@@ -44,6 +44,11 @@ Startup recovery tries `polar.json` first. If it is missing or corrupt, `load()`
 status is `corrupt_empty` with an empty model and counters. A schema version newer than this code supports returns
 `schema_too_new` with an empty model so `plugin.py` can surface an AvNav ERROR status.
 
+After a `corrupt_empty` or `schema_too_new` load, `plugin.py` keeps its startup-error flag set and every flush,
+periodic, requested, or final, skips `save()` while it is set, so the unreadable `polar.json` and `polar.backup.json`
+are never rotated or overwritten. Learning continues in memory. Learned-data restore and the Reset endpoint clear the
+flag under the lock, set the AvNav status back to `STARTED`, and request a flush that writes normally.
+
 Older schemas migrate through ordered version steps. The current migration path supports a test-only schema version 0
 and fills the version 1 metadata defaults before deserializing.
 

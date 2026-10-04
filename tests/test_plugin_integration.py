@@ -166,23 +166,6 @@ def test_concurrent_model_update_and_snapshot_read_are_detached(tmp_path: Path) 
     assert snapshot[(90, 12)]["histogram"] != plugin._model.snapshot_bins()[(90, 12)]["histogram"]
 
 
-def test_config_hot_swap_replaces_config_without_resetting_validation_state(tmp_path: Path) -> None:
-    monotonic = FakeClock(100.0)
-    wall = FakeClock(1000.0)
-    api = LoopAvNavAPI(max_fetches=2, monotonic=monotonic, wall=wall)
-    plugin = make_plugin(tmp_path, api)
-    plugin.run()
-    state = plugin._state
-    window_length = len(state.window)
-
-    plugin._on_config_change({"percentile": "72", "stability_window_seconds": "30"})
-
-    assert plugin.config.percentile == 72
-    assert plugin.config.stability_window_seconds == 30
-    assert plugin._state is state
-    assert len(plugin._state.window) == window_length
-
-
 def test_reset_pause_resume_and_export_json_endpoints(tmp_path: Path) -> None:
     monotonic = FakeClock(100.0)
     wall = FakeClock(1000.0)

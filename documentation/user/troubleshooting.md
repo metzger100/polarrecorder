@@ -40,11 +40,19 @@ collect data in conditions you do not want in the learned polar.
 
 The learned polar is stored in `<plugin_dir>/data/polar.json`. On startup, Polar Recorder tries that file first. If it
 is missing or corrupt, it tries `polar.backup.json`. If the backup loads, the plugin starts from that recovered dataset.
-If both files are missing or corrupt, the plugin starts with an empty model and counters.
+If both files are missing, the plugin starts fresh with an empty model and counters.
 
-User export presets are stored in `<plugin_dir>/data/presets.json`. If that file is missing, corrupt, or from a newer
-unsupported schema, Polar Recorder discards the user presets for that run and keeps only the built-in presets
-(`DefaultStarboard180`, `DefaultPort180`, `Default360`, `windy`). Preset save operations write a fresh `presets.json`.
+If the files exist but none can be loaded (corrupt, or written by a newer plugin version), AvNav shows an ERROR status
+and the plugin learns into an empty in-memory model, but it **never writes** `polar.json` or `polar.backup.json` while
+that error is active, so the unreadable files stay on disk untouched. To leave the error state, either restore a
+learned-data backup, press Reset, or upgrade the plugin to a version that can read the files. Restore and Reset clear
+the error and resume normal flushes, which then replace the unreadable files.
+
+User export presets are stored in `<plugin_dir>/data/presets.json`. A missing file is normal and only the built-in
+presets (`DefaultStarboard180`, `DefaultPort180`, `Default360`, `windy`) are listed. If the file is corrupt or from a
+newer unsupported schema, the built-in presets are listed with a warning, and saving or deleting a preset fails with
+"presets.json is unreadable; restore a presets backup or remove the file" instead of overwriting it. A presets restore
+replaces the unreadable file.
 
 ### Maneuver cooldown and stability window
 

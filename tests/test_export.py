@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import pytest
 from conftest import FakeLogger
 from polarrecorder import export
 
@@ -222,6 +223,40 @@ def test_corrupt_and_schema_too_new_presets_recover_empty(tmp_path: Path) -> Non
         "windy",
     ]
     assert any("too new" in message for level, message in logger.messages if level == "warn")
+
+
+def test_missing_presets_file_reads_empty_without_warning(tmp_path: Path) -> None:
+    logger = FakeLogger()
+
+    names = [preset.name for preset in export.list_presets(tmp_path, logger)]
+
+    assert names == ["DefaultStarboard180", "DefaultPort180", "Default360", "windy"]
+    assert logger.messages == []
+
+
+def test_save_and_delete_refuse_to_overwrite_unreadable_presets(tmp_path: Path) -> None:
+    presets_path = tmp_path / export.PRESETS_NAME
+    too_new = {"schema_version": export.PRESET_SCHEMA_VERSION + 1, "presets": {"keep": {}}}
+    for content in ("{bad", json.dumps(too_new)):
+        presets_path.write_text(content, encoding="utf-8")
+
+        with pytest.raises(export.ExportError, match="is unreadable; restore a presets backup"):
+            export.save_preset(tmp_path, "mine", "0,90", "4", max_tws=20)
+        with pytest.raises(export.ExportError, match="is unreadable; restore a presets backup"):
+            export.delete_preset(tmp_path, "keep", "yes")
+
+        assert presets_path.read_text(encoding="utf-8") == content
+        assert not (tmp_path / export.PRESETS_TMP_NAME).exists()
+
+
+def test_replace_user_presets_recovers_a_corrupt_file(tmp_path: Path) -> None:
+    (tmp_path / export.PRESETS_NAME).write_text("{bad", encoding="utf-8")
+    restored = export.Preset("mine", builtin=False, twa=[0, 90], tws=[4])
+
+    export.replace_user_presets(tmp_path, [restored])
+
+    assert [preset.name for preset in export.list_presets(tmp_path)][-1] == "mine"
+    export.save_preset(tmp_path, "second", "0", "4", max_tws=20)
 
 
 def test_name_and_grid_validation(tmp_path: Path) -> None:

@@ -20,8 +20,8 @@ _server_dir = str(_plugin_path / "server")
 if _server_dir not in sys.path:
     sys.path.insert(0, _server_dir)
 
-from polarrecorder import api_config, diagnostics
 from polarrecorder import config as config_module
+from polarrecorder import diagnostics
 from polarrecorder.api_dispatch import handle_request as handle_api_request
 from polarrecorder.commit import commit_sample
 from polarrecorder.counters import Counters
@@ -287,7 +287,7 @@ class Plugin:
 
     def _flush(self) -> None:
         payload = self._flush_payload()
-        size = save(self._data_dir, payload, logger=self._logger)
+        size = None if payload is None else save(self._data_dir, payload, logger=self._logger)
         with self._lock:
             if size is not None:
                 self._last_flush_size_bytes = size
@@ -295,9 +295,11 @@ class Plugin:
                 self._created_wall = self._pending_created_wall
             self._flush_requested = False
 
-    def _flush_payload(self) -> SerializedDict:
+    def _flush_payload(self) -> SerializedDict | None:
         flush_wall = self._wall_clock()
         with self._lock:
+            if self._startup_error_active:
+                return None
             created_wall = self._created_wall if self._created_wall is not None else flush_wall
             self._pending_flush_wall = flush_wall
             self._pending_created_wall = created_wall
@@ -364,10 +366,12 @@ class Plugin:
         return {"kind": "presets", "presets_restored": len(presets)}
 
     def _on_config_change(self, changed: Mapping[str, str]) -> None:
-        with self._lock:
-            self.config = api_config.apply_host_config_change(
-                self.config, self._state, changed, self._logger
-            )
+        """Ignore host callbacks; AvNav delivers no Polar Recorder keys to this callback.
+
+        ``EDITABLE_PARAMETERS`` is empty, so the host strips every key before calling.
+        The viewer save path owns runtime configuration.
+        """
+        del changed
 
     def _handle_request(
         self,
@@ -397,21 +401,15 @@ class Plugin:
 
 
 def _read_plugin_version() -> str:
-    plugin_json = Path(_plugin_dir) / "plugin.json"
-    fallback = FALLBACK_VERSION
     try:
-        with plugin_json.open(encoding="utf-8") as handle:
+        with (Path(_plugin_dir) / "plugin.json").open(encoding="utf-8") as handle:
             data = json.load(handle)
     except (OSError, json.JSONDecodeError) as exc:
         logging.warning("Could not read polarrecorder plugin.json version: %s", exc)
-        return fallback
-    if not isinstance(data, dict):
-        logging.warning("Could not read polarrecorder plugin.json version")
-        return fallback
-    version = data.get("version")
-    if version is None:
-        version = fallback
-    elif not isinstance(version, str):
-        logging.warning("Could not read polarrecorder plugin.json version")
-        version = fallback
-    return version
+        return FALLBACK_VERSION
+    if isinstance(data, dict) and data.get("version") is None:
+        return FALLBACK_VERSION
+    if isinstance(data, dict) and isinstance(data["version"], str):
+        return data["version"]
+    logging.warning("Could not read polarrecorder plugin.json version")
+    return FALLBACK_VERSION

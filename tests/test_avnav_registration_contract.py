@@ -126,6 +126,17 @@ def test_python_skips_user_app_when_base_url_method_is_missing(tmp_path: Path) -
     assert api.user_apps == []
 
 
+def test_host_config_callback_with_empty_update_keeps_config_identity(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    plugin = _make_plugin(tmp_path, api)
+    config = plugin.config
+    assert api.change_callback is not None
+
+    api.change_callback({})
+
+    assert plugin.config is config
+
+
 def test_run_waits_out_avnav_thread_registration_race(tmp_path: Path) -> None:
     api = ThreadRegistrationRaceAvNavAPI()
     plugin = _make_plugin(tmp_path, api)

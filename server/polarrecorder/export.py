@@ -147,7 +147,7 @@ def save_preset(
         twa=_parse_grid("twa", twa_text, 0, TWA_GRID_MAX),
         tws=_parse_grid("tws", tws_text, 1, max_tws),
     )
-    presets = _load_user_presets(data_dir, logger)
+    presets = _load_user_presets(data_dir, logger, writing=True)
     presets[preset.name] = preset
     _write_user_presets(data_dir, presets, logger)
     return preset
@@ -167,7 +167,7 @@ def delete_preset(
     if _is_builtin_name(trimmed):
         msg = f"Preset '{trimmed}' is built in and cannot be deleted"
         raise ExportError(msg)
-    presets = _load_user_presets(data_dir, logger)
+    presets = _load_user_presets(data_dir, logger, writing=True)
     if trimmed not in presets:
         msg = f"Unknown preset '{trimmed}'"
         raise ExportError(msg)
@@ -374,22 +374,26 @@ def _parse_grid(name: str, raw: str, lower: int, upper: int) -> list[int]:
 def _load_user_presets(
     data_dir: str | os.PathLike[str],
     logger: Logger | None,
+    *,
+    writing: bool = False,
 ) -> dict[str, Preset]:
+    """Read user presets; an unreadable file reads as empty but blocks writes."""
     path = Path(data_dir) / PRESETS_NAME
     if not path.exists():
-        _log_warn(logger, "presets.json is missing; using built-in presets only")
         return {}
     try:
         decoded = json.loads(path.read_text(encoding="utf-8"))
         data = cast("dict[str, object]", decoded)
-        if to_int(data.get("schema_version", 0)) > PRESET_SCHEMA_VERSION:
-            _log_warn(logger, "presets.json schema is too new; discarding user presets")
-            return {}
-        raw_presets = data.get("presets", {})
-        return _decode_presets(_require_presets_dict(raw_presets))
+        if to_int(data.get("schema_version", 0)) <= PRESET_SCHEMA_VERSION:
+            return _decode_presets(_require_presets_dict(data.get("presets", {})))
+        problem = "presets.json schema is too new; discarding user presets"
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
-        _log_warn(logger, f"presets.json is corrupt; using built-in presets only: {exc}")
-        return {}
+        problem = f"presets.json is corrupt; using built-in presets only: {exc}"
+    if writing:
+        msg = "presets.json is unreadable; restore a presets backup or remove the file"
+        raise ExportError(msg)
+    _log_warn(logger, problem)
+    return {}
 
 
 def _decode_presets(raw_presets: dict[object, object]) -> dict[str, Preset]:

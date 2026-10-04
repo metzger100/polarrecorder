@@ -289,20 +289,6 @@ def reset_validation_state_for_source_changes(
         state.reset_transition()
 
 
-def apply_host_config_change(
-    previous: Config, state: Any, changed: Mapping[str, str], logger: Any
-) -> Config:
-    """Parse one host callback update and reset source-dependent state."""
-    candidate = parse_config_values(changed, logger, previous)
-    relation_error = first_config_relation_error(candidate)
-    if relation_error:
-        message = f"configuration callback rejected: {relation_error}"
-        logger.debug(message)
-        return previous
-    reset_validation_state_for_source_changes(state, previous, candidate)
-    return candidate
-
-
 def _format_group(group: AdvancedGroup, config: Any) -> dict[str, object]:
     return {
         "label": group.label,

@@ -23,15 +23,15 @@ AvNav plugin editable-parameter contract:
 
 Polar Recorder registration and parsing:
 
-| Concern                        | Owner                                                                                                                   |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| AvNav editable parameter specs | `server/polarrecorder/params.py` (`EDITABLE_PARAMETERS`)                                                                |
-| Runtime configuration specs    | `server/polarrecorder/params.py` (`CONFIG_PARAMETERS`)                                                                  |
-| Runtime typed config           | `server/polarrecorder/config.py`                                                                                        |
-| Initial runtime value read     | `plugin.py` via `api.getConfigValue(name, default)`                                                                     |
-| Viewer save path               | Settings-tab API handlers validate, call `api.saveConfigValues`, then install the live config                           |
-| Hot-change callback            | `plugin.py` registers `_on_config_change` for the AvNav contract; runtime edits now arrive through the viewer save path |
-| User-facing setting reference  | [Configuration](../user/configuration.md)                                                                               |
+| Concern                        | Owner                                                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| AvNav editable parameter specs | `server/polarrecorder/params.py` (`EDITABLE_PARAMETERS`)                                                   |
+| Runtime configuration specs    | `server/polarrecorder/params.py` (`CONFIG_PARAMETERS`)                                                     |
+| Runtime typed config           | `server/polarrecorder/config.py`                                                                           |
+| Initial runtime value read     | `plugin.py` via `api.getConfigValue(name, default)`                                                        |
+| Viewer save path               | Settings-tab API handlers validate, call `api.saveConfigValues`, then install the live config              |
+| Hot-change callback            | `plugin.py` registers `_on_config_change` for the host contract; it receives no keys and ignores its input |
+| User-facing setting reference  | [Configuration](../user/configuration.md)                                                                  |
 
 Parsing rules:
 

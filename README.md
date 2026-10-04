@@ -271,6 +271,10 @@ User export presets are stored in:
 
 AvNav plugin settings are stored by AvNav, not inside `polar.json`.
 
+If `polar.json` cannot be read at startup (corrupt, or written by a newer plugin version), AvNav shows an ERROR status
+and Polar Recorder never overwrites the unreadable files. Restore a learned-data backup, press Reset, or upgrade the
+plugin to leave that state.
+
 ## Configuration
 
 Most users only need AvNav's plugin enable switch and the Pause/Resume button.

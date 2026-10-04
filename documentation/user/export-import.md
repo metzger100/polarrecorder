@@ -112,8 +112,8 @@ mirroring the Reset confirmation:
 - **Learned-data restore** fully replaces the learned model and counters with a valid `export/json` backup. The backup's
   bin grid must match this build's grid, and its schema must not be newer than this plugin supports; an older schema is
   migrated. The backup's `percentile`/`max_tws` metadata never changes your live AvNav settings. Restoring also recovers
-  a plugin that booted from a corrupt or too-new `polar.json`. On success you see how many bins and accepted samples
-  were restored.
+  a plugin that booted from a corrupt or too-new `polar.json`: until a restore or Reset, the plugin never writes over
+  those files. On success you see how many bins and accepted samples were restored.
 - **Presets restore** fully replaces your user presets with a valid `export/presets` backup. Built-in presets are never
   affected. Preset names must be valid and non-reserved, and each preset's TWS values must fit the current `max_tws`. On
   success you see how many user presets were restored.
