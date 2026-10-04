@@ -68,11 +68,11 @@ path.
   own every rule they can express; a focused custom checker is added only when no maintained tool covers the rule, and
   it ships with its own self-test in the same change.
 - `npm run format`/`format:check` (write/check Prettier + Ruff formatting), `npm run check:standard` (formatting, lint,
-  actionlint, duplication), `npm run check:fast` (exactly `check:standard && typecheck && test:unit` -- static
-  standards, full typing, and a bounded unit-test selection; bounded feedback for iteration, not a substitute for
-  `check:all`), `npm run check:core` (the full literal non-coverage gate, complete except for coverage),
-  `npm run test:split` (Python then Node tests, the complete test suite reached by `check:core`), and
-  `npm run check:all` (`check:core` plus coverage, required before handoff/push/release) are documented in full in
+  actionlint, duplication), `npm run check:fast` (exactly `check:standard && check:patterns && typecheck && test:unit`
+  -- static standards, every pattern rule, full typing, and a bounded unit-test selection; bounded feedback for
+  iteration, not a substitute for `check:all`), `npm run check:core` (the full literal non-coverage gate, complete
+  except for coverage), `npm run test:split` (Python then Node tests, the complete test suite reached by `check:core`),
+  and `npm run check:all` (`check:core` plus coverage, required before handoff/push/release) are documented in full in
   [quality gates](documentation/conventions/quality-gates.md).
 - Polar Recorder is a Python/JavaScript product profile and an extraction example for a future generic AvNav plugin
   environment. Its command graph is signed and profile-driven.

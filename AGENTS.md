@@ -163,7 +163,8 @@ State and threading:
 - `check:core` includes the independent `check:suppressions` scan.
 - Maintained source has zero inline suppression comments. Negative suppression fixtures are generated at runtime, and
   broad tooling changes require a full gate from an isolated copy containing only this repository.
-- Documentation reachability and the `CLAUDE.md` pointer contract are enforced by `npm run docs:check`.
+- Documentation reachability and the `CLAUDE.md` pointer contract are enforced by the Vitest documentation contract
+  tests in `npm run test:tools`; `npm run docs:check` runs markdownlint and the link checks.
 
 ---
 

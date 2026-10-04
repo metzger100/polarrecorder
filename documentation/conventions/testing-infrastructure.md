@@ -62,7 +62,12 @@ Polar Recorder actually uses.
   fixtures (e.g. the ESLint self-tests) briefly write into the real `viewer/`/`plugin.js`/`plugin.mjs` tree, which would
   race under concurrent file execution.
 - `npm run test:tools` runs the Vitest `tools` project over the custom JS quality-tooling self-tests, including positive
-  and clean cases for `tools/check-patterns.mjs` fail-fast rules.
+  and clean cases for `tools/check-patterns.mjs` fail-fast rules. It is the single runner of the documentation contract
+  tests and the release self-tests; `docs:check` and `package:check` do not re-run them. Only the `tools` project raises
+  Vitest's timeout (60 s), because two command-graph self-tests spawn a whole fixture `check:core` (one passing, one
+  failing) and other tool self-tests spawn npm, git, or release processes; the `viewer` and `plugin` projects keep the
+  default. Stop-on-failure for every `check:core` role is proven in-process by
+  `tests/portable-core/portable-role-graph.test.mjs`.
 - The manifest-listed portable-core self-tests cover path containment, duplicate-key rejection, schema/profile
   validation, file-size/focus/documentation/hook/format/complexity/coverage/inventory/release policies, generic-rule
   registry completeness, deterministic anonymous attestation, and standalone-boundary behavior. Their negative cases are

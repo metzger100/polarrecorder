@@ -805,7 +805,12 @@ AGENTS.md §12 fixture sync:
   30,124 non-empty projected cells, all equal. No reference implementation was committed.
 - Phase 4 `format_polar` timings before/after (default preset, 13 x 9 cells, median of 15 runs on the implementation
   machine): 1440 bins 43.3 ms -> 4.2 ms; 5760 bins 179.4 ms -> 16.1 ms (about 11x faster).
-- Phase 9 `check:core` wall time after: _pending_
+- Phase 9 `check:core` wall time after: 69.2 s on the implementation machine (before 100.9 s, single runs each; 31.7 s
+  saved). Gate trace from the `check:core` logs: `vitest run --project tools` invocations 7 -> 1 (the five `docs:check`
+  rungs and the `package:check` release run are gone, and those files still run once inside `test:tools`);
+  `node tools/check-patterns.mjs` invocations 2 -> 1 (the `smells` role); `format:check` once (the `standard` role).
+  `test:tools` 366 -> 356 tests: 12 per-role spawn tests and the repository format test removed, one failing spawn test
+  kept, and one in-process stop-on-failure test over every `check:core` role and one `docs:check` wiring test added.
 - Phase 11 inventory decision: _pending_
 
 ## Related

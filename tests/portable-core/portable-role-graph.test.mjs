@@ -82,6 +82,31 @@ test("the orchestrator executes canonical roles once and stops at the first fail
   expect(result.failedRole).toBe("suppressions");
 });
 
+test("every check:core role stops the graph at its own failure", function () {
+  const { graph, profile } = readQualityBoundary(ROOT);
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+  /** @type {string[]} */
+  const roles = pkg.scripts["check:core"].split("--roles ")[1].split(/\s+/)[0].split(",");
+  const adapters = Object.fromEntries(roles.map((role) => [role, `node ${role}`]));
+  for (const [index, failing] of roles.entries()) {
+    /** @type {string[]} */
+    const commands = [];
+    const result = runQualityRoleGraph({
+      graph,
+      profile: { ...profile, adapters: { ...profile.adapters, ...adapters } },
+      roles,
+      runCommand(command) {
+        commands.push(command);
+        return command === `node ${failing}` ? 1 : 0;
+      }
+    });
+    expect(result.ok).toBe(false);
+    expect(result.failedRole).toBe(failing);
+    expect(result.executed).toEqual(roles.slice(0, index + 1));
+    expect(commands).toEqual(roles.slice(0, index + 1).map((role) => `node ${role}`));
+  }
+});
+
 test("the orchestrator rejects reordered, duplicate, and recursive role selections", function () {
   const { graph, profile } = readQualityBoundary(ROOT);
   const reordered = runQualityRoleGraph({ graph, profile, roles: ["typing", "standard"] });

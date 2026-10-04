@@ -16,15 +16,15 @@ const PLUGIN_TESTS = ["tests/js/plugin-*.test.mjs"];
 const TOOLS_TESTS = ["tests/js/*.test.mjs", "tests/portable-core/*.test.mjs"];
 const TOOLS_EXCLUDE = [...VIEWER_TESTS, ...PLUGIN_TESTS];
 
-// Project configs do not inherit the root `test` options, so every project repeats this.
-// Some tool self-tests spawn a whole `check:core` run against a fixture workspace, which
-// takes several seconds; the default 5s timeout fails them on a loaded machine.
-const TEST_TIMEOUT_MS = 60000;
+// Only the tools project needs more than Vitest's default 5s timeout: two command-graph
+// self-tests spawn a whole fixture `check:core` run, and other tool self-tests spawn npm,
+// git, or release processes, which can exceed 5s on a loaded machine. The viewer and plugin
+// projects run in-process and keep the default.
+const TOOLS_TEST_TIMEOUT_MS = 60000;
 
 export default defineConfig({
   test: {
     allowOnly: false,
-    testTimeout: TEST_TIMEOUT_MS,
     coverage: {
       provider: "v8",
       reportsDirectory: "coverage/viewer",
@@ -42,7 +42,7 @@ export default defineConfig({
         test: {
           name: "tools",
           allowOnly: false,
-          testTimeout: TEST_TIMEOUT_MS,
+          testTimeout: TOOLS_TEST_TIMEOUT_MS,
           environment: "node",
           include: TOOLS_TESTS,
           exclude: TOOLS_EXCLUDE,
@@ -53,7 +53,6 @@ export default defineConfig({
         test: {
           name: "viewer",
           allowOnly: false,
-          testTimeout: TEST_TIMEOUT_MS,
           environment: "node",
           include: VIEWER_TESTS,
           fileParallelism: false
@@ -63,7 +62,6 @@ export default defineConfig({
         test: {
           name: "plugin",
           allowOnly: false,
-          testTimeout: TEST_TIMEOUT_MS,
           environment: "node",
           include: PLUGIN_TESTS
         }

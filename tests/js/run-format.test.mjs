@@ -49,8 +49,3 @@ test("write mode reformats a badly formatted fixture in place", () => {
   fs.rmSync(root, { recursive: true, force: true });
   assert.equal(checked.ok, true);
 });
-
-test("the real repository is already format:check-clean", () => {
-  const result = runFormat({ mode: "check", root: ROOT });
-  assert.equal(result.ok, true);
-});

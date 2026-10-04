@@ -1,10 +1,11 @@
 /**
- * Final command-authority contract: `check:core` is exactly the literal
- * target command graph, `check:all`/`check:strict` are exact aliases, `check:fast` is
- * exactly the bounded static/typing/unit graph, and the pre-push hook uses
- * wrapper, no forbidden/duplicate/undeclared/cyclic script remains, and deliberate failing
- * fixtures prove both `check:core`'s duplicate-leaf rejection and its per-group failure
- * propagation.
+ * Final command-authority contract: `check:core` is exactly the literal target role list,
+ * `check:all`/`check:strict` are exact aliases, `check:fast` composes the bounded
+ * static/pattern/typing/unit steps in order, the pre-push hook and release automation each run
+ * `check:all` once, and no forbidden, undeclared, or cyclic script remains. Two spawned
+ * fixture runs prove the real `check:core` command end to end (one passing, one failing);
+ * `tests/portable-core/portable-role-graph.test.mjs` proves stop-on-failure for every role
+ * in-process.
  */
 
 import assert from "node:assert/strict";
@@ -47,7 +48,12 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "check:fast",
   "test:unit",
   "check:strict",
-  "dependencies:audit"
+  "dependencies:audit",
+  "docs:format",
+  "docs:reachability",
+  "docs:toc",
+  "docs:smell-catalog",
+  "docs:pointer"
 ];
 
 /** Exhaustive/coverage/complexity/scaling groups `check:fast` must never reach. */
@@ -137,12 +143,27 @@ test("check:strict is an exact alias of check:all", () => {
   assert.equal(PKG.scripts["check:strict"], "npm run check:all");
 });
 
-test("check:fast is exactly check:standard && typecheck && test:unit", () => {
-  assert.equal(PKG.scripts["check:fast"], "npm run check:standard && npm run typecheck && npm run test:unit");
+test("check:fast runs standards, patterns, typing, then the bounded unit tests", () => {
+  /** @type {string[]} */
+  const steps = PKG.scripts["check:fast"].split(" && ");
+  assert.ok(
+    steps.every((step) => step.startsWith("npm run ")),
+    "check:fast composes npm scripts only"
+  );
+  const order = ["check:standard", "check:patterns", "typecheck", "test:unit"].map((name) =>
+    steps.indexOf(`npm run ${name}`)
+  );
+  assert.ok(
+    order.every((index, position) => index >= 0 && (position === 0 || index > order[position - 1])),
+    `check:fast must run ${order.join(",")} in order`
+  );
 });
 
-test("setup activates the tracked hooks after installing Node dependencies", () => {
-  assert.match(PKG.scripts.setup, /^npm ci && npm run hooks:install && /);
+test("setup installs Node dependencies first and activates the tracked hooks next", () => {
+  /** @type {string[]} */
+  const steps = PKG.scripts.setup.split(" && ");
+  assert.equal(steps.indexOf("npm ci"), 0, "setup must start with npm ci");
+  assert.equal(steps.indexOf("npm run hooks:install"), 1, "setup must install hooks right after npm ci");
 });
 
 test("check:fast never reaches an exhaustive, package, docs, complexity, or scaling group", () => {
@@ -152,7 +173,9 @@ test("check:fast never reaches an exhaustive, package, docs, complexity, or scal
   }
 });
 
-test("no npm-script leaf is reachable more than once from check:core", () => {
+test("no npm script is reached through more than one npm-run parent from check:core", () => {
+  // This graph walk sees only `npm run` reachability; a tool invoked directly by two scripts
+  // is not detectable here.
   assert.deepEqual(duplicateLeaves(PKG.scripts, "check:core"), []);
 });
 
@@ -318,14 +341,14 @@ test("a passing fixture graph exits 0 through check:core", () => {
   cleanup(root);
 });
 
-for (const failingGroup of REQUIRED_CHECK_CORE_GROUPS) {
-  test(`a failing '${failingGroup}' fixture leaf fails check:core`, () => {
-    const root = makeGraphFixture();
-    const env = { ...process.env, POLARRECORDER_FAIL_LEAF: failingGroup };
+test("a failing fixture leaf fails check:core and stops the remaining roles", () => {
+  const root = makeGraphFixture();
+  const env = { ...process.env, POLARRECORDER_FAIL_LEAF: "test-split" };
 
-    const core = spawnSync("npm", ["run", "check:core"], { cwd: root, encoding: "utf8", env });
-    assert.notEqual(core.status, 0, `check:core must fail when ${failingGroup} fails`);
+  const core = spawnSync("npm", ["run", "check:core"], { cwd: root, encoding: "utf8", env });
+  cleanup(root);
 
-    cleanup(root);
-  });
-}
+  assert.notEqual(core.status, 0, "check:core must fail when a role fails");
+  assert.ok(core.stdout.includes('"failedRole":"test-split"'), core.stdout);
+  assert.ok(!core.stdout.includes("leaf complexity ok"), "roles after the failure must not run");
+});
