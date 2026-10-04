@@ -1,24 +1,39 @@
 """Module: Projection - Pure raw-bin to grid projection and origin anchoring.
 
 Documentation: documentation/architecture/polar-model.md
-Depends: polarrecorder.bins, polarrecorder.coerce, polarrecorder.histogram
+Depends: polarrecorder.bins, polarrecorder.histogram
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from bisect import bisect_right
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import TypedDict
 
 from polarrecorder import histogram
 from polarrecorder.bins import TWS_BIN_MAX
-from polarrecorder.coerce import to_int
 
 ORIGIN_TWA = 0
 ORIGIN_STW = 0.0
 TWA_FOLD_MAX = 180
 TWA_FULL_CIRCLE = 360
 
-SnapshotBins = Mapping[tuple[int, int], Mapping[str, object]]
+
+class ProjectionBin(TypedDict):
+    """The part of a model snapshot bin that projection reads.
+
+    ``polar_model.SnapshotBin`` carries this key among others, so a model snapshot
+    is a valid ``SnapshotBins`` mapping without conversion or re-coercion.
+    """
+
+    histogram: dict[int, int]
+
+
+SnapshotBins = Mapping[tuple[int, int], ProjectionBin]
+Cell = tuple[int, int]
+Interval = tuple[int, float, float, bool]
+RawBin = tuple[int, int, Mapping[int, int]]
 
 
 @dataclass(frozen=True)
@@ -48,14 +63,14 @@ def project_grid(
     so starboard bins (1-179 deg) are excluded.
     """
     raw = _raw_bins(model_bins)
-    tws_intervals = _intervals(tws_grid, TWS_BIN_MAX)
+    tws_axis = _Axis.build(tws_grid, TWS_BIN_MAX)
     mode = _grid_mode(twa_grid)
     if mode == "full":
-        cells = _circular_cells(raw, twa_grid, tws_intervals)
+        cells = _circular_cells(raw, twa_grid, tws_axis)
     elif mode == "port":
-        cells = _linear_cells(raw, twa_grid, tws_intervals, TWA_FOLD_MAX, TWA_FULL_CIRCLE)
+        cells = _linear_cells(raw, _Axis.build(twa_grid, TWA_FULL_CIRCLE, TWA_FOLD_MAX), tws_axis)
     else:
-        cells = _linear_cells(raw, twa_grid, tws_intervals, 0, TWA_FOLD_MAX)
+        cells = _linear_cells(raw, _Axis.build(twa_grid, TWA_FOLD_MAX), tws_axis)
     return _project_cells(cells, percentile, min_samples)
 
 
@@ -77,16 +92,35 @@ def project_folded_grid(
     ]
     cells = _linear_cells(
         folded,
-        twa_grid,
-        _intervals(tws_grid, TWS_BIN_MAX),
-        0,
-        TWA_FOLD_MAX,
+        _Axis.build(twa_grid, TWA_FOLD_MAX),
+        _Axis.build(tws_grid, TWS_BIN_MAX),
     )
     return _project_cells(cells, percentile, min_samples)
 
 
+@dataclass(frozen=True)
+class _Axis:
+    """Midpoint intervals of one ascending grid axis, searchable by lower bound."""
+
+    intervals: list[Interval]
+    lowers: list[float]
+
+    @classmethod
+    def build(cls, values: Sequence[int], upper_axis: int, lower_axis: int = 0) -> _Axis:
+        intervals = _intervals(values, upper_axis, lower_axis)
+        return cls(intervals, [interval[1] for interval in intervals])
+
+    def owner(self, value: int) -> int | None:
+        """Return the grid value whose interval holds ``value``, or ``None`` outside the axis."""
+        index = bisect_right(self.lowers, value) - 1
+        if index < 0:
+            return None
+        grid_value, lower, upper, closed_upper = self.intervals[index]
+        return grid_value if _inside(value, (lower, upper, closed_upper)) else None
+
+
 def _project_cells(
-    cells: Mapping[tuple[int, int], Mapping[int, int]],
+    cells: Mapping[Cell, Mapping[int, int]],
     percentile: int,
     min_samples: int,
 ) -> dict[tuple[int, int], ProjectedCell]:
@@ -123,13 +157,8 @@ def anchor_origin(
     return anchored
 
 
-def _raw_bins(model_bins: SnapshotBins) -> list[tuple[int, int, Mapping[int, int]]]:
-    raw: list[tuple[int, int, Mapping[int, int]]] = []
-    for (twa, tws), data in sorted(model_bins.items()):
-        raw_histogram = data.get("histogram", {})
-        if isinstance(raw_histogram, dict):
-            raw.append((twa, tws, _int_histogram(raw_histogram)))
-    return raw
+def _raw_bins(model_bins: SnapshotBins) -> list[RawBin]:
+    return [(twa, tws, data["histogram"]) for (twa, tws), data in model_bins.items()]
 
 
 def _grid_mode(twa_grid: Sequence[int]) -> str:
@@ -143,42 +172,40 @@ def _grid_mode(twa_grid: Sequence[int]) -> str:
 
 
 def _linear_cells(
-    raw: Sequence[tuple[int, int, Mapping[int, int]]],
-    twa_grid: Sequence[int],
-    tws_intervals: Sequence[tuple[int, float, float, bool]],
-    lower_axis: int,
-    upper_axis: int,
-) -> dict[tuple[int, int], dict[int, int]]:
-    cells: dict[tuple[int, int], dict[int, int]] = {}
-    twa_intervals = _intervals(twa_grid, upper_axis, lower_axis)
-    for twa, twa_lower, twa_upper, twa_last in twa_intervals:
-        for tws, tws_lower, tws_upper, tws_last in tws_intervals:
-            merged = _cell_histogram(
-                raw,
-                (twa_lower, twa_upper, twa_last),
-                (tws_lower, tws_upper, tws_last),
-            )
-            if merged:
-                cells[(twa, tws)] = merged
-    return cells
+    raw: Sequence[RawBin],
+    twa_axis: _Axis,
+    tws_axis: _Axis,
+) -> dict[Cell, dict[int, int]]:
+    assignments: list[tuple[Cell, Mapping[int, int]]] = []
+    for twa, tws, source in raw:
+        grid_twa = twa_axis.owner(twa)
+        grid_tws = tws_axis.owner(tws)
+        if grid_twa is not None and grid_tws is not None:
+            assignments.append(((grid_twa, grid_tws), source))
+    return _merge_cells(assignments)
 
 
 def _circular_cells(
-    raw: Sequence[tuple[int, int, Mapping[int, int]]],
+    raw: Sequence[RawBin],
     twa_grid: Sequence[int],
-    tws_intervals: Sequence[tuple[int, float, float, bool]],
-) -> dict[tuple[int, int], dict[int, int]]:
-    cells: dict[tuple[int, int], dict[int, int]] = {}
+    tws_axis: _Axis,
+) -> dict[Cell, dict[int, int]]:
+    assignments: list[tuple[Cell, Mapping[int, int]]] = []
     points = sorted(set(twa_grid))
     for twa, tws, source in raw:
-        grid_twa = _nearest_circular(twa, points)
-        for grid_tws, tws_lower, tws_upper, tws_last in tws_intervals:
-            if _inside(tws, (tws_lower, tws_upper, tws_last)):
-                bucket = cells.setdefault((grid_twa, grid_tws), {})
-                for key, count in source.items():
-                    bucket[key] = bucket.get(key, 0) + count
-                break
-    return cells
+        grid_tws = tws_axis.owner(tws)
+        if grid_tws is not None:
+            assignments.append(((_nearest_circular(twa, points), grid_tws), source))
+    return _merge_cells(assignments)
+
+
+def _merge_cells(
+    assignments: Iterable[tuple[Cell, Mapping[int, int]]],
+) -> dict[Cell, dict[int, int]]:
+    grouped: dict[Cell, list[Mapping[int, int]]] = {}
+    for cell, source in assignments:
+        grouped.setdefault(cell, []).append(source)
+    return {cell: histogram.merge_histograms(sources) for cell, sources in grouped.items()}
 
 
 def _nearest_circular(twa: int, points: Sequence[int]) -> int:
@@ -197,22 +224,7 @@ def _circular_distance(a: int, b: int) -> int:
     return min(diff, TWA_FULL_CIRCLE - diff)
 
 
-def _cell_histogram(
-    raw: Sequence[tuple[int, int, Mapping[int, int]]],
-    twa_interval: tuple[float, float, bool],
-    tws_interval: tuple[float, float, bool],
-) -> dict[int, int]:
-    merged: dict[int, int] = {}
-    for twa, tws, source in raw:
-        if _inside(twa, twa_interval) and _inside(tws, tws_interval):
-            for key, count in source.items():
-                merged[key] = merged.get(key, 0) + count
-    return merged
-
-
-def _intervals(
-    values: Sequence[int], upper_axis: int, lower_axis: int = 0
-) -> list[tuple[int, float, float, bool]]:
+def _intervals(values: Sequence[int], upper_axis: int, lower_axis: int = 0) -> list[Interval]:
     return [
         (
             value,
@@ -229,7 +241,3 @@ def _inside(value: int, interval: tuple[float, float, bool]) -> bool:
     if closed_upper:
         return lower <= value <= upper
     return lower <= value < upper
-
-
-def _int_histogram(raw: dict[object, object]) -> dict[int, int]:
-    return {to_int(key): to_int(count) for key, count in raw.items()}

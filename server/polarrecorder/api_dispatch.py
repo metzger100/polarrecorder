@@ -69,8 +69,8 @@ def _rejections(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
         global_hist = dict(plugin._counters.rejection_histogram)
         per_bin = {
-            address: dict(model_bin["rejection_histogram"])
-            for address, model_bin in plugin._model.snapshot_bins().items()
+            address: dict(model_bin.rejection_histogram)
+            for address, model_bin in plugin._model.iter_bins()
         }
     return api_handlers.format_rejections(global_hist, per_bin)
 
@@ -247,45 +247,29 @@ def _require_active_import(plugin: Any, token: str) -> None:
 
 def _status_snapshot(plugin: Any) -> api_handlers.StatusSnapshot:
     now = plugin._clock()
-    counters = plugin._counters.to_dict()
-    rejection_histogram = dict(counters["rejection_histogram"])
-    predicate_histogram = dict(counters["predicate_histogram"])
+    counters = plugin._counters
     return api_handlers.StatusSnapshot(
         recording=not plugin._paused,
         data_status=plugin._last_data_status,
         warming_up=plugin._warming_up,
         uptime_seconds=now - plugin._run_start_monotonic,
-        current_values=_current_values_snapshot(plugin),
-        current_decision=_copy_decision(plugin._last_decision),
+        current_values=plugin._last_current_values,
+        current_decision=plugin._last_decision,
         counters={
-            "total_seen": counters["total_seen"],
-            "total_accepted": counters["total_accepted"],
-            "total_rejected": counters["total_rejected"],
-            "total_quarantined": counters["total_quarantined"],
+            "total_seen": counters.total_seen,
+            "total_accepted": counters.total_accepted,
+            "total_rejected": counters.total_rejected,
+            "total_quarantined": counters.total_quarantined,
         },
-        top_rejections=_top_rejections(rejection_histogram),
-        top_predicates=_top_predicates(predicate_histogram),
+        top_rejections=_top_rejections(counters.rejection_histogram),
+        top_predicates=_top_predicates(counters.predicate_histogram),
         last_flush_wall=plugin._last_flush_wall,
         file_size_bytes=plugin._last_flush_size_bytes,
-        bins_with_data=len(plugin._model.snapshot_bins()),
+        bins_with_data=len(plugin._model.bins),
         bins_total=360 * (TWS_BIN_MAX + 1),
         generation=plugin._model.generation,
         now_monotonic=now,
         stale_threshold=plugin.config.stale_threshold,
-    )
-
-
-def _current_values_snapshot(plugin: Any) -> api_handlers.CurrentValuesSnapshot | None:
-    values = plugin._last_current_values
-    if values is None:
-        return None
-    return api_handlers.CurrentValuesSnapshot(
-        twa_deg=values.twa_deg,
-        tws_kt=values.tws_kt,
-        stw_kt=values.stw_kt,
-        twa_timestamp=values.twa_timestamp,
-        tws_timestamp=values.tws_timestamp,
-        stw_timestamp=values.stw_timestamp,
     )
 
 
@@ -342,16 +326,6 @@ def _top_predicates(histogram: dict[str, int]) -> list[dict[str, object]]:
 def _rejection_sort_key(item: tuple[str, int]) -> tuple[int, str]:
     reason, count = item
     return -count, reason
-
-
-def _copy_decision(decision: dict[str, object] | None) -> dict[str, object] | None:
-    if decision is None:
-        return None
-    copied = dict(decision)
-    reasons = copied.get("reason_codes")
-    if isinstance(reasons, list):
-        copied["reason_codes"] = list(reasons)
-    return copied
 
 
 def _preset_dict(preset: export.Preset) -> dict[str, object]:

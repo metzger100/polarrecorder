@@ -7,13 +7,13 @@ exact same deterministic, collision-free bin layout.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from counting_dict import CountingDict
 from polarrecorder import export
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from polarrecorder.projection import ProjectionBin
 
 # A fixed, production-equivalent starboard grid (matches the DefaultStarboard180
 # preset). Kept constant wherever only the raw-bin count should vary.
@@ -21,9 +21,7 @@ FIXED_TWA_GRID = list(export.DEFAULT_TWA_STARBOARD180)
 FIXED_TWS_GRID = list(export.WINDY_TWS)
 
 
-def build_model_bins(
-    count: int, counter: list[int] | None
-) -> dict[tuple[int, int], Mapping[str, object]]:
+def build_model_bins(count: int, counter: list[int] | None) -> dict[tuple[int, int], ProjectionBin]:
     """Build `count` distinct, collision-free raw bins over the 360x61 TWA/TWS space.
 
     Args:
@@ -34,7 +32,7 @@ def build_model_bins(
     Returns:
         A `SnapshotBins`-shaped mapping with `count` entries.
     """
-    model_bins: dict[tuple[int, int], Mapping[str, object]] = {}
+    model_bins: dict[tuple[int, int], ProjectionBin] = {}
     for index in range(count):
         twa = index % 360
         tws = index // 360
@@ -44,5 +42,5 @@ def build_model_bins(
         else:
             value = CountingDict(counter)
             value["histogram"] = histogram
-            model_bins[(twa, tws)] = value
+            model_bins[(twa, tws)] = cast("ProjectionBin", value)
     return model_bins

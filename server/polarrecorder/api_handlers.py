@@ -1,8 +1,8 @@
 """Module: API Handlers - Pure API request and response formatting.
 
 Documentation: documentation/architecture/api.md
-Depends: polarrecorder.config, polarrecorder.enhanced_input, polarrecorder.export,
-polarrecorder.routing_pol
+Depends: polarrecorder.config, polarrecorder.diagnostics, polarrecorder.enhanced_input,
+polarrecorder.export, polarrecorder.routing_pol
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from polarrecorder.config import Config
+    from polarrecorder.diagnostics import CurrentValues
 
 Response = dict[str, object]
 
@@ -33,18 +34,6 @@ def normalize_args(args: Mapping[str, object]) -> dict[str, str]:
 
 
 @dataclass(frozen=True)
-class CurrentValuesSnapshot:
-    """Detached latest finite store values for status formatting."""
-
-    twa_deg: float
-    tws_kt: float
-    stw_kt: float
-    twa_timestamp: float
-    tws_timestamp: float
-    stw_timestamp: float
-
-
-@dataclass(frozen=True)
 class StatusSnapshot:
     """Detached status input consumed by ``format_status``."""
 
@@ -52,8 +41,8 @@ class StatusSnapshot:
     data_status: str
     warming_up: bool
     uptime_seconds: float
-    current_values: CurrentValuesSnapshot | None
-    current_decision: dict[str, object] | None
+    current_values: CurrentValues | None
+    current_decision: tuple[str, Sequence[str]] | None
     counters: dict[str, int]
     top_rejections: list[dict[str, object]]
     top_predicates: list[dict[str, object]]
@@ -94,7 +83,7 @@ def format_status(snapshot: StatusSnapshot) -> Response:
             "warming_up": snapshot.warming_up,
             "uptime_seconds": snapshot.uptime_seconds,
             "current_values": _format_current_values(snapshot),
-            "current_decision": snapshot.current_decision,
+            "current_decision": _format_decision(snapshot.current_decision),
             "counters": counters,
             "top_rejections": snapshot.top_rejections,
             "top_predicates": snapshot.top_predicates,
@@ -236,6 +225,13 @@ def format_enhanced_status(rows: Sequence[Mapping[str, object]]) -> Response:
 def format_enhanced_config(values: Mapping[str, object]) -> Response:
     """Format the saved enhanced configuration subset."""
     return ok({"config": dict(values)})
+
+
+def _format_decision(decision: tuple[str, Sequence[str]] | None) -> dict[str, object] | None:
+    if decision is None:
+        return None
+    state, reason_codes = decision
+    return {"state": state, "reason_codes": list(reason_codes)}
 
 
 def _format_current_values(snapshot: StatusSnapshot) -> dict[str, object] | None:

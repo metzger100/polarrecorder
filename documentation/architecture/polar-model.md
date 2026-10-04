@@ -27,7 +27,13 @@ units, so changing the requested percentile recalculates the learned speed witho
   samples. High-confidence export starts at the configured floor of 50-100 samples; the viewer gives full emphasis at
   the baseline 50-sample level.
 - `PolarModel.snapshot_bins()` returns fresh plain dicts for each bin and fresh nested histogram copies so API
-  formatting can run outside the plugin lock without sharing mutable state.
+  formatting can run outside the plugin lock without sharing mutable state. Projection types its input with the minimal
+  `projection.ProjectionBin` TypedDict (`histogram: dict[int, int]`), which `SnapshotBin` satisfies structurally, and
+  reads `histogram` directly without re-coercing keys or counts.
+- Projection assigns every raw bin once: linear grids look up the bin's TWA and TWS interval by bisecting the interval
+  lower bounds (half-open midpoint intervals, the last interval closed at the axis end), circular grids pick the nearest
+  circular grid point, and each cell's histogram is built with `histogram.merge_histograms`. Cost is linear in the raw
+  bin count, which `check:scaling` pins with one counted histogram read per bin.
 - Accepted samples update speed histograms. Quality-gate rejections and quarantines update per-bin diagnostics.
   Candidacy-gate rejections do not touch bins.
 

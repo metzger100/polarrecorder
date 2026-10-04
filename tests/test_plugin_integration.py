@@ -391,7 +391,7 @@ def test_debug_logging_emits_no_diagnostics_when_disabled(tmp_path: Path) -> Non
 
 
 def test_debug_logging_does_not_change_malformed_input_accounting(tmp_path: Path) -> None:
-    snapshots: list[tuple[dict[str, object], dict[str, object] | None]] = []
+    snapshots: list[tuple[dict[str, object], tuple[str, tuple[str, ...]] | None]] = []
     for enabled in (False, True):
         api = FakeAvNavAPI()
         api.set_value(reader.TWA_KEY, cast("float", "bad"), 99.5)

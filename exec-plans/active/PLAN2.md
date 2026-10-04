@@ -797,8 +797,14 @@ AGENTS.md §12 fixture sync:
   `check:scaling` 26 passed; `package:check` release Vitest 4 files / 36 tests; the five `docs:check` Vitest rungs 25
   tests. Coverage half: pytest 472 passed at 96.47 %; viewer + plugin 13 files / 68 tests at 93.39 % lines / 75.82 %
   branches. `check:core` wall time on the implementation machine: 100.9 s.
-- Phase 4 old/new projection equivalence: _pending_
-- Phase 4 `format_polar` timings before/after: _pending_
+- Phase 4 old/new projection equivalence: **identical**. A throwaway script outside the repository loaded the old
+  `projection.py` beside the new one and compared `project_grid` for the 5760-bin synthetic model plus four seeded
+  random models (100 to 6000 bins, including empty and zero-count histograms and bins on every interval edge, both sides
+  of 180 deg, and TWS 60) over the four built-in presets and three custom grids (starboard, full-circle, port), at
+  percentiles 10/50/65/95 and floors 1/30/50, plus `project_folded_grid` on the routing grid: 560 comparisons covering
+  30,124 non-empty projected cells, all equal. No reference implementation was committed.
+- Phase 4 `format_polar` timings before/after (default preset, 13 x 9 cells, median of 15 runs on the implementation
+  machine): 1440 bins 43.3 ms -> 4.2 ms; 5760 bins 179.4 ms -> 16.1 ms (about 11x faster).
 - Phase 9 `check:core` wall time after: _pending_
 - Phase 11 inventory decision: _pending_
 

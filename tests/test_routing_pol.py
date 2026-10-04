@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from polarrecorder import api_handlers, export, routing_pol
 from polarrecorder.projection import ProjectedCell, project_folded_grid
+
+if TYPE_CHECKING:
+    from polarrecorder.projection import SnapshotBins
 
 
 def test_routing_grid_is_fixed_practical_and_absolute() -> None:
@@ -18,7 +21,7 @@ def test_routing_grid_is_fixed_practical_and_absolute() -> None:
 
 
 def test_folded_projection_maps_symmetric_angles() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (0, 12): {"histogram": {10: 1}},
         (30, 12): {"histogram": {20: 1}},
         (330, 12): {"histogram": {30: 1}},
@@ -39,7 +42,7 @@ def test_folded_projection_maps_symmetric_angles() -> None:
 
 
 def test_folded_projection_merges_histograms_before_floor_and_percentile() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (30, 12): {"histogram": {40: 4}},
         (330, 12): {"histogram": {80: 4}},
     }
@@ -78,7 +81,7 @@ def test_pol_rejects_incomplete_projection_with_counts() -> None:
 
 
 def test_complete_routing_export_and_api_never_emit_angles_above_180() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (twa, tws): {"histogram": {twa + tws: export.MIN_SAMPLES_DISPLAY}}
         for twa in routing_pol.ROUTING_TWA
         for tws in routing_pol.ROUTING_TWS
@@ -96,7 +99,7 @@ def test_complete_routing_export_and_api_never_emit_angles_above_180() -> None:
 
 
 def test_samples_nearer_the_bow_than_any_sailing_angle_never_set_the_first_row() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (10, 12): {"histogram": {30: 5}},
         (30, 12): {"histogram": {60: 5}},
     }
@@ -118,7 +121,7 @@ def test_routing_tws_grid_drops_columns_the_wind_ceiling_can_never_fill() -> Non
 
 def test_export_succeeds_at_max_tws_20_where_the_25_knot_column_is_unreachable() -> None:
     reachable = routing_pol.routing_tws_grid(20)
-    bins = {
+    bins: SnapshotBins = {
         (twa, tws): {"histogram": {twa + tws: export.MIN_SAMPLES_DISPLAY}}
         for twa in routing_pol.ROUTING_TWA
         for tws in reachable

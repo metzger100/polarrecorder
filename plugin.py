@@ -99,7 +99,7 @@ class Plugin:
         self._state = ValidationState()
         self._timeline = Timeline(self._wall_clock)
         self._last_current_values: diagnostics.CurrentValues | None = None
-        self._last_decision: dict[str, object] | None = None
+        self._last_decision: tuple[str, tuple[str, ...]] | None = None
         self._warming_up = True
         self._last_data_status = "no_data"
         self._last_flush_wall = 0.0
@@ -196,10 +196,7 @@ class Plugin:
                 self._record_counters(pipeline_result)
                 self._timeline.record(pipeline_result.decision, pipeline_result.reason_codes)
                 self._write_status_scalars(read_result, sample, data_status, warming_up)
-                self._last_decision = {
-                    "state": pipeline_result.decision,
-                    "reason_codes": list(pipeline_result.reason_codes),
-                }
+                self._last_decision = (pipeline_result.decision, pipeline_result.reason_codes)
                 status_result = pipeline_result
         if superseded:
             if config.debug_logging:

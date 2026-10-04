@@ -13,7 +13,7 @@ from typing import Any
 
 
 class CountingDict(dict[Any, Any]):
-    """A dict that counts every `get`/`__setitem__` call against a shared counter."""
+    """A dict that counts every `get`/`__getitem__`/`__setitem__` call against a shared counter."""
 
     def __init__(self, counter: list[int]) -> None:
         super().__init__()
@@ -24,6 +24,10 @@ class CountingDict(dict[Any, Any]):
     ) -> Any:  # counting wrapper is intentionally generic
         self._counter[0] += 1
         return super().get(key, default)
+
+    def __getitem__(self, key: Any) -> Any:  # counting wrapper is intentionally generic
+        self._counter[0] += 1
+        return super().__getitem__(key)
 
     def __setitem__(
         self, key: Any, value: Any

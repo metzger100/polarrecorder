@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
+    from polarrecorder.projection import SnapshotBins
+
 
 def test_builtin_preset_values_are_exact(tmp_path: Path) -> None:
     presets = {preset.name: preset for preset in export.list_presets(tmp_path)}
@@ -54,7 +56,7 @@ def test_resolve_polar_preset_defaults_to_starboard180(tmp_path: Path) -> None:
 
 
 def test_projection_does_not_fold_port_bins_into_starboard() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (30, 4): {"histogram": {50: 2}},
         (330, 4): {"histogram": {60: 1}},
     }
@@ -71,7 +73,7 @@ def test_projection_does_not_fold_port_bins_into_starboard() -> None:
 
 
 def test_port_grid_excludes_starboard_bins() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (30, 4): {"histogram": {50: 2}},
         (270, 4): {"histogram": {60: 3}},
     }
@@ -85,9 +87,54 @@ def test_port_grid_excludes_starboard_bins() -> None:
     assert all(twa >= 180 for twa, _tws in port)
 
 
+def test_starboard_projection_interval_boundaries() -> None:
+    # Distinct power-of-two counts fingerprint which cell each raw bin lands in.
+    bins: SnapshotBins = {
+        (44, 4): {"histogram": {50: 1}},
+        (45, 4): {"histogram": {50: 2}},
+        (180, 4): {"histogram": {50: 4}},
+        (181, 4): {"histogram": {50: 8}},
+        (0, 16): {"histogram": {50: 16}},
+        (0, 17): {"histogram": {50: 32}},
+        (0, 60): {"histogram": {50: 64}},
+    }
+
+    twa_grid = [0, 30, 60, 180]
+    projected = export.project_grid(bins, twa_grid, [4, 30], percentile=65, min_samples=1)
+
+    samples = {cell: value.samples for cell, value in projected.items()}
+    # 45 deg sits exactly on the 30/60 midpoint and belongs to the upper, half-open interval.
+    # 180 deg closes the last starboard interval; the 181 deg port bin is excluded.
+    # TWS 17 sits on the 4/30 midpoint, and the last TWS interval is closed at 60 knots.
+    assert samples == {
+        (30, 4): 1,
+        (60, 4): 2,
+        (180, 4): 4,
+        (0, 4): 16,
+        (0, 30): 96,
+    }
+
+
+def test_port_projection_interval_boundaries() -> None:
+    bins: SnapshotBins = {
+        (179, 4): {"histogram": {50: 1}},
+        (180, 4): {"histogram": {50: 2}},
+        (224, 4): {"histogram": {50: 4}},
+        (225, 4): {"histogram": {50: 8}},
+        (359, 4): {"histogram": {50: 16}},
+    }
+
+    projected = export.project_grid(bins, [180, 270], [4], percentile=65, min_samples=1)
+
+    samples = {cell: value.samples for cell, value in projected.items()}
+    # 180 deg opens the port axis, 225 deg is the 180/270 midpoint, the last interval is
+    # closed at 360 deg so 359 deg is kept, and the 179 deg starboard bin is excluded.
+    assert samples == {(180, 4): 6, (270, 4): 24}
+
+
 def test_circular_projection_assigns_nearest_grid_point_across_wrap() -> None:
     grid = list(range(0, 360, 15))
-    bins = {
+    bins: SnapshotBins = {
         (358, 6): {"histogram": {50: 2}},
         (5, 6): {"histogram": {50: 1}},
         (185, 6): {"histogram": {60: 2}},
@@ -132,7 +179,7 @@ def test_anchor_origin_preserves_real_zero_twa_cell() -> None:
 
 
 def test_csv_export_emits_zero_stw_origin_row_for_populated_bands() -> None:
-    bins = {(90, 12): {"histogram": {60: 3}}}
+    bins: SnapshotBins = {(90, 12): {"histogram": {60: 3}}}
     selection = export.ExportSelection("custom", [0, 90], [8, 12], 3)
 
     csv = export.csv_export(bins, selection, percentile=65)
@@ -143,7 +190,7 @@ def test_csv_export_emits_zero_stw_origin_row_for_populated_bands() -> None:
 
 
 def test_csv_export_emits_rows_above_180_for_circular_grid() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (90, 12): {"histogram": {60: 3}},
         (270, 12): {"histogram": {50: 3}},
     }
@@ -311,10 +358,10 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
 def test_normal_and_high_confidence_floors_apply_at_thirty_and_fifty_samples() -> None:
     normal_floor = export.resolve_min_samples({}, 50)
     high_floor = export.resolve_min_samples({"high_confidence": "yes"}, 50)
-    below_normal = {(90, 12): {"histogram": {60: 29}}}
-    normal = {(90, 12): {"histogram": {60: 30}}}
-    below_high = {(90, 12): {"histogram": {60: 49}}}
-    high = {(90, 12): {"histogram": {60: 50}}}
+    below_normal: SnapshotBins = {(90, 12): {"histogram": {60: 29}}}
+    normal: SnapshotBins = {(90, 12): {"histogram": {60: 30}}}
+    below_high: SnapshotBins = {(90, 12): {"histogram": {60: 49}}}
+    high: SnapshotBins = {(90, 12): {"histogram": {60: 50}}}
 
     assert (90, 12) not in export.project_grid(below_normal, [90], [12], 65, normal_floor)
     assert export.project_grid(normal, [90], [12], 65, normal_floor)[
@@ -327,7 +374,7 @@ def test_normal_and_high_confidence_floors_apply_at_thirty_and_fifty_samples() -
 
 
 def test_projection_is_deterministic_and_reuses_polar_grid() -> None:
-    bins = {(90, 12): {"histogram": {60: 30}}, (91, 12): {"histogram": {61: 30}}}
+    bins: SnapshotBins = {(90, 12): {"histogram": {60: 30}}, (91, 12): {"histogram": {61: 30}}}
     twa_grid = list(range(181))
     tws_grid = [12]
 

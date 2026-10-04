@@ -21,6 +21,7 @@ from typing import Any
 
 from polarrecorder import api_handlers, export, routing_pol
 from polarrecorder.config import default_config
+from polarrecorder.diagnostics import CurrentValues
 from polarrecorder.polar_model import PolarModel
 from polarrecorder.sample import Freshness, ReadResult, Sample
 from polarrecorder.validation import pipeline
@@ -240,7 +241,7 @@ def hostile_core_read(role: str) -> ReadResult:
 
 def status_response(sample: Sample) -> dict[str, object]:
     """Format a representative status response from a finite sample."""
-    current_values = api_handlers.CurrentValuesSnapshot(
+    current_values = CurrentValues(
         twa_deg=sample.twa_deg_raw,
         tws_kt=sample.tws_kt,
         stw_kt=sample.stw_kt,
@@ -255,7 +256,7 @@ def status_response(sample: Sample) -> dict[str, object]:
             warming_up=False,
             uptime_seconds=sample.timestamp_monotonic,
             current_values=current_values,
-            current_decision={"state": "accepted", "reason_codes": []},
+            current_decision=("accepted", ()),
             counters={
                 "total_seen": 1,
                 "total_accepted": 1,

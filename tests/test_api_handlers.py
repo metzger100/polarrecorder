@@ -4,8 +4,10 @@ import math
 from typing import TYPE_CHECKING, cast
 
 from conftest import FakeAvNavAPI, FakeClock
+from plugin_integration_support import make_plugin
 from polarrecorder import api_handlers, export, reader
 from polarrecorder.config import default_config
+from polarrecorder.diagnostics import CurrentValues
 from polarrecorder.sample import ReadResult, build_sample
 from polarrecorder.units import knots_to_meters_per_second
 
@@ -14,6 +16,8 @@ import plugin as plugin_module
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from polarrecorder.projection import SnapshotBins
+
 
 def test_format_status_includes_counters_top_rejections_and_stale_flags() -> None:
     snapshot = api_handlers.StatusSnapshot(
@@ -21,8 +25,8 @@ def test_format_status_includes_counters_top_rejections_and_stale_flags() -> Non
         data_status="receiving",
         warming_up=False,
         uptime_seconds=12.0,
-        current_values=api_handlers.CurrentValuesSnapshot(90.0, 12.0, 6.0, 9.0, 5.0, 7.0),
-        current_decision={"state": "accepted", "reason_codes": []},
+        current_values=CurrentValues(90.0, 12.0, 6.0, 9.0, 5.0, 7.0),
+        current_decision=("rejected", ("reject_low_wind", "reject_unstable")),
         counters={
             "total_seen": 4,
             "total_accepted": 3,
@@ -44,6 +48,10 @@ def test_format_status_includes_counters_top_rejections_and_stale_flags() -> Non
     values = cast("dict[str, object]", data["current_values"])
 
     assert data["recording"] is True
+    assert data["current_decision"] == {
+        "state": "rejected",
+        "reason_codes": ["reject_low_wind", "reject_unstable"],
+    }
     assert cast("dict[str, object]", data["counters"])["acceptance_rate"] == 0.75
     assert data["top_rejections"] == [{"reason": "reject_low_wind", "count": 2}]
     assert data["top_predicates"] == [{"predicate": "reject_low_wind", "count": 2}]
@@ -90,7 +98,7 @@ def test_format_status_marks_implausibly_future_values_stale() -> None:
         data_status="receiving",
         warming_up=False,
         uptime_seconds=1.0,
-        current_values=api_handlers.CurrentValuesSnapshot(90.0, 12.0, 6.0, 11.0, 10.1, 10.0),
+        current_values=CurrentValues(90.0, 12.0, 6.0, 11.0, 10.1, 10.0),
         current_decision=None,
         counters={
             "total_seen": 0,
@@ -119,7 +127,7 @@ def test_format_status_marks_implausibly_future_values_stale() -> None:
 
 
 def test_format_polar_and_export_reuse_projection() -> None:
-    bins = {(100, 12): {"histogram": {60: 30}}}
+    bins: SnapshotBins = {(100, 12): {"histogram": {60: 30}}}
 
     polar = _data(api_handlers.format_polar(bins, [0, 90], [12], 65, 7, "windy"))
     export_response = _data(api_handlers.format_export(bins, [0, 90], [12], 65, 30))
@@ -137,7 +145,7 @@ def test_format_polar_and_export_reuse_projection() -> None:
 
 
 def test_format_polar_omits_twenty_nine_samples_and_includes_thirty() -> None:
-    bins = {
+    bins: SnapshotBins = {
         (60, 12): {"histogram": {50: 29}},
         (90, 12): {"histogram": {60: 30}},
     }
@@ -150,7 +158,7 @@ def test_format_polar_omits_twenty_nine_samples_and_includes_thirty() -> None:
 
 
 def test_format_polar_curve_spans_full_circle_for_port_cells() -> None:
-    bins = {(210, 12): {"histogram": {50: 30}}}
+    bins: SnapshotBins = {(210, 12): {"histogram": {50: 30}}}
     grid = [0, 180, 210, 270]
 
     polar = _data(api_handlers.format_polar(bins, grid, [12], 65, 3, "Default360"))
@@ -164,7 +172,7 @@ def test_format_polar_curve_spans_full_circle_for_port_cells() -> None:
 
 
 def test_format_polar_zero_twa_anchor_does_not_create_empty_bands() -> None:
-    bins = {(90, 12): {"histogram": {60: 30}}}
+    bins: SnapshotBins = {(90, 12): {"histogram": {60: 30}}}
 
     polar = _data(api_handlers.format_polar(bins, [0, 90], [8, 12], 65, 1, "windy"))
     curves = cast("dict[str, list[dict[str, object] | None]]", polar["curves"])
@@ -292,6 +300,31 @@ def test_non_finite_read_keeps_status_current_values_frozen(tmp_path: Path) -> N
         value = values[key]
         assert isinstance(value, (float, int))
         assert math.isfinite(float(value))
+
+
+def test_status_through_dispatch_formats_the_live_decision_and_bin_count(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    plugin = make_plugin(tmp_path, api)
+    now = plugin._clock()
+    api.set_value(reader.TWA_KEY, 90.0, now)
+    api.set_value(reader.TWS_KEY, knots_to_meters_per_second(12.0), now)
+    api.set_value(reader.STW_KEY, knots_to_meters_per_second(6.0), now)
+    sample = build_sample(_read_result(now, 45.0, 8.0, 5.0))
+    assert sample is not None
+    plugin._model.update_accepted(sample)
+
+    plugin._run_iteration(plugin.config)
+    data = _data(plugin._handle_request("status", object(), {}))
+
+    assert plugin._last_decision is not None
+    state, reason_codes = plugin._last_decision
+    assert data["current_decision"] == {"state": state, "reason_codes": list(reason_codes)}
+    assert isinstance(cast("dict[str, object]", data["current_decision"])["reason_codes"], list)
+    persistence = cast("dict[str, object]", data["persistence"])
+    assert persistence["bins_with_data"] == len(plugin._model.bins) >= 1
+    counters = cast("dict[str, object]", data["counters"])
+    assert counters["total_seen"] == plugin._counters.total_seen
+    assert data["top_rejections"] == [{"reason": "reject_warming_up", "count": 1}]
 
 
 def _read_result(timestamp: float, twa: float, tws_kt: float, stw_kt: float) -> ReadResult:

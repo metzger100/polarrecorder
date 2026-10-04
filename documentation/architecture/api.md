@@ -129,6 +129,12 @@ plugin thread performs the next polar-file flush. `export/json` likewise keeps l
 `plugin.py` calls `persistence.serialize_to_dict(...)` while locked, then the pure API formatter wraps the finished
 dict.
 
+`status` snapshots only what it formats: under the lock it counts bins with `len(model.bins)` instead of copying them,
+reads the counter totals directly, builds the bounded top-rejection and top-predicate lists from the live histograms
+(sorting already produces new lists), and passes the immutable `diagnostics.CurrentValues` tuple and the immutable
+`(decision, reason_codes)` tuple that `plugin.py` stores per iteration; `format_status` renders the decision as
+`{"state", "reason_codes"}`. `rejections` copies only each bin's `rejection_histogram` via `iter_bins()`.
+
 ## Related
 
 - [Plugin lifecycle](plugin-lifecycle.md)
