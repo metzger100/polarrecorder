@@ -70,8 +70,8 @@ Polar Recorder actually uses.
   `tests/portable-core/portable-role-graph.test.mjs`.
 - The manifest-listed portable-core self-tests cover path containment, duplicate-key rejection, schema/profile
   validation, file-size/focus/documentation/hook/format/complexity/coverage/inventory/release policies, generic-rule
-  registry completeness, deterministic anonymous attestation, and standalone-boundary behavior. Their negative cases are
-  product-neutral and fail closed on malformed, stale, duplicate, escaping, or parity-drifting data.
+  registry completeness, and standalone-boundary behavior. Their negative cases are product-neutral and fail closed on
+  malformed, stale, duplicate, escaping, or parity-drifting data.
 - `npm run check:suppressions` scans maintained comments lexically without treating directive-like strings as comments.
   Its negative test writes temporary Python and JavaScript directives; `eslint.config.mjs` independently rejects a
   generated JavaScript directive through `no-warning-comments` and `noInlineConfig`. The maintained tree therefore
@@ -138,8 +138,7 @@ Polar Recorder actually uses.
 - `tools/check-runtime-contracts.py` complements static checks by rejecting finite raw core speeds that overflow during
   knot normalization and scanning representative Status, polar, CSV, and Windy responses for runtime non-finites.
 - The final reproducibility proof runs `npm run check:all` in the normal checkout and in a fresh isolated copy that
-  contains only this repository. Required gates do not install dependencies or read sibling directories; the portable
-  attestation is emitted twice and the bytes must match exactly.
+  contains only this repository. Required gates do not install dependencies or read sibling directories.
 
 ## Related
 

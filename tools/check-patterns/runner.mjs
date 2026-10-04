@@ -6,14 +6,7 @@
  */
 
 import path from "node:path";
-import {
-  compareFindings,
-  filesForScope,
-  getWarnMode,
-  isLintSuppressed,
-  resetContext,
-  setKnownRuleNames
-} from "./shared.mjs";
+import { compareFindings, filesForScope, getWarnMode, resetContext } from "./shared.mjs";
 import { runRegexRule } from "./rules-core.mjs";
 
 /** @typedef {import("./shared.mjs").Finding} Finding */
@@ -30,7 +23,6 @@ export function runPatternCheck(options) {
     root: path.resolve(options.root || process.cwd()),
     warnMode: !!options.warnMode
   });
-  setKnownRuleNames(options.rules.map((rule) => rule.name));
 
   /** @type {Finding[]} */
   const findings = [];
@@ -53,11 +45,7 @@ export function runPatternCheck(options) {
         return { ...finding, severity };
       })
       .filter(function (/** @type {Finding} */ finding) {
-        if (rule.name === "invalid-lint-suppression") return true;
-        return (
-          !isLintSuppressed(finding.file, finding.line, rule.name) &&
-          !isConfiguredException(options.configuredExceptions || [], finding, rule.name)
-        );
+        return !isConfiguredException(options.configuredExceptions || [], finding, rule.name);
       })
       .sort(compareFindings);
     byRule[rule.name] = ruleFindings.length;

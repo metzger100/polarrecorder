@@ -18,12 +18,12 @@ npm run check:all
 `npm run check:strict` is an exact alias of `check:all`.
 
 `check:all` is exactly `check:core` plus `test:coverage:check`, the sole coverage half of the gate. `check:core` is
-executed by the signed `tools/portable-core/gate-orchestrator.mjs` role graph, with the local profile supplying product
-adapters in this canonical order:
+executed by the `tools/portable-core/gate-orchestrator.mjs` role graph, with the local profile supplying product
+adapters in this canonical order, exactly the `--roles` list of `check:core`:
 
 ```text
-standard, portable-core, generic-surface, standalone, suppressions, typing, packaging,
-focus, smells, product-contracts, test-split, complexity, scaling, documentation, file-size
+standard, suppressions, typing, packaging, focus, smells, product-contracts, test-split, complexity, scaling,
+documentation, file-size
 ```
 
 | Group                            | Composition                                                                                                                                                                                                                                                         |

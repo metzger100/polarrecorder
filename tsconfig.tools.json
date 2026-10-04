@@ -30,7 +30,6 @@
     "tools/check-patterns/rules.mjs",
     "tools/check-patterns/runner.mjs",
     "tools/check-patterns/shared.mjs",
-    "tools/check-patterns/shared-suppressions.mjs",
     "tools/check-schema.mjs",
     "tools/check-test-focus.mjs",
     "tools/hooks-doctor.mjs",

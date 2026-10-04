@@ -25,7 +25,9 @@ Python standards:
   services.
 - `plugin.py`, `server/polarrecorder/`, `tests/`, `viewer/*.js`, `viewer/*.css`, `viewer/*.html`, `plugin.js`,
   `plugin.mjs`, `tools/**/*.mjs`, `tools/**/*.py`, project Markdown files, and `documentation/**/*.md` have a 400
-  non-empty-line hard limit; `exec-plans/` is exempt.
+  non-empty-line hard limit; `exec-plans/` is exempt. Files close to that limit also carry a lower, reviewed hotspot
+  budget in `tools/quality-policy/hotspot-budgets.json`, enforced by `tests/js/hotspot-budgets.test.mjs`; a budget is
+  never raised to make a change pass, so the file is split or trimmed instead.
 - Each `server/polarrecorder/` module's `Depends:` header must list exactly the intra-package modules it imports — no
   undeclared imports and no stale declarations. Runtime and `TYPE_CHECKING` imports of `polarrecorder.*` both count. The
   runtime import graph must stay acyclic (move type-only edges under `TYPE_CHECKING`). `tools/check-py-dependencies.py`
@@ -70,9 +72,9 @@ Depends: <list of polarrecorder/ module dependencies>
   (`canonical-helper-redefinition`) enforces this against a curated owner map.
 - Do not re-implement a helper that already exists; import the canonical one. The generic `duplicate-functions` rule
   blocks cross-file duplicate function bodies and long copied statement blocks.
-- Lint and type suppressions must name specific codes and carry a reason: `# noqa: <CODES>  # <reason>` and
-  `# type: ignore[<code>]  # <reason>`. Blanket `# noqa`, blanket `# type: ignore`, and file-level `# ruff: noqa` /
-  `# mypy: ignore-errors` are blocked by `check-patterns.mjs`.
+- No in-source lint or type suppression of any kind: no `# noqa` (with or without codes), `# type: ignore`,
+  `# ruff: noqa`, or `# mypy: ignore-errors` comment; fix the root cause. `npm run check:suppressions` enforces this for
+  every maintained file.
 - `TODO` and `FIXME` markers in source and Markdown must use the form `TODO(owner, YYYY-MM-DD): ...`.
 
 JavaScript standards:
@@ -115,9 +117,9 @@ JavaScript standards:
   from `generic/*.mjs` and `project/*.mjs` rule-def files): each rule is `{id, name, scope, severity, run}`, with `name`
   matching one of `PATTERN_RULE_IDS`. Files depending on no Polar Recorder concept live under `generic/`
   (`tests/js/check-patterns-registry.test.mjs` proves the directory is token-free); rules referencing
-  `server/polarrecorder/`, the `Polarrecorder` namespace, `ConfigCache`/`Placeholders`, or Python-specific suppression
-  forms live under `project/`. A rule may honor the generic `pattern-ignore: <rule-name>` suppression comment (on the
-  offending line or the line above) via `fail()`'s optional `lines` argument.
+  `server/polarrecorder/` or the `Polarrecorder` namespace and `ConfigCache`/`Placeholders` live under `project/`. No
+  rule honors an in-source suppression comment; a finding can only be excused by a checker-owned configured exception
+  that names its file, line, rule, owner, and reason.
 - `viewer/*.js` behavioral contracts are executed, not just pattern-matched: `tests/js/viewer-render-contract.test.mjs`
   drives the real scripts through the shared `tools/viewer-harness.mjs` and fails if any contract-valid payload renders
   a `NaN`/`undefined`/`null` token, clobbers a present `0`, or skips the absent-value placeholder. It is the viewer twin

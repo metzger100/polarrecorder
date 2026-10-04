@@ -44,13 +44,19 @@ const GENERIC_SCOPE_KEYS = Object.freeze({
   "duplicate-block-clones": "duplication-source",
   "catch-fallback-without-suppression": "js-runtime-default",
   "internal-contract-fallback": "js-runtime-default",
-  "framework-method-typeof-guard": "js-runtime-default",
-  "invalid-lint-suppression": "generic-source"
+  "framework-method-typeof-guard": "js-runtime-default"
 });
 const CANONICAL_GENERIC_RULE_SET = new Set(CANONICAL_GENERIC_RULE_IDS);
 
+// Canonical generic rules this project does not register because a dedicated gate owns them:
+// `check:suppressions` (tools/portable-core/suppression-engine.mjs) rejects every in-source
+// suppression spelling, so a second, more permissive suppression grammar here could only drift.
+export const UNREGISTERED_GENERIC_RULE_IDS = Object.freeze(["invalid-lint-suppression"]);
+
 /** @type {Rule[]} */
-export const GENERIC_RULES = CANONICAL_GENERIC_RULE_IDS.map((name) => ({
+export const GENERIC_RULES = CANONICAL_GENERIC_RULE_IDS.filter(
+  (name) => !UNREGISTERED_GENERIC_RULE_IDS.includes(name)
+).map((name) => ({
   id: name,
   name,
   severity: /** @type {"block"} */ ("block"),

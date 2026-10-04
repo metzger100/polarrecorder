@@ -811,6 +811,12 @@ AGENTS.md §12 fixture sync:
   `node tools/check-patterns.mjs` invocations 2 -> 1 (the `smells` role); `format:check` once (the `standard` role).
   `test:tools` 366 -> 356 tests: 12 per-role spawn tests and the repository format test removed, one failing spawn test
   kept, and one in-process stop-on-failure test over every `check:core` role and one `docs:check` wiring test added.
+- Phase 10 suppression coverage: `tests/js/suppression-policy.test.mjs` now proves that `check:suppressions` rejects
+  every suppression spelling the unregistered pattern rule flagged (the Python lint, type, ruff, flake8, and mypy forms,
+  including the coded-with-reason forms the old rule allowed, the ESLint disable forms, and both plugin marker
+  families). The one spelling the old rule matched that the byte-identical engine does not is a bare ESLint re-enable
+  directive; it cannot suppress anything, any disable it would pair with is rejected, and ESLint reports it under
+  `noInlineConfig`.
 - Phase 11 inventory decision: _pending_
 
 ## Related

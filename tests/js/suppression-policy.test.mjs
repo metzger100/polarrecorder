@@ -30,3 +30,33 @@ test("generated Python and JavaScript directives fail", () => {
   assert.equal(result.ok, false);
   assert.equal(result.findings.length, 2);
 });
+
+test("every suppression spelling the retired pattern grammar flagged is rejected", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "suppression-spellings-"));
+  const python = [
+    `# ${"noqa"}`,
+    `value = 1  # ${"noqa"}: F401  # documented reason`,
+    `# ${"type"}: ignore`,
+    `value = 2  # ${"type"}: ignore[attr-defined]  # documented reason`,
+    `# ${"ruff"}: ${"noqa"}`,
+    `# ${"flake8"}: ${"noqa"}`,
+    `# ${"mypy"}: ignore-errors`
+  ];
+  const javascript = [
+    `// ${"plugin-lint-disable"}-next-line some-rule -- documented reason`,
+    `// ${"plugin-lint-disable"}-line some-rule -- documented reason`,
+    `// ${"plugin-lint-disable"}-next-line`,
+    `// ${"plugin-boundary"}-next-line(category: host, owner: tests) -- documented reason`,
+    `/* ${"eslint-disable"} */`,
+    `// ${"eslint-disable"}-next-line no-undef`,
+    `const value = 1; // ${"eslint-disable"}-line no-undef`
+  ];
+  fs.writeFileSync(path.join(root, "bad.py"), python.join("\n"));
+  fs.writeFileSync(path.join(root, "bad.mjs"), javascript.join("\n"));
+
+  const result = runSuppressionCheck({ root, print: false });
+  fs.rmSync(root, { recursive: true, force: true });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.findings.length, python.length + javascript.length);
+});

@@ -20,8 +20,7 @@
     "duplicate-block-clones",
     "catch-fallback-without-suppression",
     "internal-contract-fallback",
-    "framework-method-typeof-guard",
-    "invalid-lint-suppression"
+    "framework-method-typeof-guard"
   ],
   "scopes": {
     "absolute-home-path": {
@@ -105,7 +104,6 @@
     "python-domain": { "include": ["server/polarrecorder/**/*.py"] },
     "plugin-shell": { "include": ["plugin.py"] },
     "duplication-source": { "include": ["viewer/*.js", "plugin.js", "plugin.mjs", "server/polarrecorder/**/*.py"] },
-    "generic-source": { "include": ["viewer/*.js", "plugin.js", "plugin.mjs", "server/polarrecorder/**/*.py"] },
     "markdown-todo": {
       "include": [
         "documentation/**/*.md",

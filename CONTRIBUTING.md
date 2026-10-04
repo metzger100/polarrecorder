@@ -75,7 +75,7 @@ path.
   and `npm run check:all` (`check:core` plus coverage, required before handoff/push/release) are documented in full in
   [quality gates](documentation/conventions/quality-gates.md).
 - Polar Recorder is a Python/JavaScript product profile and an extraction example for a future generic AvNav plugin
-  environment. Its command graph is signed and profile-driven.
+  environment. Its command graph is profile-driven.
 - Releases are prepared, validated, and created locally (`npm run release:prepare`, manual notes/version review,
   `npm run release:create -- --version=X.Y.Z`, then `git push --tags`); before pushing the tag, run the manual
   [manual AvNav validation checklist](documentation/guides/manual-avnav-validation.md) against a real AvNav host and

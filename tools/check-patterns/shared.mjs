@@ -2,9 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { maskCode, maskStringsOnly } from "./ast-utils.mjs";
-import { resetSuppressionState, setKnownRuleNames } from "./shared-suppressions.mjs";
-
-export { getInvalidLintSuppressions, isLintSuppressed, setKnownRuleNames } from "./shared-suppressions.mjs";
 
 /** @typedef {{text: string, lineStarts: number[], masked: string, maskedStringsOnly: string}} FileData */
 /** @typedef {{file: string, line: number, message: string, [key: string]: any}} Finding */
@@ -59,7 +56,7 @@ const scopeCache = new Map();
 
 /**
  * Point the engine at a (possibly fake) workspace root and reset every
- * per-run cache and the suppression state for a fresh run.
+ * per-run cache for a fresh run.
  * @param {{root?: string, warnMode?: boolean}} [options]
  * @returns {void}
  */
@@ -68,8 +65,6 @@ export function resetContext(options = {}) {
   WARN_MODE = !!options.warnMode;
   fileCache.clear();
   scopeCache.clear();
-  resetSuppressionState();
-  setKnownRuleNames([]);
 }
 
 /** @returns {boolean} */

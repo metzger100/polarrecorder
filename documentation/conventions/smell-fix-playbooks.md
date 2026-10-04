@@ -95,13 +95,14 @@ move the problem. Each playbook names the rule, the checker that raises it, and 
   placeholder. Do not add per-field defensive guards — fix the producer or the presence check. The contract only ever
   feeds contract-valid payloads, so a failure is a real rendering bug.
 
-### Unjustified suppression (`*-suppression`)
+### In-source suppression comment
 
-- **Checker:** `tools/check-patterns.mjs`.
-- **Why it fires:** A blanket `# noqa` / `# type: ignore`, a file-level suppression, or a viewer `eslint-disable` /
-  `@ts-ignore`.
-- **Fix:** Remove the suppression and fix the underlying lint/type error. If a suppression is genuinely warranted, name
-  the specific code and add a trailing `# <reason>`; file-level and blanket suppressions are never allowed.
+- **Checker:** `npm run check:suppressions` (`tools/portable-core/suppression-engine.mjs`); ESLint independently for JS.
+- **Why it fires:** Any suppression directive in a maintained comment: `# noqa` (even with specific codes and a reason),
+  `# type: ignore`, a file-level suppression, `eslint-disable`, `@ts-ignore`, `prettier-ignore`, a coverage ignore, or a
+  checker marker.
+- **Fix:** Remove the comment and fix the underlying lint, type, or format error. There is no sanctioned suppression
+  syntax; a pattern-checker false positive is handled by a checker-owned configured exception with an owner and reason.
 
 ## Related
 

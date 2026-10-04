@@ -1,5 +1,9 @@
 /**
- * Self-tests for the fail-closed suppression grammar.
+ * The pattern runner honors no in-source suppression: a finding on or after a line carrying any
+ * directive-like comment is still reported, and only a checker-owned configured exception (file,
+ * line, rule, owner, reason) can filter one. `check:suppressions` separately rejects the directive
+ * comments themselves (see suppression-policy.test.mjs). Directive text is assembled at runtime so
+ * this file carries no directive comment of its own.
  */
 
 import assert from "node:assert/strict";
@@ -8,109 +12,71 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "vitest";
 
-import {
-  resetContext,
-  isLintSuppressed,
-  getInvalidLintSuppressions,
-  setKnownRuleNames
-} from "../../tools/check-patterns/shared.mjs";
+import { runPatternCheck } from "../../tools/check-patterns/runner.mjs";
+
+/** @typedef {import("../../tools/check-patterns/shared.mjs").Rule} Rule */
+
+/** @type {Rule} */
+const PROBE_RULE = {
+  id: "probe-token",
+  name: "probe-token",
+  severity: "block",
+  scope: { include: ["*.js"] },
+  detect: /probeToken/,
+  message: (/** @type {{file: string, line: number}} */ context) => `${context.file}:${context.line}: probe token`
+};
+
+const DIRECTIVES = [
+  `// ${"plugin-lint-disable"}-next-line probe-token -- documented reason`,
+  `// ${"plugin-boundary"}-next-line(category: host, owner: tests) -- documented reason`,
+  `// ${"pattern-ignore"}: probe-token`,
+  `/* ${"eslint-disable"} */`
+];
 
 /**
- * @param {string} content
+ * @param {string[]} lines
  * @returns {string}
  */
-function makeFixtureRoot(content) {
+function makeFixtureRoot(lines) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "pattern-suppression-"));
-  fs.writeFileSync(path.join(root, "sample.js"), content);
+  fs.writeFileSync(path.join(root, "sample.js"), lines.join("\n"));
   return root;
 }
 
-test("a well-formed lint marker naming a known rule is still forbidden", () => {
-  const root = makeFixtureRoot(
-    ["// plugin-lint-disable-next-line some-rule -- documented false positive", "const x = 1;"].join("\n")
+test("no in-source directive suppresses a pattern finding", () => {
+  for (const directive of DIRECTIVES) {
+    const root = makeFixtureRoot([directive, "const probeToken = 1;", `const copy = probeToken; ${directive}`]);
+    const result = runPatternCheck({ root, rules: [PROBE_RULE], print: false });
+    fs.rmSync(root, { recursive: true, force: true });
+
+    assert.deepEqual(
+      result.findings.map((finding) => finding.line),
+      [2, 3],
+      directive
+    );
+  }
+});
+
+test("a configured exception is the only filter for a pattern finding", () => {
+  const root = makeFixtureRoot(["const probeToken = 1;", "const copy = probeToken;"]);
+  const exception = { file: "sample.js", line: 1, rule: "probe-token", owner: "tests", reason: "fixture" };
+
+  const result = runPatternCheck({ root, rules: [PROBE_RULE], print: false, configuredExceptions: [exception] });
+  fs.rmSync(root, { recursive: true, force: true });
+
+  assert.deepEqual(
+    result.findings.map((finding) => finding.line),
+    [2]
   );
-  resetContext({ root });
-  setKnownRuleNames(["some-rule"]);
-  assert.equal(isLintSuppressed("sample.js", 2, "some-rule"), false);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("is forbidden"));
 });
 
-test("a lint marker referencing an unknown rule is invalid", () => {
-  const root = makeFixtureRoot(
-    ["// plugin-lint-disable-next-line unknown-rule -- some reason", "const x = 1;"].join("\n")
+test("a configured exception without an owner and reason is rejected", () => {
+  const root = makeFixtureRoot(["const probeToken = 1;"]);
+  const exception = { file: "sample.js", line: 1, rule: "probe-token", owner: "", reason: "" };
+
+  assert.throws(
+    () => runPatternCheck({ root, rules: [PROBE_RULE], print: false, configuredExceptions: [exception] }),
+    /Invalid configured pattern exception/
   );
-  resetContext({ root });
-  setKnownRuleNames(["some-rule"]);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("unknown rule"));
-});
-
-test("a lint marker missing a reason is invalid", () => {
-  const root = makeFixtureRoot(["// plugin-lint-disable-next-line some-rule --", "const x = 1;"].join("\n"));
-  resetContext({ root });
-  setKnownRuleNames(["some-rule"]);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-});
-
-test("a malformed lint marker is invalid", () => {
-  const root = makeFixtureRoot(["// plugin-lint-disable-next-line", "const x = 1;"].join("\n"));
-  resetContext({ root });
-  setKnownRuleNames(["some-rule"]);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("Malformed"));
-});
-
-test("a well-formed boundary marker is forbidden and suppresses nothing", () => {
-  const root = makeFixtureRoot(
-    [
-      "// plugin-boundary-next-line(category: host-window, owner: alice, date: 2026-01-01) -- window.name may be absent",
-      "const x = 1;"
-    ].join("\n")
-  );
-  resetContext({ root });
-  setKnownRuleNames([]);
-  assert.equal(isLintSuppressed("sample.js", 2, "catch-fallback-without-suppression"), false);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("forbidden"));
-});
-
-test("a plugin-boundary marker missing a required field is invalid", () => {
-  const root = makeFixtureRoot(
-    ["// plugin-boundary-next-line(category: host-window, date: 2026-01-01) -- missing owner", "const x = 1;"].join(
-      "\n"
-    )
-  );
-  resetContext({ root });
-  setKnownRuleNames([]);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("forbidden"));
-});
-
-test("an expired plugin-boundary marker is invalid", () => {
-  const root = makeFixtureRoot(
-    [
-      "// plugin-boundary-next-line(category: host-window, owner: alice, date: 2020-01-01, expires: 2020-02-01) -- old",
-      "const x = 1;"
-    ].join("\n")
-  );
-  resetContext({ root });
-  setKnownRuleNames([]);
-  const invalids = getInvalidLintSuppressions("sample.js");
-  assert.equal(invalids.length, 1);
-  assert.ok(invalids[0].detail.includes("forbidden"));
-});
-
-test("the retired pattern-ignore convention is no longer recognised at all", () => {
-  const root = makeFixtureRoot(["// pattern-ignore: some-rule", "const x = 1;"].join("\n"));
-  resetContext({ root });
-  setKnownRuleNames(["some-rule"]);
-  assert.equal(isLintSuppressed("sample.js", 2, "some-rule"), false);
-  assert.deepEqual(getInvalidLintSuppressions("sample.js"), []);
+  fs.rmSync(root, { recursive: true, force: true });
 });

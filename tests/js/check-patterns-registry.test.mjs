@@ -13,10 +13,13 @@ import { findMatchingBrace } from "../../tools/check-patterns/ast-utils.mjs";
 import { runNamespacePolicyRule } from "../../tools/check-patterns/generic/namespace-policy.mjs";
 import { CANONICAL_GENERIC_RULE_IDS, runGenericRule } from "../../tools/portable-core/generic-rule-engine.mjs";
 import { runRegexRule } from "../../tools/check-patterns/rules-core.mjs";
-import { GENERIC_RULES, PROJECT_RULES } from "../../tools/check-patterns/rules.mjs";
+import { GENERIC_RULES, PROJECT_RULES, UNREGISTERED_GENERIC_RULE_IDS } from "../../tools/check-patterns/rules.mjs";
 
 const ROOT = process.cwd();
 const PROJECT_SCOPES_PATH = path.join(ROOT, "tools", "quality-policy", "project-pattern-scopes.json");
+const REGISTERED_GENERIC_RULE_IDS = CANONICAL_GENERIC_RULE_IDS.filter(
+  (name) => !UNREGISTERED_GENERIC_RULE_IDS.includes(name)
+);
 
 test("every RULES entry names one of PATTERN_RULE_IDS, and every id is covered", () => {
   const registryNames = new Set(RULES.map((rule) => rule.name));
@@ -54,7 +57,14 @@ test("the Tier 2 profile fixes every rule's final classification", () => {
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-lock-acquisition"));
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "plugin-lock-ownership"));
   assert.ok(PROJECT_RULES.some((rule) => rule.name === "domain-time-sleep"));
-  assert.ok(!PROJECT_RULES.some((rule) => rule.name === "invalid-lint-suppression"));
+  assert.ok(!RULES.some((rule) => rule.name === "invalid-lint-suppression"));
+});
+
+test("only the suppression grammar is unregistered, because check:suppressions owns it", () => {
+  assert.deepEqual(UNREGISTERED_GENERIC_RULE_IDS, ["invalid-lint-suppression"]);
+  for (const id of UNREGISTERED_GENERIC_RULE_IDS) {
+    assert.ok(CANONICAL_GENERIC_RULE_IDS.includes(id), `${id} must name a canonical generic rule`);
+  }
 });
 
 test("generic engine helpers remain direct-importable manifest targets", () => {
@@ -63,7 +73,7 @@ test("generic engine helpers remain direct-importable manifest targets", () => {
   assert.equal(typeof runNamespacePolicyRule, "function");
   assert.deepEqual(
     GENERIC_RULES.map((rule) => rule.name),
-    CANONICAL_GENERIC_RULE_IDS
+    REGISTERED_GENERIC_RULE_IDS
   );
   assert.deepEqual(runGenericRule(CANONICAL_GENERIC_RULE_IDS[0], []), []);
 });
@@ -78,5 +88,5 @@ test("every generic rule has a clean corpus invocation", () => {
 
 test("the registry remains fail-closed when a canonical rule is omitted", () => {
   const names = GENERIC_RULES.map((rule) => rule.name);
-  assert.notDeepEqual(names.slice(0, -1), CANONICAL_GENERIC_RULE_IDS);
+  assert.notDeepEqual(names.slice(0, -1), REGISTERED_GENERIC_RULE_IDS);
 });

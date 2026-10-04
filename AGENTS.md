@@ -209,9 +209,9 @@ masks contract gaps, re-doing work the pipeline already did, and inventing senti
   downstream code consumes already-converted values.
 - Never duplicate a model or validation threshold inline. Reference the named config or constant (see the
   magic-threshold smell); ruff `PLR2004` blocks magic values in comparisons.
-- Never silence the gate: lint and type suppressions must name specific codes and carry a reason
-  (`# noqa: <CODES>  # <reason>`, `# type: ignore[<code>]  # <reason>`); blanket and file-level suppressions are blocked
-  by `check-patterns.mjs`.
+- Never silence the gate: maintained source carries no in-source suppression comment of any kind (no `# noqa`,
+  `# type: ignore`, `eslint-disable`, `@ts-ignore`, `prettier-ignore`, or checker markers); fix the root cause.
+  `npm run check:suppressions` enforces this.
 - Never weaken or delete a test, lower a coverage threshold, skip a check, or suppress a smell to obtain a green gate.
   Fix the root cause; a passing `npm run check:all` must reflect real behavior.
 
