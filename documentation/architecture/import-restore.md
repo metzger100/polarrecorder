@@ -21,7 +21,7 @@ value; the first failure raises with a stable, user-readable reason and no exter
 
 Learned-data validation order (`server/polarrecorder/restore.py`):
 
-1. Size gate — decoded bytes `<= MAX_IMPORT_BYTES` (4 MiB).
+1. Size gate — decoded bytes `<= MAX_IMPORT_BYTES` (12 MiB).
 2. JSON-object gate — parses as JSON and is an object.
 3. Provenance gate — int `schema_version`, a `config` object with `twa_bin_size`/`tws_bin_size`, a `bins` object, and a
    `counters` object; else rejected as "not a Polar Recorder backup".
@@ -61,7 +61,23 @@ buffer with a `kind` discriminator and an upload token:
 - `import/commit?token=&confirm=yes` — verifies the token, requires `confirm=yes` (an unconfirmed commit errors but
   **keeps** staging for a retry), assembles the parts, clears staging, then validates **outside** the lock and applies
   by kind.
-- `import/abort` — clears staging idempotently.
+- `import/abort?token=` — clears staging only when `token` equals the active upload token. With no active upload, or a
+  different or missing token, it returns `ok({})` and changes nothing, so a failing upload in one tab can never abort
+  another tab's upload.
+
+`MAX_IMPORT_BYTES` (12 MiB, 12,582,912 bytes) must stay at or below `Plugin.MAX_IMPORT_CHUNKS` (4096) times the viewer's
+4000-character chunk (16,384,000), so the chunk cap never binds before the byte cap for ASCII JSON.
+`tests/test_import_flow.py` pins that relation.
+
+### Viewer upload contract
+
+The Settings tab downloads both backups as compact JSON (`JSON.stringify(data)`, no indentation), which keeps realistic
+learned-data backups well below the cap. `ImportUpload.UploadBackup` reads `max_bytes` and `max_chunks` from
+`import/begin`, computes the UTF-8 byte length (`TextEncoder`) and the chunk count, and when either exceeds its limit
+aborts that token and reports the file size and the limit in MiB before any `import/chunk` is sent. Otherwise it sends
+the chunks sequentially and reports `sent / total` progress, which Settings shows as "Uploading backup… n / N". While an
+upload runs, both Restore buttons and both file inputs stay disabled; they are re-enabled when the upload or the
+`FileReader` read settles, and a `FileReader` error is shown in the Settings message line.
 
 ### Apply paths (replace semantics)
 

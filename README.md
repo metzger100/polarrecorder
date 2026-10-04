@@ -160,7 +160,9 @@ To restore:
 3. Click **Restore Learned Data** or **Restore Presets**.
 
 Invalid or incompatible backups are rejected without changing current data. Restore is replace-only and backups are
-limited to 4 MiB. See [Export and import](documentation/user/export-import.md) for compatibility rules.
+limited to 12 MiB. Downloads are compact JSON, so realistic learned-data backups stay well below that limit; a larger
+file is rejected before upload starts. See [Export and import](documentation/user/export-import.md) for compatibility
+rules.
 
 ### Enhanced Rules (optional signals)
 

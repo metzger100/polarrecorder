@@ -10,10 +10,10 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
 
   /** @typedef {{wrap: HTMLLabelElement, control: HTMLInputElement}} FieldResult */
-  /** @typedef {{messageNode: HTMLElement}} SettingsState */
+  /** @typedef {{messageNode: HTMLElement, restoreControls: Array<HTMLButtonElement | HTMLInputElement>}} SettingsState */
 
   /** @type {SettingsState} */
-  const state = { messageNode: document.createElement("p") };
+  const state = { messageNode: document.createElement("p"), restoreControls: [] };
 
   function init() {
     const host = Polarrecorder.Dom.RequireById("settings-panel");
@@ -129,6 +129,7 @@ window.Polarrecorder = window.Polarrecorder || {};
       },
       "danger-action"
     );
+    state.restoreControls.push(fileInput, confirmButton);
     group.appendChild(fileInput);
     group.appendChild(Polarrecorder.Dom.ActionRow([choose]));
     group.appendChild(chosen);
@@ -152,11 +153,26 @@ window.Polarrecorder = window.Polarrecorder || {};
       setMessage("Choose a backup file first.", "error");
       return;
     }
+    setRestoreBusy(true);
     const reader = new FileReader();
     reader.addEventListener("load", function () {
       runUpload(kind, String(reader.result), field);
     });
+    reader.addEventListener("error", function () {
+      setRestoreBusy(false);
+      setMessage("Could not read the backup file.", "error");
+    });
     reader.readAsText(file);
+  }
+
+  /**
+   * Keeps restores single-flight: every restore button and file input is disabled until the upload settles.
+   * @param {boolean} busy
+   */
+  function setRestoreBusy(busy) {
+    state.restoreControls.forEach(function (control) {
+      control.disabled = busy;
+    });
   }
 
   /**
@@ -170,12 +186,21 @@ window.Polarrecorder = window.Polarrecorder || {};
       text,
       /** @param {string} summary */
       function (summary) {
+        setRestoreBusy(false);
         field.control.value = "";
         setMessage(summary, "info");
       },
       /** @param {string} error */
       function (error) {
+        setRestoreBusy(false);
         setMessage(error, "error");
+      },
+      /**
+       * @param {number} sent
+       * @param {number} total
+       */
+      function (sent, total) {
+        setMessage("Uploading backup… " + String(sent) + " / " + String(total), "info");
       }
     );
   }
@@ -288,7 +313,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function downloadJson() {
     fetchJson("export/json")
       .then(function (data) {
-        Polarrecorder.Dom.Download("polarrecorder-backup.json", JSON.stringify(data, null, 2), "application/json");
+        Polarrecorder.Dom.Download("polarrecorder-backup.json", JSON.stringify(data), "application/json");
         setMessage("Backup downloaded.", "info");
       })
       .catch(function (error) {
@@ -299,7 +324,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   function downloadPresets() {
     fetchJson("export/presets")
       .then(function (data) {
-        Polarrecorder.Dom.Download("polarrecorder-presets.json", JSON.stringify(data, null, 2), "application/json");
+        Polarrecorder.Dom.Download("polarrecorder-presets.json", JSON.stringify(data), "application/json");
         setMessage("Presets downloaded.", "info");
       })
       .catch(function (error) {

@@ -61,13 +61,51 @@ function responder(endpoint) {
       ]
     });
   }
-  if (endpoint.startsWith("export/json")) return ok({ schema_version: 1, bins: {} });
+  if (endpoint.startsWith("export/json")) {
+    return ok({ schema_version: 1, bins: { "90_12": { histogram: { 60: 2 }, total_accepted: 2 } } });
+  }
   return defaultResponseBody(endpoint);
 }
 
-/** @returns {Promise<{env: Environment, panel: FakeElement}>} */
-async function openSettings() {
-  const env = createEnvironment({ responder });
+/** Minimal FileReader stand-in: `load` delivers `file.text`; a file marked unreadable fires `error`. */
+class FakeFileReader {
+  constructor() {
+    /** @type {string | null} */
+    this.result = null;
+    /** @type {Record<string, () => void>} */
+    this.listeners = {};
+  }
+
+  /**
+   * @param {string} name
+   * @param {() => void} callback
+   */
+  addEventListener(name, callback) {
+    this.listeners[name] = callback;
+  }
+
+  /** @param {{text?: string, unreadable?: boolean}} file */
+  readAsText(file) {
+    Promise.resolve().then(() => {
+      if (file.unreadable) {
+        this.listeners.error();
+        return;
+      }
+      this.result = file.text ?? "";
+      this.listeners.load();
+    });
+  }
+}
+
+/**
+ * @param {(endpoint: string) => ApiResponse | undefined} [override]
+ * @returns {Promise<{env: Environment, panel: FakeElement}>}
+ */
+async function openSettings(override) {
+  const env = createEnvironment({
+    responder: (endpoint) => (override && override(endpoint)) || responder(endpoint)
+  });
+  /** @type {Record<string, unknown>} */ (env.context).FileReader = FakeFileReader;
   for (const name of SETTINGS_MODULES) loadViewerFile(env, name);
   env.fireDOMContentLoaded();
   await flushViewer();
@@ -130,6 +168,30 @@ function fire(node, name) {
   const handler = /** @type {Record<string, unknown>} */ (node)["on" + name];
   assert.equal(typeof handler, "function", `expected a ${name} listener`);
   /** @type {() => void} */ (handler)();
+}
+
+/**
+ * @param {FakeElement} panel
+ * @param {string} cardTitle
+ * @param {Record<string, unknown>} file
+ */
+function chooseAndConfirm(panel, cardTitle, file) {
+  const restore = cardByTitle(panel, cardTitle).querySelectorAll(".settings-group")[1];
+  const fileInput = inputOfType(restore, "file");
+  /** @type {Record<string, unknown>} */ (fileInput).files = [file];
+  fire(fileInput, "change");
+  inputOfType(restore, "text").value = "RESTORE";
+}
+
+/**
+ * @param {FakeElement} panel
+ * @returns {FakeElement[]}
+ */
+function restoreControls(panel) {
+  const inputs = descendants(panel, function (node) {
+    return node.tagName === "input" && /** @type {Record<string, unknown>} */ (node).type === "file";
+  });
+  return [...inputs, buttonByText(panel, "Restore Learned Data"), buttonByText(panel, "Restore Presets")];
 }
 
 /**
@@ -199,4 +261,97 @@ test("a settings message renders once with the matching class", async () => {
   assert.equal(infos[0].className, "helper");
   assert.equal(infos[0], errors[0], "the same message node is reused");
   assert.equal(messageNodes(panel, "Type RESET before confirming.").length, 0);
+});
+
+test("backup downloads are compact JSON", async () => {
+  const { env, panel } = await openSettings();
+  /** @type {string[]} */
+  const downloads = [];
+  const dom = /** @type {{Download: (name: string, text: string) => void}} */ (env.window.Polarrecorder.Dom);
+  dom.Download = function (_name, text) {
+    downloads.push(text);
+  };
+
+  buttonByText(panel, "Download Learned Data").click();
+  buttonByText(panel, "Download Presets").click();
+  await flushViewer();
+
+  assert.equal(downloads.length, 2);
+  for (const text of downloads) {
+    assert.ok(!text.includes("\n") && !text.includes("  "), text);
+    assert.equal(text, JSON.stringify(JSON.parse(text)));
+  }
+});
+
+test("an oversized backup fails before the first chunk is sent", async () => {
+  const { env, panel } = await openSettings(function (endpoint) {
+    if (!endpoint.startsWith("import/begin")) return undefined;
+    return ok({ token: "big-token", kind: "learned-data", max_bytes: 1048576, max_chunks: 4096 });
+  });
+  chooseAndConfirm(panel, "Learned Data", { name: "huge.json", text: "x".repeat(1572864) });
+
+  buttonByText(panel, "Restore Learned Data").click();
+  await flushViewer();
+  await flushViewer();
+
+  assert.ok(
+    env.requests.some((url) => url.includes("import/begin")),
+    env.requests.join(" | ")
+  );
+  assert.ok(!env.requests.some((url) => url.includes("import/chunk")), env.requests.join(" | "));
+  assert.ok(
+    env.requests.some((url) => url.endsWith("import/abort?token=big-token")),
+    env.requests.join(" | ")
+  );
+  const errors = messageNodes(panel, "Backup file is 1.5 MiB, above the 1.0 MiB restore limit.");
+  assert.equal(errors.length, 1, textTree(panel));
+  assert.equal(errors[0].className, "error-text");
+  assert.ok(restoreControls(panel).every((control) => !control.disabled));
+});
+
+test("restore controls stay disabled while an upload runs", async () => {
+  /** @type {FakeElement[]} */
+  let controls = [];
+  /** @type {boolean[]} */
+  const disabledDuringChunk = [];
+  /** @type {string[]} */
+  const messagesAtCommit = [];
+  /** @type {FakeElement | null} */
+  let panelRef = null;
+  const { panel } = await openSettings(function (endpoint) {
+    if (endpoint.startsWith("import/chunk")) {
+      disabledDuringChunk.push(...controls.map((control) => control.disabled));
+    }
+    if (endpoint.startsWith("import/commit") && panelRef) {
+      messagesAtCommit.push(textTree(panelRef));
+    }
+    return undefined;
+  });
+  panelRef = panel;
+  controls = restoreControls(panel);
+  assert.equal(controls.length, 4);
+  chooseAndConfirm(panel, "Learned Data", { name: "backup.json", text: '{"schema_version":1}' });
+
+  buttonByText(panel, "Restore Learned Data").click();
+  await flushViewer();
+  await flushViewer();
+
+  assert.deepEqual(disabledDuringChunk, [true, true, true, true]);
+  assert.ok(messagesAtCommit[0].includes("Uploading backup… 1 / 1"), messagesAtCommit.join(" | "));
+  assert.ok(controls.every((control) => !control.disabled));
+  assert.ok(textTree(panel).includes("Restored 4 bins"), textTree(panel));
+});
+
+test("a FileReader error is surfaced and re-enables restore", async () => {
+  const { env, panel } = await openSettings();
+  chooseAndConfirm(panel, "Presets", { name: "broken.json", unreadable: true });
+
+  buttonByText(panel, "Restore Presets").click();
+  await flushViewer();
+
+  const errors = messageNodes(panel, "Could not read the backup file.");
+  assert.equal(errors.length, 1, textTree(panel));
+  assert.equal(errors[0].className, "error-text");
+  assert.ok(!env.requests.some((url) => url.includes("import/begin")), env.requests.join(" | "));
+  assert.ok(restoreControls(panel).every((control) => !control.disabled));
 });

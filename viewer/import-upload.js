@@ -9,8 +9,9 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   const Polarrecorder = window.Polarrecorder;
   const IMPORT_CHUNK_CHARS = 4000;
+  const BYTES_PER_MIB = 1024 * 1024;
 
-  /** @typedef {{token: string}} ImportBeginResponse */
+  /** @typedef {{token: string, max_bytes: number, max_chunks: number}} ImportBeginResponse */
   /**
    * @typedef {{
    *   presets_restored?: number,
@@ -21,17 +22,26 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
 
   /**
+   * Uploads one backup; an oversized file is rejected after `import/begin` and before any chunk is sent.
    * @param {string} kind
    * @param {string} text
    * @param {(summary: string) => void} onSummary
    * @param {(message: string) => void} onError
+   * @param {(sent: number, total: number) => void} onProgress
    */
-  function uploadBackup(kind, text, onSummary, onError) {
+  function uploadBackup(kind, text, onSummary, onError, onProgress) {
     let token = "";
     fetchJson("import/begin?kind=" + encodeURIComponent(kind))
-      .then(function (begin) {
+      .then(function (/** @type {ImportBeginResponse} */ begin) {
         token = begin.token;
-        return sendChunks(token, text);
+        const total = Math.ceil(text.length / IMPORT_CHUNK_CHARS);
+        const bytes = new TextEncoder().encode(text).length;
+        if (bytes > begin.max_bytes || total > begin.max_chunks) {
+          throw new Error(
+            "Backup file is " + mebibytes(bytes) + ", above the " + mebibytes(begin.max_bytes) + " restore limit."
+          );
+        }
+        return sendChunks(token, text, total, onProgress);
       })
       .then(function () {
         return fetchJson("import/commit?token=" + encodeURIComponent(token) + "&confirm=yes");
@@ -48,27 +58,39 @@ window.Polarrecorder = window.Polarrecorder || {};
   /**
    * @param {string} token
    * @param {string} text
+   * @param {number} total
+   * @param {(sent: number, total: number) => void} onProgress
    * @returns {Promise<void>}
    */
-  function sendChunks(token, text) {
+  function sendChunks(token, text, total, onProgress) {
     let chain = Promise.resolve();
-    let seq = 0;
-    for (let start = 0; start < text.length; start += IMPORT_CHUNK_CHARS) {
+    for (let index = 0; index < total; index += 1) {
+      const start = index * IMPORT_CHUNK_CHARS;
       const slice = text.slice(start, start + IMPORT_CHUNK_CHARS);
-      const index = seq;
-      chain = chain.then(function () {
-        return fetchJson(
-          "import/chunk?token=" +
-            encodeURIComponent(token) +
-            "&seq=" +
-            String(index) +
-            "&data=" +
-            encodeURIComponent(slice)
-        );
-      });
-      seq += 1;
+      chain = chain
+        .then(function () {
+          return fetchJson(
+            "import/chunk?token=" +
+              encodeURIComponent(token) +
+              "&seq=" +
+              String(index) +
+              "&data=" +
+              encodeURIComponent(slice)
+          );
+        })
+        .then(function () {
+          onProgress(index + 1, total);
+        });
     }
     return chain;
+  }
+
+  /**
+   * @param {number} bytes
+   * @returns {string}
+   */
+  function mebibytes(bytes) {
+    return (bytes / BYTES_PER_MIB).toFixed(1) + " MiB";
   }
 
   /** @param {string} token */

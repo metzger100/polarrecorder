@@ -61,8 +61,8 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   `EnhancedSettings`, the Settings tab's fourth card, mounted by `settings-ui.js` so the transport-heavy markup stays
   out of the Settings budget. `viewer/presets.js` adds `Presets`, owning the built-in fallback list and display labels
   so `viewer.js` stays within its line budget. `viewer/import-upload.js` adds `ImportUpload`, the shared chunked-upload
-  helper (`UploadBackup(kind, text, onSummary, onError)`) used by both Settings restore cards, keeping the transport in
-  one place and `settings-ui.js` under its budget.
+  helper (`UploadBackup(kind, text, onSummary, onError, onProgress)`) used by both Settings restore cards, keeping the
+  transport in one place and `settings-ui.js` under its budget.
 - The viewer defaults to the `DefaultStarboard180` preset (label "Default (Starboard 180°)"). The preset selector also
   offers `DefaultPort180` ("Default (Port 180°)", the mirrored 180-360 deg half), `Default360` ("Default (360°)"), and
   the legacy `windy` ("Windy Passage Planner"); `Presets.Fallback()` mirrors all four when the `presets` fetch fails.

@@ -148,11 +148,46 @@ def test_post_abort_use_is_rejected(tmp_path: Path) -> None:
     plugin, _api = make_plugin(tmp_path)
     begin = response_data(request(plugin, "import/begin", kind="learned-data"))
     token = str(begin["token"])
-    assert request(plugin, "import/abort")["status"] == "OK"
+    assert request(plugin, "import/abort", token=token)["status"] == "OK"
 
     response = request(plugin, "import/chunk", token=token, seq="0", data="{}")
 
     assert response["status"] == "ERROR"
+
+
+def test_abort_with_a_foreign_token_keeps_the_active_import(tmp_path: Path) -> None:
+    plugin, _api = make_plugin(tmp_path)
+    begin = response_data(request(plugin, "import/begin", kind="learned-data"))
+    token = str(begin["token"])
+    assert request(plugin, "import/chunk", token=token, seq="0", data="{")["status"] == "OK"
+
+    foreign_args = {"token": "other-tab"}
+    foreign = request(plugin, "import/abort", **foreign_args)
+    tokenless = request(plugin, "import/abort")
+
+    assert foreign == tokenless == {"status": "OK", "data": {}}
+    assert plugin._import_token == token
+    assert plugin._import_parts == ["{"]
+    assert request(plugin, "import/chunk", token=token, seq="1", data="}")["status"] == "OK"
+
+
+def test_abort_with_the_matching_token_clears_staging(tmp_path: Path) -> None:
+    plugin, _api = make_plugin(tmp_path)
+    begin = response_data(request(plugin, "import/begin", kind="presets"))
+    token = str(begin["token"])
+    assert request(plugin, "import/chunk", token=token, seq="0", data="{")["status"] == "OK"
+
+    aborted = request(plugin, "import/abort", token=token)
+    idle = request(plugin, "import/abort", token=token)
+
+    assert aborted == idle == {"status": "OK", "data": {}}
+    assert plugin._import_token is None
+    assert plugin._import_parts == []
+
+
+def test_byte_cap_never_exceeds_the_ascii_chunk_capacity() -> None:
+    assert import_common.MAX_IMPORT_BYTES == 12 * 1024 * 1024
+    assert import_common.MAX_IMPORT_BYTES <= plugin_module.Plugin.MAX_IMPORT_CHUNKS * CHUNK_CHARS
 
 
 def test_seq_gap_is_rejected(tmp_path: Path) -> None:

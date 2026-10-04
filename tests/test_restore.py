@@ -196,6 +196,32 @@ def test_non_finite_last_update_wall_is_rejected() -> None:
         restore.validate_and_build(json.dumps(payload))
 
 
+def test_compact_realistic_backup_restores() -> None:
+    model = PolarModel()
+    for twa in range(360):
+        for tws in range(16):
+            histogram = {speed: 1000 + speed for speed in range(100, 130)}
+            model.bins[(twa, tws)] = Bin(
+                twa_deg=twa,
+                tws_kt=tws,
+                histogram=histogram,
+                total_accepted=sum(histogram.values()),
+                total_rejected=2,
+                last_update_wall=1_700_000_000.5,
+                rejection_histogram={"reject_unstable": 2},
+            )
+    payload = persistence.serialize_to_dict(
+        model, Counters(), persistence.PersistenceMetadata(created_wall=500.0)
+    )
+    raw = json.dumps(payload, separators=(",", ":"))
+
+    result = restore.validate_and_build(raw)
+
+    assert len(raw.encode("utf-8")) > 2 * 1024 * 1024
+    assert result.bins_restored == 5760
+    assert result.model.bins == model.bins
+
+
 def test_oversize_payload_is_rejected() -> None:
     raw = "a" * (restore.MAX_IMPORT_BYTES + 1)
     with pytest.raises(BackupError, match="too large"):

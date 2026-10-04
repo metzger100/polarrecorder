@@ -153,30 +153,29 @@ async function testImportUpload(env) {
   const recorder = polarrecorderOf(env);
   /** @type {string[]} */
   const summaries = [];
-  recorder.ImportUpload.UploadBackup(
-    "learned-data",
-    '{"schema_version":1}',
-    /** @param {string} text */
-    function (text) {
-      summaries.push(text);
-    },
-    /** @param {string} error */
-    function (error) {
-      summaries.push("error:" + error);
-    }
-  );
-  recorder.ImportUpload.UploadBackup(
-    "presets",
-    '{"schema_version":1}',
-    /** @param {string} text */
-    function (text) {
-      summaries.push(text);
-    },
-    /** @param {string} error */
-    function (error) {
-      summaries.push("error:" + error);
-    }
-  );
+  /** @type {string[]} */
+  const progress = [];
+  for (const kind of ["learned-data", "presets"]) {
+    recorder.ImportUpload.UploadBackup(
+      kind,
+      '{"schema_version":1}',
+      /** @param {string} text */
+      function (text) {
+        summaries.push(text);
+      },
+      /** @param {string} error */
+      function (error) {
+        summaries.push("error:" + error);
+      },
+      /**
+       * @param {number} sent
+       * @param {number} total
+       */
+      function (sent, total) {
+        progress.push(kind + ":" + String(sent) + "/" + String(total));
+      }
+    );
+  }
   await flushViewer();
   await flushViewer();
   await flushViewer();
@@ -188,6 +187,7 @@ async function testImportUpload(env) {
     summaries.some((text) => text.includes("user presets")),
     summaries.join(" | ")
   );
+  assert.deepEqual(progress, ["learned-data:1/1", "presets:1/1"]);
 }
 
 /** @param {Environment} env */

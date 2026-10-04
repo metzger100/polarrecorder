@@ -224,9 +224,10 @@ def _import_commit(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     return api_handlers.ok(plugin._apply_presets_restore(assembled))
 
 
-def _import_abort(plugin: Any, _args: dict[str, str]) -> dict[str, object]:
+def _import_abort(plugin: Any, args: dict[str, str]) -> dict[str, object]:
     with plugin._lock:
-        plugin._reset_import_staging()
+        if plugin._import_token is not None and args.get("token") == plugin._import_token:
+            plugin._reset_import_staging()
     return api_handlers.ok({})
 
 

@@ -74,6 +74,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
 /**
  * @typedef {{
  *   Blob: typeof Blob,
+ *   TextEncoder: typeof TextEncoder,
  *   URL: FakeUrl,
  *   URLSearchParams: typeof URLSearchParams,
  *   document: FakeDocument,
@@ -249,6 +250,7 @@ export function createEnvironment(options = {}) {
   /** @type {FakeContext} */
   const context = {
     Blob,
+    TextEncoder,
     URL: window.URL,
     URLSearchParams,
     document,

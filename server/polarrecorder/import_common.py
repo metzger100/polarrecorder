@@ -9,8 +9,10 @@ from __future__ import annotations
 import json
 from typing import cast
 
-# Maximum decoded size of an uploaded backup, shared by every import kind.
-MAX_IMPORT_BYTES = 4_194_304  # 4 MiB
+# Maximum decoded size of an uploaded backup, shared by every import kind. It must stay at or
+# below Plugin.MAX_IMPORT_CHUNKS times the viewer's 4000-character chunk (16,384,000), so the
+# chunk cap never binds before the byte cap for ASCII JSON.
+MAX_IMPORT_BYTES = 12_582_912  # 12 MiB
 
 
 class BackupError(Exception):

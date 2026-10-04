@@ -121,8 +121,9 @@ mirroring the Reset confirmation:
 Both imports are fail-closed and all-or-nothing: a wrong file, corrupted JSON, a foreign bin grid (learned data), a
 too-new schema, a reserved/built-in preset name, or any out-of-range value is rejected with a precise reason and your
 current state is left completely untouched. Backups are uploaded in chunks over several GET requests (AvNav plugins
-cannot receive POST). The import size cap is 4 MiB. See [import and restore](../architecture/import-restore.md) for the
-full rules.
+cannot receive POST). The import size cap is 12 MiB; backups downloaded from the Settings tab are compact JSON, and a
+larger file is rejected before any part of it is uploaded. See [import and restore](../architecture/import-restore.md)
+for the full rules.
 
 ## Related
 
