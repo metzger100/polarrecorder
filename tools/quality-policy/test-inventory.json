@@ -160,6 +160,9 @@
     "tests/js/viewer-render-contract.test.mjs": {
       "classification": "strict"
     },
+    "tests/js/viewer-settings.test.mjs": {
+      "classification": "strict"
+    },
     "tests/js/viewer-smoke.test.mjs": {
       "classification": "strict"
     },

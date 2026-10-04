@@ -66,6 +66,7 @@
     "tests/js/viewer-polar-bands.test.mjs",
     "tests/js/viewer-polar.test.mjs",
     "tests/js/viewer-render-contract.test.mjs",
+    "tests/js/viewer-settings.test.mjs",
     "tests/js/viewer-smoke.test.mjs",
     "tests/js/viewer-structure-contract.test.mjs",
     "tests/js/viewer-theme.test.mjs",

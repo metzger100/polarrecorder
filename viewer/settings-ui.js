@@ -10,34 +10,30 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
 
   /** @typedef {{wrap: HTMLLabelElement, control: HTMLInputElement}} FieldResult */
-  /**
-   * @typedef {{
-   *   host: HTMLElement | null,
-   *   message: string,
-   *   messageKind: "info" | "error"
-   * }} SettingsState
-   */
+  /** @typedef {{messageNode: HTMLElement}} SettingsState */
 
   /** @type {SettingsState} */
-  const state = { host: null, message: "", messageKind: "info" };
+  const state = { messageNode: document.createElement("p") };
 
   function init() {
     const host = Polarrecorder.Dom.RequireById("settings-panel");
-    state.host = host;
     host.classList.add("has-data");
-    render();
+    render(host);
   }
 
-  function render() {
-    if (!state.host) return;
-    const host = state.host;
+  /**
+   * Builds the Settings cards once; later messages update only the message line.
+   * @param {HTMLElement} host
+   */
+  function render(host) {
     Polarrecorder.Dom.Clear(host);
     host.appendChild(Polarrecorder.SourceSettings.Render());
     host.appendChild(learnedDataCard());
     host.appendChild(presetsCard());
     host.appendChild(Polarrecorder.EnhancedSettings.Render());
     host.appendChild(Polarrecorder.AdvancedSettings.Render());
-    host.appendChild(messageNode());
+    state.messageNode = Polarrecorder.Dom.Node("p", "helper");
+    host.appendChild(state.messageNode);
   }
 
   /** @returns {HTMLElement} */
@@ -320,22 +316,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     return fn(endpoint, { action: true });
   }
 
-  /** @returns {HTMLParagraphElement} */
-  function messageNode() {
-    const node = document.createElement("p");
-    node.className = state.message && state.messageKind === "error" ? "error-text" : "helper";
-    node.textContent = state.message;
-    return node;
-  }
-
   /**
    * @param {string} text
-   * @param {"info" | "error"} [kind]
+   * @param {"info" | "error"} kind
    */
   function setMessage(text, kind) {
-    state.message = text;
-    state.messageKind = kind || "info";
-    render();
+    state.messageNode.className = kind === "error" ? "error-text" : "helper";
+    state.messageNode.textContent = text;
   }
 
   Polarrecorder.SettingsUI = { Init: init };

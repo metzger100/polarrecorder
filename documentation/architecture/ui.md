@@ -75,7 +75,10 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   Reset one carries `.settings-group-danger`). Each restore subsection has a hidden file input behind a "Choose Backup
   File" button, a chosen-filename label, a "Type RESTORE to confirm" field, and a danger button; on confirmation it
   reads the file and drives `ImportUpload.UploadBackup(kind, ...)`, which uploads the JSON in chunks and shows the
-  server's summary or its precise rejection. Reset still requires the `RESET` confirmation.
+  server's summary or its precise rejection. Reset still requires the `RESET` confirmation. `settings-ui.js` builds the
+  Settings cards once per page load; download, restore, and reset messages update only the shared message line below the
+  cards in place (`error-text` or `helper` class), so unsaved edits, a chosen restore file, and typed confirmation text
+  survive every message.
 - Settings also owns a fourth **Enhanced Rules** card (`EnhancedSettings.Render()`), rendered from `GET enhanced/keys`
   and `GET enhanced/status`. Each rule shows an Enabled switch (the shared `.switch-field` control also used by the
   Export tab), one store-key selector per configured key field using the same shared control builder as Data Sources

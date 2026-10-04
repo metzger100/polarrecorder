@@ -791,7 +791,12 @@ AGENTS.md §12 fixture sync:
 
 ## Progress
 
-- Before-state (`check:all` counts, `check:core` wall time): _pending_
+- Before-state (`check:all` counts, `check:core` wall time), measured 2026-10-04 on `817d069`, the clean tree at
+  implementation start (it carries ten commits after the audited `991a241`): `check:all` green. `check:core`: pytest 472
+  passed; `test:tools` 46 files / 366 tests (55.9 s); `test:viewer` 12 files / 67 tests; `test:plugin` 1 / 1;
+  `check:scaling` 26 passed; `package:check` release Vitest 4 files / 36 tests; the five `docs:check` Vitest rungs 25
+  tests. Coverage half: pytest 472 passed at 96.47 %; viewer + plugin 13 files / 68 tests at 93.39 % lines / 75.82 %
+  branches. `check:core` wall time on the implementation machine: 100.9 s.
 - Phase 4 old/new projection equivalence: _pending_
 - Phase 4 `format_polar` timings before/after: _pending_
 - Phase 9 `check:core` wall time after: _pending_
