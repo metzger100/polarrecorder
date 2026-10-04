@@ -2,8 +2,10 @@
 
 ## Status
 
-Active. Authored 2026-09-30 from a read-only repository audit; the owner confirmed findings F1–F9 and the tooling
-findings as true and asked for every smaller finding to be fixed as well.
+Implemented through all twelve phases on 2026-10-04, one commit per phase, each leaving `npm run check:all` green.
+Authored 2026-09-30 from a read-only repository audit; the owner confirmed findings F1–F9 and the tooling findings as
+true and asked for every smaller finding to be fixed as well. The three new manual host checks (Phase 12) remain open
+until they are run against a real AvNav host.
 
 This plan is prescriptive about **behavior, contracts, file ownership, and exit conditions**. It is flexible about exact
 function bodies, helper names that stay private, and test names, as long as they do not cite this plan or a phase
@@ -822,6 +824,22 @@ AGENTS.md §12 fixture sync:
   and tested in `tests/js/test-inventory.test.mjs`: a discovered file outside the include globs fails before `tsc` runs,
   and a type error in a discovered file fails the `tsc` run. `test-inventory.json`, `inventory:write`, and the
   writer/diff logic are gone; the byte-identical `test-inventory-engine.mjs` is untouched.
+- Phase 12 final integration, measured 2026-10-04:
+  - Normal checkout: `npm run check:all` green after every phase and again after this Progress update.
+  - Fresh isolated copy: a `git clone` of this repository plus its current tracked working-tree files, with
+    `node_modules` and `venv` copied in and nothing else in its parent directory, ran `npm run check:all` green in a
+    network namespace with only loopback up (external hosts unreachable), 72.6 s end to end. Loopback is needed because
+    the Linkinator link check serves files over a local server.
+  - After-state counts: pytest 472 -> 482; `test:tools` 46 files / 366 -> 339 tests; `test:viewer` 12 files / 67 -> 13
+    files / 85 tests; `test:plugin` 1 / 1; `check:scaling` 26; the five `docs:check` Vitest rungs and the
+    `package:check` release run are gone (those files run once in `test:tools`). Coverage: Python 96.47 % -> 96.77 %;
+    viewer + plugin 13 files / 68 -> 14 files / 86 tests, lines 93.39 % -> 96.14 %, branches 75.82 % -> 81.55 %.
+  - Portable parity: `git diff --stat 817d069 HEAD` over the 17 byte-identical portable-core files from fact 61 is
+    empty. A manual comparison afterwards shows the sibling checkout changed `generic-rule-structural.mjs` in its own
+    work on 2026-10-04, so that one file no longer matches the sibling; this repository's copy is unchanged.
+  - Manual host checks 13–15 in `documentation/guides/manual-avnav-validation.md` were added and are **open**: no real
+    AvNav host was used here, and booting the local AvNav data directory with a newer-schema `polar.json` would have
+    touched the owner's own recorded data.
 
 ## Related
 
