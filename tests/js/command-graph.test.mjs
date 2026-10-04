@@ -44,7 +44,6 @@ const ALLOWED_OUTSIDE_CHECK_ALL = [
   "requirements:lock",
   "release:prepare",
   "release:create",
-  "inventory:write",
   "check:fast",
   "test:unit",
   "check:strict",
@@ -281,37 +280,10 @@ function makeGraphFixture() {
   for (const file of ["gate-orchestrator.mjs", "gate-role-engine.mjs"]) {
     fs.copyFileSync(path.join(ROOT, "tools/portable-core", file), path.join(root, "tools/portable-core", file));
   }
-  const graph = {
-    schemaVersion: 1,
-    graphVersion: 1,
-    requiredOrder: ["setup", ...REQUIRED_CHECK_CORE_GROUPS, "coverage"],
-    roles: Object.fromEntries(
-      ["setup", ...REQUIRED_CHECK_CORE_GROUPS, "coverage"].map((role) => [role, { required: true, exactlyOnce: true }])
-    ),
-    extensionPolicy: {
-      allowProfileExtensions: true,
-      unknownRole: "reject",
-      duplicateRole: "reject",
-      recursiveCommand: "reject",
-      failure: "stop"
-    }
-  };
+  const graph = { requiredOrder: ["setup", ...REQUIRED_CHECK_CORE_GROUPS, "coverage"] };
   const adapters = Object.fromEntries(REQUIRED_CHECK_CORE_GROUPS.map((role) => [role, `npm run leaf-${role}`]));
   fs.writeFileSync(path.join(root, "tools/quality-policy/portable-role-graph.json"), JSON.stringify(graph));
-  fs.writeFileSync(
-    path.join(root, "tools/quality-policy/project-profile.json"),
-    JSON.stringify({
-      schemaVersion: 1,
-      profileType: "product-quality-profile",
-      product: { id: "fixture", runtime: "browser" },
-      sourceScopes: [{ id: "fixture", roots: ["leaf.mjs"] }],
-      languages: { javascript: true },
-      testProjects: [{ id: "fixture", command: "node leaf.mjs fixture", paths: ["leaf.mjs"] }],
-      policies: { fixture: "leaf.mjs" },
-      documentation: { roots: ["tools"] },
-      adapters
-    })
-  );
+  fs.writeFileSync(path.join(root, "tools/quality-policy/project-profile.json"), JSON.stringify({ adapters }));
   const leafScripts = Object.fromEntries(
     REQUIRED_CHECK_CORE_GROUPS.map((group) => [`leaf-${group}`, `node leaf.mjs ${group}`])
   );

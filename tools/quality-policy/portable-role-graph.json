@@ -1,6 +1,4 @@
 {
-  "schemaVersion": 1,
-  "graphVersion": 1,
   "requiredOrder": [
     "setup",
     "standard",
@@ -16,28 +14,5 @@
     "documentation",
     "file-size",
     "coverage"
-  ],
-  "roles": {
-    "setup": { "required": true, "exactlyOnce": true },
-    "standard": { "required": true, "exactlyOnce": true },
-    "suppressions": { "required": true, "exactlyOnce": true },
-    "typing": { "required": true, "exactlyOnce": true },
-    "packaging": { "required": true, "exactlyOnce": true },
-    "focus": { "required": true, "exactlyOnce": true },
-    "smells": { "required": true, "exactlyOnce": true },
-    "product-contracts": { "required": true, "exactlyOnce": true },
-    "test-split": { "required": true, "exactlyOnce": true },
-    "complexity": { "required": true, "exactlyOnce": true },
-    "scaling": { "required": true, "exactlyOnce": true },
-    "documentation": { "required": true, "exactlyOnce": true },
-    "file-size": { "required": true, "exactlyOnce": true },
-    "coverage": { "required": true, "exactlyOnce": true }
-  },
-  "extensionPolicy": {
-    "allowProfileExtensions": true,
-    "unknownRole": "reject",
-    "duplicateRole": "reject",
-    "recursiveCommand": "reject",
-    "failure": "stop"
-  }
+  ]
 }

@@ -1,51 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Permanent strict-typing and inventory owner for every executable JavaScript test/helper
- * file (`tests/js/**\/*.test.mjs` plus `tools/*-harness.mjs`).
+ * Strict-typing owner for every executable JavaScript test/helper file (`tests/js/**\/*.test.mjs`
+ * plus `tools/*-harness.mjs`).
  *
- * Replaces a prior `typecheck:migration-tests` owner (deleted in the same change that
- * activated this script). Every executable JS test/helper is classified `strict`; there is no harness
- * exception class. The only non-strict classification is `fixture`, restricted to
- * non-executable data files under `tests/fixtures/quality/` that were named in
- * `planned-quality-fixtures.json` before creation -- this script validates that
- * provenance too, so an unplanned, executable, ownerless, path-mismatched,
- * hash-mismatched, or unused fixture fails closed.
+ * Live discovery is the only list of those files. This script fails when a discovered file falls
+ * outside `tsconfig.tests.json`'s `include` globs, then runs strict no-emit `tsc` over that
+ * project, so a type error in any discovered test or helper fails as well. There is no committed
+ * inventory to regenerate and no exception class.
  */
 
 import { execFileSync } from "node:child_process";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { runTestInventoryPolicy } from "../portable-core/test-inventory-engine.mjs";
 
 const ROOT = process.cwd();
-const TSCONFIG_PATH = path.join(ROOT, "tsconfig.tests.json");
-const EXECUTABLE_EXTENSIONS = new Set([".mjs", ".js", ".py", ".sh"]);
-
-/**
- * @param {string} root
- * @returns {string}
- */
-function inventoryPath(root) {
-  return path.join(root, "tools", "quality-policy", "test-inventory.json");
-}
-
-/**
- * @param {string} root
- * @returns {string}
- */
-function exceptionBaselinePath(root) {
-  return path.join(root, "tools", "quality-policy", "test-exception-baseline.json");
-}
-
-/**
- * @param {string} root
- * @returns {string}
- */
-function plannedFixturesPath(root) {
-  return path.join(root, "tools", "quality-policy", "planned-quality-fixtures.json");
-}
+const TSCONFIG_NAME = "tsconfig.tests.json";
 
 /**
  * @param {string} [root]
@@ -72,206 +42,29 @@ export function discoverExecutableTestHelpers(root = ROOT) {
 }
 
 /**
- * @param {string} [root]
- * @returns {Record<string, {classification: "strict"}>}
+ * Convert a tsconfig `include` glob (`*` within a segment, `**` across segments) into an
+ * anchored pattern over repository-relative paths.
+ * @param {string} glob
+ * @returns {RegExp}
  */
-export function buildTestInventory(root = ROOT) {
-  return Object.fromEntries(
-    discoverExecutableTestHelpers(root).map((relPath) => [relPath, { classification: "strict" }])
-  );
+export function includeGlobToRegExp(glob) {
+  const escaped = glob.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("^" + escaped.replace(/\*\*\//g, "(?:.*/)?").replace(/\*/g, "[^/]*") + "$");
 }
 
 /**
- * @param {string} [root]
- * @returns {{missingFromInventory: string[], extraInInventory: string[], nonStrictEntries: string[]}}
- */
-export function diffTestInventory(root = ROOT) {
-  const live = new Set(discoverExecutableTestHelpers(root));
-  const committed = JSON.parse(fs.readFileSync(inventoryPath(root), "utf8"));
-  /** @type {Record<string, {classification: string}>} */
-  const entries = committed.entries;
-  const committedPaths = new Set(Object.keys(entries));
-  const missingFromInventory = [...live].filter((p) => !committedPaths.has(p)).sort();
-  const extraInInventory = [...committedPaths].filter((p) => !live.has(p)).sort();
-  const nonStrictEntries = Object.entries(entries)
-    .filter(([, entry]) => entry.classification !== "strict")
-    .map(([file]) => file)
-    .sort();
-  return { missingFromInventory, extraInInventory, nonStrictEntries };
-}
-
-/**
- * @param {string} filePath
- * @returns {boolean}
- */
-function looksExecutable(filePath) {
-  if (EXECUTABLE_EXTENSIONS.has(path.extname(filePath))) return true;
-  const head = fs.readFileSync(filePath, "utf8").slice(0, 2);
-  return head === "#!";
-}
-
-/**
- * @param {string} filePath
- * @returns {string}
- */
-function sha256Of(filePath) {
-  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
-}
-
-/**
- * @param {string} root
- * @returns {string[]}
- */
-function collectQualityFixtureFiles(root) {
-  const dir = path.join(root, "tests", "fixtures", "quality");
-  if (!fs.existsSync(dir)) return [];
-  /** @type {string[]} */
-  const found = [];
-  for (const entry of fs.readdirSync(dir, { recursive: true, encoding: "utf8" })) {
-    const absolute = path.join(dir, entry);
-    if (fs.statSync(absolute).isFile()) {
-      found.push(path.join("tests", "fixtures", "quality", entry).split(path.sep).join("/"));
-    }
-  }
-  return found.sort();
-}
-
-/**
- * @param {string} root
- * @param {string} fixtureRelPath
- * @returns {boolean}
- */
-function fixtureIsReferenced(root, fixtureRelPath) {
-  const searchRoots = ["tests", "tools"];
-  for (const searchRoot of searchRoots) {
-    const absoluteRoot = path.join(root, searchRoot);
-    if (!fs.existsSync(absoluteRoot)) continue;
-    for (const entry of fs.readdirSync(absoluteRoot, { recursive: true, encoding: "utf8" })) {
-      const absoluteEntry = path.join(absoluteRoot, entry);
-      if (!fs.statSync(absoluteEntry).isFile()) continue;
-      if (absoluteEntry.startsWith(path.join(root, fixtureRelPath))) continue;
-      // Provenance metadata (test-inventory.json, planned-quality-fixtures.json,
-      // ...) legitimately names every fixture path without "using" it as an owner test.
-      if (absoluteEntry.endsWith(".json")) continue;
-      const content = fs.readFileSync(absoluteEntry, "utf8");
-      if (content.includes(fixtureRelPath)) return true;
-    }
-  }
-  return false;
-}
-
-/**
+ * Discovered test/helper files that none of the tsconfig's `include` globs covers.
  * @param {string} [root]
  * @returns {string[]}
  */
-export function checkPlannedFixtureProvenance(root = ROOT) {
-  /** @type {string[]} */
-  const failures = [];
-  const plannedRaw = JSON.parse(fs.readFileSync(plannedFixturesPath(root), "utf8"));
-  /** @type {{path: string, sha256: string, ownerTest: string, rule: string, reason: string}[]} */
-  const planned = plannedRaw.plannedFixtures;
-  const plannedByPath = new Map(planned.map((entry) => [entry.path, entry]));
-  const liveFixtures = collectQualityFixtureFiles(root);
-
-  for (const entry of planned) {
-    if (!entry.ownerTest) failures.push(`planned fixture ${entry.path} is ownerless`);
-    if (!entry.rule) failures.push(`planned fixture ${entry.path} names no rule/command`);
-    if (!entry.reason) failures.push(`planned fixture ${entry.path} has no reason`);
-    const absolute = path.join(root, entry.path);
-    if (!fs.existsSync(absolute)) {
-      failures.push(`planned fixture ${entry.path} is missing`);
-      continue;
-    }
-    if (looksExecutable(absolute)) {
-      failures.push(`planned fixture ${entry.path} must not be executable`);
-    }
-    if (sha256Of(absolute) !== entry.sha256) {
-      failures.push(`planned fixture ${entry.path} content does not match its captured hash`);
-    }
-    if (!fixtureIsReferenced(root, entry.path)) {
-      failures.push(`planned fixture ${entry.path} is unused (not referenced by any test/tool)`);
-    }
+export function filesOutsideTypecheckScope(root = ROOT) {
+  const config = JSON.parse(fs.readFileSync(path.join(root, TSCONFIG_NAME), "utf8"));
+  if (!Array.isArray(config.include) || config.files !== undefined) {
+    throw new Error(`${TSCONFIG_NAME} must scope tests with "include" globs and no "files" list`);
   }
-
-  for (const livePath of liveFixtures) {
-    if (!plannedByPath.has(livePath)) {
-      failures.push(`${livePath} is an unplanned quality fixture`);
-    }
-  }
-
-  return failures;
-}
-
-/**
- * @param {{root?: string, print?: boolean}} [options]
- * @returns {{ok: boolean, failures: string[]}}
- */
-export function runTestInventoryCheck({ root = ROOT, print = true } = {}) {
-  /** @type {string[]} */
-  const failures = [];
-  const { missingFromInventory, extraInInventory, nonStrictEntries } = diffTestInventory(root);
-  for (const missing of missingFromInventory) {
-    failures.push(`${missing} is missing from test-inventory.json`);
-  }
-  for (const extra of extraInInventory) {
-    failures.push(`test-inventory.json lists stale/removed executable ${extra}`);
-  }
-  for (const nonStrict of nonStrictEntries) {
-    failures.push(`${nonStrict} is classified non-strict; every executable must be strict`);
-  }
-
-  const exceptionBaseline = JSON.parse(fs.readFileSync(exceptionBaselinePath(root), "utf8"));
-  if (exceptionBaseline.exceptions.length > 0) {
-    failures.push(
-      "test-exception-baseline.json is non-empty; a strict-typing exception requires " +
-        "reviewed owner/date/reason justification, not silent implementation convenience"
-    );
-  }
-
-  failures.push(...checkPlannedFixtureProvenance(root));
-  const committed = JSON.parse(fs.readFileSync(inventoryPath(root), "utf8"));
-  failures.push(
-    ...runTestInventoryPolicy({
-      entries: committed.entries,
-      livePaths: discoverExecutableTestHelpers(root)
-    }).failures
-  );
-
-  const summary = { ok: failures.length === 0 };
-  if (print) reportInventory(failures, summary);
-  return { ok: summary.ok, failures };
-}
-
-/**
- * @param {string[]} failures
- * @param {{ok: boolean}} summary
- */
-function reportInventory(failures, summary) {
-  if (!summary.ok) {
-    for (const failure of failures) console.error(`[test-inventory] ${failure}`);
-    return;
-  }
-  console.log("Test inventory check passed.");
-}
-
-/**
- * Compares `tsconfig.tests.json`'s `files` array against the live executable
- * test/helper discovery, so the strict-checkJs project file itself cannot silently
- * drift from the same file set `test-inventory.json` and the runner both track.
- *
- * @param {string} [root]
- * @param {string} [tsconfigPath]
- * @returns {{missingFromTsconfig: string[], extraInTsconfig: string[]}}
- */
-export function diffTsconfigTestsInventory(root = ROOT, tsconfigPath = TSCONFIG_PATH) {
-  const live = new Set(discoverExecutableTestHelpers(root));
-  const config = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
-  /** @type {string[]} */
-  const included = config.files.filter((/** @type {string} */ entry) => !entry.endsWith(".d.ts"));
-  const includedSet = new Set(included);
-  const missingFromTsconfig = [...live].filter((p) => !includedSet.has(p)).sort();
-  const extraInTsconfig = included.filter((p) => !live.has(p)).sort();
-  return { missingFromTsconfig, extraInTsconfig };
+  /** @type {RegExp[]} */
+  const patterns = config.include.map(includeGlobToRegExp);
+  return discoverExecutableTestHelpers(root).filter((file) => !patterns.some((pattern) => pattern.test(file)));
 }
 
 /**
@@ -279,70 +72,26 @@ export function diffTsconfigTestsInventory(root = ROOT, tsconfigPath = TSCONFIG_
  * @returns {{ok: boolean, failures: string[], checkedFiles: number}}
  */
 export function runTypecheckTests({ root = ROOT, print = true } = {}) {
-  const inventoryResult = runTestInventoryCheck({ root, print });
-  if (!inventoryResult.ok) {
-    return { ok: false, failures: inventoryResult.failures, checkedFiles: 0 };
-  }
-
-  const { missingFromTsconfig, extraInTsconfig } = diffTsconfigTestsInventory();
-  if (missingFromTsconfig.length > 0 || extraInTsconfig.length > 0) {
-    /** @type {string[]} */
-    const failures = [];
-    for (const missing of missingFromTsconfig) {
-      failures.push(`${missing} is missing from tsconfig.tests.json's files list`);
-    }
-    for (const extra of extraInTsconfig) {
-      failures.push(`tsconfig.tests.json files list includes stale/removed executable ${extra}`);
-    }
-    if (print) for (const failure of failures) console.error(`[test-inventory] ${failure}`);
+  const outside = filesOutsideTypecheckScope(root);
+  if (outside.length > 0) {
+    const failures = outside.map((file) => `${file} is outside ${TSCONFIG_NAME}'s include globs`);
+    if (print) for (const failure of failures) console.error(`[test-typecheck] ${failure}`);
     return { ok: false, failures, checkedFiles: 0 };
   }
-
   const checkedFiles = discoverExecutableTestHelpers(root).length;
   try {
-    execFileSync(path.join(ROOT, "node_modules", ".bin", "tsc"), ["--noEmit", "-p", TSCONFIG_PATH], {
-      cwd: ROOT,
+    execFileSync(path.join(ROOT, "node_modules", ".bin", "tsc"), ["--noEmit", "-p", path.join(root, TSCONFIG_NAME)], {
+      cwd: root,
       stdio: print ? "inherit" : "pipe"
     });
-    return { ok: true, failures: [], checkedFiles };
   } catch {
-    return {
-      ok: false,
-      failures: ["tsc reported errors over the executable test inventory"],
-      checkedFiles
-    };
+    if (print) console.error(`[test-typecheck] tsc reported errors over the ${checkedFiles} discovered test files`);
+    return { ok: false, failures: ["tsc reported errors over the discovered test files"], checkedFiles };
   }
-}
-
-export function writeInventory({ root = ROOT, tsconfigPath = TSCONFIG_PATH } = {}) {
-  const entries = buildTestInventory(root);
-  const payload = {
-    note:
-      "Committed executable JS test/helper inventory. Regenerate with " +
-      "`npm run inventory:write` whenever a test/helper file " +
-      "is added, removed, or renamed under tests/js/ or as a tools/*-harness.mjs file.",
-    entries
-  };
-  fs.writeFileSync(inventoryPath(root), JSON.stringify(payload, null, 2) + "\n");
-  const configText = fs.readFileSync(tsconfigPath, "utf8");
-  const config = JSON.parse(configText);
-  const preserved = config.files.filter((/** @type {string} */ entry) => entry.endsWith(".d.ts"));
-  const files = [...new Set([...discoverExecutableTestHelpers(root), ...preserved])].sort();
-  const filesMatch = /^([ \t]*)"files"\s*:\s*\[[\s\S]*?^([ \t]*)\](?=\s*[},])/m.exec(configText);
-  if (!filesMatch) throw new Error(`Could not locate the files array in ${tsconfigPath}`);
-  const [, propertyIndent, closingIndent] = filesMatch;
-  const entriesText = files
-    .map((entry, index) => `${closingIndent}  ${JSON.stringify(entry)}${index < files.length - 1 ? "," : ""}`)
-    .join("\n");
-  const replacement = `${propertyIndent}"files": [\n${entriesText}${entriesText ? "\n" : ""}${closingIndent}]`;
-  const updatedConfigText = configText.replace(filesMatch[0], replacement);
-  fs.writeFileSync(tsconfigPath, updatedConfigText);
+  if (print) console.log(`Test typecheck passed (${checkedFiles} discovered test files).`);
+  return { ok: true, failures: [], checkedFiles };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  if (process.argv.includes("--write")) {
-    writeInventory();
-  } else {
-    process.exit(runTypecheckTests().ok ? 0 : 1);
-  }
+  process.exit(runTypecheckTests().ok ? 0 : 1);
 }

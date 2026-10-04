@@ -4,37 +4,37 @@
     "preflight": {
       "source": ".agents/skills/preflight/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "bae26054439f3d858bdc833b8efbd8d02d09ea75000ed4a3ac55b75356db7b24"
+      "computedHash": "aadc348aa7d3091a9a9a19a4e8425ad1b05857294831a49add3853d0a68d7290"
     },
     "create-plan": {
       "source": ".agents/skills/create-plan/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "0d5a9c7e8dcffda375cfc4c2675d00d9b37cae7a473a155fa64993374c90154c"
+      "computedHash": "c0bcf9d53f89a121a28e9061f765d18c6914741e6b6c11c43cce03f3bdda2148"
     },
     "doc-sync": {
       "source": ".agents/skills/doc-sync/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "12d1f3a3422669ac9a1cced136da4ccca3fd27382def1aad4286e78f9c9758fc"
+      "computedHash": "234d8d337a6d28572bbece17bf61876eceddfa7581703fa34e05213d6a5be009"
     },
     "scan-smells": {
       "source": ".agents/skills/scan-smells/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "56965a9da2f44cb63f842e0c4b2d5f8c231fda48f834e216026fe68588de61c9"
+      "computedHash": "e52c6dcc1c54bbf1110885de019f8192055e1aebd641502e9301a77605184e3e"
     },
     "grill-me-repo": {
       "source": ".agents/skills/grill-me-repo/SKILL.md",
       "sourceType": "vendored-generic",
-      "computedHash": "cec3e5db98ba1e885b359468d3730a0c21344bbf3cde84da4ec583f69cd2eaea"
+      "computedHash": "8b51010baffdd3c7d95b241a539f9ee5d7c8ddfba9c7dc968acdccee758a8a50"
     },
     "add-api-endpoint": {
       "source": ".agents/skills/add-api-endpoint/SKILL.md",
       "sourceType": "project-local",
-      "computedHash": "6f65063783c11ad1219e047248cca08d93f142968110ceb3b595e312d815ec22"
+      "computedHash": "98cf242ad2c9b66595afb7c7c7ce0d6eb7abda3998f255f308a38bd1ec6b306e"
     },
     "review-validation": {
       "source": ".agents/skills/review-validation/SKILL.md",
       "sourceType": "project-local",
-      "computedHash": "5ed7d2e248fe5608ad60a38c6bb6e148ad94ba368788bec2cf6dad6a3e69a4ec"
+      "computedHash": "8dac419e94bd080edb1bb4480461bd1044d2e5945503fbf4db7f294a209515e7"
     },
     "create-release": {
       "source": ".agents/skills/create-release/SKILL.md",

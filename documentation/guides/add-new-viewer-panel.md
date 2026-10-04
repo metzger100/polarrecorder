@@ -14,7 +14,8 @@ Use this guide to add a static viewer panel without breaking namespace, theme, o
 - Use `--polarrecorder-` CSS tokens and update `plugin.css` or the panel stylesheet for themes.
 - Keep settings in AvNav configuration and route persistence through the existing API.
 - Add Vitest coverage under `tests/js/` for rendering, absent values, and explicit zero values.
-- Run `npm run inventory:write` after adding executable test helpers.
+- New `tests/js/*.test.mjs` files need no registration: `npm run typecheck:tests` type-checks every discovered test
+  file.
 - Run `npm run check:all` before committing.
 
 ## Related

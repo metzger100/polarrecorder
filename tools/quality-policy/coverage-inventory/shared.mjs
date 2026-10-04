@@ -33,9 +33,9 @@ export function readJson(filePath) {
  * @param {number} floor
  */
 export function requireAtLeast(failures, label, actual, floor) {
-  // Floors are captured rounded to 2 decimals (matching the baseline capture generator's
-  // convention); round the live measurement the same way so genuine no-op reruns never
-  // fail on sub-hundredth floating noise (coverage.py/c8 percentages carry more digits).
+  // Floors are recorded rounded to 2 decimals; round the live measurement the same way so
+  // genuine no-op reruns never fail on sub-hundredth floating noise (coverage.py/c8
+  // percentages carry more digits).
   const rounded = Math.round(actual * 100) / 100;
   if (rounded + 1e-9 < floor) {
     failures.push(`${label}: ${rounded.toFixed(2)}% is below the ${floor}% floor`);

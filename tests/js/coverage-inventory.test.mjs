@@ -1,61 +1,46 @@
 /**
  * Self-tests for tools/quality-policy/check-coverage-inventory.mjs, the combined Python +
- * viewer/plugin JS coverage inventory and ratchet.
- *
- * The expected SHA-256 of tools/quality-policy/baseline-coverage-capture.json is
- * hardcoded here, independent of the file itself, so a coordinated edit that lowers a
- * historical floor and updates coverage-floor-baseline.json to match still requires a
- * visible, reviewable change to this anchor (mirroring test-inventory.test.mjs's
- * exception-baseline digest).
+ * viewer/plugin JS coverage inventory and its reviewed floor ratchet
+ * (tools/quality-policy/coverage-floor-baseline.json).
  */
 
 import assert from "node:assert/strict";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import { test } from "vitest";
 import path from "node:path";
 
-import {
-  checkFloorRatchet,
-  deriveCoverageFloorBaseline,
-  diffCoverageFloorBaseline,
-  runCoverageInventoryCheck
-} from "../../tools/quality-policy/check-coverage-inventory.mjs";
+import { checkFloorRatchet, runCoverageInventoryCheck } from "../../tools/quality-policy/check-coverage-inventory.mjs";
 
 const ROOT = process.cwd();
-const EXPECTED_BASELINE_CAPTURE_DIGEST = "a3af7e341a4dda51616808e2df14c034c130c0b5df1260ace8dee5f037addf62";
-
-test("the baseline coverage capture is byte-anchored", () => {
-  const capturePath = path.join(ROOT, "tools", "quality-policy", "baseline-coverage-capture.json");
-  const digest = crypto.createHash("sha256").update(fs.readFileSync(capturePath)).digest("hex");
-  assert.equal(digest, EXPECTED_BASELINE_CAPTURE_DIGEST);
-});
-
-test("the committed baseline matches the value derived from the real capture", () => {
-  const result = diffCoverageFloorBaseline(ROOT);
-  assert.equal(result.ok, true, result.failures.join("\n"));
-  const derived = deriveCoverageFloorBaseline(ROOT);
-  const committed = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "coverage-floor-baseline.json"), "utf8")
-  );
-  assert.deepEqual(derived, committed);
-});
 
 test("the real coverage-floors.json never falls below its baseline", () => {
   const result = checkFloorRatchet(ROOT);
   assert.equal(result.ok, true, result.failures.join("\n"));
 });
 
-test("detects a coverage-floor-baseline.json that no longer matches the capture", () => {
+test("the reviewed ratchet holds every family and per-file floor at its current value", () => {
+  const read = (/** @type {string} */ name) =>
+    JSON.parse(fs.readFileSync(path.join(ROOT, "tools", "quality-policy", name), "utf8"));
+  const floors = read("coverage-floors.json");
+  const baseline = read("coverage-floor-baseline.json");
+  assert.deepEqual(baseline.minimumFloors.families, floors.families);
+  assert.deepEqual(baseline.minimumFloors.pluginPy, floors.pluginPy);
+  assert.deepEqual(baseline.minimumFloors.viewerPerFileLinePercent, floors.viewerPerFileLinePercent);
+});
+
+test("detects a family or per-file floor that has no reviewed minimum", () => {
   const root = makeFakeRoot();
-  const baselinePath = path.join(root, "tools", "quality-policy", "coverage-floor-baseline.json");
-  const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
-  baseline.minimumFloors.families.pythonAggregateCombinedPercent = 1;
-  fs.writeFileSync(baselinePath, JSON.stringify(baseline));
-  const result = diffCoverageFloorBaseline(root);
-  assert.equal(result.ok, false);
+  const floorsPath = path.join(root, "tools", "quality-policy", "coverage-floors.json");
+  const floors = JSON.parse(fs.readFileSync(floorsPath, "utf8"));
+  floors.families.newFamilyLinePercent = 90;
+  floors.viewerPerFileLinePercent["viewer/new-module.js"] = 85;
+  fs.writeFileSync(floorsPath, JSON.stringify(floors));
+  const result = checkFloorRatchet(root);
   fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((f) => f.includes("families.newFamilyLinePercent has no reviewed minimum")));
+  assert.ok(result.failures.some((f) => f.includes('["viewer/new-module.js"] has no reviewed minimum')));
 });
 
 test("detects an active floor lowered below its baseline (family, plugin.py, and per-file)", () => {
@@ -283,22 +268,21 @@ function makeFakeRoot() {
   fs.writeFileSync(path.join(root, "plugin.js"), "// legacy stub\n");
   fs.writeFileSync(path.join(root, "plugin.mjs"), "export default {};\n");
 
-  // Reuse the real, mutually-consistent baseline capture and its derived baseline so
-  // baseline-derivation and ratchet checks stay green by default; only coverage-floors.json
-  // needs an extra entry for this fake root's one real viewer file, "viewer/a.js".
-  fs.copyFileSync(
-    path.join(ROOT, "tools", "quality-policy", "baseline-coverage-capture.json"),
-    path.join(root, "tools", "quality-policy", "baseline-coverage-capture.json")
+  // Reuse the real reviewed ratchet so the ratchet checks stay green by default; this fake
+  // root's one real viewer file, "viewer/a.js", gets a floor and a matching minimum.
+  const baseline = JSON.parse(
+    fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "coverage-floor-baseline.json"), "utf8")
   );
-  fs.copyFileSync(
-    path.join(ROOT, "tools", "quality-policy", "coverage-floor-baseline.json"),
-    path.join(root, "tools", "quality-policy", "coverage-floor-baseline.json")
+  baseline.minimumFloors.viewerPerFileLinePercent["viewer/a.js"] = 80.0;
+  fs.writeFileSync(
+    path.join(root, "tools", "quality-policy", "coverage-floor-baseline.json"),
+    JSON.stringify(baseline)
   );
   const floors = JSON.parse(
     fs.readFileSync(path.join(ROOT, "tools", "quality-policy", "coverage-floors.json"), "utf8")
   );
-  // Keep every real historical key (checkFloorRatchet requires them all present at or
-  // above baseline) and add this fake root's own one real viewer file on top.
+  // Keep every real key (checkFloorRatchet requires them all present at or above baseline)
+  // and add this fake root's own one real viewer file on top.
   floors.viewerPerFileLinePercent["viewer/a.js"] = 80.0;
   floors.contractOwned = { javascript: {}, python: {} };
   fs.writeFileSync(path.join(root, "tools", "quality-policy", "coverage-floors.json"), JSON.stringify(floors));

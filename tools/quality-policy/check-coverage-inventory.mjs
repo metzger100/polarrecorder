@@ -13,10 +13,8 @@
  * - enforces the family floors (validation package, histogram core, Python aggregate,
  *   viewer family, plugin-entrypoint family) and the per-file `plugin.py`/viewer line
  *   floors recorded in `coverage-floors.json`;
- * - proves `coverage-floors.json` never regresses below `coverage-floor-baseline.json`,
- *   and that the baseline itself is exactly what `baseline-coverage-capture.json` derives
- *   (so the two cannot be edited together to silently lower the floor without a visible
- *   diff to this file's own self-test, which independently anchors the capture's digest).
+ * - proves `coverage-floors.json` never regresses below the reviewed minimums in
+ *   `coverage-floor-baseline.json`, and that every family and per-file floor has one.
  *
  * Supersedes `check-js-coverage.mjs` (deleted; c8 now attributes viewer/plugin VM
  * coverage directly) and `check-coverage.py` (deleted; its validation/histogram family
@@ -28,15 +26,11 @@ import path from "node:path";
 
 import { checkPythonCoverage } from "./coverage-inventory/python-coverage.mjs";
 import { checkViewerCoverage } from "./coverage-inventory/viewer-coverage.mjs";
-import { checkFloorRatchet, diffCoverageFloorBaseline } from "./coverage-inventory/floor-baseline.mjs";
+import { checkFloorRatchet } from "./coverage-inventory/floor-baseline.mjs";
 import { floorsPath, pythonReportPath, readJson, viewerReportPath } from "./coverage-inventory/shared.mjs";
 import { runCoveragePolicy } from "../portable-core/coverage-engine.mjs";
 
-export {
-  deriveCoverageFloorBaseline,
-  diffCoverageFloorBaseline,
-  checkFloorRatchet
-} from "./coverage-inventory/floor-baseline.mjs";
+export { checkFloorRatchet } from "./coverage-inventory/floor-baseline.mjs";
 export { listPythonPackageFiles } from "./coverage-inventory/python-coverage.mjs";
 export { listViewerJsFiles } from "./coverage-inventory/viewer-coverage.mjs";
 export { pythonReportPath, viewerReportPath, floorsPath, baselinePath } from "./coverage-inventory/shared.mjs";
@@ -81,7 +75,6 @@ export function runCoverageInventoryCheck(options = {}) {
   /** @type {string[]} */
   const failures = [];
 
-  failures.push(...diffCoverageFloorBaseline(root).failures);
   failures.push(...checkFloorRatchet(root).failures);
 
   const floors = readJson(floorsPath(root));

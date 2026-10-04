@@ -21,16 +21,14 @@ Repository layout (development-only roots, none shipped in a release artifact):
   typing of viewer/plugin JS; never imported at runtime.
 - `tests/js/`: every executable JavaScript test and reusable checker self-test (Vitest/`node:assert/strict`), covering
   viewer behavior, plugin entrypoints, and the custom `tools/check-*.mjs` quality checkers.
-- `tools/quality-policy/`: the JavaScript quality-tooling policy engine — complexity/coverage/test-inventory checkers
-  and their active-baseline JSON policies, the in-process format-scope classification, and the
-  developer-Python/schema/SemVer corpora. `baseline-coverage-capture.json` is the one remaining immutable, point-in-time
-  worktree capture; every other historical capture/ledger (complexity source capture, test-inventory baseline, command
-  graph) was retired once its live checker/test independently reproduced the same guarantee. There is no committed
-  command-graph ledger: `tests/js/command-graph.test.mjs` proves reachability by walking the live `package.json` script
-  graph directly. Python quality tooling (`tools/check-*.py`) lives directly under `tools/` and is a separate, parallel
-  authority; the two do not share code. Baseline captures are frozen reviewed data — `generate-format-scope.mjs` only
-  cites their byte-stable output format in a comment to justify exempting `baseline-coverage-capture.json` from
-  Prettier, it does not import it.
+- `tools/quality-policy/`: the JavaScript quality-tooling policy engine — complexity, coverage, and test-typecheck
+  checkers and their reviewed JSON policies (`coverage-floors.json` with its reviewed ratchet
+  `coverage-floor-baseline.json`, `hotspot-budgets.json`, the role graph and adapter profile), the in-process
+  format-scope classification, and the developer-Python/schema/SemVer corpora. No frozen point-in-time capture,
+  digest-anchored manifest, or committed test inventory remains: each was retired once a live checker or test enforced
+  the same guarantee directly. There is no committed command-graph ledger either: `tests/js/command-graph.test.mjs`
+  proves reachability by walking the live `package.json` script graph directly. Python quality tooling
+  (`tools/check-*.py`) lives directly under `tools/` and is a separate, parallel authority; the two do not share code.
 
 ## Related
 

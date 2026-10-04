@@ -11,49 +11,38 @@ import { runQualityRoleGraph } from "../../tools/portable-core/gate-orchestrator
 
 const ROOT = process.cwd();
 
-test("the checked-in role graph and local profile satisfy the portable boundary", function () {
+test("the checked-in role graph and local profile hold only the fields the orchestrator reads", function () {
   const { graph, profile } = readQualityBoundary(ROOT);
   expect(runGateRoleGraphCheck(graph)).toMatchObject({ ok: true, findings: [] });
   expect(runProfileContractCheck(profile)).toMatchObject({ ok: true, findings: [] });
-  expect(graph.requiredOrder).toHaveLength(Object.keys(graph.roles).length);
+  expect(Object.keys(graph)).toEqual(["requiredOrder"]);
+  expect(Object.keys(profile)).toEqual(["adapters"]);
+  expect(Object.keys(profile.adapters).sort()).toEqual([...graph.requiredOrder].sort());
 });
 
-test("the role graph rejects duplicates, unknown roles, and weak failure policy", function () {
+test("the role graph rejects duplicate and malformed roles and unread fields", function () {
   const graph = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/quality-policy/portable-role-graph.json"), "utf8"));
-  graph.requiredOrder.push("standard");
-  graph.roles.unlisted = { required: true, exactlyOnce: true, portable: false };
-  graph.extensionPolicy.failure = "continue";
+  graph.requiredOrder.push("standard", "Not A Role");
+  graph.extensionPolicy = { failure: "stop" };
   const result = runGateRoleGraphCheck(graph);
   expect(result.ok).toBe(false);
   expect(result.findings.map((finding) => finding.kind)).toEqual(
-    expect.arrayContaining(["duplicate-role", "unknown-role", "extension-policy"])
+    expect.arrayContaining(["duplicate-role", "role-id", "unknown-field"])
   );
+  expect(runGateRoleGraphCheck({ requiredOrder: [] }).findings[0].kind).toBe("shape");
 });
 
-test("the profile rejects unsafe paths, recursive commands, and duplicate test projects", function () {
+test("the profile rejects non-local adapter commands, malformed roles, and unread fields", function () {
   const { profile } = readQualityBoundary(ROOT);
   const invalid = structuredClone(profile);
-  invalid.portableCore = { coreVersion: "1", roleGraph: "../outside.json" };
-  invalid.testProjects[1].id = invalid.testProjects[0].id;
-  invalid.testProjects[0].command = "npm run check && /bin/sh";
   invalid.adapters.extra = "node ../outside.mjs";
+  invalid.adapters["Not A Role"] = "node local.mjs";
+  invalid.testProjects = [{ id: "python", command: "npm run test:python" }];
   const result = runProfileContractCheck(invalid);
   expect(result.ok).toBe(false);
-  expect(result.findings.map((finding) => finding.kind)).toEqual(
-    expect.arrayContaining(["path", "test-project", "command"])
-  );
-});
-
-test("the profile rejects stale repository paths and duplicate source roots", function () {
-  const { profile } = readQualityBoundary(ROOT);
-  const invalid = structuredClone(profile);
-  invalid.sourceScopes[0].roots.push(invalid.sourceScopes[0].roots[0]);
-  invalid.policies.coverage = "tools/quality-policy/missing-policy.json";
-  const result = runProfileContractCheck(invalid, { root: ROOT });
-  expect(result.ok).toBe(false);
-  expect(result.findings.map((finding) => finding.kind)).toEqual(
-    expect.arrayContaining(["source-scope", "stale-path"])
-  );
+  expect(result.findings.map((finding) => finding.kind)).toEqual(expect.arrayContaining(["command", "unknown-field"]));
+  expect(result.findings.filter((finding) => finding.kind === "command")).toHaveLength(2);
+  expect(runProfileContractCheck({}).findings[0].kind).toBe("shape");
 });
 
 test("the orchestrator executes canonical roles once and stops at the first failure", function () {

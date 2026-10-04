@@ -29,11 +29,11 @@ Polar Recorder actually uses.
   actually imports the target, never a partially-measured file); enforces the validation-package (95/95), histogram-core
   (95/90), Python-aggregate (90), viewer-family, and plugin-entrypoint-family (80/80/80/65 each) floors plus
   `plugin.py`'s and every viewer file's per-file floor, all read from `tools/quality-policy/coverage-floors.json`; and
-  proves those active floors never fall below `tools/quality-policy/coverage-floor-baseline.json`, itself mechanically
-  re-derived every run from the frozen `baseline-coverage-capture.json` (whose SHA-256 is independently hardcoded in
-  `tests/js/coverage-inventory.test.mjs`, so a coordinated edit to both the capture and the baseline still needs a
-  visible test-file change). `npm run test:coverage:check` runs all three in sequence and is the sole coverage half of
-  the final `check:all`.
+  proves those active floors never fall below the reviewed minimums in
+  `tools/quality-policy/coverage-floor-baseline.json` and that every family and per-file floor has one. The ratchet
+  holds the current floors exactly (`tests/js/coverage-inventory.test.mjs`), so a floor moves only together with a
+  visible, reviewed edit of its minimum. `npm run test:coverage:check` runs all three in sequence and is the sole
+  coverage half of the final `check:all`.
 - The smoke test imports `polarrecorder` and instantiates `plugin.py` so pytest never exits with zero collected tests.
 - Plugin integration tests exercise the single-lock API/persistence boundary with fakes rather than a live AvNav
   process.
@@ -82,21 +82,16 @@ Polar Recorder actually uses.
   inventory-drift detection plus five negative contract fixtures (a new viewer file omitted from the inventory, a
   misspelled namespace method, a nullable DOM value used without narrowing, runtime `import`/`export` drift, and an
   incompatible mock payload), each shown to fail on the bad shape and pass on the clean one.
-- `npm run typecheck:tests` (`tools/quality-policy/test-inventory.mjs`) is the permanent owner for every executable JS
-  test/helper: it verifies the committed `tools/quality-policy/test-inventory.json` (every entry classified `strict`;
-  there is no harness exception class) and `tsconfig.tests.json`'s `files` list both match live discovery with no drift,
-  verifies `tools/quality-policy/test-exception-baseline.json`'s exception list stays empty (independently
-  digest-anchored in `tests/js/test-inventory.test.mjs`), verifies any file under `tests/fixtures/quality/` matches a
-  planned, non-executable, referenced entry in `tools/quality-policy/planned-quality-fixtures.json`, then strictly
-  no-emit `checkJs`-types the whole set against `tsconfig.tests.json`.
+- `npm run typecheck:tests` (`tools/quality-policy/test-inventory.mjs`) is the strict-typing owner for every executable
+  JS test/helper. Live discovery (`tests/js/**/*.test.mjs` plus `tools/*-harness.mjs`) is the only list of those files:
+  the check fails when a discovered file falls outside `tsconfig.tests.json`'s `include` globs, then strictly no-emit
+  `checkJs`-types the whole project, so a type error in any discovered file fails too. There is no committed inventory,
+  no exception class, and nothing to regenerate when a test file is added.
 - `npm run typecheck:tools` (`tools/quality-policy/typecheck-tools.mjs`) is the `typecheck:source`/`typecheck:tests`
   twin for maintained JavaScript quality tooling: it verifies the committed `tsconfig.tools.json`'s `files` list matches
   live discovery of every `tools/**/*.mjs` file with no drift, then strictly no-emit `checkJs`-types the whole set.
   `tests/js/typecheck-tools.test.mjs` proves the inventory-drift detection (a live tool file missing from the list, a
   stale listed entry) and that the real repo's tool source typechecks clean.
-- `npm run inventory:write` regenerates both the committed executable-test inventory and the `files` list in
-  `tsconfig.tests.json`; run it after adding, removing, or renaming a test/helper instead of editing either list by
-  hand.
 - `npm run test:focus:check` blocks focused or disabled tests before they merge: `tools/check-test-focus.mjs` parses
   every executable JS test/helper with `acorn` (so string/comment content can never trigger a false positive) for
   `.only(`/`.skip(`/`.todo(` calls, Jasmine-style bare aliases (`fdescribe`/`fit`/`xdescribe`/`xit`/`xtest`), Vitest's

@@ -38,7 +38,6 @@ Use preflight with this repository's real paths and scripts.
 - `documentation/filters/poisoning-resistance.md` owns adversarial cases.
 - `documentation/user/configuration.md` owns editable settings.
 - `documentation/conventions/testing-infrastructure.md` owns fakes and coverage.
-- `npm run inventory:write` regenerates executable test inventory.
 - `npm run docs:check` validates maintained documentation.
 - `npm run check:patterns` and `npm run check:filesize` enforce source hygiene.
 - `npm run test:focus:check` blocks focused tests in both languages.

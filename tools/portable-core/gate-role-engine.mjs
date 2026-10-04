@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * @file gate-role-engine - validates the product-neutral quality role graph and local profile boundary.
+ * @file gate-role-engine - validates the quality role graph and the local adapter profile.
  * Documentation: documentation/conventions/quality-gates.md
+ *
+ * The orchestrator reads exactly two fields: the graph's `requiredOrder` and the profile's
+ * `adapters`. Both files hold nothing else, so this engine rejects any other field instead of
+ * validating metadata that no code reads.
  */
 
 import fs from "node:fs";
@@ -11,186 +15,77 @@ import path from "node:path";
 const GRAPH_PATH = "tools/quality-policy/portable-role-graph.json";
 const PROFILE_PATH = "tools/quality-policy/project-profile.json";
 const ROLE_ID = /^[a-z][a-z0-9-]*$/;
-const RELATIVE_PATH = /^(?!\/)(?![A-Za-z]:)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/;
 const COMMAND = /^(?!.*(?:^|[ /])(?:\/|[A-Za-z]:|\.\.(?:\/|$))).+$/;
 
 /** @typedef {{path: string, kind: string, detail?: string}} RoleFinding */
 
 /**
- * Validate the canonical graph without reading product-specific files.
+ * Validate the canonical role order: a non-empty list of unique role ids and nothing else.
  * @param {unknown} graph
  * @returns {{ok: boolean, findings: RoleFinding[]}}
  */
 export function runGateRoleGraphCheck(graph) {
   const value = /** @type {any} */ (graph);
+  if (!isPlainObject(value) || !Array.isArray(value.requiredOrder) || value.requiredOrder.length === 0) {
+    return {
+      ok: false,
+      findings: [{ path: GRAPH_PATH, kind: "shape", detail: "requiredOrder must be a non-empty list" }]
+    };
+  }
   /** @type {RoleFinding[]} */
-  const findings = [];
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return { ok: false, findings: [{ path: GRAPH_PATH, kind: "shape", detail: "graph must be an object" }] };
-  }
-  if (value.schemaVersion !== 1 || value.graphVersion !== 1) {
-    findings.push({ path: GRAPH_PATH, kind: "version", detail: "schemaVersion and graphVersion must be 1" });
-  }
+  const findings = unknownFields(value, ["requiredOrder"], GRAPH_PATH);
+  /** @type {unknown[]} */
   const order = value.requiredOrder;
-  const roles = value.roles;
-  if (!Array.isArray(order) || !roles || typeof roles !== "object" || Array.isArray(roles)) {
-    findings.push({ path: GRAPH_PATH, kind: "shape", detail: "requiredOrder and roles are required" });
-    return { ok: findings.length === 0, findings };
-  }
   if (new Set(order).size !== order.length) {
     findings.push({ path: GRAPH_PATH, kind: "duplicate-role", detail: "requiredOrder contains duplicates" });
   }
   for (const role of order) {
     if (typeof role !== "string" || !ROLE_ID.test(role)) {
       findings.push({ path: GRAPH_PATH, kind: "role-id", detail: `invalid role '${String(role)}'` });
-      continue;
     }
-    const definition = roles[role];
-    if (!definition || definition.required !== true || definition.exactlyOnce !== true) {
-      findings.push({ path: GRAPH_PATH, kind: "required-role", detail: `role '${role}' is not required exactly once` });
-    }
-  }
-  for (const role of Object.keys(roles)) {
-    if (!order.includes(role)) {
-      findings.push({ path: GRAPH_PATH, kind: "unknown-role", detail: `role '${role}' is absent from requiredOrder` });
-    }
-  }
-  const extensions = value.extensionPolicy;
-  if (
-    !extensions ||
-    extensions.allowProfileExtensions !== true ||
-    extensions.unknownRole !== "reject" ||
-    extensions.duplicateRole !== "reject" ||
-    extensions.recursiveCommand !== "reject" ||
-    extensions.failure !== "stop"
-  ) {
-    findings.push({ path: GRAPH_PATH, kind: "extension-policy", detail: "graph extension policy is not fail-closed" });
   }
   return { ok: findings.length === 0, findings };
 }
 
 /**
- * Validate a product profile's boundary fields and role adapter commands.
+ * Validate the profile: one local adapter command per role id and nothing else.
  * @param {unknown} profile
- * @param {{root?: string}} [options]
  * @returns {{ok: boolean, findings: RoleFinding[]}}
  */
-export function runProfileContractCheck(profile, options = {}) {
+export function runProfileContractCheck(profile) {
   const value = /** @type {any} */ (profile);
-  const root = path.resolve(options.root || process.cwd());
+  if (!isPlainObject(value) || !isPlainObject(value.adapters)) {
+    return { ok: false, findings: [{ path: PROFILE_PATH, kind: "shape", detail: "adapters must be an object" }] };
+  }
   /** @type {RoleFinding[]} */
-  const findings = [];
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return { ok: false, findings: [{ path: PROFILE_PATH, kind: "shape", detail: "profile must be an object" }] };
-  }
-  if (value.schemaVersion !== 1 || value.profileType !== "product-quality-profile") {
-    findings.push({ path: PROFILE_PATH, kind: "version", detail: "profile envelope is unsupported" });
-  }
-  if (value.portableCore !== undefined) {
-    if (!value.portableCore || typeof value.portableCore !== "object" || Array.isArray(value.portableCore)) {
-      findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "portableCore must be an object" });
-    } else {
-      if (typeof value.portableCore.coreVersion !== "string") {
-        findings.push({ path: PROFILE_PATH, kind: "portable-core", detail: "coreVersion is required" });
-      }
-      if (!isRelativePath(value.portableCore.roleGraph)) {
-        findings.push({ path: PROFILE_PATH, kind: "path", detail: "roleGraph must be repository-relative" });
-      }
-    }
-  }
-  if (!Array.isArray(value.sourceScopes) || value.sourceScopes.length === 0) {
-    findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "sourceScopes must be non-empty" });
-  } else {
-    const scopeIds = value.sourceScopes.map((/** @type {any} */ scope) => scope && scope.id);
-    if (
-      scopeIds.some((/** @type {any} */ id) => typeof id !== "string" || !ROLE_ID.test(id)) ||
-      new Set(scopeIds).size !== scopeIds.length
-    ) {
-      findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "source scope ids must be unique role ids" });
-    }
-    for (const scope of value.sourceScopes) {
-      if (!scope || !Array.isArray(scope.roots) || scope.roots.length === 0) {
-        findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: "each source scope needs roots" });
-        continue;
-      }
-      if (new Set(scope.roots).size !== scope.roots.length) {
-        findings.push({ path: PROFILE_PATH, kind: "source-scope", detail: `scope '${scope.id}' has duplicate roots` });
-      }
-      for (const relativePath of scope.roots) checkRepositoryPath(root, relativePath, "source-scope", findings);
-    }
-  }
-  if (!Array.isArray(value.testProjects) || value.testProjects.length === 0) {
-    findings.push({ path: PROFILE_PATH, kind: "test-project", detail: "testProjects must be non-empty" });
-  } else {
-    const ids = value.testProjects.map((/** @type {any} */ project) => project && project.id);
-    if (
-      ids.some((/** @type {any} */ id) => typeof id !== "string" || !ROLE_ID.test(id)) ||
-      new Set(ids).size !== ids.length
-    ) {
-      findings.push({ path: PROFILE_PATH, kind: "test-project", detail: "test project ids must be unique role ids" });
-    }
-    for (const project of value.testProjects) {
-      if (!project || !isCommand(project.command)) {
-        findings.push({ path: PROFILE_PATH, kind: "command", detail: "test project command must be local" });
-      }
-      for (const relativePath of project?.paths || []) {
-        checkRepositoryPath(root, relativePath, "test-project", findings);
-      }
-    }
-  }
-  if (!value.product || typeof value.product !== "object" || Array.isArray(value.product)) {
-    findings.push({ path: PROFILE_PATH, kind: "product", detail: "product identity is required" });
-  } else if (!ROLE_ID.test(value.product.id) || !["browser", "python-plus-browser"].includes(value.product.runtime)) {
-    findings.push({ path: PROFILE_PATH, kind: "product", detail: "product id/runtime is unsupported" });
-  }
-  if (!value.policies || typeof value.policies !== "object" || Array.isArray(value.policies)) {
-    findings.push({ path: PROFILE_PATH, kind: "policy", detail: "policies are required" });
-  } else {
-    for (const [policy, relativePath] of Object.entries(value.policies)) {
-      checkRepositoryPath(root, relativePath, `policy:${policy}`, findings, "file");
-    }
-  }
-  if (!value.documentation || !Array.isArray(value.documentation.roots) || value.documentation.roots.length === 0) {
-    findings.push({ path: PROFILE_PATH, kind: "documentation", detail: "documentation roots are required" });
-  } else {
-    for (const relativePath of value.documentation.roots) {
-      checkRepositoryPath(root, relativePath, "documentation", findings);
-    }
-  }
-  if (!value.adapters || typeof value.adapters !== "object" || Array.isArray(value.adapters)) {
-    findings.push({ path: PROFILE_PATH, kind: "adapter", detail: "adapters are required" });
-  } else {
-    for (const [role, command] of Object.entries(value.adapters)) {
-      if (!ROLE_ID.test(role) || !isCommand(command)) {
-        findings.push({ path: PROFILE_PATH, kind: "command", detail: `invalid adapter '${role}'` });
-      }
+  const findings = unknownFields(value, ["adapters"], PROFILE_PATH);
+  for (const [role, command] of Object.entries(value.adapters)) {
+    if (!ROLE_ID.test(role) || !isCommand(command)) {
+      findings.push({ path: PROFILE_PATH, kind: "command", detail: `invalid adapter '${role}'` });
     }
   }
   return { ok: findings.length === 0, findings };
 }
 
-/** @param {string} root @param {unknown} relativePath @param {string} kind @param {RoleFinding[]} findings @param {"file"|"directory"} [expectedKind] @returns {void} */
-function checkRepositoryPath(root, relativePath, kind, findings, expectedKind) {
-  if (!isRelativePath(relativePath)) {
-    findings.push({ path: PROFILE_PATH, kind: "path", detail: `${kind} path must be repository-relative` });
-    return;
-  }
-  const absolutePath = path.resolve(root, relativePath);
-  const relative = path.relative(root, absolutePath);
-  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
-    findings.push({ path: PROFILE_PATH, kind: "path", detail: `${kind} path escapes repository root` });
-    return;
-  }
-  if (!fs.existsSync(absolutePath)) {
-    findings.push({ path: relativePath, kind: "stale-path", detail: `${kind} path does not exist` });
-    return;
-  }
-  if (expectedKind === "file" && !fs.statSync(absolutePath).isFile()) {
-    findings.push({ path: relativePath, kind: "path-kind", detail: `${kind} path must be a file` });
-  }
-  if (expectedKind === "directory" && !fs.statSync(absolutePath).isDirectory()) {
-    findings.push({ path: relativePath, kind: "path-kind", detail: `${kind} path must be a directory` });
-  }
+/** @param {Record<string, unknown>} value @param {string[]} allowed @param {string} filePath @returns {RoleFinding[]} */
+function unknownFields(value, allowed, filePath) {
+  return Object.keys(value)
+    .filter((key) => !allowed.includes(key))
+    .map((key) => ({
+      path: filePath,
+      kind: "unknown-field",
+      detail: `field '${key}' is not read by the orchestrator`
+    }));
+}
+
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+/** @param {unknown} value @returns {boolean} */
+function isCommand(value) {
+  return typeof value === "string" && value.length > 0 && COMMAND.test(value);
 }
 
 /** @param {string} filePath @returns {unknown} */
@@ -201,16 +96,6 @@ export function readPortableRoleGraph(filePath) {
 /** @param {string} filePath @returns {unknown} */
 export function readProjectProfile(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
-/** @param {unknown} value @returns {value is string} */
-function isRelativePath(value) {
-  return typeof value === "string" && RELATIVE_PATH.test(value);
-}
-
-/** @param {unknown} value @returns {boolean} */
-function isCommand(value) {
-  return typeof value === "string" && value.length > 0 && COMMAND.test(value);
 }
 
 /** @param {string} root @returns {{graph: any, profile: any}} */

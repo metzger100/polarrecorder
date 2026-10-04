@@ -1,34 +1,4 @@
 {
-  "schemaVersion": 1,
-  "profileType": "product-quality-profile",
-  "product": {
-    "id": "python-plus-browser",
-    "runtime": "python-plus-browser"
-  },
-  "sourceScopes": [
-    { "id": "python", "roots": ["server", "plugin.py", "tests"] },
-    { "id": "viewer", "roots": ["viewer", "plugin.js", "plugin.mjs"] }
-  ],
-  "languages": {
-    "javascript": true,
-    "typescript": true,
-    "css": true,
-    "markdown": true,
-    "python": true
-  },
-  "testProjects": [
-    { "id": "python", "command": "npm run test:python", "paths": ["tests"] },
-    { "id": "viewer", "command": "npm run test:viewer", "paths": ["tests/js"] },
-    { "id": "plugin", "command": "npm run test:plugin", "paths": ["tests/js"] }
-  ],
-  "policies": {
-    "coverage": "tools/quality-policy/coverage-floors.json",
-    "complexity": "tools/quality-policy/eslint.complexity.config.mjs",
-    "fileSize": "tools/quality-policy/project-file-size-scope.json"
-  },
-  "documentation": {
-    "roots": ["README.md", "documentation", "CONTRIBUTING.md"]
-  },
   "adapters": {
     "setup": "npm run setup",
     "standard": "npm run check:standard",

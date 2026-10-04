@@ -37,11 +37,6 @@ const GENERATED_STATE_DIRS = new Set([
   "venv"
 ]);
 
-const IMMUTABLE_CAPTURE_JSON_FILES = new Set([
-  "tools/quality-policy/baseline-coverage-capture.json",
-  "tools/quality-policy/planned-quality-fixtures.json"
-]);
-
 /**
  * @param {string} relativePath
  * @returns {{owner: "prettier" | "ruff" | "unsupported", reason?: string, alternateValidation?: string} | null}
@@ -80,13 +75,6 @@ function classify(relativePath) {
         reason:
           "functional test fixture; reformatting is a fixture-sync decision (CLAUDE.md Section 10), not an automated one",
         alternateValidation: "tests/test_export.py and related fixture-sync tests exercise byte content"
-      };
-    }
-    if (IMMUTABLE_CAPTURE_JSON_FILES.has(relativePath)) {
-      return {
-        owner: "unsupported",
-        reason: "byte-stable immutable capture, hand-authored and reviewed directly rather than formatted by Prettier",
-        alternateValidation: "tests/test_baseline_captures.py digest anchors and regeneration proofs"
       };
     }
     return { owner: "prettier" };

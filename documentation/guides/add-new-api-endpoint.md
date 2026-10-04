@@ -15,7 +15,8 @@ Use this guide to add an endpoint while preserving the AvNav boundary and snapsh
 - Add pytest coverage under `tests/` for accepted, rejected, and malformed requests.
 - Add Vitest coverage under `tests/js/` for any viewer client call or rendering change.
 - Update API fixtures when the response shape changes.
-- Run `npm run inventory:write` after adding executable test helpers.
+- New `tests/js/*.test.mjs` files need no registration: `npm run typecheck:tests` type-checks every discovered test
+  file.
 - Run `npm run check:all` before committing.
 
 ## Related

@@ -815,9 +815,13 @@ AGENTS.md §12 fixture sync:
   every suppression spelling the unregistered pattern rule flagged (the Python lint, type, ruff, flake8, and mypy forms,
   including the coded-with-reason forms the old rule allowed, the ESLint disable forms, and both plugin marker
   families). The one spelling the old rule matched that the byte-identical engine does not is a bare ESLint re-enable
-  directive; it cannot suppress anything, any disable it would pair with is rejected, and ESLint reports it under
-  `noInlineConfig`.
-- Phase 11 inventory decision: _pending_
+  directive; it cannot suppress anything, any disable it would pair with is rejected, and ESLint reports it as a warning
+  under `noInlineConfig`.
+- Phase 11 inventory decision: **retired**. With `tsconfig.tests.json` on `include` globs (`tests/js/**/*.test.mjs`,
+  `tools/*-harness.mjs`), `tsc --listFilesOnly` showed all 59 discovered files in the program. Both guarantees are kept
+  and tested in `tests/js/test-inventory.test.mjs`: a discovered file outside the include globs fails before `tsc` runs,
+  and a type error in a discovered file fails the `tsc` run. `test-inventory.json`, `inventory:write`, and the
+  writer/diff logic are gone; the byte-identical `test-inventory-engine.mjs` is untouched.
 
 ## Related
 

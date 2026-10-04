@@ -16,7 +16,6 @@ This project-local workflow documents a concrete Polar Recorder extension.
 - Review `plugin.py` integration boundaries.
 - Review `viewer/viewer.html` script order.
 - Add tests under `tests/`.
-- Run `npm run inventory:write`.
 - Run `npm run check:all`.
 - Step 1: keep the contract explicit, typed, tested, and documented.
 - Step 2: keep the contract explicit, typed, tested, and documented.
