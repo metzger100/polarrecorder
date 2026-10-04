@@ -5,7 +5,7 @@ import {
   createEnvironment,
   defaultResponseBody,
   flushViewer,
-  loadViewerFile,
+  loadViewerApp,
   ok,
   textTree
 } from "../../tools/viewer-harness.mjs";
@@ -68,7 +68,7 @@ function responder(endpoint) {
 
 test("advanced settings render and save", async () => {
   const env = createEnvironment({ responder });
-  loadSettingsViewer(env);
+  loadViewerApp(env);
 
   env.fireDOMContentLoaded();
   await flushViewer();
@@ -107,7 +107,7 @@ test("advanced settings render and save", async () => {
 
 test("core data sources render defaults and save all three keys", async () => {
   const env = createEnvironment({ responder });
-  loadSettingsViewer(env);
+  loadViewerApp(env);
 
   env.fireDOMContentLoaded();
   await flushViewer();
@@ -143,7 +143,7 @@ test("core data sources render defaults and save all three keys", async () => {
 
 test("advanced settings validates range", async () => {
   const env = createEnvironment({ responder });
-  loadSettingsViewer(env);
+  loadViewerApp(env);
 
   env.fireDOMContentLoaded();
   await flushViewer();
@@ -165,27 +165,6 @@ test("advanced settings validates range", async () => {
   assert.ok(textTree(panel).includes("Minimum true wind must be between 0.5 and 10."), textTree(panel));
 });
 
-/** @param {Environment} env */
-function loadSettingsViewer(env) {
-  loadViewerFile(env, "placeholders.js");
-  loadViewerFile(env, "dom.js");
-  loadViewerFile(env, "enhanced-rule-display.js");
-  loadViewerFile(env, "status-ui.js");
-  loadViewerFile(env, "presets.js");
-  loadViewerFile(env, "grid-editor.js");
-  loadViewerFile(env, "polar-chart-geometry.js");
-  loadViewerFile(env, "polar-chart.js");
-  loadViewerFile(env, "timeline-chart.js");
-  loadViewerFile(env, "export-fields.js");
-  loadViewerFile(env, "export-presets.js");
-  loadViewerFile(env, "export-ui.js");
-  loadViewerFile(env, "import-upload.js");
-  loadViewerFile(env, "enhanced-settings.js");
-  loadViewerFile(env, "advanced-settings.js");
-  loadViewerFile(env, "settings-ui.js");
-  loadViewerFile(env, "viewer.js");
-}
-
 /**
  * @param {FakeElement} panel
  * @returns {FakeElement | undefined}
@@ -205,3 +184,51 @@ function sourceSaveButton(panel) {
     return item.textContent === "Save Data Sources";
   });
 }
+
+/**
+ * @param {Record<string, unknown>} config
+ * @param {Record<string, unknown>} saved
+ * @returns {Promise<Environment>}
+ */
+async function openExportThenSettings(config, saved) {
+  const env = createEnvironment({
+    responder(endpoint) {
+      if (endpoint.startsWith("config")) return ok(config);
+      if (endpoint.startsWith("advanced/save")) return ok({ config: saved });
+      return responder(endpoint);
+    }
+  });
+  loadViewerApp(env);
+  env.fireDOMContentLoaded();
+  await flushViewer();
+  env.clickTab("export");
+  await flushViewer();
+  env.clickTab("settings");
+  await flushViewer();
+  return env;
+}
+
+test("the percentile help text names the configured default", async () => {
+  const env = await openExportThenSettings({ min_samples_for_export: 50, percentile: 72 }, {});
+
+  const tree = textTree(env.elements["export-panel"]);
+
+  assert.ok(tree.includes("Default 72 means about 72% of accepted samples"), tree);
+  assert.ok(!tree.includes("Default 65"), tree);
+});
+
+test("an Advanced save refreshes ConfigCache and re-renders the Export tab", async () => {
+  const env = await openExportThenSettings(
+    { min_samples_for_export: 50, percentile: 65, low_wind_threshold: 3 },
+    { low_wind_threshold: 4.2, percentile: 80 }
+  );
+  const saveButton = advancedSaveButton(env.elements["settings-panel"]);
+  assert.ok(saveButton, "expected the Save Advanced Settings button");
+
+  saveButton.click();
+  await flushViewer();
+
+  const cache = /** @type {Record<string, unknown>} */ (env.window.Polarrecorder.ConfigCache);
+  assert.deepEqual(cache, { min_samples_for_export: 50, percentile: 80, low_wind_threshold: 4.2 });
+  assert.ok(textTree(env.elements["export-panel"]).includes("Default 80 means about 80%"));
+});

@@ -319,6 +319,12 @@ Blank cells mean not enough accepted data exists for that TWA/TWS cell. Normal e
 cell; high-confidence export requires at least 50. Sail more in those conditions, or turn off high-confidence export
 when the normal-confidence table is sufficient.
 
+### A banner appears above the tabs
+
+"Connection lost — retrying..." means the viewer cannot reach AvNav; it clears itself once requests succeed again.
+"Polar Recorder error: ..." means AvNav answered but the plugin rejected the request, and the text after the colon is
+the plugin's own message.
+
 ### Timeline times look odd after startup
 
 If the AvNav computer corrects its clock after boot, timeline buckets can briefly look strange. They age out

@@ -10,6 +10,10 @@ window.Polarrecorder = window.Polarrecorder || {};
   const Polarrecorder = window.Polarrecorder;
   const HEARTBEAT_MS = 2000;
   const TIMELINE_TICKS = 30;
+  const CONNECTION_LOST_TEXT = "Connection lost — retrying...";
+
+  /** An `ERROR` body returned by the plugin API, as opposed to a transport or HTTP failure. */
+  class ApiError extends Error {}
 
   /** @typedef {{name: string, builtin: boolean, twa: number[], tws: number[]}} Preset */
   /**
@@ -24,7 +28,9 @@ window.Polarrecorder = window.Polarrecorder || {};
    *   timelineMinutes: number,
    *   polarFormat: string,
    *   initializedExport: boolean,
-   *   initializedSettings: boolean
+   *   initializedSettings: boolean,
+   *   statusInFlight: boolean,
+   *   pendingAction: string | null
    * }} ViewerState
    */
 
@@ -40,7 +46,9 @@ window.Polarrecorder = window.Polarrecorder || {};
     timelineMinutes: 240,
     polarFormat: "DefaultStarboard180",
     initializedExport: false,
-    initializedSettings: false
+    initializedSettings: false,
+    statusInFlight: false,
+    pendingAction: null
   };
 
   Polarrecorder.ApiBase = "";
@@ -54,6 +62,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     Object.defineProperty(Polarrecorder, "fetchJson", { value: fetchJson });
     Polarrecorder.FetchJson = fetchJson;
     wireTabs();
+    wirePolarPreset();
     fetchPresets().then(function () {
       populatePresetSelects();
       activateTab("polar");
@@ -74,23 +83,12 @@ window.Polarrecorder = window.Polarrecorder || {};
     return Polarrecorder.Dom.RequireById(id);
   }
 
-  /**
-   * @template {keyof HTMLElementTagNameMap} K
-   * @param {K} tag
-   * @param {string} [className]
-   * @param {string} [text]
-   * @returns {HTMLElementTagNameMap[K]}
-   */
-  function el(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
-  }
-
-  /** @param {HTMLElement} node */
-  function clear(node) {
-    Polarrecorder.Dom.Clear(node);
+  function wirePolarPreset() {
+    const polar = /** @type {HTMLSelectElement} */ (byId("polar-preset"));
+    polar.addEventListener("change", function () {
+      state.polarFormat = polar.value;
+      fetchPolar(true);
+    });
   }
 
   function wireTabs() {
@@ -124,7 +122,8 @@ window.Polarrecorder = window.Polarrecorder || {};
 
   function heartbeat() {
     state.tick += 1;
-    fetchStatus();
+    if (!state.statusInFlight) fetchStatus();
+    if (state.activeTab === "export" && !state.initializedExport) initExport();
     if (state.activeTab === "timeline" && state.tick - state.lastTimelineTick >= TIMELINE_TICKS) {
       fetchTimeline(state.timelineMinutes);
     }
@@ -151,24 +150,31 @@ window.Polarrecorder = window.Polarrecorder || {};
         return response.json();
       })
       .then(function (body) {
-        if (!body || body.status === "ERROR") {
-          throw new Error((body && body.error) || "Request failed");
-        }
+        if (!body) throw new Error("Request failed");
+        if (body.status === "ERROR") throw new ApiError(body.error);
         hideBanner();
         return body.data;
       })
       .catch(function (error) {
-        if (!action) showBanner();
+        if (!action) showBanner(error);
         throw error;
       });
   }
 
-  function showBanner() {
-    byId("connection-banner").hidden = false;
+  /**
+   * Shows the server message for an API error and the connection text for transport or HTTP failures.
+   * @param {unknown} [error]
+   */
+  function showBanner(error) {
+    const banner = byId("connection-banner");
+    banner.textContent = error instanceof ApiError ? "Polar Recorder error: " + error.message : CONNECTION_LOST_TEXT;
+    banner.hidden = false;
   }
 
   function hideBanner() {
-    byId("connection-banner").hidden = true;
+    const banner = byId("connection-banner");
+    banner.textContent = CONNECTION_LOST_TEXT;
+    banner.hidden = true;
   }
 
   /** @returns {Promise<void>} */
@@ -187,19 +193,23 @@ window.Polarrecorder = window.Polarrecorder || {};
     return fetchPresets().then(populatePresetSelects);
   }
 
+  /** Rebuilds the polar preset options; a selection that no longer exists falls back to the first preset. */
   function populatePresetSelects() {
     const polar = /** @type {HTMLSelectElement} */ (byId("polar-preset"));
-    clear(polar);
-    Polarrecorder.PresetsCache.forEach(function (/** @type {Preset} */ preset) {
-      const option = el("option", "", Polarrecorder.Presets.Label(preset));
+    const presets = Polarrecorder.PresetsCache;
+    const known = presets.some(function (/** @type {Preset} */ preset) {
+      return preset.name === state.polarFormat;
+    });
+    if (!known) state.polarFormat = presets[0].name;
+    Polarrecorder.Dom.Clear(polar);
+    presets.forEach(function (/** @type {Preset} */ preset) {
+      const option = /** @type {HTMLOptionElement} */ (
+        Polarrecorder.Dom.Node("option", "", Polarrecorder.Presets.Label(preset))
+      );
       option.value = preset.name;
       polar.appendChild(option);
     });
     polar.value = state.polarFormat;
-    polar.addEventListener("change", function () {
-      state.polarFormat = polar.value;
-      fetchPolar(true);
-    });
     if (Polarrecorder.ExportUI) Polarrecorder.ExportUI.RefreshPresets();
   }
 
@@ -210,6 +220,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     const endpoint = "polar?" + params.toString();
     fetchJson(endpoint)
       .then(function (data) {
+        if (data.format !== state.polarFormat) return;
         state.polarGen = data.generation;
         byId("polar-chart").classList.add("has-data");
         Polarrecorder.PolarChart.Render(data, {
@@ -232,6 +243,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   function fetchStatus() {
+    state.statusInFlight = true;
     fetchJson("status")
       .then(function (data) {
         state.statusData = data;
@@ -240,7 +252,10 @@ window.Polarrecorder = window.Polarrecorder || {};
         if (state.activeTab === "polar" && data.generation !== state.polarGen) fetchPolar();
         if (state.activeTab === "export" && data.generation !== state.csvGen) refreshPreview(data.generation);
       })
-      .catch(showBanner);
+      .catch(showBanner)
+      .finally(function () {
+        state.statusInFlight = false;
+      });
   }
 
   /** @param {any} data */
@@ -259,7 +274,8 @@ window.Polarrecorder = window.Polarrecorder || {};
   function renderStatusPanel(data) {
     Polarrecorder.StatusUI.Render(byId("status-panel"), data, {
       runAction: runAction,
-      fetchStatus: fetchStatus
+      fetchStatus: fetchStatus,
+      pendingAction: state.pendingAction
     });
   }
 
@@ -301,9 +317,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         Polarrecorder.ConfigCache = data;
         finish();
       })
-      .catch(function () {
-        showBanner();
-      });
+      .catch(showBanner);
   }
 
   function initSettings() {
@@ -320,17 +334,30 @@ window.Polarrecorder = window.Polarrecorder || {};
    */
   function runAction(endpoint, button, done) {
     const oldText = button.textContent;
+    state.pendingAction = endpoint;
     button.disabled = true;
     button.textContent = "Working";
     fetchJson(endpoint, { action: true })
       .then(done)
       .catch(showBanner)
       .finally(function () {
+        state.pendingAction = null;
         button.disabled = false;
         button.textContent = oldText;
       });
   }
 
+  /**
+   * Merges a saved settings subset into the loaded ConfigCache, then re-renders an initialized Export tab.
+   * @param {Record<string, unknown>} saved
+   */
+  function applySavedConfig(saved) {
+    if (!Polarrecorder.ConfigCache) return;
+    Object.assign(Polarrecorder.ConfigCache, saved);
+    if (state.initializedExport) Polarrecorder.ExportUI.RefreshPresets();
+  }
+
   Polarrecorder.RefreshPresets = refreshPresets;
+  Polarrecorder.ApplySavedConfig = applySavedConfig;
   Polarrecorder.FetchTimeline = fetchTimeline;
 })();

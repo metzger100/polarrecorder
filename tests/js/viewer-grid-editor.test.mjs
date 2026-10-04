@@ -128,9 +128,9 @@ test("blurring a value input commits the edit and re-sorts", () => {
   );
   const input = childByTag(tokens(editor)[0], "input");
   input.value = "90";
-  assert.ok(input.onblur, "expected a blur handler on the value input");
+  assert.equal(input.listeners.get("blur")?.length, 1, "expected one blur handler on the value input");
 
-  input.onblur();
+  input.dispatch("blur");
 
   assert.deepEqual(editor.Values(), [60, 90], "the edited value sorts to the end");
   assert.equal(changes, 1, "committing an edit notifies once");

@@ -12,6 +12,14 @@ window.Polarrecorder = window.Polarrecorder || {};
   Polarrecorder.RecentDecisions = [];
 
   /**
+   * @typedef {{
+   *   runAction: (endpoint: string, button: HTMLButtonElement, done: () => void) => void,
+   *   fetchStatus: () => void,
+   *   pendingAction: string | null
+   * }} StatusCallbacks
+   */
+
+  /**
    * @param {string} tag
    * @param {string} [className]
    * @param {string} [text]
@@ -52,7 +60,7 @@ window.Polarrecorder = window.Polarrecorder || {};
   /**
    * @param {HTMLElement} host
    * @param {any} data
-   * @param {{runAction: (endpoint: string, button: HTMLElement, done: () => void) => void, fetchStatus: () => void}} callbacks
+   * @param {StatusCallbacks} callbacks
    */
   function render(host, data, callbacks) {
     host.classList.add("has-data");
@@ -65,8 +73,9 @@ window.Polarrecorder = window.Polarrecorder || {};
   }
 
   /**
+   * A pending Pause/Resume keeps the rebuilt button disabled as "Working" until the action settles.
    * @param {any} data
-   * @param {{runAction: (endpoint: string, button: HTMLElement, done: () => void) => void, fetchStatus: () => void}} callbacks
+   * @param {StatusCallbacks} callbacks
    * @returns {HTMLElement}
    */
   function renderStateCard(data, callbacks) {
@@ -76,7 +85,13 @@ window.Polarrecorder = window.Polarrecorder || {};
     title.appendChild(el("span", "dot " + label.className));
     title.appendChild(el("span", "", label.text));
     const meta = el("p", "helper", label.helper + " · Uptime " + formatDuration(data.uptime_seconds || 0));
-    const action = el("button", "primary-action state-layer", data.recording ? "Pause" : "Resume");
+    const action = /** @type {HTMLButtonElement} */ (
+      el("button", "primary-action state-layer", data.recording ? "Pause" : "Resume")
+    );
+    if (callbacks.pendingAction) {
+      action.disabled = true;
+      action.textContent = "Working";
+    }
     action.addEventListener("click", function () {
       const endpoint = data.recording ? "pause" : "resume";
       callbacks.runAction(endpoint, action, callbacks.fetchStatus);

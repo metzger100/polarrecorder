@@ -1,8 +1,9 @@
 /**
  * Behavioral tests for viewer/export-ui.js: preset save (empty name, new name, existing-name
  * overwrite confirm accepted/declined), preset delete (builtin blocked, confirm
- * accepted/declined), preview/action error handling, the cancel-save-box path, and the strict
- * POL/CSV card separation (own percentile, confidence, and message line per format).
+ * accepted/declined, editors reset to the default grid), preview/action error handling, the
+ * cancel-save-box path, and the strict POL/CSV card separation (own percentile, confidence,
+ * and message line per format).
  */
 
 import assert from "node:assert/strict";
@@ -12,7 +13,7 @@ import {
   createEnvironment,
   defaultResponseBody,
   flushViewer,
-  loadViewerFile,
+  loadViewerApp,
   ok,
   textTree
 } from "../../tools/viewer-harness.mjs";
@@ -63,33 +64,12 @@ function responder(endpoint) {
   return defaultResponseBody(endpoint);
 }
 
-/** @param {Environment} env */
-function loadExportViewer(env) {
-  loadViewerFile(env, "placeholders.js");
-  loadViewerFile(env, "dom.js");
-  loadViewerFile(env, "enhanced-rule-display.js");
-  loadViewerFile(env, "status-ui.js");
-  loadViewerFile(env, "presets.js");
-  loadViewerFile(env, "grid-editor.js");
-  loadViewerFile(env, "polar-chart-geometry.js");
-  loadViewerFile(env, "polar-chart.js");
-  loadViewerFile(env, "timeline-chart.js");
-  loadViewerFile(env, "export-fields.js");
-  loadViewerFile(env, "export-presets.js");
-  loadViewerFile(env, "export-ui.js");
-  loadViewerFile(env, "import-upload.js");
-  loadViewerFile(env, "enhanced-settings.js");
-  loadViewerFile(env, "advanced-settings.js");
-  loadViewerFile(env, "settings-ui.js");
-  loadViewerFile(env, "viewer.js");
-}
-
 /**
  * @param {Environment} env
  * @returns {Promise<FakeElement>}
  */
 async function openExportPanel(env) {
-  loadExportViewer(env);
+  loadViewerApp(env);
   env.fireDOMContentLoaded();
   await flushViewer();
   env.clickTab("export");
@@ -183,15 +163,6 @@ function confidenceControl(card) {
 }
 
 /**
- * @param {FakeElement} node
- * @param {"oninput" | "onchange"} handlerName
- */
-function fireHandler(node, handlerName) {
-  const handler = /** @type {Record<string, unknown>} */ (node)[handlerName];
-  if (typeof handler === "function") handler();
-}
-
-/**
  * @param {FakeElement} card
  * @param {string} percentile
  * @param {boolean} highConfidence
@@ -199,10 +170,10 @@ function fireHandler(node, handlerName) {
 function setQuality(card, percentile, highConfidence) {
   const percentileNode = fieldControl(card, "Percentile override");
   percentileNode.value = percentile;
-  fireHandler(percentileNode, "oninput");
+  percentileNode.dispatch("input");
   const confidenceNode = confidenceControl(card);
   confidenceNode.checked = highConfidence;
-  fireHandler(confidenceNode, "onchange");
+  confidenceNode.dispatch("change");
 }
 
 /**
@@ -213,8 +184,7 @@ function selectPreset(panel, name) {
   const select = allByTag(panel, "select")[0];
   assert.ok(select, "expected the preset select element");
   select.value = name;
-  const onChange = /** @type {Record<string, unknown>} */ (select).onchange;
-  if (typeof onChange === "function") onChange();
+  select.dispatch("change");
 }
 
 test("save box opens and saving an empty name shows an error", async () => {
@@ -328,6 +298,9 @@ test("delete sends a request for a non-builtin preset once confirmed", async () 
   assert.equal(deleteRequests.length, before + 1, deleteRequests.join(" | "));
   assert.ok(deleteRequests[deleteRequests.length - 1].includes("name=coastal-cruise"));
   assert.ok(textTree(panel).includes("Preset deleted."), textTree(panel));
+  const editors = /** @type {any} */ (env.window.Polarrecorder).ExportPresets.Editors();
+  assert.deepEqual(editors.twa.Values(), [0, 90, 180], "the editors load the default grid");
+  assert.deepEqual(editors.tws.Values(), [4, 6, 8]);
 });
 
 test("delete does nothing for a non-builtin preset when declined", async () => {

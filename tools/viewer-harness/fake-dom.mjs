@@ -25,12 +25,12 @@
 /**
  * A fake DOM node produced by element(). Every node produced by the harness
  * carries all of these members; classList and firstChild are populated by
- * element() itself before the node is ever handed to a caller. id, onclick,
- * onfocus, onblur, ondblclick, and checked are genuinely absent until the
- * harness (or the vm-loaded viewer script) sets them -- checked stands in for a
- * checkbox-role <input>'s real DOM `.checked` property, and onfocus, onblur,
- * and ondblclick are the addEventListener("focus"/"blur"/"dblclick", ...)
- * storage slots, mirroring onclick.
+ * element() itself before the node is ever handed to a caller. id and checked
+ * are genuinely absent until the harness (or the vm-loaded viewer script) sets
+ * them -- checked stands in for a checkbox-role <input>'s real DOM `.checked`
+ * property. Like the real DOM, addEventListener keeps every listener per event
+ * type, and dispatch(name, event) calls all of them in registration order;
+ * click() dispatches "click".
  *
  * @typedef {{
  *   attributes: Map<string, string>,
@@ -44,10 +44,7 @@
  *   hidden: boolean,
  *   inert: boolean,
  *   id?: string,
- *   onblur?: () => void,
- *   onclick?: (event: FakeClickEvent) => void,
- *   ondblclick?: () => void,
- *   onfocus?: () => void,
+ *   listeners: Map<string, Array<(event?: unknown) => void>>,
  *   parentNode: FakeElement | null,
  *   style: FakeStyle,
  *   tagName: string,
@@ -55,6 +52,8 @@
  *   value: string,
  *   appendChild: (child: FakeElement) => FakeElement,
  *   addEventListener: (name: string, callback: (event?: unknown) => void) => void,
+ *   removeEventListener: (name: string, callback: (event?: unknown) => void) => void,
+ *   dispatch: (name: string, event?: unknown) => void,
  *   click: () => void,
  *   closest: (selector: string) => FakeElement | null,
  *   getAttribute: (name: string) => string | undefined,
@@ -87,6 +86,7 @@ export function element(tagName) {
     firstChild: null,
     hidden: false,
     inert: false,
+    listeners: new Map(),
     parentNode: null,
     style: styleBag(),
     tagName,
@@ -98,11 +98,29 @@ export function element(tagName) {
       return child;
     },
     addEventListener(name, callback) {
-      const bag = /** @type {Record<string, unknown>} */ (node);
-      bag["on" + name] = callback;
+      const callbacks = node.listeners.get(name) || [];
+      callbacks.push(callback);
+      node.listeners.set(name, callbacks);
+    },
+    removeEventListener(name, callback) {
+      const callbacks = node.listeners.get(name) || [];
+      node.listeners.set(
+        name,
+        callbacks.filter(function (item) {
+          return item !== callback;
+        })
+      );
+    },
+    dispatch(name, event) {
+      const callbacks = (node.listeners.get(name) || []).slice();
+      callbacks.forEach(function (callback) {
+        callback(event);
+      });
     },
     click() {
-      if (node.onclick) node.onclick({ clientX: 20, clientY: 20 });
+      /** @type {FakeClickEvent} */
+      const event = { clientX: 20, clientY: 20 };
+      node.dispatch("click", event);
     },
     closest(selector) {
       if (!selector.startsWith(".")) return null;

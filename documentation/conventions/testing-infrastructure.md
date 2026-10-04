@@ -41,8 +41,11 @@ Polar Recorder actually uses.
   user-visible API shape changes.
 - Every executable JavaScript test/helper lives under `tests/js/*.test.mjs` (plus the shared `tools/viewer-harness.mjs`
   fake-DOM/fetch harness) and runs under Vitest with `node:assert/strict` assertions -- no custom runner, no success
-  `console.log` sentinel; Vitest reports pass/fail and exit code itself. Reusable CLI checker implementations
-  (`check-*.mjs`) stay under `tools/`, imported by their matching `tests/js/*.test.mjs` file.
+  `console.log` sentinel; Vitest reports pass/fail and exit code itself. Like the real DOM, the fake elements keep every
+  listener per event type and `dispatch(name, event)` calls them all, so a stacked listener is visible to tests;
+  `loadViewerApp(env)` loads every app script, and `env.intervals` exposes registered timers so a test can drive the
+  heartbeat. Reusable CLI checker implementations (`check-*.mjs`) stay under `tools/`, imported by their matching
+  `tests/js/*.test.mjs` file.
 - `vitest.config.mjs` defines three projects by include pattern rather than by file list: `viewer`
   (`tests/js/viewer-*.test.mjs`), `plugin` (`tests/js/plugin-*.test.mjs`), and `tools` (every other
   `tests/js/*.test.mjs`). Because the projects are pattern-matched, a newly added test file is picked up by a gate

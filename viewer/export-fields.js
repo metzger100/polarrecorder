@@ -113,16 +113,23 @@ window.Polarrecorder = window.Polarrecorder || {};
         target.highConfidence = checked;
       }
     );
-    return [percentile.wrap, percentileHelp(), confidence];
+    return [percentile.wrap, percentileHelp(defaultPercentile), confidence];
   }
 
-  /** @returns {HTMLParagraphElement} */
-  function percentileHelp() {
+  /**
+   * @param {string} defaultPercentile
+   * @returns {HTMLParagraphElement}
+   */
+  function percentileHelp(defaultPercentile) {
     const node = document.createElement("p");
     node.className = "helper";
     node.textContent =
       "The percentile chooses the speed written for each polar cell from its accepted-sample histogram. " +
-      "Default 65 means about 65% of accepted samples in that cell were at or below the exported speed. " +
+      "Default " +
+      defaultPercentile +
+      " means about " +
+      defaultPercentile +
+      "% of accepted samples in that cell were at or below the exported speed. " +
       "Lower values export a more conservative, slower table; higher values export a more optimistic, faster table. " +
       "Leave blank unless you intentionally want an alternate export.";
     return node;

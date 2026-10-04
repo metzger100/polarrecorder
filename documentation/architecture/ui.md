@@ -34,10 +34,12 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
   status rendering call without creating a namespace cycle between them. `viewer/status-ui.js` owns the Status tab:
   recent-decision derivation and the `RecentDecisions` cache, the state/values/counters/persistence cards, decision
   strip coloring, and status-local duration/last-flush text, driven by
-  `StatusUI.Render(host, data, { runAction, fetchStatus })` and `StatusUI.AppendRecentDecision(data)`; `viewer.js`
-  passes its own `runAction` and `fetchStatus` in as callbacks rather than status-ui.js reaching back into the shell's
-  namespace. `viewer/placeholders.js` owns shared absent-value display text so chart and status rendering reuse one
-  vocabulary. Component modules add `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
+  `StatusUI.Render(host, data, { runAction, fetchStatus, pendingAction })` and `StatusUI.AppendRecentDecision(data)`;
+  `viewer.js` passes its own `runAction` and `fetchStatus` in as callbacks rather than status-ui.js reaching back into
+  the shell's namespace. `runAction` records the pending Pause/Resume endpoint in viewer state until the action settles,
+  and `pendingAction` makes every rebuilt Pause/Resume button render disabled as "Working" until then.
+  `viewer/placeholders.js` owns shared absent-value display text so chart and status rendering reuse one vocabulary.
+  Component modules add `PolarChart`, `TimelineChart`, `GridEditor`, `ExportUI`, and `SettingsUI`.
   `viewer/polar-chart-geometry.js` adds `PolarChartGeometry` (`SvgNode`, `AddGrid`, `AddCurve`, `BandColor`), the SVG
   grid/curve drawing math that `polar-chart.js` calls into so its own state/orchestration logic stays under the
   file-size budget. `viewer/export-fields.js` adds `ExportFields` (`Section`, `Header`, `Field`, `ConfidenceField`,
@@ -109,12 +111,27 @@ JavaScript, and SVG so it can run inside AvNav without a build step, network acc
 - Export grid controls reserve room for the browser's numeric spinner as well as a three-digit TWA value, so port-side
   angles through `359` remain fully visible while the row continues to scroll horizontally when needed. Its add/remove
   controls do not shrink, preserving their circular touch targets at every grid width.
-- A single two-second heartbeat is the only timer and the shared sync anchor. It always fetches `status`, which carries
-  the monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch. The active tab
-  refreshes off that heartbeat: Status re-renders every beat; Polar refetches only when `generation` advances, so new
-  curves and TWS bands appear within one beat of the sample entering the model; the Export CSV preview, once shown,
-  silently refreshes when `generation` advances; Timeline refetches once per minute. Switching tabs immediately fetches
-  that tab's data, so every tab shows the same model state within one beat.
+- A single two-second heartbeat is the only timer and the shared sync anchor. It fetches `status`, which carries the
+  monotonic `generation` token, and keeps the recent-decision strip filled without any extra fetch; a beat skips that
+  fetch while the previous `status` request is still in flight. The active tab refreshes off that heartbeat: Status
+  re-renders every beat; Polar refetches only when `generation` advances, so new curves and TWS bands appear within one
+  beat of the sample entering the model; the Export CSV preview, once shown, silently refreshes when `generation`
+  advances; Timeline refetches once per minute; an Export tab whose first `config` fetch failed retries its
+  initialization every beat until it succeeds. Switching tabs immediately fetches that tab's data, so every tab shows
+  the same model state within one beat.
+- The `#polar-preset` change listener is bound once at startup. Every preset refresh (after an Export save/delete or a
+  presets restore, through `Polarrecorder.RefreshPresets()`) only rebuilds the options, and a selection whose preset no
+  longer exists falls back to the first cached preset. A `polar` response whose echoed `format` no longer matches the
+  current selection is dropped, so an older response can never overwrite a newer one.
+- `fetchJson` distinguishes plugin API `ERROR` bodies from transport and HTTP failures. A failed background fetch shows
+  "Connection lost — retrying..." only for transport or HTTP failures; an API error shows "Polar Recorder error:
+  <server message>" instead, and the next successful fetch hides the banner and restores its default text. Action
+  fetches never raise the banner themselves.
+- `Polarrecorder.ConfigCache` is fetched once for the Export tab. Data Sources, Advanced, and Enhanced saves pass the
+  saved subset that the server returns (`data.config`) to `Polarrecorder.ApplySavedConfig`, which merges it into a
+  loaded cache and re-renders an initialized Export tab, so defaults such as the percentile help text ("Default N means
+  about N% ...") and the high-confidence floor follow saved settings. Deleting the selected export preset reloads the
+  grid editors with the default preset.
 - New TWS bands merge into the current chip selection and appear selected; band selection only resets on a format/preset
   change or an explicit reset, so a live band arriving never wipes the user's chip choices.
 - SVG rendering is used for both charts. The polar chart renders only the selected preset's TWA columns, draws dots

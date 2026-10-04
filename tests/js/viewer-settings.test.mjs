@@ -4,8 +4,9 @@ import { test } from "vitest";
 import {
   createEnvironment,
   defaultResponseBody,
+  fallbackPresets,
   flushViewer,
-  loadViewerFile,
+  loadViewerApp,
   ok,
   textTree
 } from "../../tools/viewer-harness.mjs";
@@ -13,26 +14,6 @@ import {
 /** @typedef {import("../../tools/viewer-harness.mjs").Environment} Environment */
 /** @typedef {import("../../tools/viewer-harness.mjs").FakeElement} FakeElement */
 /** @typedef {import("../../tools/viewer-harness.mjs").ApiResponse} ApiResponse */
-
-const SETTINGS_MODULES = [
-  "placeholders.js",
-  "dom.js",
-  "enhanced-rule-display.js",
-  "status-ui.js",
-  "presets.js",
-  "grid-editor.js",
-  "polar-chart-geometry.js",
-  "polar-chart.js",
-  "timeline-chart.js",
-  "export-fields.js",
-  "export-presets.js",
-  "export-ui.js",
-  "import-upload.js",
-  "enhanced-settings.js",
-  "advanced-settings.js",
-  "settings-ui.js",
-  "viewer.js"
-];
 
 /**
  * @param {string} endpoint
@@ -106,7 +87,7 @@ async function openSettings(override) {
     responder: (endpoint) => (override && override(endpoint)) || responder(endpoint)
   });
   /** @type {Record<string, unknown>} */ (env.context).FileReader = FakeFileReader;
-  for (const name of SETTINGS_MODULES) loadViewerFile(env, name);
+  loadViewerApp(env);
   env.fireDOMContentLoaded();
   await flushViewer();
   env.clickTab("settings");
@@ -161,16 +142,6 @@ function messageNodes(panel, text) {
 }
 
 /**
- * @param {FakeElement} node
- * @param {string} name
- */
-function fire(node, name) {
-  const handler = /** @type {Record<string, unknown>} */ (node)["on" + name];
-  assert.equal(typeof handler, "function", `expected a ${name} listener`);
-  /** @type {() => void} */ (handler)();
-}
-
-/**
  * @param {FakeElement} panel
  * @param {string} cardTitle
  * @param {Record<string, unknown>} file
@@ -179,7 +150,7 @@ function chooseAndConfirm(panel, cardTitle, file) {
   const restore = cardByTitle(panel, cardTitle).querySelectorAll(".settings-group")[1];
   const fileInput = inputOfType(restore, "file");
   /** @type {Record<string, unknown>} */ (fileInput).files = [file];
-  fire(fileInput, "change");
+  fileInput.dispatch("change");
   inputOfType(restore, "text").value = "RESTORE";
 }
 
@@ -232,7 +203,7 @@ test("a restore validation error keeps the chosen file and confirmation text", a
   const confirmation = inputOfType(restore, "text");
   const file = { name: "polarrecorder-backup.json" };
   /** @type {Record<string, unknown>} */ (fileInput).files = [file];
-  fire(fileInput, "change");
+  fileInput.dispatch("change");
   confirmation.value = "restor";
 
   buttonByText(panel, "Restore Learned Data").click();
@@ -354,4 +325,30 @@ test("a FileReader error is surfaced and re-enables restore", async () => {
   assert.equal(errors[0].className, "error-text");
   assert.ok(!env.requests.some((url) => url.includes("import/begin")), env.requests.join(" | "));
   assert.ok(restoreControls(panel).every((control) => !control.disabled));
+});
+
+test("a presets restore refreshes the cached presets", async () => {
+  let restored = false;
+  const { env, panel } = await openSettings(function (endpoint) {
+    if (endpoint.startsWith("import/commit")) {
+      restored = true;
+      return ok({ kind: "presets", presets_restored: 1 });
+    }
+    if (endpoint === "presets" && restored) {
+      return ok({ presets: [...fallbackPresets(), { name: "restored", builtin: false, twa: [0, 90], tws: [8] }] });
+    }
+    return undefined;
+  });
+  chooseAndConfirm(panel, "Presets", { name: "presets.json", text: '{"schema_version":1,"presets":{}}' });
+
+  buttonByText(panel, "Restore Presets").click();
+  await flushViewer();
+  await flushViewer();
+
+  const cache = /** @type {Array<{name: string}>} */ (env.window.Polarrecorder.PresetsCache);
+  assert.ok(
+    cache.some((preset) => preset.name === "restored"),
+    JSON.stringify(cache)
+  );
+  assert.ok(textTree(panel).includes("Restored 1 user presets."), textTree(panel));
 });

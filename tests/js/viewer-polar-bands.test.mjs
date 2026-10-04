@@ -122,8 +122,8 @@ test("double-clicking a band chip isolates that band", () => {
   env.chart.Render(polarData([12, 16, 20]), { force: true });
 
   const chip = env.chips.children[2];
-  assert.ok(chip.ondblclick, "expected a dblclick handler on the chip");
-  chip.ondblclick();
+  assert.equal(chip.listeners.get("dblclick")?.length, 1, "expected one dblclick handler on the chip");
+  chip.dispatch("dblclick");
 
   assert.deepEqual(activeChips(env), [false, false, true]);
 });
@@ -152,7 +152,7 @@ test("a band that disappears is dropped from the selection", () => {
 test("a band set that loses every selected band falls back to selecting all", () => {
   const env = loadChart();
   env.chart.Render(polarData([12, 16]), { force: true });
-  env.chips.children[0].ondblclick?.();
+  env.chips.children[0].dispatch("dblclick");
   assert.deepEqual(activeChips(env), [true, false], "only band 12 is selected");
 
   // 16 was present in the previous band set, so the merge does not re-add it; the

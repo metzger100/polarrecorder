@@ -5,7 +5,7 @@ import {
   createEnvironment,
   defaultResponseBody,
   flushViewer,
-  loadViewerFile,
+  loadViewerApp,
   ok,
   textTree
 } from "../../tools/viewer-harness.mjs";
@@ -65,23 +65,7 @@ function responder(endpoint) {
 
 function loadEnhancedEnvironment() {
   const env = createEnvironment({ responder });
-  loadViewerFile(env, "placeholders.js");
-  loadViewerFile(env, "dom.js");
-  loadViewerFile(env, "enhanced-rule-display.js");
-  loadViewerFile(env, "status-ui.js");
-  loadViewerFile(env, "presets.js");
-  loadViewerFile(env, "grid-editor.js");
-  loadViewerFile(env, "polar-chart-geometry.js");
-  loadViewerFile(env, "polar-chart.js");
-  loadViewerFile(env, "timeline-chart.js");
-  loadViewerFile(env, "export-fields.js");
-  loadViewerFile(env, "export-presets.js");
-  loadViewerFile(env, "export-ui.js");
-  loadViewerFile(env, "import-upload.js");
-  loadViewerFile(env, "enhanced-settings.js");
-  loadViewerFile(env, "advanced-settings.js");
-  loadViewerFile(env, "settings-ui.js");
-  loadViewerFile(env, "viewer.js");
+  loadViewerApp(env);
   return env;
 }
 
@@ -181,3 +165,22 @@ function enhancedSaveButton(panel) {
     return item.textContent === "Save Enhanced Settings";
   });
 }
+
+test("an enhanced save merges the saved values into a loaded ConfigCache", async () => {
+  const env = loadEnhancedEnvironment();
+  env.fireDOMContentLoaded();
+  await flushViewer();
+  env.clickTab("export");
+  await flushViewer();
+  env.clickTab("settings");
+  await flushViewer();
+  const saveButton = enhancedSaveButton(env.elements["settings-panel"]);
+  assert.ok(saveButton, "expected the Save Enhanced Settings button");
+
+  saveButton.click();
+  await flushViewer();
+
+  const cache = /** @type {Record<string, unknown>} */ (env.window.Polarrecorder.ConfigCache);
+  assert.equal(cache.enh_rpm_idle_max, 900);
+  assert.equal(cache.percentile, 65, "unsaved values are kept");
+});

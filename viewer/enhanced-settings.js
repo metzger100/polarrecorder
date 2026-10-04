@@ -234,7 +234,8 @@ window.Polarrecorder = window.Polarrecorder || {};
       return encodeURIComponent(item.field) + "=" + encodeURIComponent(controlValue(item));
     });
     action("enhanced/save?" + params.join("&"))
-      .then(function () {
+      .then(function (data) {
+        Polarrecorder.ApplySavedConfig(data.config);
         setMessage("Enhanced settings saved.", "info");
         reload();
       })

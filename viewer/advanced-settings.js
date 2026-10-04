@@ -141,7 +141,8 @@ window.Polarrecorder = window.Polarrecorder || {};
       return encodeURIComponent(item.field) + "=" + encodeURIComponent(item.control.value);
     });
     action("advanced/save?" + params.join("&"))
-      .then(function () {
+      .then(function (data) {
+        Polarrecorder.ApplySavedConfig(data.config);
         setMessage(sourceState.messageNode, "Data sources saved.", "info");
       })
       .catch(function (error) {
@@ -296,7 +297,8 @@ window.Polarrecorder = window.Polarrecorder || {};
       return encodeURIComponent(item.field) + "=" + encodeURIComponent(controlValue(item));
     });
     action("advanced/save?" + params.join("&"))
-      .then(function () {
+      .then(function (data) {
+        Polarrecorder.ApplySavedConfig(data.config);
         setMessage(state.messageNode, "Advanced settings saved.", "info");
         reload();
       })

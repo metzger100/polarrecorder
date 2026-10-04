@@ -79,7 +79,7 @@ export function defaultResponseBody(endpoint) {
     curve[90] = { samples: 20, stw: 6.2 };
     return ok({
       curves: { 12: curve },
-      format: "DefaultStarboard180",
+      format: new URLSearchParams(endpoint.split("?")[1]).get("format") || "DefaultStarboard180",
       generation: 2,
       percentile: 65,
       tws_bands: [12]

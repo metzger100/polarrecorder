@@ -65,7 +65,7 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  *   innerHeight: number,
  *   innerWidth: number,
  *   localStorage: { getItem: (key: string) => string | null, setItem: (key: string, value: string) => void },
- *   setInterval: () => number,
+ *   setInterval: (callback: () => void) => number,
  *   setTimeout: (callback: unknown) => number,
  *   fetch?: FetchFn
  * }} FakeWindow
@@ -95,11 +95,38 @@ export { ok, defaultResponseBody, statusPayload, fallbackPresets, textTree };
  *   fireDOMContentLoaded: () => void,
  *   fireKeydown: (key: string, shiftKey?: boolean) => void,
  *   clickTab: (name: string) => void,
+ *   intervals: Array<() => void>,
  *   requests: string[],
  *   storage: Map<string, string>,
  *   window: FakeWindow
  * }} Environment
  */
+
+/**
+ * Every viewer app script the behavior tests load. The theme bridge and the self-starting
+ * engine warning are left out; their own tests load them. The shell wires everything on
+ * DOMContentLoaded, so this order does not change behavior; viewer.html's real script order
+ * is pinned separately by viewer-structure-contract.test.mjs.
+ */
+export const VIEWER_APP_MODULES = Object.freeze([
+  "placeholders.js",
+  "dom.js",
+  "enhanced-rule-display.js",
+  "status-ui.js",
+  "presets.js",
+  "grid-editor.js",
+  "polar-chart-geometry.js",
+  "polar-chart.js",
+  "timeline-chart.js",
+  "export-fields.js",
+  "export-presets.js",
+  "export-ui.js",
+  "import-upload.js",
+  "enhanced-settings.js",
+  "advanced-settings.js",
+  "settings-ui.js",
+  "viewer.js"
+]);
 
 /**
  * @param {Environment} env
@@ -111,6 +138,15 @@ export function loadViewerFile(env, name, root = process.cwd()) {
   const filename = path.join(root, "viewer", name);
   const source = fs.readFileSync(filename, "utf8");
   vm.runInNewContext(source, env.context, { filename });
+}
+
+/**
+ * @param {Environment} env
+ * @param {string} [root]
+ * @returns {void}
+ */
+export function loadViewerApp(env, root = process.cwd()) {
+  for (const name of VIEWER_APP_MODULES) loadViewerFile(env, name, root);
 }
 
 /**
@@ -205,6 +241,8 @@ export function createEnvironment(options = {}) {
   const storage = options.storage || new Map();
   /** @type {Map<string, Array<(event: { preventDefault: () => void }) => void>>} */
   const windowListeners = new Map();
+  /** @type {Array<() => void>} */
+  const intervals = [];
   /** @type {FakeWindow} */
   const window = {
     Blob,
@@ -230,8 +268,9 @@ export function createEnvironment(options = {}) {
         storage.set(key, value);
       }
     },
-    setInterval() {
-      return 1;
+    setInterval(callback) {
+      intervals.push(callback);
+      return intervals.length;
     },
     setTimeout(_callback) {
       return 1;
@@ -287,6 +326,7 @@ export function createEnvironment(options = {}) {
       }
       button.click();
     },
+    intervals,
     requests,
     storage,
     window

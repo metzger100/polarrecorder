@@ -317,6 +317,7 @@ window.Polarrecorder = window.Polarrecorder || {};
     params.set("confirm", "yes");
     action("presets/delete?" + params.toString(), "Preset deleted.", function () {
       Polarrecorder.ExportPresets.SetSelected("DefaultStarboard180");
+      Polarrecorder.ExportPresets.LoadSelected();
       if (state.hooks.refreshPresets) state.hooks.refreshPresets();
     });
   }

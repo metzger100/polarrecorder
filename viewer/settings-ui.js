@@ -189,6 +189,7 @@ window.Polarrecorder = window.Polarrecorder || {};
         setRestoreBusy(false);
         field.control.value = "";
         setMessage(summary, "info");
+        if (kind === "presets") Polarrecorder.RefreshPresets();
       },
       /** @param {string} error */
       function (error) {
