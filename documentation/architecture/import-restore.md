@@ -39,7 +39,8 @@ Presets validation order (`server/polarrecorder/preset_backup.py`): size, JSON-o
 and a `presets` object), schema (`<= PRESET_SCHEMA_VERSION`), unknown-key, then per-preset parse. Each preset name
 passes `export.validate_preset_name` (trimmed, 1-30 chars, allowed pattern, reserved/built-in names rejected, not
 skipped) and each `twa`/`tws` array passes `export.validate_grid_values` (strict integers — `bool` rejected — within
-range; TWS bounded by the **live** `max_tws`). Duplicate normalized names are rejected.
+range; TWS bounded by the fixed model grid, `bins.TWS_BIN_MAX` = 60, not by the live `max_tws`). Duplicate normalized
+names are rejected.
 
 Shared size/JSON/object/unknown-key gates live in `server/polarrecorder/import_common.py` and raise `BackupError`.
 Polar-specific failures raise `RestoreError` (a `BackupError` subclass); preset-specific failures reuse

@@ -133,7 +133,8 @@ recording rejects that wind and the column could never fill.
 full 360° tack asymmetry. You can preview or download CSV, edit its grid, and save presets. Presets and the grid editor
 belong to this card only; they never change the POL table.
 
-Blank CSV cells mean there was not enough accepted data for that angle and wind speed.
+Blank CSV cells mean there was not enough accepted data for that angle and wind speed. CSV grids and saved presets
+accept wind columns from 1 to 60 knots at every "Maximum true wind" setting; a column above that setting stays blank.
 
 Normal CSV, routing POL, and polar-diagram cells require at least 30 accepted samples. In the polar diagram, cells with
 30-49 samples are shown with reduced emphasis; cells reach the standard high-confidence emphasis at 50 samples. The

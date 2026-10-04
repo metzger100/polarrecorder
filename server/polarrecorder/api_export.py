@@ -17,7 +17,6 @@ def export_csv(plugin: Any, args: dict[str, str]) -> dict[str, object]:
         selection = export.resolve_export_selection(
             plugin._data_dir,
             args,
-            plugin.config.max_tws,
             plugin.config.min_samples_for_export,
             plugin._logger,
         )

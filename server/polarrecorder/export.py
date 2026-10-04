@@ -1,7 +1,7 @@
 """Module: Export - CSV export and preset persistence over pure projection.
 
 Documentation: documentation/user/export-import.md
-Depends: polarrecorder.coerce, polarrecorder.logger, polarrecorder.projection
+Depends: polarrecorder.bins, polarrecorder.coerce, polarrecorder.logger, polarrecorder.projection
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from polarrecorder.bins import TWS_BIN_MAX
 from polarrecorder.coerce import to_int
 from polarrecorder.projection import (
     TWA_FOLD_MAX,
@@ -137,15 +138,14 @@ def save_preset(
     name: str,
     twa_text: str,
     tws_text: str,
-    max_tws: int,
     logger: Logger | None = None,
 ) -> Preset:
-    """Create or overwrite a user preset."""
+    """Create or overwrite a user preset; TWS columns are bounded by the model grid."""
     preset = Preset(
         name=_validate_name(name),
         builtin=False,
         twa=_parse_grid("twa", twa_text, 0, TWA_GRID_MAX),
-        tws=_parse_grid("tws", tws_text, 1, max_tws),
+        tws=_parse_grid("tws", tws_text, 1, TWS_BIN_MAX),
     )
     presets = _load_user_presets(data_dir, logger, writing=True)
     presets[preset.name] = preset
@@ -212,11 +212,10 @@ def resolve_polar_preset(
 def resolve_export_selection(
     data_dir: str | os.PathLike[str],
     args: Mapping[str, str],
-    max_tws: int,
     min_samples_for_export: int,
     logger: Logger | None = None,
 ) -> ExportSelection:
-    """Resolve CSV export mode, grid, and confidence floor."""
+    """Resolve CSV export mode, grid, and confidence floor; TWS is bounded by the model grid."""
     min_samples = resolve_min_samples(args, min_samples_for_export)
     has_twa = "twa" in args
     has_tws = "tws" in args
@@ -230,7 +229,7 @@ def resolve_export_selection(
         return ExportSelection(
             "custom",
             _parse_grid("twa", args["twa"], 0, TWA_GRID_MAX),
-            _parse_grid("tws", args["tws"], 1, max_tws),
+            _parse_grid("tws", args["tws"], 1, TWS_BIN_MAX),
             min_samples,
         )
     preset = resolve_polar_preset(data_dir, args, logger)

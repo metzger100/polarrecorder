@@ -26,7 +26,8 @@ User presets are stored in `<plugin_dir>/data/presets.json`, separate from the l
 trimmed, case-sensitive, 1-30 characters, and may contain letters, digits, spaces, and hyphens. The names
 `DefaultStarboard180`, `DefaultPort180`, `Default360`, and `windy` are reserved case-insensitively, as is the pre-rename
 `Default180` (it still resolves to the starboard half). TWA values must be integers 0-359; values above 180 deg capture
-port-side data. TWS values must be integers 1 through the active `max_tws`. Values are sorted on save.
+port-side data. TWS values must be integers 1-60, the fixed model grid, at every `max_tws`; a CSV column above the
+active `max_tws` stays blank because no sample can be recorded there. Values are sorted on save.
 
 ### Routing POL
 
@@ -115,8 +116,8 @@ mirroring the Reset confirmation:
   a plugin that booted from a corrupt or too-new `polar.json`: until a restore or Reset, the plugin never writes over
   those files. On success you see how many bins and accepted samples were restored.
 - **Presets restore** fully replaces your user presets with a valid `export/presets` backup. Built-in presets are never
-  affected. Preset names must be valid and non-reserved, and each preset's TWS values must fit the current `max_tws`. On
-  success you see how many user presets were restored.
+  affected. Preset names must be valid and non-reserved, and each preset's TWS values must be integers 1-60. On success
+  you see how many user presets were restored.
 
 Both imports are fail-closed and all-or-nothing: a wrong file, corrupted JSON, a foreign bin grid (learned data), a
 too-new schema, a reserved/built-in preset name, or any out-of-range value is rejected with a precise reason and your

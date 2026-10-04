@@ -4,7 +4,8 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
-from conftest import FakeLogger
+from conftest import FakeAvNavAPI, FakeLogger
+from plugin_integration_support import make_plugin, response_data, sample_at
 from polarrecorder import export
 
 if TYPE_CHECKING:
@@ -203,7 +204,7 @@ def test_csv_export_emits_rows_above_180_for_circular_grid() -> None:
 
 
 def test_preset_save_load_delete_round_trip(tmp_path: Path) -> None:
-    saved = export.save_preset(tmp_path, "my plan", "90,0", "8,4", max_tws=20)
+    saved = export.save_preset(tmp_path, "my plan", "90,0", "8,4")
 
     assert saved.twa == [0, 90]
     assert saved.tws == [4, 8]
@@ -236,7 +237,7 @@ def test_reserved_builtin_names_save_and_delete_are_rejected(tmp_path: Path) -> 
     for reserved in reserved_names:
 
         def save_reserved(name: str = reserved) -> object:
-            return export.save_preset(tmp_path, name, "0", "4", max_tws=20)
+            return export.save_preset(tmp_path, name, "0", "4")
 
         def delete_reserved(name: str = reserved) -> object:
             export.delete_preset(tmp_path, name, "yes")
@@ -288,7 +289,7 @@ def test_save_and_delete_refuse_to_overwrite_unreadable_presets(tmp_path: Path) 
         presets_path.write_text(content, encoding="utf-8")
 
         with pytest.raises(export.ExportError, match="is unreadable; restore a presets backup"):
-            export.save_preset(tmp_path, "mine", "0,90", "4", max_tws=20)
+            export.save_preset(tmp_path, "mine", "0,90", "4")
         with pytest.raises(export.ExportError, match="is unreadable; restore a presets backup"):
             export.delete_preset(tmp_path, "keep", "yes")
 
@@ -303,7 +304,7 @@ def test_replace_user_presets_recovers_a_corrupt_file(tmp_path: Path) -> None:
     export.replace_user_presets(tmp_path, [restored])
 
     assert [preset.name for preset in export.list_presets(tmp_path)][-1] == "mine"
-    export.save_preset(tmp_path, "second", "0", "4", max_tws=20)
+    export.save_preset(tmp_path, "second", "0", "4")
 
 
 def test_name_and_grid_validation(tmp_path: Path) -> None:
@@ -317,23 +318,52 @@ def test_name_and_grid_validation(tmp_path: Path) -> None:
     ]
     for name, twa, tws in invalid:
         try:
-            export.save_preset(tmp_path, name, twa, tws, max_tws=20)
+            export.save_preset(tmp_path, name, twa, tws)
         except export.ExportError:
             continue
         msg = "expected ExportError"
         raise AssertionError(msg)
 
     # TWA values up to 359 deg are now accepted so circular grids are storable.
-    saved = export.save_preset(tmp_path, "wide", "0,210,359", "4", max_tws=20)
+    saved = export.save_preset(tmp_path, "wide", "0,210,359", "4")
     assert saved.twa == [0, 210, 359]
 
 
-def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> None:
-    export.save_preset(tmp_path, "mine", "0,90", "4,8", max_tws=20)
+def test_default_grid_exports_at_low_max_tws_with_a_blank_column(tmp_path: Path) -> None:
+    api = FakeAvNavAPI()
+    api.config["max_tws"] = "20"
+    plugin = make_plugin(tmp_path, api)
+    assert plugin.config.max_tws == 20
+    for _ in range(export.MIN_SAMPLES_DISPLAY):
+        sample = sample_at(100.0, 1000.0)
+        assert sample is not None
+        plugin._model.update_accepted(sample)
+    default = export.resolve_polar_preset(tmp_path, {})
+    grid = {
+        "twa": [",".join(str(value) for value in default.twa)],
+        "tws": [",".join(str(value) for value in default.tws)],
+    }
+    light_air = {"name": ["light air"], "twa": ["0,90"], "tws": ["4,25"]}
 
-    default = export.resolve_export_selection(tmp_path, {}, 20, 10)
-    named = export.resolve_export_selection(tmp_path, {"format": "mine"}, 20, 10)
-    inline = export.resolve_export_selection(tmp_path, {"twa": "90,0", "tws": "8,4"}, 20, 10)
+    exported = response_data(plugin._handle_request("export", object(), grid))
+    saved = plugin._handle_request("presets/save", object(), light_air)
+    too_high = plugin._handle_request("export", object(), {"twa": ["90"], "tws": ["61"]})
+
+    header, *rows = str(exported["csv"]).split("\r\n")
+    assert header.endswith(";20;25")
+    row_90 = next(row for row in rows if row.startswith("90;"))
+    assert row_90.split(";")[5] == "6.0"
+    assert row_90.endswith(";;")
+    assert saved["status"] == "OK"
+    assert too_high == {"status": "ERROR", "error": "Invalid parameter 'tws': expected values 1-60"}
+
+
+def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> None:
+    export.save_preset(tmp_path, "mine", "0,90", "4,8")
+
+    default = export.resolve_export_selection(tmp_path, {}, 10)
+    named = export.resolve_export_selection(tmp_path, {"format": "mine"}, 10)
+    inline = export.resolve_export_selection(tmp_path, {"twa": "90,0", "tws": "8,4"}, 10)
 
     assert default.name == "DefaultStarboard180"
     assert named.twa == [0, 90]
@@ -344,12 +374,11 @@ def test_format_resolution_default_preset_inline_and_errors(tmp_path: Path) -> N
         return export.resolve_export_selection(
             tmp_path,
             {"format": "windy", "twa": "0"},
-            20,
             10,
         )
 
     def incomplete_inline() -> object:
-        return export.resolve_export_selection(tmp_path, {"twa": "0"}, 20, 10)
+        return export.resolve_export_selection(tmp_path, {"twa": "0"}, 10)
 
     _assert_export_error(mixed_builtin_and_inline)
     _assert_export_error(incomplete_inline)

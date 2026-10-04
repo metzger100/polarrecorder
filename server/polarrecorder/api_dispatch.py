@@ -137,7 +137,6 @@ def _preset_save(plugin: Any, args: dict[str, str]) -> dict[str, object]:
             args.get("name", ""),
             args.get("twa", ""),
             args.get("tws", ""),
-            plugin.config.max_tws,
             plugin._logger,
         )
     return api_handlers.ok({"preset": _preset_dict(preset)})

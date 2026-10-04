@@ -357,7 +357,7 @@ class Plugin:
         }
 
     def _apply_presets_restore(self, assembled: str) -> dict[str, object]:
-        presets = validate_presets(assembled, self.config.max_tws)
+        presets = validate_presets(assembled)
         with self._lock:
             replace_user_presets(self._data_dir, presets, self._logger)
         return {"kind": "presets", "presets_restored": len(presets)}

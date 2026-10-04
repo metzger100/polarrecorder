@@ -1,13 +1,14 @@
 """Module: Preset Backup - Strict presets backup serialization and validation.
 
 Documentation: documentation/user/export-import.md
-Depends: polarrecorder.export, polarrecorder.import_common
+Depends: polarrecorder.bins, polarrecorder.export, polarrecorder.import_common
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from polarrecorder.bins import TWS_BIN_MAX
 from polarrecorder.export import (
     PRESET_SCHEMA_VERSION,
     TWA_GRID_MAX,
@@ -47,12 +48,14 @@ def serialize_presets(presets: Sequence[Preset]) -> dict[str, object]:
     }
 
 
-def validate_presets(raw: str, max_tws: int) -> list[Preset]:
+def validate_presets(raw: str) -> list[Preset]:
     """Validate a presets backup string into a replacement set of user presets.
+
+    Preset TWS values are bounded by the fixed model grid (``TWS_BIN_MAX``), not by the
+    live ``max_tws`` rejection ceiling, so a backup restores the same at every setting.
 
     Args:
         raw: The assembled presets backup text (a ``GET /api/export/presets`` body).
-        max_tws: The live maximum TWS used to bound preset TWS values.
 
     Returns:
         The validated user presets that replace the current user-preset set.
@@ -65,7 +68,7 @@ def validate_presets(raw: str, max_tws: int) -> list[Preset]:
     _check_provenance(data)
     _check_schema(data)
     check_unknown_keys(data, _TOP_LEVEL_KEYS, _WHAT)
-    return _build_presets(require_dict(data["presets"], "presets"), max_tws)
+    return _build_presets(require_dict(data["presets"], "presets"))
 
 
 def _check_provenance(data: dict[str, object]) -> None:
@@ -84,7 +87,7 @@ def _check_schema(data: dict[str, object]) -> None:
         raise ExportError(msg)
 
 
-def _build_presets(presets_obj: dict[str, object], max_tws: int) -> list[Preset]:
+def _build_presets(presets_obj: dict[str, object]) -> list[Preset]:
     presets: list[Preset] = []
     seen: set[str] = set()
     for raw_name, raw_entry in presets_obj.items():
@@ -98,7 +101,7 @@ def _build_presets(presets_obj: dict[str, object], max_tws: int) -> list[Preset]
             "twa", _list(entry.get("twa"), name, "twa"), TWA_GRID_LOWER, TWA_GRID_MAX
         )
         tws = validate_grid_values(
-            "tws", _list(entry.get("tws"), name, "tws"), TWS_GRID_LOWER, max_tws
+            "tws", _list(entry.get("tws"), name, "tws"), TWS_GRID_LOWER, TWS_BIN_MAX
         )
         presets.append(Preset(name=name, builtin=False, twa=twa, tws=tws))
     return presets

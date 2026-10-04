@@ -75,12 +75,11 @@ written. It is debug/future-restore metadata and is not shown in the Status tab.
 
 ### Lowering `max_tws` and export presets
 
-`max_tws` is a validation and inline-editor limit, not the projection grid ceiling. If `max_tws` is lowered below a
-preset's largest TWS column, the Export tab flags that column as out of range for inline editing, inline download, and
-saving.
-
-Preset-mode export is unaffected. `GET /api/export?format=<name>` still works for saved presets because projection
-sweeps the fixed 0-60 kt bin grid rather than the active `max_tws` limit.
+`max_tws` is a recording limit (R6 rejects true wind above it), not an export grid bound. CSV export, preset save, and
+presets restore accept TWS columns from 1 to 60 kt, the fixed model grid, at every `max_tws`, so the built-in presets
+with their 25 kt column keep exporting at `max_tws=20`. A column above the active `max_tws` simply stays blank because
+no sample can be recorded there. The routing POL export is the exception: it requires every cell, so it trims its TWS
+columns to the active `max_tws`.
 
 ## Related
 
